@@ -7,7 +7,7 @@
     /// <summary>
     /// Configuration extensions for the subscription storage
     /// </summary>
-    public static partial class ConfigureAzureSubscriptionStorage
+    public static class ConfigureAzureSubscriptionStorage
     {
         /// <summary>
         /// Connection string to use for subscriptions storage.
