@@ -13,7 +13,7 @@
     using Microsoft.WindowsAzure.Storage.Table.DataServices;
     using Timeout.Core;
     
-    public class TimeoutPersister : IPersistTimeouts, IDetermineWhoCanSend
+    public class TimeoutPersister : IPersistTimeouts, IPersistTimeoutsV2, IDetermineWhoCanSend
     {
         //Configure config;
         string _sanitizedEndpointName;
@@ -142,6 +142,47 @@
 
             context.SaveChanges();
         }
+
+        public TimeoutData Peek(string timeoutId)
+        {
+            var context = new ServiceContext(account.CreateCloudTableClient()) { IgnoreResourceNotFoundException = true };
+
+            TimeoutDataEntity timeoutDataEntity;
+            if (!TryGetTimeoutData(context, timeoutId, string.Empty, out timeoutDataEntity))
+            {
+                return null;
+            }
+
+            var timeoutData = new TimeoutData
+            {
+                Destination = Address.Parse(timeoutDataEntity.Destination),
+                SagaId = timeoutDataEntity.SagaId,
+                State = Download(timeoutDataEntity.StateAddress),
+                Time = timeoutDataEntity.Time,
+                Id = timeoutDataEntity.RowKey,
+                OwningTimeoutManager = timeoutDataEntity.OwningTimeoutManager,
+                Headers = Deserialize(timeoutDataEntity.Headers)
+            };
+            return timeoutData;
+        }
+
+        public bool TryRemove(string timeoutId)
+        {
+            try
+            {
+                TimeoutData data;
+                return TryRemove(timeoutId, out data);
+            }
+            catch (DataServiceRequestException) // table entries were already removed
+            {
+                return false;
+            }
+            catch (StorageException) // blob file was already removed
+            {
+                return false;
+            }
+        }
+
 
         public bool TryRemove(string timeoutId, out TimeoutData timeoutData)
         {
