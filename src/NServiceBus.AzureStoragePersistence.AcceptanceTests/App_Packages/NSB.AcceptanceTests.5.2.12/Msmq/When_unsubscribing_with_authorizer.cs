@@ -31,7 +31,7 @@
                 .Done(c =>
                     c.SubscriberEventCount == 2 &&
                     c.DeclinedUnSubscribe)
-                .Repeat(r => r.For(Transports.Msmq))
+                .Repeat(r => r.For<MsmqOnly>())
                 .Run();
         }
 

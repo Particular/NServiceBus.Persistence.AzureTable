@@ -5,6 +5,7 @@
     using System.Transactions;
     using NServiceBus.AcceptanceTesting;
     using NServiceBus.AcceptanceTests.EndpointTemplates;
+    using NServiceBus.AcceptanceTests.ScenarioDescriptors;
     using NServiceBus.Features;
     using NServiceBus.ObjectBuilder;
     using NServiceBus.Timeout.Core;
@@ -15,9 +16,7 @@
         [Test]
         public void Should_rollback_and_not_deliver_timeout_when_using_dtc()
         {
-            var context = new Context();
-
-            Scenario.Define(context)
+            Scenario.Define<Context>()
                 .WithEndpoint<Endpoint>(b => b
                     .CustomConfig(configure => configure.Transactions().EnableDistributedTransactions())
                     .Given(bus =>
@@ -25,14 +24,18 @@
                         bus.Defer(TimeSpan.FromSeconds(5), new MyMessage());
                     }))
                 .Done(c => c.AttemptedToRemoveTimeout || c.MessageReceived)
+                .Repeat(r => r.For<AllDtcTransports>())
+                .Should(context =>
+                {
+                    Assert.IsFalse(context.MessageReceived, "Message should not be delivered using dtc.");
+                    Assert.AreEqual(2, context.NumberOfProcessingAttempts, "The rollback should cause a retry.");
+                    Assert.IsTrue(context.AttemptedToRemoveTimeout);
+                })
                 .Run();
-
-            Assert.IsFalse(context.MessageReceived, "Message should not be delivered using dtc.");
-            Assert.AreEqual(2, context.NumberOfProcessingAttempts, "The rollback should cause a retry.");
-            Assert.IsTrue(context.AttemptedToRemoveTimeout);
         }
 
         [Test]
+        [Ignore("Really funny assertions about number of retries when timeouts removed in different transactional contexts. Test removed in V6.")]
         public void Should_rollback_and_deliver_timeout_anyway_when_using_native_tx()
         {
             var context = new Context();
@@ -53,11 +56,10 @@
         }
 
         [Test]
+        [Ignore("Really funny assertions about number of retries when timeouts removed in different transactional contexts. Test removed in V6.")]
         public void Should_deliver_timeout_anyway_when_using_no_tx()
         {
-            var context = new Context();
-
-            Scenario.Define(context)
+            var context = Scenario.Define<Context>()
                 .WithEndpoint<Endpoint>(b => b
                     .CustomConfig(configure => configure.Transactions().Disable())
                     .Given(bus =>

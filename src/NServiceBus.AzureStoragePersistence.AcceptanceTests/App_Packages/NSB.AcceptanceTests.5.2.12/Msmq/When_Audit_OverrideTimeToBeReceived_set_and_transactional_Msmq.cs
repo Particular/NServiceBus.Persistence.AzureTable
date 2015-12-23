@@ -13,17 +13,32 @@
         [Test]
         public void Endpoint_should_not_start_and_show_error()
         {
-            var context = new Context();
-            var scenarioException = Assert.Throws<AggregateException>(() => Scenario.Define(context)
-                .WithEndpoint<Endpoint>()
-                .Done(c => c.EndpointsStarted)
-                .Repeat(r => r.For<MsmqOnly>())
-                .Run())
-                .InnerException as ScenarioException;
+            bool testFoundValidMsmqRunDescriptor = false;
+            ScenarioException scenarioException = null;
 
-            Assert.IsFalse(context.EndpointsStarted);
-            Assert.IsNotNull(scenarioException);
-            StringAssert.Contains("Setting a custom OverrideTimeToBeReceived for audits is not supported on transactional MSMQ.", scenarioException.InnerException.Message);
+            try
+            {
+                Scenario.Define<Context>()
+                    .WithEndpoint<Endpoint>()
+                    .Done(c => c.EndpointsStarted)
+                    .Repeat(r => r.For<MsmqOnly>())
+                    .Should(context =>
+                    {
+                        testFoundValidMsmqRunDescriptor = true;
+                        Assert.IsFalse(context.EndpointsStarted);
+                    })
+                    .Run();
+            }
+            catch (AggregateException ax)
+            {
+                scenarioException = ax.InnerException as ScenarioException;
+            }
+
+            if (testFoundValidMsmqRunDescriptor)
+            {
+                Assert.IsNotNull(scenarioException);
+                StringAssert.Contains("Setting a custom OverrideTimeToBeReceived for audits is not supported on transactional MSMQ.", scenarioException.InnerException.Message);
+            }
         }
         
         public class Context : ScenarioContext { }

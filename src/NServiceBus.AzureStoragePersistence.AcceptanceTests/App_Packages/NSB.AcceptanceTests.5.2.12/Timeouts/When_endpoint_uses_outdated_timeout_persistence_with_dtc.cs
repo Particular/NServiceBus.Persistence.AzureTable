@@ -1,7 +1,9 @@
 ﻿namespace NServiceBus.AcceptanceTests.Timeouts
 {
+    using System.Linq;
     using NServiceBus.AcceptanceTesting;
     using NServiceBus.AcceptanceTests.EndpointTemplates;
+    using NServiceBus.AcceptanceTests.ScenarioDescriptors;
     using NServiceBus.Features;
     using NUnit.Framework;
 
@@ -10,13 +12,15 @@
         [Test]
         public void Endpoint_should_start()
         {
-            var context = new Context();
-            Scenario.Define(context)
+            var resultContexts = Scenario.Define<Context>()
                 .WithEndpoint<Endpoint>()
                 .Done(c => c.EndpointsStarted)
+                .Repeat(r => r.For<AllDtcTransports>())
+                .Should(context =>
+                {
+                    Assert.IsTrue(context.EndpointsStarted);
+                })
                 .Run();
-
-            Assert.IsTrue(context.EndpointsStarted);
         }
 
         public class Context : ScenarioContext { }

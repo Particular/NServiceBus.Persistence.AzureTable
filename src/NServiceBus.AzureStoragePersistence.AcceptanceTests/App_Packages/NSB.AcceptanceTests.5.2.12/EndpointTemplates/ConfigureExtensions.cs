@@ -2,7 +2,9 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using ScenarioDescriptors;
+    using System.Reflection;
 
     public static class ConfigureExtensions
     {
@@ -16,6 +18,28 @@
             return dictionary[key];
         }
 
+        private static Type GetTypePersistent(string typeName)
+        {
+            var type = Type.GetType(typeName);
+            if (type != null)
+                return type;
+
+            int firstComma = typeName.IndexOf(',');
+            string assemName = typeName.Substring(firstComma + 1).TrimStart();
+            string className = typeName.Substring(0, firstComma);
+            foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (string.Equals(a.FullName, assemName, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    type = a.GetType(className);
+                    if (type != null)
+                        return type;
+                }
+            }
+
+            return null;
+        }
+
         public static void DefineTransport(this BusConfiguration builder, IDictionary<string, string> settings, Type endpointBuilderType)
         {
             if (!settings.ContainsKey("Transport"))
@@ -25,7 +49,18 @@
 
             const string typeName = "ConfigureTransport";
 
-            var transportType = Type.GetType(settings["Transport"]);
+            var transportType = GetTypePersistent(settings["Transport"]);
+
+            if (transportType == null)
+            {
+                var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+                    .Select(a => a.FullName)
+                    .ToArray();
+
+                var msg = $"Requested Transport: `{settings["Transport"]}` but got null. Loaded Assemblies: {String.Join(", ", assemblies)}";
+                throw new InvalidOperationException(msg);
+            }
+
             var transportTypeName = "Configure" + transportType.Name;
 
             var configurerType = endpointBuilderType.GetNestedType(typeName) ??

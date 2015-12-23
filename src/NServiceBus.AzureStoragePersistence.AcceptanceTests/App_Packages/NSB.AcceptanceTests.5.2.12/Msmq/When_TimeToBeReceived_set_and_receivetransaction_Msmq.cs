@@ -15,8 +15,8 @@
             Scenario.Define(context)
                     .WithEndpoint<Endpoint>(b => b.Given((bus, c) => bus.SendLocal(new MyMessage())))
                     .Repeat(r => r.For<MsmqOnly>())
+                    .Should(c => Assert.IsTrue(c.CorrectExceptionThrown))
                     .Run();
-            Assert.IsTrue(context.CorrectExceptionThrown);
         }
 
         public class Context : ScenarioContext

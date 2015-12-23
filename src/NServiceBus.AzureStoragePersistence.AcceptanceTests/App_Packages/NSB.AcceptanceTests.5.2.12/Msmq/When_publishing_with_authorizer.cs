@@ -28,7 +28,7 @@
                 .Done(c =>
                     c.Subscriber1GotTheEvent &&
                     c.DeclinedSubscriber2)
-                .Repeat(r => r.For(Transports.Msmq))
+                .Repeat(r => r.For<MsmqOnly>())
                 .Should(c =>
                 {
                     Assert.True(c.Subscriber1GotTheEvent);

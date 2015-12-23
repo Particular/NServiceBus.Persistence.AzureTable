@@ -16,11 +16,13 @@
     public class TimeoutPersister : IPersistTimeouts, IPersistTimeoutsV2, IDetermineWhoCanSend
     {
         //Configure config;
+        string _endpointName;
         string _sanitizedEndpointName;
 
         public TimeoutPersister(Configure config)
         {
-            _sanitizedEndpointName = Sanitize(config.Settings.EndpointName());
+            _endpointName = config.Settings.EndpointName();
+            _sanitizedEndpointName = Sanitize(_endpointName);
         }
 
         public IEnumerable<Tuple<string, DateTime>> GetNextChunk(DateTime startSlice, out DateTime nextTimeToRunQuery)
@@ -42,14 +44,14 @@
                 query = from c in context.TimeoutData
                             where c.PartitionKey.CompareTo(lastSuccessfulRead.Value.ToString(PartitionKeyScope)) >= 0
                             && c.PartitionKey.CompareTo(now.ToString(PartitionKeyScope)) <= 0
-                                && c.OwningTimeoutManager == _sanitizedEndpointName
-                            select c;
+                                && c.OwningTimeoutManager == _endpointName
+                        select c;
             }
             else
             {
                 query = from c in context.TimeoutData
-                        where c.OwningTimeoutManager == _sanitizedEndpointName
-                            select c;
+                        where c.OwningTimeoutManager == _endpointName
+                        select c;
             }
 
             result = query

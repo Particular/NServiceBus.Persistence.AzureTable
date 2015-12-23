@@ -13,17 +13,30 @@
         [Test]
         public void Endpoint_should_not_start_and_show_error()
         {
+            bool testFoundValidMsmqRunDescriptor = false;
+            ScenarioException scenarioException = null;
             var context = new Context();
-            var scenarioException = Assert.Throws<AggregateException>(() => Scenario.Define(context)
-                .WithEndpoint<Endpoint>()
-                .Done(c => c.EndpointsStarted)
-                .Repeat(r => r.For<MsmqOnly>())
-                .Run())
-                .InnerException as ScenarioException;
 
-            Assert.IsFalse(context.EndpointsStarted);
-            Assert.IsNotNull(scenarioException);
-            StringAssert.Contains("Setting a custom TimeToBeReceivedOnForwardedMessages is not supported on transactional MSMQ.", scenarioException.InnerException.Message);
+            try
+            {
+                Scenario.Define(context)
+                    .WithEndpoint<Endpoint>()
+                    .Done(c => c.EndpointsStarted)
+                    .Repeat(r => r.For<MsmqOnly>())
+                    .Should(c => testFoundValidMsmqRunDescriptor = true)
+                    .Run();
+            }
+            catch (AggregateException ax)
+            {
+                scenarioException = ax.InnerException as ScenarioException;
+            }
+
+            if(testFoundValidMsmqRunDescriptor)
+            { 
+                Assert.IsFalse(context.EndpointsStarted);
+                Assert.IsNotNull(scenarioException);
+                StringAssert.Contains("Setting a custom TimeToBeReceivedOnForwardedMessages is not supported on transactional MSMQ.", scenarioException.InnerException.Message);
+            }
         }
 
         public class Context : ScenarioContext { }
