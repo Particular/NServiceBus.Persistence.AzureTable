@@ -17,12 +17,21 @@
     {
         //Configure config;
         string _endpointName;
-        string _sanitizedEndpointName;
+        string _sanitizedEndpointInstanceName;
 
         public TimeoutPersister(Configure config)
         {
             _endpointName = config.Settings.EndpointName();
-            _sanitizedEndpointName = Sanitize(_endpointName);
+
+            // Unicast sets the default for this value to the machine name.
+            // NServiceBus.Host.AzureCloudService, when running in a cloud environment, sets this value to the current RoleInstanceId.
+            var hostDisplayName = config.Settings.GetOrDefault<string>("NServiceBus.HostInformation.DisplayName");
+            if (string.IsNullOrWhiteSpace(hostDisplayName))
+            {
+                throw new InvalidOperationException("The TimeoutPersister for Azure Storage Persistence requires a host-specific identifier to execute properly. Unable to find identifier in the `NServiceBus.HostInformation.DisplayName` settings key.");
+            }
+
+            _sanitizedEndpointInstanceName = Sanitize(_endpointName + "_" + hostDisplayName);
         }
 
         public IEnumerable<Tuple<string, DateTime>> GetNextChunk(DateTime startSlice, out DateTime nextTimeToRunQuery)
@@ -382,7 +391,7 @@
         bool TryGetLastSuccessfulRead(ServiceContext context, out TimeoutManagerDataEntity lastSuccessfulReadEntity)
         {
             var query = from m in context.TimeoutManagerData
-                        where m.PartitionKey == _sanitizedEndpointName
+                        where m.PartitionKey == _sanitizedEndpointInstanceName
                         select m;
 
             lastSuccessfulReadEntity = query
@@ -399,7 +408,7 @@
             {
                 if (read == null)
                 {
-                    read = new TimeoutManagerDataEntity(_sanitizedEndpointName, string.Empty)
+                    read = new TimeoutManagerDataEntity(_sanitizedEndpointInstanceName, string.Empty)
                            {
                                LastSuccessfullRead = DateTime.UtcNow
                            };
