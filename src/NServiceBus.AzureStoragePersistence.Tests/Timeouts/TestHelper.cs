@@ -14,6 +14,7 @@ namespace NServiceBus.AzureStoragePersistence.Tests.Timeouts
     using NServiceBus.ObjectBuilder.Common;
     using NServiceBus.Pipeline;
     using NServiceBus.Settings;
+    using NServiceBus.Support;
     using NServiceBus.Timeout.Core;
     using NUnit.Framework;
 
@@ -28,6 +29,7 @@ namespace NServiceBus.AzureStoragePersistence.Tests.Timeouts
             {
                 var settingsHolder = new SettingsHolder();
                 settingsHolder.Set("EndpointName", EndpointName);
+                settingsHolder.Set("NServiceBus.HostInformation.DisplayName", RuntimeEnvironment.MachineName);
                 persister = new TimeoutPersister(new Configure(settingsHolder, new FakeContainer(), new List<Action<IConfigureComponents>>(), new PipelineSettings(new BusConfiguration())))
                 {
                     PartitionKeyScope = new AzureTimeoutPersisterConfig().PartitionKeyScope,
