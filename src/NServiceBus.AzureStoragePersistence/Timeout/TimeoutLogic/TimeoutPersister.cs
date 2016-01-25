@@ -196,6 +196,8 @@
                 return false;
             }
 
+            context.DeleteObject(timeoutDataEntity);
+
             timeoutData = new TimeoutData
             {
                 Destination = Address.Parse(timeoutDataEntity.Destination),
@@ -219,11 +221,9 @@
                 context.DeleteObject(timeoutDataEntityByTime);
             }
 
-            RemoveState(timeoutDataEntity.StateAddress);
-
-            context.DeleteObject(timeoutDataEntity);
-
             context.SaveChangesWithRetries();
+
+            RemoveState(timeoutDataEntity.StateAddress);
 
             return true;
         }
