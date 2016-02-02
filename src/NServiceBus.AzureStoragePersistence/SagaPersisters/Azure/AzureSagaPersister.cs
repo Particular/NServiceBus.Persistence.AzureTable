@@ -24,11 +24,12 @@
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="account"></param>
+        /// <param name="connectionString"></param>
         /// <param name="autoUpdateSchema"></param>
-        public AzureSagaPersister(CloudStorageAccount account, bool autoUpdateSchema)
+        public AzureSagaPersister(string connectionString, bool autoUpdateSchema)
         {
             this.autoUpdateSchema = autoUpdateSchema;
+            var account = CloudStorageAccount.Parse(connectionString);
             client = account.CreateCloudTableClient();
         }
 

@@ -2,7 +2,6 @@
 {
     using Config;
     using Features;
-    using Microsoft.WindowsAzure.Storage;
     using SagaPersisters.Azure;
 
     public class AzureStorageSagaPersistence : Feature
@@ -25,10 +24,8 @@
         {
             var connectionstring = context.Settings.Get<string>("AzureSagaStorage.ConnectionString");
             var updateSchema = context.Settings.Get<bool>("AzureSagaStorage.CreateSchema");
-
-            var account = CloudStorageAccount.Parse(connectionstring);
-
-            context.Container.ConfigureComponent(() => new AzureSagaPersister(account, updateSchema), DependencyLifecycle.InstancePerCall);
+            
+            context.Container.ConfigureComponent(() => new AzureSagaPersister(connectionstring, updateSchema), DependencyLifecycle.InstancePerCall);
         }
     }
 }
