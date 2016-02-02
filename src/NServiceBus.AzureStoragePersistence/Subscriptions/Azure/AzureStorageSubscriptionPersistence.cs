@@ -24,14 +24,16 @@ namespace NServiceBus
         /// </summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
-            //TODO: get rid of these statics
-            SubscriptionServiceContext.SubscriptionTableName = context.Settings.Get<string>("AzureSubscriptionStorage.TableName");
-            SubscriptionServiceContext.CreateIfNotExist = context.Settings.Get<bool>("AzureSubscriptionStorage.CreateSchema");
+            var subscriptionTableName = context.Settings.Get<string>("AzureSubscriptionStorage.TableName");
+            var connectionString = context.Settings.Get<string>("AzureSubscriptionStorage.ConnectionString");
+            var createIfNotExist = context.Settings.Get<bool>("AzureSubscriptionStorage.CreateSchema");
 
-            var account = CloudStorageAccount.Parse(context.Settings.Get<string>("AzureSubscriptionStorage.ConnectionString"));
-            SubscriptionServiceContext.Init(account.CreateCloudTableClient());
+            var account = CloudStorageAccount.Parse(connectionString);
 
-            context.Container.ConfigureComponent(() => new AzureSubscriptionStorage(account), DependencyLifecycle.InstancePerCall);
+            var table = account.CreateCloudTableClient().GetTableReference(subscriptionTableName);
+            if (createIfNotExist) table.CreateIfNotExists();
+
+            context.Container.ConfigureComponent(() => new AzureSubscriptionStorage(subscriptionTableName, connectionString), DependencyLifecycle.InstancePerCall);
         }
     }
 }

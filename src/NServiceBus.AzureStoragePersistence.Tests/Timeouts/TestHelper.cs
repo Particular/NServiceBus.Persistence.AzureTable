@@ -10,9 +10,7 @@ namespace NServiceBus.AzureStoragePersistence.Tests.Timeouts
     using Microsoft.WindowsAzure.Storage.Table;
     using NServiceBus.Azure;
     using NServiceBus.Config;
-    using NServiceBus.ObjectBuilder;
     using NServiceBus.ObjectBuilder.Common;
-    using NServiceBus.Pipeline;
     using NServiceBus.Settings;
     using NServiceBus.Support;
     using NServiceBus.Timeout.Core;
@@ -30,11 +28,13 @@ namespace NServiceBus.AzureStoragePersistence.Tests.Timeouts
                 var settingsHolder = new SettingsHolder();
                 settingsHolder.Set("EndpointName", EndpointName);
                 settingsHolder.Set("NServiceBus.HostInformation.DisplayName", RuntimeEnvironment.MachineName);
-                persister = new TimeoutPersister(new Configure(settingsHolder, new FakeContainer(), new List<Action<IConfigureComponents>>(), new PipelineSettings(new BusConfiguration())))
-                {
-                    PartitionKeyScope = new AzureTimeoutPersisterConfig().PartitionKeyScope,
-                    ConnectionString = AzurePersistenceTests.GetConnectionString()
-                };
+
+                var azureTimeoutPersisterConfig = new AzureTimeoutPersisterConfig();
+
+                persister = new TimeoutPersister(AzurePersistenceTests.GetConnectionString(), 
+                    azureTimeoutPersisterConfig.TimeoutDataTableName, azureTimeoutPersisterConfig.TimeoutManagerDataTableName,
+                    azureTimeoutPersisterConfig.TimeoutDataBlobName, 3600, 
+                    azureTimeoutPersisterConfig.PartitionKeyScope,EndpointName,RuntimeEnvironment.MachineName);
             }
             catch (WebException exception)
             {
@@ -81,18 +81,15 @@ namespace NServiceBus.AzureStoragePersistence.Tests.Timeouts
 
         public static void AssertAllTimeoutsThatHaveBeenRemoved(TimeoutPersister timeoutPersister)
         {
-            var cloudStorageAccount = CloudStorageAccount.Parse(timeoutPersister.ConnectionString);
-
-            var table = cloudStorageAccount.CreateCloudTableClient().GetTableReference(ServiceContext.TimeoutDataTableName);
-            var results = table.ExecuteQuery(new TableQuery()).ToList();
-            Assert.IsFalse(results.Any());
+            DateTime nextRun;
+            var timeouts = timeoutPersister.GetNextChunk(DateTime.Now.AddYears(-3), out nextRun).ToList();
+            Assert.IsFalse(timeouts.Any());
         }
 
         internal static void PerformStorageCleanup()
         {
-            ServiceContext.CreateSchema = true;
-            RemoveAllRowsForTable(ServiceContext.TimeoutDataTableName);
-            RemoveAllRowsForTable(ServiceContext.TimeoutManagerDataTableName);
+            RemoveAllRowsForTable(new AzureTimeoutPersisterConfig().TimeoutDataTableName);
+            RemoveAllRowsForTable(new AzureTimeoutPersisterConfig().TimeoutManagerDataTableName);
             RemoveAllBlobs();
         }
 
@@ -101,10 +98,11 @@ namespace NServiceBus.AzureStoragePersistence.Tests.Timeouts
             var cloudStorageAccount = CloudStorageAccount.Parse(AzurePersistenceTests.GetConnectionString());
             var table = cloudStorageAccount.CreateCloudTableClient().GetTableReference(tableName);
 
-            if (!table.Exists())
-            {
-                return;
-            }
+//            if (!table.Exists())
+//            {
+                table.CreateIfNotExists();
+//                return;
+//            }
 
             var projectionQuery = new TableQuery<DynamicTableEntity>().Select(new[] { "Destination" });
 

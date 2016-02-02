@@ -1,100 +1,103 @@
 ﻿namespace NServiceBus.Unicast.Subscriptions
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Azure;
-    using MessageDrivenSubscriptions;
+    using System.Text;
     using Microsoft.WindowsAzure.Storage;
+    using Microsoft.WindowsAzure.Storage.RetryPolicies;
     using Microsoft.WindowsAzure.Storage.Table;
-    using Microsoft.WindowsAzure.Storage.Table.DataServices;
+    using Microsoft.WindowsAzure.Storage.Table.Queryable;
+    using NServiceBus.Azure;
+    using NServiceBus.Unicast.Subscriptions.MessageDrivenSubscriptions;
 
     /// <summary>
-    /// 
     /// </summary>
     public class AzureSubscriptionStorage : ISubscriptionStorage
     {
-        CloudTableClient client;
+        private readonly string subscriptionTableName;
+        private CloudTableClient client;
 
         /// <summary>
-        /// 
         /// </summary>
-        /// <param name="account"></param>
-        public AzureSubscriptionStorage(CloudStorageAccount account)
+        /// <param name="subscriptionTableName">Table name used to store subscription information</param>
+        /// <param name="subscriptionConnectionString">Subscription connection string</param>
+        public AzureSubscriptionStorage(string subscriptionTableName, string subscriptionConnectionString)
         {
-            client = account.CreateCloudTableClient();           
+            this.subscriptionTableName = subscriptionTableName;
+            var account = CloudStorageAccount.Parse(subscriptionConnectionString);
+
+            client = account.CreateCloudTableClient();
+            client.DefaultRequestOptions = new TableRequestOptions
+            {
+                RetryPolicy = new ExponentialRetry()
+            };
         }
 
         void ISubscriptionStorage.Subscribe(Address address, IEnumerable<MessageType> messageTypes)
         {
-            using (var context = new SubscriptionServiceContext(client))
-            {
-                foreach (var messageType in messageTypes)
-                {
-                    try
-                    {
-                        var subscription = new Subscription
-                        {
-                            RowKey = EncodeTo64(address.ToString()),
-                            PartitionKey = messageType.ToString()
-                        };
+            var table = client.GetTableReference(subscriptionTableName);
 
-                        context.AddObject(SubscriptionServiceContext.SubscriptionTableName, subscription);
-                        context.SaveChangesWithRetries();
-                    }
-                    catch (StorageException ex)
+            foreach (var messageType in messageTypes)
+            {
+                try
+                {
+                    var subscription = new Subscription
                     {
-                        if (ex.RequestInformation.HttpStatusCode != 409) throw;
+                        RowKey = EncodeTo64(address.ToString()),
+                        PartitionKey = messageType.ToString()
+                    };
+                    var operation = TableOperation.Insert(subscription);
+                    table.Execute(operation);
+                }
+                catch (StorageException ex)
+                {
+                    if (ex.RequestInformation.HttpStatusCode != 409)
+                    {
+                        throw;
                     }
-                   
                 }
             }
         }
 
         void ISubscriptionStorage.Unsubscribe(Address address, IEnumerable<MessageType> messageTypes)
         {
-            using (var context = new SubscriptionServiceContext(client))
-            {
-                var encodedAddress = EncodeTo64(address.ToString());
-                foreach (var messageType in messageTypes)
-                {
-                    var type = messageType;
-                    var query = from s in context.Subscriptions
-                                where s.PartitionKey == type.ToString() && s.RowKey == encodedAddress
-                                select s;
+            var table = client.GetTableReference(subscriptionTableName);
 
-                    var subscription = query
-                        .AsTableServiceQuery(context) // Fixes #191
-                        .AsEnumerable() // Fixes #191, continuation not applied on single resultsets eventhough continuation can happen
-                        .SafeFirstOrDefault();
-                    if(subscription != null) context.DeleteObject(subscription);
-                    context.SaveChangesWithRetries();
+            var encodedAddress = EncodeTo64(address.ToString());
+            foreach (var messageType in messageTypes)
+            {
+                var type = messageType;
+                var query = from s in table.CreateQuery<Subscription>()
+                    where s.PartitionKey == type.ToString() && s.RowKey == encodedAddress
+                    select s;
+                var subscription = query.AsTableQuery().AsEnumerable().SafeFirstOrDefault();
+                if (subscription != null)
+                {
+                    var operation = TableOperation.Delete(subscription);
+                    table.Execute(operation);
                 }
             }
         }
 
 
-
         IEnumerable<Address> ISubscriptionStorage.GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes)
         {
             var subscribers = new List<Address>();
+            var table = client.GetTableReference(subscriptionTableName);
 
-            using (var context = new SubscriptionServiceContext(client))
+            foreach (var messageType in messageTypes)
             {
-                foreach (var messageType in messageTypes)
-                {
-                    var type = messageType;
-                    var query = from s in context.Subscriptions
-                                where s.PartitionKey == type.ToString() 
-                                select s;
+                var type = messageType;
+                var query = from s in table.CreateQuery<Subscription>()
+                    where s.PartitionKey == type.ToString()
+                    select s;
 
-                    var result = query
-                        .AsTableServiceQuery(context) // Fixes #191
-                        .ToList();
+                var result = query.ToList();
 
-                    subscribers.AddRange(result.Select(s => Address.Parse(DecodeFrom64(s.RowKey))));
-                }
+                subscribers.AddRange(result.Select(s => Address.Parse(DecodeFrom64(s.RowKey))));
             }
-          
+
             return subscribers;
         }
 
@@ -105,15 +108,15 @@
 
         static string EncodeTo64(string toEncode)
         {
-            var toEncodeAsBytes = System.Text.Encoding.ASCII.GetBytes(toEncode);
-            var returnValue = System.Convert.ToBase64String(toEncodeAsBytes);
+            var toEncodeAsBytes = Encoding.ASCII.GetBytes(toEncode);
+            var returnValue = Convert.ToBase64String(toEncodeAsBytes);
             return returnValue;
         }
 
         static string DecodeFrom64(string encodedData)
         {
-            var encodedDataAsBytes = System.Convert.FromBase64String(encodedData);
-            var returnValue = System.Text.Encoding.ASCII.GetString(encodedDataAsBytes);
+            var encodedDataAsBytes = Convert.FromBase64String(encodedData);
+            var returnValue = Encoding.ASCII.GetString(encodedDataAsBytes);
             return returnValue;
         }
     }

@@ -22,6 +22,8 @@
             var peekedTimeout = timeoutPersister.Peek(timeout.Id);
 
             Assert.AreEqual(timeout.State, peekedTimeout.State);
+
+            TestHelper.PerformStorageCleanup();
         }
     }
 }

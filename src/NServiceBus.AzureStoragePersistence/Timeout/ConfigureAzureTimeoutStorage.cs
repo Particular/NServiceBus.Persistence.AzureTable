@@ -20,6 +20,12 @@
             return config;
         }
 
+        public static PersistenceExtentions<AzureStoragePersistence, StorageType.Timeouts> TimeoutStateBlobName(this PersistenceExtentions<AzureStoragePersistence, StorageType.Timeouts> config, string blobName)
+        {
+            config.GetSettings().Set("AzureTimeoutStorage.TimeoutStateBlobName", blobName);
+            return config;
+        }
+
         /// <summary>
         /// Should an attempt at startup be made to verify if storage tables for timeouts exist or not and if not create those.
         /// <remarks>Operation will fail if connection string does not allow access to create storage tables</remarks>

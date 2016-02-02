@@ -67,10 +67,6 @@
       <HintPath>..\packages\Microsoft.Data.Services.Client.5.7.0\lib\net40\Microsoft.Data.Services.Client.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.ServiceBus, Version=2.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\WindowsAzure.ServiceBus.2.5.4\lib\net40-full\Microsoft.ServiceBus.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.WindowsAzure.Configuration, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.WindowsAzure.ConfigurationManager.2.0.3\lib\net40\Microsoft.WindowsAzure.Configuration.dll</HintPath>
     </Reference>
@@ -132,13 +128,11 @@
     <Compile Include="Timeout\TimeoutLogic\AutoRenewLease.cs" />
     <Compile Include="Timeout\TimeoutLogic\IDetermineWhoCanSend.cs" />
     <Compile Include="Timeout\TimeoutLogic\LeaseExtensions.cs" />
-    <Compile Include="Timeout\TimeoutLogic\ServiceContext.cs" />
     <Compile Include="Timeout\TimeoutLogic\TimeoutDataEntity.cs" />
     <Compile Include="Timeout\TimeoutLogic\TimeoutPersister.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Subscriptions\Azure\AzureSubscriptionStorage.cs" />
     <Compile Include="Subscriptions\Azure\Subscription.cs" />
-    <Compile Include="Subscriptions\Azure\SubscriptionServiceContext.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
