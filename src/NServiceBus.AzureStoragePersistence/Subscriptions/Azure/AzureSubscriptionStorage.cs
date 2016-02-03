@@ -124,9 +124,7 @@
 
         static string DecodeFrom64(string encodedData)
         {
-            var encodedDataAsBytes = Convert.FromBase64String(encodedData);
-            var returnValue = Encoding.ASCII.GetString(encodedDataAsBytes);
-            return returnValue;
+            return Encoding.ASCII.GetString(Convert.FromBase64String(encodedData));
         }
     }
 }

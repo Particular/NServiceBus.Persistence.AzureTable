@@ -47,7 +47,7 @@ namespace NServiceBus
                 var timeoutManagerTable = account.CreateCloudTableClient().GetTableReference(timeoutManagerDataTableName);
                 timeoutManagerTable.CreateIfNotExists();
 
-                var container = account.CreateCloudBlobClient().GetContainerReference("timeoutstate");
+                var container = account.CreateCloudBlobClient().GetContainerReference(timeoutStateContainerName);
                 container.CreateIfNotExists();
             }
 

@@ -33,7 +33,7 @@ namespace NServiceBus.AzureStoragePersistence.Tests.Timeouts
 
                 persister = new TimeoutPersister(AzurePersistenceTests.GetConnectionString(), 
                     azureTimeoutPersisterConfig.TimeoutDataTableName, azureTimeoutPersisterConfig.TimeoutManagerDataTableName,
-                    azureTimeoutPersisterConfig.TimeoutDataBlobName, 3600, 
+                    azureTimeoutPersisterConfig.TimeoutStateContainerName, 3600, 
                     azureTimeoutPersisterConfig.PartitionKeyScope,EndpointName,RuntimeEnvironment.MachineName);
             }
             catch (WebException exception)

@@ -68,7 +68,7 @@ namespace NServiceBus.Config
             set { this["CreateSchema"] = value; }
         }
 
-        public string TimeoutDataBlobName
+        public string TimeoutStateContainerName
         {
             get { return (string) this["TimeoutStateContainerName"]; }
             set { this["TimeoutStateContainerName"] = value; }
