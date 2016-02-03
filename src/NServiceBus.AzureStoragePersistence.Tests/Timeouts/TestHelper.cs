@@ -97,12 +97,8 @@ namespace NServiceBus.AzureStoragePersistence.Tests.Timeouts
         {
             var cloudStorageAccount = CloudStorageAccount.Parse(AzurePersistenceTests.GetConnectionString());
             var table = cloudStorageAccount.CreateCloudTableClient().GetTableReference(tableName);
-
-//            if (!table.Exists())
-//            {
-                table.CreateIfNotExists();
-//                return;
-//            }
+            
+            table.CreateIfNotExists();
 
             var projectionQuery = new TableQuery<DynamicTableEntity>().Select(new[] { "Destination" });
 

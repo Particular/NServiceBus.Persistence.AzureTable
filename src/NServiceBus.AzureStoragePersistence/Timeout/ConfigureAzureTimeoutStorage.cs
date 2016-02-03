@@ -20,9 +20,9 @@
             return config;
         }
 
-        public static PersistenceExtentions<AzureStoragePersistence, StorageType.Timeouts> TimeoutStateBlobName(this PersistenceExtentions<AzureStoragePersistence, StorageType.Timeouts> config, string blobName)
+        public static PersistenceExtentions<AzureStoragePersistence, StorageType.Timeouts> TimeoutStateContainerName(this PersistenceExtentions<AzureStoragePersistence, StorageType.Timeouts> config, string blobName)
         {
-            config.GetSettings().Set("AzureTimeoutStorage.TimeoutStateBlobName", blobName);
+            config.GetSettings().Set("AzureTimeoutStorage.TimeoutStateContainerName", blobName);
             return config;
         }
 

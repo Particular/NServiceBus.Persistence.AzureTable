@@ -27,7 +27,6 @@ namespace NServiceBus
         /// </summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
-            //TODO: get rid of these statics
             var createIfNotExist = context.Settings.Get<bool>("AzureTimeoutStorage.CreateSchema");
             var timeoutDataTableName = context.Settings.Get<string>("AzureTimeoutStorage.TimeoutDataTableName");
             var timeoutManagerDataTableName = context.Settings.Get<string>("AzureTimeoutStorage.TimeoutManagerDataTableName");
@@ -36,21 +35,24 @@ namespace NServiceBus
             var partitionKeyScope = context.Settings.Get<string>("AzureTimeoutStorage.PartitionKeyScope");
             var endpointName = context.Settings.EndpointName();
             var hostDisplayName = context.Settings.GetOrDefault<string>("NServiceBus.HostInformation.DisplayName");
-            var timeoutStateBlobName = context.Settings.GetOrDefault<string>("AzureTimeoutStorage.TimeoutStateBlobName");
+            var timeoutStateContainerName = context.Settings.GetOrDefault<string>("AzureTimeoutStorage.TimeoutStateContainerName");
 
             var account = CloudStorageAccount.Parse(connectionString);
 
-            var timeoutTable = account.CreateCloudTableClient().GetTableReference(timeoutDataTableName);
-            if (createIfNotExist) timeoutTable.CreateIfNotExists();
+            if (createIfNotExist)
+            {
+                var timeoutTable = account.CreateCloudTableClient().GetTableReference(timeoutDataTableName);
+                timeoutTable.CreateIfNotExists();
 
-            var timeoutManagerTable = account.CreateCloudTableClient().GetTableReference(timeoutManagerDataTableName);
-            if (createIfNotExist) timeoutManagerTable.CreateIfNotExists();
+                var timeoutManagerTable = account.CreateCloudTableClient().GetTableReference(timeoutManagerDataTableName);
+                timeoutManagerTable.CreateIfNotExists();
 
-            var container = account.CreateCloudBlobClient().GetContainerReference("timeoutstate");
-            if (createIfNotExist) container.CreateIfNotExists();
+                var container = account.CreateCloudBlobClient().GetContainerReference("timeoutstate");
+                container.CreateIfNotExists();
+            }
 
             context.Container.ConfigureComponent(()=>
-                new TimeoutPersister(connectionString, timeoutDataTableName, timeoutManagerDataTableName, timeoutStateBlobName, catchUpInterval, 
+                new TimeoutPersister(connectionString, timeoutDataTableName, timeoutManagerDataTableName, timeoutStateContainerName, catchUpInterval, 
                                      partitionKeyScope, endpointName, hostDisplayName), 
                 DependencyLifecycle.InstancePerCall);
         }

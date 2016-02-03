@@ -12,11 +12,12 @@
     using NServiceBus.Unicast.Subscriptions.MessageDrivenSubscriptions;
 
     /// <summary>
+    /// Provides Azure Storage Table storage functionality for Subscriptions
     /// </summary>
     public class AzureSubscriptionStorage : ISubscriptionStorage
     {
-        private readonly string subscriptionTableName;
-        private CloudTableClient client;
+        readonly string subscriptionTableName;
+        CloudTableClient client;
 
         /// <summary>
         /// </summary>
@@ -34,6 +35,11 @@
             };
         }
 
+        /// <summary>
+        /// Stores a subscription
+        /// </summary>
+        /// <param name="address">The address that is being subscribed to</param>
+        /// <param name="messageTypes">The types of messages that are being subscribed to</param>
         void ISubscriptionStorage.Subscribe(Address address, IEnumerable<MessageType> messageTypes)
         {
             var table = client.GetTableReference(subscriptionTableName);
@@ -60,6 +66,11 @@
             }
         }
 
+        /// <summary>
+        /// Removes a subscription
+        /// </summary>
+        /// <param name="address">The address that is being unsubscribed from</param>
+        /// <param name="messageTypes">The types of messages that are being unsubscribed</param>
         void ISubscriptionStorage.Unsubscribe(Address address, IEnumerable<MessageType> messageTypes)
         {
             var table = client.GetTableReference(subscriptionTableName);
@@ -80,7 +91,11 @@
             }
         }
 
-
+        /// <summary>
+        /// Returns the subscription address based on message type
+        /// </summary>
+        /// <param name="messageTypes">Types of messages that subscription addresses should be found for</param>
+        /// <returns>Subscription addresses that were found for the provided messageTypes</returns>
         IEnumerable<Address> ISubscriptionStorage.GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes)
         {
             var subscribers = new List<Address>();
@@ -108,16 +123,12 @@
 
         static string EncodeTo64(string toEncode)
         {
-            var toEncodeAsBytes = Encoding.ASCII.GetBytes(toEncode);
-            var returnValue = Convert.ToBase64String(toEncodeAsBytes);
-            return returnValue;
+            return Convert.ToBase64String(Encoding.ASCII.GetBytes(toEncode));
         }
 
         static string DecodeFrom64(string encodedData)
         {
-            var encodedDataAsBytes = Convert.FromBase64String(encodedData);
-            var returnValue = Encoding.ASCII.GetString(encodedDataAsBytes);
-            return returnValue;
+            return Encoding.ASCII.GetString(Convert.FromBase64String(encodedData));
         }
     }
 }

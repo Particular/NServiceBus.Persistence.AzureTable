@@ -11,6 +11,6 @@
         public const int CatchUpInterval = 3600;
         public const string PartitionKeyScope = "yyyyMMddHH";
         public const bool CreateSchema = true;
-        public const string TimeoutStateBlobName = "timeoutstate";
+        public const string TimeoutStateContainerName = "timeoutstate";
     }
 }
