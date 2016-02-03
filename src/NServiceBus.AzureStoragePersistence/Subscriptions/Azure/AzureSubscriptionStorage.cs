@@ -78,9 +78,8 @@
             var encodedAddress = EncodeTo64(address.ToString());
             foreach (var messageType in messageTypes)
             {
-                var type = messageType;
                 var query = from s in table.CreateQuery<Subscription>()
-                    where s.PartitionKey == type.ToString() && s.RowKey == encodedAddress
+                    where s.PartitionKey == messageType.ToString() && s.RowKey == encodedAddress
                     select s;
                 var subscription = query.AsTableQuery().AsEnumerable().SafeFirstOrDefault();
                 if (subscription != null)
@@ -103,14 +102,11 @@
 
             foreach (var messageType in messageTypes)
             {
-                var type = messageType;
                 var query = from s in table.CreateQuery<Subscription>()
-                    where s.PartitionKey == type.ToString()
+                    where s.PartitionKey == messageType.ToString()
                     select s;
 
-                var result = query.ToList();
-
-                subscribers.AddRange(result.Select(s => Address.Parse(DecodeFrom64(s.RowKey))));
+                subscribers.AddRange(query.Select(s => Address.Parse(DecodeFrom64(s.RowKey))));
             }
 
             return subscribers;
@@ -128,7 +124,9 @@
 
         static string DecodeFrom64(string encodedData)
         {
-            return Encoding.ASCII.GetString(Convert.FromBase64String(encodedData));
+            var encodedDataAsBytes = Convert.FromBase64String(encodedData);
+            var returnValue = Encoding.ASCII.GetString(encodedDataAsBytes);
+            return returnValue;
         }
     }
 }
