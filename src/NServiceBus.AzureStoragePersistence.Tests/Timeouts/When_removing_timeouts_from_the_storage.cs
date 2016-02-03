@@ -21,6 +21,7 @@
          public void Should_return_correct_headers_when_timeout_is_TryRemoved()
          {
              var timeoutPersister = TestHelper.CreateTimeoutPersister();
+             
 
              var timeout = TestHelper.GenerateTimeoutWithHeaders();
              timeoutPersister.Add(timeout);
@@ -67,6 +68,10 @@
          public void Should_remove_timeouts_by_id_using_old_interface()
          {
              var timeoutPersister = TestHelper.CreateTimeoutPersister();
+
+             TestHelper.PerformStorageCleanup();
+
+
              var timeout1 = TestHelper.GenerateTimeoutWithHeaders();
              var timeout2 = TestHelper.GenerateTimeoutWithHeaders();
              timeoutPersister.Add(timeout1);

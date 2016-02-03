@@ -1,9 +1,9 @@
 namespace NServiceBus.Azure
 {
     using System;
-    using Microsoft.WindowsAzure.Storage.Table.DataServices;
-
-    public class TimeoutDataEntity : TableServiceEntity
+    using Microsoft.WindowsAzure.Storage.Table;
+    
+    public class TimeoutDataEntity : TableEntity
     {
         public TimeoutDataEntity(){}
 
@@ -43,7 +43,7 @@ namespace NServiceBus.Azure
         public string Headers { get; set; }
     }
 
-    public class TimeoutManagerDataEntity : TableServiceEntity
+    public class TimeoutManagerDataEntity : TableEntity
     {
         public TimeoutManagerDataEntity() { }
 

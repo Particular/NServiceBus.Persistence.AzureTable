@@ -24,11 +24,12 @@
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="account"></param>
-        /// <param name="autoUpdateSchema"></param>
-        public AzureSagaPersister(CloudStorageAccount account, bool autoUpdateSchema)
+        /// <param name="connectionString">The Azure storage connection string</param>
+        /// <param name="autoUpdateSchema">Indicates if the storage tables should be auto created if they do not exist</param>
+        public AzureSagaPersister(string connectionString, bool autoUpdateSchema)
         {
             this.autoUpdateSchema = autoUpdateSchema;
+            var account = CloudStorageAccount.Parse(connectionString);
             client = account.CreateCloudTableClient();
         }
 
@@ -36,7 +37,7 @@
         /// Saves the given saga entity using the current session of the
         /// injected session factory.
         /// </summary>
-        /// <param name="saga">the saga entity that will be saved.</param>
+        /// <param name="saga">The saga entity that will be saved.</param>
         public void Save(IContainSagaData saga)
         {
             Persist(saga);
@@ -46,7 +47,7 @@
         /// Updates the given saga entity using the current session of the
         /// injected session factory.
         /// </summary>
-        /// <param name="saga">the saga entity that will be updated.</param>
+        /// <param name="saga">The saga entity that will be updated.</param>
         public void Update(IContainSagaData saga)
         {
             Persist(saga);

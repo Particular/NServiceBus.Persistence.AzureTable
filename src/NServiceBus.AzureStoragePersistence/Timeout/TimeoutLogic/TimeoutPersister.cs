@@ -7,66 +7,105 @@
     using System.IO;
     using System.Linq;
     using System.Web.Script.Serialization;
-    using Logging;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Blob;
-    using Microsoft.WindowsAzure.Storage.Table.DataServices;
+    using Microsoft.WindowsAzure.Storage.RetryPolicies;
+    using Microsoft.WindowsAzure.Storage.Table;
     using Timeout.Core;
     
+    /// <summary>
+    /// Provides that ability to save and retrieve timeout information
+    /// </summary>
     public class TimeoutPersister : IPersistTimeouts, IPersistTimeoutsV2, IDetermineWhoCanSend
     {
-        //Configure config;
-        string _endpointName;
-        string _sanitizedEndpointInstanceName;
+        readonly string timeoutDataTableName;
+        readonly string timeoutManagerDataTableName;
+        readonly string timeoutStateContainerName;
+        readonly int catchUpInterval;
+        readonly string partitionKeyScope;
+        readonly string endpointName;
+        string sanitizedEndpointInstanceName;
 
-        public TimeoutPersister(Configure config)
+        /// <summary>
+        /// </summary>
+        /// <param name="timeoutConnectionString">Connection string for the Azure table store</param>
+        /// <param name="timeoutDataTableName">Name of the timeout data table</param>
+        /// <param name="timeoutManagerDataTableName">Name of the timeout manager data table</param>
+        /// <param name="timeoutStateContainerName">Name of the timeout state container</param>
+        /// <param name="catchUpInterval">Amount of time in seconds to increment last successful read time by</param>
+        /// <param name="partitionKeyScope">DateTime format to use in Partition Key</param>
+        /// <param name="endpointName">Endpoint Name</param>
+        /// <param name="hostDisplayName">Host Display Name</param>
+        public TimeoutPersister(string timeoutConnectionString, string timeoutDataTableName, string timeoutManagerDataTableName, string timeoutStateContainerName, int catchUpInterval, string partitionKeyScope, string endpointName, string hostDisplayName)
         {
-            _endpointName = config.Settings.EndpointName();
-
+            this.timeoutDataTableName = timeoutDataTableName;
+            this.timeoutManagerDataTableName = timeoutManagerDataTableName;
+            this.timeoutStateContainerName = timeoutStateContainerName;
+            this.catchUpInterval = catchUpInterval;
+            this.partitionKeyScope = partitionKeyScope;
+            this.endpointName = endpointName;
+            
             // Unicast sets the default for this value to the machine name.
             // NServiceBus.Host.AzureCloudService, when running in a cloud environment, sets this value to the current RoleInstanceId.
-            var hostDisplayName = config.Settings.GetOrDefault<string>("NServiceBus.HostInformation.DisplayName");
             if (string.IsNullOrWhiteSpace(hostDisplayName))
             {
                 throw new InvalidOperationException("The TimeoutPersister for Azure Storage Persistence requires a host-specific identifier to execute properly. Unable to find identifier in the `NServiceBus.HostInformation.DisplayName` settings key.");
             }
 
-            _sanitizedEndpointInstanceName = Sanitize(_endpointName + "_" + hostDisplayName);
+            sanitizedEndpointInstanceName = Sanitize(endpointName + "_" + hostDisplayName);
+
+            var account = CloudStorageAccount.Parse(timeoutConnectionString);
+            client = account.CreateCloudTableClient();
+            client.DefaultRequestOptions = new TableRequestOptions
+            {
+                RetryPolicy = new ExponentialRetry()
+            };
+
+            cloudBlobclient = account.CreateCloudBlobClient();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="startSlice">Time to start pulling the chunks at</param>
+        /// <param name="nextTimeToRunQuery">Returns the next time that the GetNextChunk method should be called at</param>
+        /// <returns>Collection of timeouts</returns>
         public IEnumerable<Tuple<string, DateTime>> GetNextChunk(DateTime startSlice, out DateTime nextTimeToRunQuery)
         {
             var results = new List<Tuple<string, DateTime>>();
            
             var now = DateTime.UtcNow;
-            var context = new ServiceContext(account.CreateCloudTableClient()) {IgnoreResourceNotFoundException = true};
+
+
+            var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
+            var timeoutManagerDataTable = client.GetTableReference(timeoutManagerDataTableName);
+
             TimeoutManagerDataEntity lastSuccessfulReadEntity;
-            var lastSuccessfulRead = TryGetLastSuccessfulRead(context, out lastSuccessfulReadEntity)
+            var lastSuccessfulRead = TryGetLastSuccessfulRead(timeoutManagerDataTable, out lastSuccessfulReadEntity)
                                             ? lastSuccessfulReadEntity.LastSuccessfullRead
                                             : default(DateTime?);
 
-            IOrderedEnumerable<TimeoutDataEntity> result;
             IQueryable<TimeoutDataEntity> query;
 
             if (lastSuccessfulRead.HasValue)
             {
-                query = from c in context.TimeoutData
-                            where c.PartitionKey.CompareTo(lastSuccessfulRead.Value.ToString(PartitionKeyScope)) >= 0
-                            && c.PartitionKey.CompareTo(now.ToString(PartitionKeyScope)) <= 0
-                                && c.OwningTimeoutManager == _endpointName
+                query = from c in timeoutDataTable.CreateQuery<TimeoutDataEntity>()
+                            where c.PartitionKey.CompareTo(lastSuccessfulRead.Value.ToString(partitionKeyScope)) >= 0
+                            && c.PartitionKey.CompareTo(now.ToString(partitionKeyScope)) <= 0
+                                && c.OwningTimeoutManager == endpointName
                         select c;
             }
             else
             {
-                query = from c in context.TimeoutData
-                        where c.OwningTimeoutManager == _endpointName
+                query = from c in timeoutDataTable.CreateQuery<TimeoutDataEntity>()
+                        where c.OwningTimeoutManager == endpointName
                         select c;
             }
 
-            result = query
-                        .Take(1000) // fixes isue #208. 
-                        .AsTableServiceQuery(context) // fixes issue #191
-                        .ToList().OrderBy(c => c.Time);
+            var result = query
+                .Take(1000)
+                .ToList()
+                .OrderBy(c => c.Time);
 
             var allTimeouts = result.ToList();
             if (allTimeouts.Count == 0)
@@ -80,7 +119,7 @@
 
             if (lastSuccessfulReadEntity != null && lastSuccessfulRead.HasValue)
             {
-                var catchingUp = lastSuccessfulRead.Value.AddSeconds(CatchUpInterval);
+                var catchingUp = lastSuccessfulRead.Value.AddSeconds(catchUpInterval);
                 lastSuccessfulRead = catchingUp > now ? now : catchingUp;
                 lastSuccessfulReadEntity.LastSuccessfullRead = lastSuccessfulRead.Value;
             }
@@ -95,53 +134,65 @@
                 .Distinct()
                 .ToList();
 
-            UpdateSuccessfulRead(context, lastSuccessfulReadEntity);
+            UpdateSuccessfulRead(timeoutManagerDataTable, lastSuccessfulReadEntity);
            
             return results;
         }
 
+        /// <summary>
+        /// Add a new timeout entry
+        /// </summary>
+        /// <param name="timeout">The timeout to be added</param>
         public void Add(TimeoutData timeout)
         {
-            var context = new ServiceContext(account.CreateCloudTableClient()){ IgnoreResourceNotFoundException = true};
+            var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
 
             string identifier;
             timeout.Headers.TryGetValue(Headers.MessageId, out identifier);
-            if (string.IsNullOrEmpty(identifier)) { identifier = Guid.NewGuid().ToString(); }
+            if (string.IsNullOrEmpty(identifier))
+            {
+                identifier = Guid.NewGuid().ToString();
+            }
 
             TimeoutDataEntity timeoutDataEntity;
-            if (TryGetTimeoutData(context, identifier, string.Empty, out timeoutDataEntity)) return;
+            if (TryGetTimeoutData(timeoutDataTable, identifier, string.Empty, out timeoutDataEntity)) return;
 
             Upload(timeout.State, identifier);
             var headers = Serialize(timeout.Headers);
 
-            if (!TryGetTimeoutData(context, timeout.Time.ToString(PartitionKeyScope), identifier, out timeoutDataEntity))
-                context.AddObject(ServiceContext.TimeoutDataTableName,
-                                      new TimeoutDataEntity(timeout.Time.ToString(PartitionKeyScope), identifier)
-                                      {
-                                          Destination = timeout.Destination.ToString(),
-                                          SagaId = timeout.SagaId,
-                                          StateAddress = identifier,
-                                          Time = timeout.Time,
-                                          OwningTimeoutManager = timeout.OwningTimeoutManager,
-                                          Headers = headers
-                                      });
-
+            if (!TryGetTimeoutData(timeoutDataTable, timeout.Time.ToString(partitionKeyScope), identifier, out timeoutDataEntity))
+            {
+                var timeoutData = new TimeoutDataEntity(timeout.Time.ToString(partitionKeyScope), identifier)
+                                    {
+                                        Destination = timeout.Destination.ToString(),
+                                        SagaId = timeout.SagaId,
+                                        StateAddress = identifier,
+                                        Time = timeout.Time,
+                                        OwningTimeoutManager = timeout.OwningTimeoutManager,
+                                        Headers = headers
+                                    };
+                var addOperation = TableOperation.Insert(timeoutData);
+                timeoutDataTable.Execute(addOperation);
+            }
             timeout.Id = identifier;
 
-            if (timeout.SagaId != default(Guid) && !TryGetTimeoutData(context, timeout.SagaId.ToString(), identifier, out timeoutDataEntity))
-                context.AddObject(ServiceContext.TimeoutDataTableName,
-                                      new TimeoutDataEntity(timeout.SagaId.ToString(), identifier)
-                                      {
-                                          Destination = timeout.Destination.ToString(),
-                                          SagaId = timeout.SagaId,
-                                          StateAddress = identifier,
-                                          Time = timeout.Time,
-                                          OwningTimeoutManager = timeout.OwningTimeoutManager,
-                                          Headers = headers
-                                      });
+            if (timeout.SagaId != default(Guid) && !TryGetTimeoutData(timeoutDataTable, timeout.SagaId.ToString(), identifier, out timeoutDataEntity))
+            {
+                var timeoutData = new TimeoutDataEntity(timeout.SagaId.ToString(), identifier)
+                                    {
+                                        Destination = timeout.Destination.ToString(),
+                                        SagaId = timeout.SagaId,
+                                        StateAddress = identifier,
+                                        Time = timeout.Time,
+                                        OwningTimeoutManager = timeout.OwningTimeoutManager,
+                                        Headers = headers
+                                    };
 
-            context.AddObject(ServiceContext.TimeoutDataTableName,
-                                new TimeoutDataEntity(identifier, string.Empty)
+                var addOperation = TableOperation.Insert(timeoutData);
+                timeoutDataTable.Execute(addOperation);
+            }
+
+            var timeoutDataObject = new TimeoutDataEntity(identifier, string.Empty)
                                 {
                                     Destination = timeout.Destination.ToString(),
                                     SagaId = timeout.SagaId,
@@ -149,17 +200,22 @@
                                     Time = timeout.Time,
                                     OwningTimeoutManager = timeout.OwningTimeoutManager,
                                     Headers = headers
-                                });
-
-            context.SaveChanges();
+                                };
+            var addEntityOperation = TableOperation.Insert(timeoutDataObject);
+            timeoutDataTable.Execute(addEntityOperation);
         }
 
+        /// <summary>
+        /// Peek at an existing timeout entry
+        /// </summary>
+        /// <param name="timeoutId">The ID of the timeout that is being requested</param>
+        /// <returns>The requested timeout entry</returns>
         public TimeoutData Peek(string timeoutId)
         {
-            var context = new ServiceContext(account.CreateCloudTableClient()) { IgnoreResourceNotFoundException = true };
+            var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
 
             TimeoutDataEntity timeoutDataEntity;
-            if (!TryGetTimeoutData(context, timeoutId, string.Empty, out timeoutDataEntity))
+            if (!TryGetTimeoutData(timeoutDataTable, timeoutId, string.Empty, out timeoutDataEntity))
             {
                 return null;
             }
@@ -177,6 +233,11 @@
             return timeoutData;
         }
 
+        /// <summary>
+        /// Safe method for removing a timeout entry
+        /// </summary>
+        /// <param name="timeoutId">ID of the timeout you want to try deleting</param>
+        /// <returns>True/False indicating successful or unsucessful deletion</returns>
         public bool TryRemove(string timeoutId)
         {
             try
@@ -194,20 +255,26 @@
             }
         }
 
-
+        /// <summary>
+        /// Safe method for removing a timeout entry
+        /// </summary>
+        /// <param name="timeoutId">ID of the timeout you want to try deleting</param>
+        /// <param name="timeoutData">returns the object that deletion was attempted on</param>
+        /// <returns>True/False indicating successful or unsucessful deletion</returns>
         public bool TryRemove(string timeoutId, out TimeoutData timeoutData)
         {
             timeoutData = null;
-
-            var context = new ServiceContext(account.CreateCloudTableClient()) { IgnoreResourceNotFoundException = true};
             
+            var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
+
             TimeoutDataEntity timeoutDataEntity;
-            if (!TryGetTimeoutData(context, timeoutId, string.Empty, out timeoutDataEntity))
+            if (!TryGetTimeoutData(timeoutDataTable, timeoutId, string.Empty, out timeoutDataEntity))
             {
                 return false;
             }
 
-            context.DeleteObject(timeoutDataEntity);
+            var deleteOperation = TableOperation.Delete(timeoutDataEntity);
+            timeoutDataTable.Execute(deleteOperation);
 
             timeoutData = new TimeoutData
             {
@@ -221,58 +288,62 @@
             };
 
             TimeoutDataEntity timeoutDataEntityBySaga;
-            if (TryGetTimeoutData(context, timeoutDataEntity.SagaId.ToString(), timeoutId, out timeoutDataEntityBySaga))
+            if (TryGetTimeoutData(timeoutDataTable, timeoutDataEntity.SagaId.ToString(), timeoutId, out timeoutDataEntityBySaga))
             {
-                context.DeleteObject(timeoutDataEntityBySaga);
+                var deleteSagaOperation = TableOperation.Delete(timeoutDataEntityBySaga);
+                timeoutDataTable.Execute(deleteSagaOperation);
             }
 
             TimeoutDataEntity timeoutDataEntityByTime;
-            if (TryGetTimeoutData(context, timeoutDataEntity.Time.ToString(PartitionKeyScope), timeoutId, out timeoutDataEntityByTime))
+            if (TryGetTimeoutData(timeoutDataTable, timeoutDataEntity.Time.ToString(partitionKeyScope), timeoutId, out timeoutDataEntityByTime))
             {
-                context.DeleteObject(timeoutDataEntityByTime);
+                var deleteByTimeOperation = TableOperation.Delete(timeoutDataEntityByTime);
+                timeoutDataTable.Execute(deleteByTimeOperation);
             }
-
-            context.SaveChangesWithRetries();
 
             RemoveState(timeoutDataEntity.StateAddress);
 
             return true;
         }
 
+        /// <summary>
+        /// Remove a single timeout entry
+        /// </summary>
+        /// <param name="sagaId">The saga ID used to find the timeout that will be removed</param>
         public void RemoveTimeoutBy(Guid sagaId)
         {
-            var context = new ServiceContext(account.CreateCloudTableClient());
-            
-            var query = (from c in context.TimeoutData
+            var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
+
+            var query = (from c in timeoutDataTable.CreateQuery<TimeoutDataEntity>()
                 where c.PartitionKey == sagaId.ToString()
                 select c);
 
-            var results = query
-                .Take(1000) // fixes isue #208.
-                .AsTableServiceQuery(context) // fixes issue #191
-               .ToList();
-
-            foreach (var timeoutDataEntityBySaga in results)
+            foreach (var timeoutDataEntityBySaga in query.Take(1000))
             {
                 RemoveState(timeoutDataEntityBySaga.StateAddress);
 
                 TimeoutDataEntity timeoutDataEntityByTime;
-                if (TryGetTimeoutData(context, timeoutDataEntityBySaga.Time.ToString(PartitionKeyScope), timeoutDataEntityBySaga.RowKey, out timeoutDataEntityByTime))
-                    context.DeleteObject(timeoutDataEntityByTime);
+                if (TryGetTimeoutData(timeoutDataTable, timeoutDataEntityBySaga.Time.ToString(partitionKeyScope), timeoutDataEntityBySaga.RowKey, out timeoutDataEntityByTime))
+                {
+                    var deleteOperation = TableOperation.Delete(timeoutDataEntityByTime);
+                    timeoutDataTable.Execute(deleteOperation);
+                }
 
                 TimeoutDataEntity timeoutDataEntity;
-                if (TryGetTimeoutData(context, timeoutDataEntityBySaga.RowKey, string.Empty, out timeoutDataEntity))
-                    context.DeleteObject(timeoutDataEntity);
+                if (TryGetTimeoutData(timeoutDataTable, timeoutDataEntityBySaga.RowKey, string.Empty, out timeoutDataEntity))
+                {
+                    var deleteOperation = TableOperation.Delete(timeoutDataEntity);
+                    timeoutDataTable.Execute(deleteOperation);
+                }
 
-                context.DeleteObject(timeoutDataEntityBySaga);
+                var sagaDeleteOperation = TableOperation.Delete(timeoutDataEntityBySaga);
+                timeoutDataTable.Execute(sagaDeleteOperation);
             }
-            context.SaveChanges();
-
         }
-
-        bool TryGetTimeoutData(ServiceContext context, string partitionKey, string rowKey, out TimeoutDataEntity result)
+        
+        bool TryGetTimeoutData(CloudTable timeoutDataTable, string partitionKey, string rowKey, out TimeoutDataEntity result)
         {
-            result = (from c in context.TimeoutData
+            result = (from c in timeoutDataTable.CreateQuery<TimeoutDataEntity>()
                       where c.PartitionKey == partitionKey && c.RowKey == rowKey // issue #191 cannot occur when both partitionkey and rowkey are specified
                       select c).SafeFirstOrDefault();
 
@@ -280,56 +351,30 @@
 
         }
 
+        /// <summary>
+        /// Verify if the timeout data has a lease
+        /// </summary>
+        /// <param name="data">The timeout data to check</param>
+        /// <returns>True if the timeout data has a lease associated with it</returns>
         public bool CanSend(TimeoutData data)
         {
-            var context = new ServiceContext(account.CreateCloudTableClient());
+            var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
+
             TimeoutDataEntity timeoutDataEntity;
-            if (!TryGetTimeoutData(context, data.Id, string.Empty, out timeoutDataEntity)) return false;
+            if (!TryGetTimeoutData(timeoutDataTable, data.Id, string.Empty, out timeoutDataEntity)) return false;
+
+            var container = cloudBlobclient.GetContainerReference(timeoutStateContainerName);
 
             var leaseBlob = container.GetBlockBlobReference(timeoutDataEntity.StateAddress);
-
             using (var lease = new AutoRenewLease(leaseBlob))
             {
                 return lease.HasLease;
             }
         }
 
-        public string ConnectionString
-        {
-            get
-            {
-                return connectionString;
-            }
-            set
-            {
-                connectionString = value;
-                Init(connectionString);
-            }
-        }
-
-        public int CatchUpInterval { get; set; }
-        public string PartitionKeyScope { get; set; }
-
-        void Init(string connectionString)
-        {
-            account = CloudStorageAccount.Parse(connectionString);
-            var tableClient = account.CreateCloudTableClient();
-            var table = tableClient.GetTableReference(ServiceContext.TimeoutManagerDataTableName);
-            if (ServiceContext.CreateSchema)
-            {
-                table.CreateIfNotExists();
-            }
-            table = tableClient.GetTableReference(ServiceContext.TimeoutDataTableName);
-            if (ServiceContext.CreateSchema)
-            {
-                table.CreateIfNotExists();
-            }
-            container = account.CreateCloudBlobClient().GetContainerReference("timeoutstate");
-            container.CreateIfNotExists();
-        }
-
         void Upload(byte[] state, string stateAddress)
         {
+            var container = cloudBlobclient.GetContainerReference(timeoutStateContainerName);
             var blob = container.GetBlockBlobReference(stateAddress);
             using (var stream = new MemoryStream(state))
             {
@@ -339,6 +384,8 @@
 
         byte[] Download(string stateAddress)
         {
+            var container = cloudBlobclient.GetContainerReference(timeoutStateContainerName);
+
             var blob = container.GetBlockBlobReference(stateAddress);
             using (var stream = new MemoryStream())
             {
@@ -377,6 +424,7 @@
 
         void RemoveState(string stateAddress)
         {
+            var container = cloudBlobclient.GetContainerReference(timeoutStateContainerName);
             var blob = container.GetBlockBlobReference(stateAddress);
             blob.DeleteIfExists();
         }
@@ -388,40 +436,37 @@
             return n;
         }
 
-        bool TryGetLastSuccessfulRead(ServiceContext context, out TimeoutManagerDataEntity lastSuccessfulReadEntity)
+        bool TryGetLastSuccessfulRead(CloudTable timeoutManagerDataTable, out TimeoutManagerDataEntity lastSuccessfulReadEntity)
         {
-            var query = from m in context.TimeoutManagerData
-                        where m.PartitionKey == _sanitizedEndpointInstanceName
+
+            var query = from m in timeoutManagerDataTable.CreateQuery<TimeoutManagerDataEntity>()
+                        where m.PartitionKey == sanitizedEndpointInstanceName
                         select m;
 
-            lastSuccessfulReadEntity = query
-                .AsTableServiceQuery(context)
-                .AsEnumerable() //TSQ does only follows continuation tokens for listings, not for single entity results, yet continuation tokes can still happen in this case
-                .SafeFirstOrDefault();
+            lastSuccessfulReadEntity = query.SafeFirstOrDefault();
             
             return lastSuccessfulReadEntity != null;
         }
 
-        void UpdateSuccessfulRead(ServiceContext context, TimeoutManagerDataEntity read)
+        void UpdateSuccessfulRead(CloudTable table, TimeoutManagerDataEntity read)
         {
             try
             {
                 if (read == null)
                 {
-                    read = new TimeoutManagerDataEntity(_sanitizedEndpointInstanceName, string.Empty)
+                    read = new TimeoutManagerDataEntity(sanitizedEndpointInstanceName, string.Empty)
                            {
                                LastSuccessfullRead = DateTime.UtcNow
                            };
 
-                    context.AddObject(ServiceContext.TimeoutManagerDataTableName, read);
+                    var addOperation = TableOperation.Insert(read);
+                    table.Execute(addOperation);
                 }
                 else
                 {
-                    context.Detach(read);
-                    context.AttachTo(ServiceContext.TimeoutManagerDataTableName, read, "*");
-                    context.UpdateObject(read);
+                    var updateOperation = TableOperation.Replace(read);
+                    table.Execute(updateOperation);
                 }
-                context.SaveChangesWithRetries(SaveChangesOptions.ReplaceOnUpdate);
             }
             catch (DataServiceRequestException ex) // handle concurrency issues
             {
@@ -440,11 +485,8 @@
             }
 
         }
-
-        string connectionString;
-        CloudStorageAccount account;
-        CloudBlobContainer container;
-
-        static ILog Logger = LogManager.GetLogger(typeof(TimeoutPersister));
+        
+        CloudTableClient client;
+        CloudBlobClient cloudBlobclient;
     }
 }

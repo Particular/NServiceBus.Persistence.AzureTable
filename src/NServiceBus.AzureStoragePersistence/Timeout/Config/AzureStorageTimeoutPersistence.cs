@@ -3,6 +3,7 @@ namespace NServiceBus
     using Azure;
     using Config;
     using Features;
+    using Microsoft.WindowsAzure.Storage;
 
     public class AzureStorageTimeoutPersistence : Feature
     {
@@ -26,15 +27,34 @@ namespace NServiceBus
         /// </summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
-            //TODO: get rid of these statics
-            ServiceContext.CreateSchema = context.Settings.Get<bool>("AzureTimeoutStorage.CreateSchema");
-            ServiceContext.TimeoutDataTableName = context.Settings.Get<string>("AzureTimeoutStorage.TimeoutDataTableName");
-            ServiceContext.TimeoutManagerDataTableName = context.Settings.Get<string>("AzureTimeoutStorage.TimeoutManagerDataTableName");
+            var createIfNotExist = context.Settings.Get<bool>("AzureTimeoutStorage.CreateSchema");
+            var timeoutDataTableName = context.Settings.Get<string>("AzureTimeoutStorage.TimeoutDataTableName");
+            var timeoutManagerDataTableName = context.Settings.Get<string>("AzureTimeoutStorage.TimeoutManagerDataTableName");
+            var connectionString = context.Settings.Get<string>("AzureTimeoutStorage.ConnectionString");
+            var catchUpInterval = context.Settings.Get<int>("AzureTimeoutStorage.CatchUpInterval");
+            var partitionKeyScope = context.Settings.Get<string>("AzureTimeoutStorage.PartitionKeyScope");
+            var endpointName = context.Settings.EndpointName();
+            var hostDisplayName = context.Settings.GetOrDefault<string>("NServiceBus.HostInformation.DisplayName");
+            var timeoutStateContainerName = context.Settings.GetOrDefault<string>("AzureTimeoutStorage.TimeoutStateContainerName");
 
-            context.Container.ConfigureComponent<TimeoutPersister>(DependencyLifecycle.InstancePerCall)
-                .ConfigureProperty(tp => tp.ConnectionString, context.Settings.Get<string>("AzureTimeoutStorage.ConnectionString"))
-                .ConfigureProperty(tp => tp.CatchUpInterval, context.Settings.Get<int>("AzureTimeoutStorage.CatchUpInterval"))
-                .ConfigureProperty(tp => tp.PartitionKeyScope, context.Settings.Get<string>("AzureTimeoutStorage.PartitionKeyScope"));
+            var account = CloudStorageAccount.Parse(connectionString);
+
+            if (createIfNotExist)
+            {
+                var timeoutTable = account.CreateCloudTableClient().GetTableReference(timeoutDataTableName);
+                timeoutTable.CreateIfNotExists();
+
+                var timeoutManagerTable = account.CreateCloudTableClient().GetTableReference(timeoutManagerDataTableName);
+                timeoutManagerTable.CreateIfNotExists();
+
+                var container = account.CreateCloudBlobClient().GetContainerReference(timeoutStateContainerName);
+                container.CreateIfNotExists();
+            }
+
+            context.Container.ConfigureComponent(()=>
+                new TimeoutPersister(connectionString, timeoutDataTableName, timeoutManagerDataTableName, timeoutStateContainerName, catchUpInterval, 
+                                     partitionKeyScope, endpointName, hostDisplayName), 
+                DependencyLifecycle.InstancePerCall);
         }
     }
 }

@@ -1,11 +1,11 @@
 ﻿namespace NServiceBus.Unicast.Subscriptions
 {
-    using Microsoft.WindowsAzure.Storage.Table.DataServices;
-
+    using Microsoft.WindowsAzure.Storage.Table;
+    
     /// <summary>
-    /// Enity containing subscription data
+    /// Entity containing subscription data
     /// </summary>
-    public class Subscription : TableServiceEntity
+    public class Subscription : TableEntity
     {
         public override bool Equals(object obj)
         {

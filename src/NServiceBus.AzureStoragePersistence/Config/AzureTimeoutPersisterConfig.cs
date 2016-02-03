@@ -27,6 +27,9 @@ namespace NServiceBus.Config
 
             Properties.Add(new ConfigurationProperty("CreateSchema", typeof(bool), AzureTimeoutStorageDefaults.CreateSchema, ConfigurationPropertyOptions.None));
 
+            Properties.Add(new ConfigurationProperty("TimeoutStateContainerName", typeof(string),AzureTimeoutStorageDefaults.TimeoutStateContainerName,
+                null, new CallbackValidator(typeof(string), AzureTimeoutStorageGuard.CheckTableName), ConfigurationPropertyOptions.None));
+
         }
 
         public string ConnectionString
@@ -63,6 +66,12 @@ namespace NServiceBus.Config
         {
             get { return (bool)this["CreateSchema"]; }
             set { this["CreateSchema"] = value; }
+        }
+
+        public string TimeoutStateContainerName
+        {
+            get { return (string) this["TimeoutStateContainerName"]; }
+            set { this["TimeoutStateContainerName"] = value; }
         }
     }
 }
