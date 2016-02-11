@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.Azure.Tests.Persisters
+﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Persisters
 {
     using System;
     using Config;

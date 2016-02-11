@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.AzureStoragePersistence.Tests.Timeouts
+﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
 {
     using NUnit.Framework;
 

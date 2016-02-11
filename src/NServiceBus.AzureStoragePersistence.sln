@@ -5,7 +5,7 @@ VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBus.AzureStoragePersistence", "NServiceBus.AzureStoragePersistence\NServiceBus.AzureStoragePersistence.csproj", "{12F1D9F1-0A2C-4442-8D18-67DD096C6300}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBus.AzureStoragePersistence.Tests", "NServiceBus.AzureStoragePersistence.Tests\NServiceBus.AzureStoragePersistence.Tests.csproj", "{E25B5433-7166-4C10-A76E-C0546F9E2497}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBus.AzureStoragePersistence.ComponentTests", "NServiceBus.AzureStoragePersistence.ComponentTests\NServiceBus.AzureStoragePersistence.ComponentTests.csproj", "{E25B5433-7166-4C10-A76E-C0546F9E2497}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuget.packaging", "nuget.packaging", "{9085253E-1263-436F-9CAF-6592DA32CF26}"
 	ProjectSection(SolutionItems) = preProject

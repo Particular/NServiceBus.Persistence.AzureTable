@@ -1,10 +1,10 @@
-﻿namespace NServiceBus.Azure.Tests.Persisters
+﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Persisters
 {
     using System;
     using Config;
     using Subscriptions;
     using NUnit.Framework;
-
+    
     [TestFixture]
     [Category("Azure")]
     public class When_using_AzureSubscriptionStorageGuard
