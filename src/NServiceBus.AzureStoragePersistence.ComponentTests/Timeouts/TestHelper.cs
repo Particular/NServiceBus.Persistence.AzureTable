@@ -19,6 +19,7 @@ namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
     static class TestHelper
     {
         const string EndpointName = "Sales";
+        
 
         internal static TimeoutPersister CreateTimeoutPersister()
         {
@@ -47,6 +48,22 @@ namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
             return persister;
         }
 
+        public static CloudBlockBlob CreateTimeoutCloudBlockBlob(string timeoutBlobId)
+        {
+            var azureTimeoutPersisterConfig = new AzureTimeoutPersisterConfig();
+
+            var account = CloudStorageAccount.Parse(AzurePersistenceTests.GetConnectionString());
+            var client = account.CreateCloudTableClient();
+            client.DefaultRequestOptions = new TableRequestOptions
+            {
+                RetryPolicy = new ExponentialRetry()
+            };
+
+            var cloudBlobclient = account.CreateCloudBlobClient();
+            var container = cloudBlobclient.GetContainerReference(azureTimeoutPersisterConfig.TimeoutStateContainerName);
+            
+            return container.GetBlockBlobReference(timeoutBlobId);
+        }
 
         internal static TimeoutData GenerateTimeoutWithHeaders()
         {
@@ -176,5 +193,6 @@ namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
 
             }
         }
+
     }
 }

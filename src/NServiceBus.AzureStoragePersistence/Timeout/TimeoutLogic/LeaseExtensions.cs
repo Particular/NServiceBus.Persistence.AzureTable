@@ -1,7 +1,6 @@
 ﻿namespace NServiceBus.Azure
 {
     using System;
-    using System.Net;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Blob;
 
@@ -9,14 +8,13 @@
     {
         public static string TryAcquireLease(this CloudBlockBlob blob)
         {
-            try { return blob.AcquireLease(TimeSpan.FromSeconds(90), null); }
-            catch (WebException e)
+            try { return blob.AcquireLease(TimeSpan.FromSeconds(60), null); }
+            catch (StorageException e)
             {
-                if (((HttpWebResponse)e.Response).StatusCode != HttpStatusCode.Conflict) // 409, already leased
+                if (e.RequestInformation.HttpStatusCode != 409)
                 {
-                    throw;
+                    throw ;
                 }
-                e.Response.Close();
                 return null;
             }
         }

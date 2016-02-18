@@ -345,7 +345,7 @@
         {
             result = (from c in timeoutDataTable.CreateQuery<TimeoutDataEntity>()
                       where c.PartitionKey == partitionKey && c.RowKey == rowKey // issue #191 cannot occur when both partitionkey and rowkey are specified
-                      select c).SafeFirstOrDefault();
+                      select c).ToList().SafeFirstOrDefault();
 
             return result != null;
 
