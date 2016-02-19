@@ -94,6 +94,9 @@
     <Compile Include="Persisters\When_using_AzureTimeoutStorageGuard.cs" />
     <Compile Include="Persisters\When_using_AzureStorageSagaGuard.cs" />
     <Compile Include="Persisters\When_using_AzureSubscriptionStorageGuard.cs" />
+    <Compile Include="Subscriptions\SuscriptionTestHelper.cs" />
+    <Compile Include="Subscriptions\When_subscribing.cs" />
+    <Compile Include="Subscriptions\When_unsubscribing.cs" />
     <Compile Include="Timeouts\TestHelper.cs" />
     <Compile Include="Timeouts\When_auto_renewing_a_lease.cs" />
     <Compile Include="Timeouts\When_checking_if_a_timeout_has_a_lease.cs" />

@@ -2,7 +2,7 @@
 {
     using System;
     using Config;
-    using Subscriptions;
+    using NServiceBus.Subscriptions;
     using NUnit.Framework;
     
     [TestFixture]

@@ -10,8 +10,6 @@ namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
     using Microsoft.WindowsAzure.Storage.Table;
     using NServiceBus.Azure;
     using NServiceBus.Config;
-    using NServiceBus.ObjectBuilder.Common;
-    using NServiceBus.Settings;
     using NServiceBus.Support;
     using NServiceBus.Timeout.Core;
     using NUnit.Framework;
@@ -26,10 +24,6 @@ namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
             TimeoutPersister persister = null;
             try
             {
-                var settingsHolder = new SettingsHolder();
-                settingsHolder.Set("EndpointName", EndpointName);
-                settingsHolder.Set("NServiceBus.HostInformation.DisplayName", RuntimeEnvironment.MachineName);
-
                 var azureTimeoutPersisterConfig = new AzureTimeoutPersisterConfig();
 
                 persister = new TimeoutPersister(AzurePersistenceTests.GetConnectionString(), 
@@ -122,7 +116,7 @@ namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
             // Define an entity resolver to work with the entity after retrieval.
             EntityResolver<Tuple<string, string>> resolver = (pk, rk, ts, props, etag) => props.ContainsKey("Destination") ? new Tuple<string, string>(pk, rk) : null;
 
-            foreach (var tuple in table.ExecuteQuery(projectionQuery, resolver, null, null))
+            foreach (var tuple in table.ExecuteQuery(projectionQuery, resolver))
             {
                 var tableEntity = new DynamicTableEntity(tuple.Item1, tuple.Item2) { ETag = "*" };
                 table.Execute(TableOperation.Delete(tableEntity));
@@ -140,59 +134,5 @@ namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
 
             }
         }
-
-        class FakeContainer : IContainer
-        {
-            public void Dispose()
-            {
-
-            }
-
-            public object Build(Type typeToBuild)
-            {
-                return null;
-            }
-
-            public IContainer BuildChildContainer()
-            {
-                return null;
-            }
-
-            public IEnumerable<object> BuildAll(Type typeToBuild)
-            {
-                return null;
-            }
-
-            public void Configure(Type component, DependencyLifecycle dependencyLifecycle)
-            {
-
-            }
-
-            public void Configure<T>(Func<T> component, DependencyLifecycle dependencyLifecycle)
-            {
-
-            }
-
-            public void ConfigureProperty(Type component, string property, object value)
-            {
-
-            }
-
-            public void RegisterSingleton(Type lookupType, object instance)
-            {
-
-            }
-
-            public bool HasComponent(Type componentType)
-            {
-                return false;
-            }
-
-            public void Release(object instance)
-            {
-
-            }
-        }
-
     }
 }
