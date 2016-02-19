@@ -49,6 +49,7 @@
             Assert.AreEqual(AzureTimeoutStorageDefaults.PartitionKeyScope, config.PartitionKeyScope);
             Assert.AreEqual(AzureTimeoutStorageDefaults.CatchUpInterval, config.CatchUpInterval);
             Assert.AreEqual(AzureTimeoutStorageDefaults.CreateSchema, config.CreateSchema);
+            Assert.AreEqual(AzureTimeoutStorageDefaults.TimeoutStateContainerName, config.TimeoutStateContainerName);
         }
     }
 }
