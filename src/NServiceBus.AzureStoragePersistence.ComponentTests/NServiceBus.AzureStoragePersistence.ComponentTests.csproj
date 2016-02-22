@@ -91,6 +91,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AzurePersistenceTests.cs" />
+    <Compile Include="Persisters\When_completing_saga.cs" />
+    <Compile Include="Persisters\When_updating_saga.cs" />
+    <Compile Include="Persisters\When_saving_saga.cs" />
+    <Compile Include="Persisters\When_getting_the_saga_entity.cs" />
     <Compile Include="Persisters\When_using_AzureTimeoutStorageGuard.cs" />
     <Compile Include="Persisters\When_using_AzureStorageSagaGuard.cs" />
     <Compile Include="Persisters\When_using_AzureSubscriptionStorageGuard.cs" />

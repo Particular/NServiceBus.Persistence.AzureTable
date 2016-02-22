@@ -135,8 +135,8 @@
              var timeoutPersister = TestHelper.CreateTimeoutPersister();
              var sagaId1 = Guid.NewGuid();
              var sagaId2 = Guid.NewGuid();
-             var timeout1 = TestHelper.GetnerateTimeoutWithSagaId(sagaId1);
-             var timeout2 = TestHelper.GetnerateTimeoutWithSagaId(sagaId2);
+             var timeout1 = TestHelper.GenerateTimeoutWithSagaId(sagaId1);
+             var timeout2 = TestHelper.GenerateTimeoutWithSagaId(sagaId2);
              timeoutPersister.Add(timeout1);
              timeoutPersister.Add(timeout2);
 

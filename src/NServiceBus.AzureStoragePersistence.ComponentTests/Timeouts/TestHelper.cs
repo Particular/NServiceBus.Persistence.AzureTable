@@ -33,7 +33,7 @@ namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
             }
             catch (WebException exception)
             {
-                // Azure blob container CreateIfNotExists() can falsly report HTTP 409 error, swallow it
+                // Azure blob container CreateIfNotExists() can falsely report HTTP 409 error, swallow it
                 if (exception.Status != WebExceptionStatus.ProtocolError || (exception.Response is HttpWebResponse && ((HttpWebResponse)exception.Response).StatusCode != HttpStatusCode.NotFound))
                 {
                     throw;
@@ -76,7 +76,7 @@ namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
             };
         }
 
-        internal static TimeoutData GetnerateTimeoutWithSagaId(Guid sagaId)
+        internal static TimeoutData GenerateTimeoutWithSagaId(Guid sagaId)
         {
             var timeoutWithHeaders1 = GenerateTimeoutWithHeaders();
             timeoutWithHeaders1.SagaId = sagaId;
