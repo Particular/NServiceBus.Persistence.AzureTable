@@ -1,7 +1,6 @@
 ﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Persisters
 {
     using System;
-    using Timeouts;
     using NServiceBus.Saga;
     using NServiceBus.SagaPersisters.Azure;
     using NUnit.Framework;
