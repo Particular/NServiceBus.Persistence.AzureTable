@@ -7,7 +7,7 @@
     using NUnit.Framework;
     using ScenarioDescriptors;
 
-    public class When_publishin : NServiceBusAcceptanceTest
+    public class When_publishing : NServiceBusAcceptanceTest
     {
         [Test]
         public void Issue_1851()
