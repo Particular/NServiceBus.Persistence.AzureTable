@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>NServiceBus.AzureStoragePersistence.ComponentTests</RootNamespace>
-    <AssemblyName>NServiceBus.AzureStoragePersistence.ComponentTests</AssemblyName>
+    <AssemblyName>NServiceBus.AzureStoragePersistence.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SignAssembly>true</SignAssembly>
