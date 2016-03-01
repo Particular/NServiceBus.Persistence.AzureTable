@@ -19,6 +19,7 @@ namespace NServiceBus
                 s.SetDefault("AzureTimeoutStorage.TimeoutDataTableName", config.TimeoutDataTableName);
                 s.SetDefault("AzureTimeoutStorage.CatchUpInterval", config.CatchUpInterval);
                 s.SetDefault("AzureTimeoutStorage.PartitionKeyScope", config.PartitionKeyScope);
+                s.SetDefault("AzureTimeoutStorage.TimeoutStateContainerName", config.TimeoutStateContainerName);
             });
         }
 

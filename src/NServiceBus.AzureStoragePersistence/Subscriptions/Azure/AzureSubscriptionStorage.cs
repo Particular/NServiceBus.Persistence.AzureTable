@@ -44,6 +44,7 @@
         {
             var table = client.GetTableReference(subscriptionTableName);
 
+
             foreach (var messageType in messageTypes)
             {
                 try
@@ -106,7 +107,7 @@
                     where s.PartitionKey == messageType.ToString()
                     select s;
 
-                subscribers.AddRange(query.Select(s => Address.Parse(DecodeFrom64(s.RowKey))));
+                subscribers.AddRange(query.ToList().Select(s => Address.Parse(DecodeFrom64(s.RowKey))));
             }
 
             return subscribers;
