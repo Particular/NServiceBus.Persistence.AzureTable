@@ -1,0 +1,26 @@
+﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Persisters
+{
+    using NServiceBus;
+    using NUnit.Framework;
+    using NServiceBus.Configuration.AdvanceExtensibility;
+
+    [TestFixture]
+    [Category("Azure")]
+    public class When_using_GlobalConnectionStringConfiguration
+    {
+        [Test]
+        public void Specifying_a_single_connection_string_should_populate_all_connection_string_settings()
+        {
+            var connectionString = "UseDevelopmentStorage=true";
+
+            var busConfig = new BusConfiguration();
+            var persistence = busConfig.UsePersistence<AzureStoragePersistence>().ConnectionString(connectionString);
+
+            var settings = persistence.GetSettings();
+
+            Assert.AreEqual(connectionString, settings.Get<string>("AzureSagaStorage.ConnectionString"));
+            Assert.AreEqual(connectionString, settings.Get<string>("AzureSubscriptionStorage.ConnectionString"));
+            Assert.AreEqual(connectionString, settings.Get<string>("AzureTimeoutStorage.ConnectionString"));
+        }
+    }
+}
