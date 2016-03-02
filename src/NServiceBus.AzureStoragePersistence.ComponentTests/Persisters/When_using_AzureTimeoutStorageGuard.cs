@@ -43,7 +43,6 @@
         public void Should_validate_all_default_settings_for_a_new_config()
         {
             var config = new AzureTimeoutPersisterConfig();
-            Assert.AreEqual(AzureTimeoutStorageDefaults.ConnectionString, config.ConnectionString);
             Assert.AreEqual(AzureTimeoutStorageDefaults.TimeoutManagerDataTableName, config.TimeoutManagerDataTableName);
             Assert.AreEqual(AzureTimeoutStorageDefaults.TimeoutDataTableName, config.TimeoutDataTableName);
             Assert.AreEqual(AzureTimeoutStorageDefaults.PartitionKeyScope, config.PartitionKeyScope);
