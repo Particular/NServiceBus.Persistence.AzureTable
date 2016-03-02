@@ -28,6 +28,5 @@
             config.GetSettings().Set("AzureSagaStorage.CreateSchema", createSchema);
             return config;
         }
-
     }
 }
