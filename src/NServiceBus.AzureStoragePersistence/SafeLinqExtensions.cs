@@ -8,6 +8,8 @@ namespace NServiceBus.Azure
     {
         public static TSource SafeFirstOrDefault<TSource>(this IEnumerable<TSource> source)
         {
+            if (source == null) return default(TSource);
+
             try
             {
                 return source.FirstOrDefault();
