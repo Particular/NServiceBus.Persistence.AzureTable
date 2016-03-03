@@ -125,12 +125,11 @@
             }
 
             var future = futureTimeouts.SafeFirstOrDefault();
-            nextTimeToRunQuery = lastSuccessfulRead.HasValue ? lastSuccessfulRead.Value
-                                        : (future != null ? future.Time : now.AddSeconds(1));
+            nextTimeToRunQuery = lastSuccessfulRead ?? (future?.Time ?? now.AddSeconds(1));
                 
             results = pastTimeouts
                 .Where(c => !string.IsNullOrEmpty(c.RowKey))
-                .Select(c => new Tuple<String, DateTime>(c.RowKey, c.Time))
+                .Select(c => new Tuple<string, DateTime>(c.RowKey, c.Time))
                 .Distinct()
                 .ToList();
 
@@ -345,7 +344,7 @@
         {
             result = (from c in timeoutDataTable.CreateQuery<TimeoutDataEntity>()
                       where c.PartitionKey == partitionKey && c.RowKey == rowKey // issue #191 cannot occur when both partitionkey and rowkey are specified
-                      select c).ToList().SafeFirstOrDefault();
+                      select c).SafeFirstOrDefault();
 
             return result != null;
 
