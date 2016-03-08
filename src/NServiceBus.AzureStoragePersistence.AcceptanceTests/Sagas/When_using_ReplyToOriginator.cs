@@ -65,6 +65,7 @@
                 }
                 public class RequestingSagaData : ContainSagaData
                 {
+                    [Unique]
                     public virtual Guid CorrIdForResponse { get; set; } //wont be needed in the future
                 }
             }

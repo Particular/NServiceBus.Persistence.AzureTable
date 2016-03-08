@@ -24,23 +24,23 @@
 
             var context = new Context();
             Scenario.Define(context)
-                    .WithEndpoint<ReceiverWithSagas>(b => b.Given((bus, c) =>
+                .WithEndpoint<ReceiverWithSagas>(b => b.Given((bus, c) =>
+                {
+                    foreach (var guid in guids)
                     {
-                        foreach (var guid in guids)
+                        bus.SendLocal(new OrderBilled
                         {
-                            bus.SendLocal(new OrderBilled
-                            {
-                                OrderId = guid
-                            });
-                            bus.SendLocal(new OrderPlaced
-                            {
-                                OrderId = guid
-                            });
-                        }
-                    }))
-                    .AllowExceptions()
-                    .Done(c => c.CompletedIds.OrderBy(s => s).ToArray().Intersect(guids).Count() == expectedNumberOfCreatedSagas)
-                    .Run();
+                            OrderId = guid
+                        });
+                        bus.SendLocal(new OrderPlaced
+                        {
+                            OrderId = guid
+                        });
+                    }
+                }))
+                .AllowExceptions()
+                .Done(c => c.CompletedIds.OrderBy(s => s).ToArray().Intersect(guids).Count() == expectedNumberOfCreatedSagas)
+                .Run();
 
             CollectionAssert.AreEquivalent(guids, context.CompletedIds.OrderBy(s => s).ToArray());
 
@@ -50,12 +50,19 @@
 
         private static IEnumerable<int> AllIndexesOf(string str, string value)
         {
-            for (int index = 0; ; index += value.Length)
+            if (str == null || value == null)
             {
-                index = str.IndexOf(value, index, StringComparison.Ordinal);
-                if (index == -1)
+                yield break;
+            }
+
+            for (var i = 0;; i += value.Length)
+            {
+                i = str.IndexOf(value, i, StringComparison.Ordinal);
+                if (i == -1)
+                {
                     yield break;
-                yield return index;
+                }
+                yield return i;
             }
         }
 
@@ -65,7 +72,7 @@
             {
                 return new TransportConfig
                 {
-                    MaximumConcurrencyLevel = 3,
+                    MaximumConcurrencyLevel = 3
                 };
             }
         }
@@ -87,8 +94,7 @@
             public ReceiverWithSagas()
             {
                 EndpointSetup<DefaultServer>(
-                    config =>
-                    { });
+                    config => { });
             }
         }
 
@@ -135,6 +141,7 @@
             {
                 [Unique]
                 public virtual string OrderId { get; set; }
+
                 public virtual bool Placed { get; set; }
                 public virtual bool Billed { get; set; }
                 public virtual Guid Id { get; set; }

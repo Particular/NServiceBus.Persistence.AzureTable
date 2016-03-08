@@ -1,12 +1,11 @@
-﻿
-namespace NServiceBus.AcceptanceTests.Sagas
+﻿namespace NServiceBus.AcceptanceTests.Sagas
 {
     using System;
-    using EndpointTemplates;
-    using AcceptanceTesting;
+    using NServiceBus.AcceptanceTesting;
     using NServiceBus.AcceptanceTesting.Support;
+    using NServiceBus.AcceptanceTests.EndpointTemplates;
+    using NServiceBus.Saga;
     using NUnit.Framework;
-    using Saga;
 
     public class When_doing_request_response_between_sagas : NServiceBusAcceptanceTest
     {
@@ -16,9 +15,13 @@ namespace NServiceBus.AcceptanceTests.Sagas
             var context = new Context();
 
             Scenario.Define(context)
-                    .WithEndpoint<Endpoint>(b => b.Given(bus => bus.SendLocal(new InitiateRequestingSaga())))
-                    .Done(c => c.DidRequestingSagaGetTheResponse)
-                    .Run(new RunSettings { UseSeparateAppDomains = true });
+                .WithEndpoint<Endpoint>(b => b.Given(bus => bus.SendLocal(new InitiateRequestingSaga())))
+                .Done(c => c.DidRequestingSagaGetTheResponse)
+                .AllowExceptions(ex => true)
+                .Run(new RunSettings
+                {
+                    UseSeparateAppDomains = true
+                });
 
             Assert.True(context.DidRequestingSagaGetTheResponse);
         }
@@ -32,9 +35,13 @@ namespace NServiceBus.AcceptanceTests.Sagas
             };
 
             Scenario.Define(context)
-                    .WithEndpoint<Endpoint>(b => b.Given(bus => bus.SendLocal(new InitiateRequestingSaga())))
-                    .Done(c => c.DidRequestingSagaGetTheResponse)
-                    .Run(new RunSettings { UseSeparateAppDomains = true, TestExecutionTimeout = TimeSpan.FromSeconds(15) });
+                .WithEndpoint<Endpoint>(b => b.Given(bus => bus.SendLocal(new InitiateRequestingSaga())))
+                .Done(c => c.DidRequestingSagaGetTheResponse)
+                .Run(new RunSettings
+                {
+                    UseSeparateAppDomains = true,
+                    TestExecutionTimeout = TimeSpan.FromSeconds(15)
+                });
 
             Assert.True(context.DidRequestingSagaGetTheResponse);
         }
@@ -49,9 +56,13 @@ namespace NServiceBus.AcceptanceTests.Sagas
             };
 
             Scenario.Define(context)
-                    .WithEndpoint<Endpoint>(b => b.Given(bus => bus.SendLocal(new InitiateRequestingSaga())))
-                    .Done(c => c.DidRequestingSagaGetTheResponse)
-                    .Run(new RunSettings { UseSeparateAppDomains = true, TestExecutionTimeout = TimeSpan.FromSeconds(15) });
+                .WithEndpoint<Endpoint>(b => b.Given(bus => bus.SendLocal(new InitiateRequestingSaga())))
+                .Done(c => c.DidRequestingSagaGetTheResponse)
+                .Run(new RunSettings
+                {
+                    UseSeparateAppDomains = true,
+                    TestExecutionTimeout = TimeSpan.FromSeconds(15)
+                });
 
             Assert.True(context.DidRequestingSagaGetTheResponse);
         }
@@ -65,7 +76,6 @@ namespace NServiceBus.AcceptanceTests.Sagas
 
         public class Endpoint : EndpointConfigurationBuilder
         {
-
             public Endpoint()
             {
                 EndpointSetup<DefaultServer>();
@@ -99,12 +109,12 @@ namespace NServiceBus.AcceptanceTests.Sagas
                     // for more info and discussion see TBD
                     mapper.ConfigureMapping<ResponseFromOtherSaga>(m => m.SomeCorrelationId).ToSaga(s => s.CorrIdForResponse);
                 }
+
                 public class RequestingSagaData : ContainSagaData
                 {
                     [Unique]
                     public virtual Guid CorrIdForResponse { get; set; } //wont be needed in the future
                 }
-
             }
 
             public class RespondingSaga : Saga<RespondingSaga.RespondingSagaData>,
@@ -119,7 +129,10 @@ namespace NServiceBus.AcceptanceTests.Sagas
                     if (Context.ReplyFromNonInitiatingHandler)
                     {
                         Data.CorrIdForRequest = message.SomeIdThatTheResponseSagaCanCorrelateBackToUs; //wont be needed in the future
-                        Bus.SendLocal(new SendReplyFromNonInitiatingHandler { SagaIdSoWeCanCorrelate = Data.Id });
+                        Bus.SendLocal(new SendReplyFromNonInitiatingHandler
+                        {
+                            SagaIdSoWeCanCorrelate = Data.Id
+                        });
                         return;
                     }
 
@@ -130,35 +143,28 @@ namespace NServiceBus.AcceptanceTests.Sagas
                         return;
                     }
 
+                    Data.CorrIdForRequest = message.SomeIdThatTheResponseSagaCanCorrelateBackToUs;
+
                     // Both reply and reply to originator work here since the sender of the incoming message is the requesting saga
                     // also note we don't set the correlation ID since auto correlation happens to work for this special case 
                     // where we reply from the first handler
                     Bus.Reply(new ResponseFromOtherSaga());
                 }
 
-                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<RespondingSagaData> mapper)
+                public void Handle(SendReplyFromNonInitiatingHandler message)
                 {
-                    //this line is just needed so we can test the non initiating handler case
-                    mapper.ConfigureMapping<SendReplyFromNonInitiatingHandler>(m => m.SagaIdSoWeCanCorrelate).ToSaga(s => s.Id);
+                    SendReply();
                 }
-
-                public class RespondingSagaData : ContainSagaData
-                {
-                    [Unique]
-                    public virtual Guid CorrIdForRequest { get; set; }
-                }
-
-
-                public class DelayReply { }
 
                 public void Timeout(DelayReply state)
                 {
                     SendReply();
                 }
 
-                public void Handle(SendReplyFromNonInitiatingHandler message)
+                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<RespondingSagaData> mapper)
                 {
-                    SendReply();
+                    //this line is just needed so we can test the non initiating handler case
+                    mapper.ConfigureMapping<SendReplyFromNonInitiatingHandler>(m => m.SagaIdSoWeCanCorrelate).ToSaga(s => s.Id);
                 }
 
                 void SendReply()
@@ -169,10 +175,23 @@ namespace NServiceBus.AcceptanceTests.Sagas
                         SomeCorrelationId = Data.CorrIdForRequest //wont be needed in the future
                     });
                 }
+
+                public class RespondingSagaData : ContainSagaData
+                {
+                    [Unique]
+                    public virtual Guid CorrIdForRequest { get; set; }
+                }
+
+
+                public class DelayReply
+                {
+                }
             }
         }
 
-        public class InitiateRequestingSaga : ICommand { }
+        public class InitiateRequestingSaga : ICommand
+        {
+        }
 
         public class RequestToRespondingSaga : ICommand
         {
