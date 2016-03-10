@@ -13,8 +13,8 @@
         {
             var connectionString = "UseDevelopmentStorage=true";
 
-            var busConfig = new BusConfiguration();
-            var persistence = busConfig.UsePersistence<AzureStoragePersistence>().ConnectionString(connectionString);
+            var endpointConfig = new EndpointConfiguration();
+            var persistence = endpointConfig.UsePersistence<AzureStoragePersistence>().ConnectionString(connectionString);
 
             var settings = persistence.GetSettings();
 

@@ -10,9 +10,10 @@
     using Microsoft.WindowsAzure.Storage.Table;
     using Microsoft.WindowsAzure.Storage.Table.Queryable;
     using NServiceBus.Azure;
-    using NServiceBus.Extensibility;
+    using Extensibility;
     using NServiceBus.Routing;
     using NServiceBus.Unicast.Subscriptions.MessageDrivenSubscriptions;
+    using NServiceBus.Routing;
 
     /// <summary>
     /// Provides Azure Storage Table storage functionality for Subscriptions
@@ -38,12 +39,22 @@
             };
         }
 
+        static string EncodeTo64(string toEncode)
+        {
+            return Convert.ToBase64String(Encoding.ASCII.GetBytes(toEncode));
+        }
+
+        static string DecodeFrom64(string encodedData)
+        {
+            return Encoding.ASCII.GetString(Convert.FromBase64String(encodedData));
+        }
+
         /// <summary>
         /// Subscribes the given client to messages of a given type.
         /// </summary>
-        /// <param name="subscriber">The subscriber</param>
+        /// <param name="subscriber">The subscriber to subscribe</param>
         /// <param name="messageType">The types of messages that are being subscribed to</param>
-        /// <param name="context">The current pipeline context</param>
+        /// <param name="context">The current context</param>
         public async Task Subscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
         {
             var table = client.GetTableReference(subscriptionTableName);
@@ -56,6 +67,7 @@
                     PartitionKey = messageType.ToString(),
                     EndpointName = subscriber.Endpoint.ToString()
                 };
+
                 var operation = TableOperation.Insert(subscription);
                 await table.ExecuteAsync(operation).ConfigureAwait(false);
             }
@@ -71,18 +83,20 @@
         /// <summary>
         /// Removes a subscription
         /// </summary>
-        /// <param name="subscriber">The subscriber</param>
-        /// <param name="messageType">The types of messages that are being subscribed to</param>
+        /// <param name="subscriber">The subscriber to unsubscribe</param>
+        /// <param name="messageType">The message type to unsubscribed</param>
         /// <param name="context">The current pipeline context</param>
-        public Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
+        public async Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
         {
             var table = client.GetTableReference(subscriptionTableName);
+            var encodedAddress = EncodeTo64(subscriber.Endpoint.ToString());
 
             var encodedAddress = EncodeTo64(subscriber.TransportAddress);
 
             var query = from s in table.CreateQuery<Subscription>()
                 where s.PartitionKey == messageType.ToString() && s.RowKey == encodedAddress
                 select s;
+
             var subscription = query.AsTableQuery().AsEnumerable().SafeFirstOrDefault();
             if (subscription != null)
             {
@@ -106,22 +120,13 @@
             foreach (var messageType in messageTypes)
             {
                 var query = from s in table.CreateQuery<Subscription>()
-                    where s.PartitionKey == messageType.ToString()
-                    select s;
+                            where s.PartitionKey == messageType.ToString()
+                            select new Subscriber(s.TransportAddress, new EndpointName(DecodeFrom64(s.RowKey)));
                 
                 subscribers.AddRange(query.ToList().Select(s => new Subscriber(DecodeFrom64(s.RowKey),new EndpointName(s.EndpointName))));
             }
-            return Task.FromResult<IEnumerable<Subscriber>>(subscribers);
-        }
 
-        static string EncodeTo64(string toEncode)
-        {
-            return Convert.ToBase64String(Encoding.ASCII.GetBytes(toEncode));
-        }
-
-        static string DecodeFrom64(string encodedData)
-        {
-            return Encoding.ASCII.GetString(Convert.FromBase64String(encodedData));
+            return Task.FromResult((IEnumerable<Subscriber>)subscribers);
         }
     }
 }
