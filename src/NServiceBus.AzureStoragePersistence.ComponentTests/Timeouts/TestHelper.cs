@@ -29,7 +29,7 @@ namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
                 persister = new TimeoutPersister(AzurePersistenceTests.GetConnectionString(), 
                     azureTimeoutPersisterConfig.TimeoutDataTableName, azureTimeoutPersisterConfig.TimeoutManagerDataTableName,
                     azureTimeoutPersisterConfig.TimeoutStateContainerName, 3600, 
-                    azureTimeoutPersisterConfig.PartitionKeyScope,EndpointName,RuntimeEnvironment.MachineName);
+                    azureTimeoutPersisterConfig.PartitionKeyScope,EndpointName, RuntimeEnvironment.MachineName);
             }
             catch (WebException exception)
             {
@@ -100,6 +100,7 @@ namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
         {
             RemoveAllRowsForTable(new AzureTimeoutPersisterConfig().TimeoutDataTableName);
             RemoveAllRowsForTable(new AzureTimeoutPersisterConfig().TimeoutManagerDataTableName);
+
             RemoveAllBlobs();
         }
 

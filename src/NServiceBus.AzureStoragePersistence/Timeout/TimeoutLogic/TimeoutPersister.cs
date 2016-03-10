@@ -14,7 +14,9 @@
     using Microsoft.WindowsAzure.Storage.Table;
     using NServiceBus.Extensibility;
     using Timeout.Core;
-    
+    using Timeout.TimeoutLogic;
+    using System.Net;
+
     /// <summary>
     /// Provides that ability to save and retrieve timeout information
     /// </summary>
@@ -128,7 +130,7 @@
             var timeoutsChunk = new TimeoutsChunk(
                 pastTimeouts.Where(c => !string.IsNullOrEmpty(c.RowKey))
                     .Select(c => new TimeoutsChunk.Timeout(c.RowKey, c.Time))
-                    .GroupBy(c => new { Id = c.Id, DueDate = c.DueTime }).First()
+                    .Distinct(new TimoutChunkComparer())
                     .ToList(),
                 nextTimeToRunQuery);
 
@@ -136,6 +138,8 @@
            
             return timeoutsChunk;
         }
+
+        
 
         /// <summary>
         /// Add a new timeout entry
@@ -222,8 +226,20 @@
                 DeleteState(timeoutDataEntity.StateAddress)
             };
 
-            await Task.WhenAll(deleteTasks).ConfigureAwait(false);
-            await DeleteMainEntity(timeoutDataEntity, timeoutDataTable).ConfigureAwait(false);
+            try
+            {
+                await Task.WhenAll(deleteTasks).ConfigureAwait(false);
+                await DeleteMainEntity(timeoutDataEntity, timeoutDataTable).ConfigureAwait(false);
+            }
+            catch (StorageException e)
+            {
+                if (e.RequestInformation.HttpStatusCode != (int)HttpStatusCode.NotFound)
+                {
+                    throw;
+                }
+
+                return false;
+            }
 
             return true;
         }
@@ -275,6 +291,7 @@
                 var deleteByTimeOperation = TableOperation.Delete(timeoutDataEntityByTime);
                 return timeoutDataTable.ExecuteAsync(deleteByTimeOperation);
             }
+
             return TaskEx.CompletedTask;
         }
 
