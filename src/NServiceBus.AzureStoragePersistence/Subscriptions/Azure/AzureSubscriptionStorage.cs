@@ -98,8 +98,9 @@
             if (subscription != null)
             {
                 var operation = TableOperation.Delete(subscription);
-                await table.ExecuteAsync(operation).ConfigureAwait(false);
+                return table.ExecuteAsync(operation);
             }
+            return TaskEx.CompletedTask;
         }
 
         /// <summary>
@@ -119,7 +120,7 @@
                             where s.PartitionKey == messageType.ToString()
                             select new Subscriber(DecodeFrom64(s.RowKey), new EndpointName(s.EndpointName));
                 
-                subscribers.AddRange(query.ToList().Select(s => new Subscriber(s.TransportAddress, s.Endpoint)));
+                subscribers.AddRange(query.ToList());
             }
 
             return Task.FromResult((IEnumerable<Subscriber>)subscribers);
