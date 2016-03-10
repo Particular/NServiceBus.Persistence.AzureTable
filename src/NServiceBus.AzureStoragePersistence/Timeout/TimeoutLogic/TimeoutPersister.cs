@@ -155,16 +155,17 @@
             timeout.Id = identifier;
 
             var timeoutDataEntity = GetTimeoutData(timeoutDataTable, identifier, string.Empty);
-            if (timeoutDataEntity == null) return;
+            if (timeoutDataEntity != null) return;
 
             var headers = Serialize(timeout.Headers);
 
             var saveActions = new List<Task>
             {
-                SaveCurrentTimeoutState(timeout.State,identifier),
+                SaveCurrentTimeoutState(timeout.State, identifier),
                 SaveTimeoutEntry(timeout, timeoutDataTable, identifier, headers),
                 SaveSagaEntry(timeout, timeoutDataTable, identifier, headers)
             };
+
             await Task.WhenAll(saveActions).ConfigureAwait(false);
             await SaveMainEntry(timeout, identifier, headers, timeoutDataTable).ConfigureAwait(false);
         }
@@ -368,14 +369,14 @@
             }
         }
 
-        Task<byte[]> Download(string stateAddress)
+        async Task<byte[]> Download(string stateAddress)
         {
             var container = cloudBlobclient.GetContainerReference(timeoutStateContainerName);
 
             var blob = container.GetBlockBlobReference(stateAddress);
             using (var stream = new MemoryStream())
             {
-                blob.DownloadToStreamAsync(stream);
+                await blob.DownloadToStreamAsync(stream).ConfigureAwait(false);
                 stream.Position = 0;
 
                 var buffer = new byte[16*1024];
@@ -386,7 +387,7 @@
                     {
                         ms.Write(buffer, 0, read);
                     }
-                    return Task.FromResult(ms.ToArray());
+                    return ms.ToArray();
                 }
             }
         }

@@ -13,11 +13,11 @@ namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
     using NServiceBus.Support;
     using NServiceBus.Timeout.Core;
     using NUnit.Framework;
+    using System.Threading.Tasks;
 
     static class TestHelper
     {
         const string EndpointName = "Sales";
-        
 
         internal static TimeoutPersister CreateTimeoutPersister()
         {
@@ -64,7 +64,7 @@ namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
             return new TimeoutData
             {
                 Time = DateTime.UtcNow.AddYears(-1),
-                Destination = new Address("timeouts", "some_azure_connection_string"),
+                Destination = "address://some_azure_connection_string",
                 SagaId = Guid.NewGuid(),
                 State = new byte[] { 1, 2, 3, 4 },
                 Headers = new Dictionary<string, string>
@@ -83,18 +83,17 @@ namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
             return timeoutWithHeaders1;
         }
 
-        internal static List<Tuple<string, DateTime>> GetAllTimeoutsUsingGetNextChunk(TimeoutPersister persister)
+        internal static async Task<List<Tuple<string, DateTime>>> GetAllTimeoutsUsingGetNextChunk(TimeoutPersister persister)
         {
-            DateTime nextRun;
-            var timeouts = persister.GetNextChunk(DateTime.Now.AddYears(-3), out nextRun).ToList();
-            return timeouts;
+            var timeouts = await persister.GetNextChunk(DateTime.Now.AddYears(-3));
+
+            return timeouts.DueTimeouts.Select(timeout => new Tuple<string, DateTime>(timeout.Id, timeout.DueTime)).ToList();
         }
 
-        public static void AssertAllTimeoutsThatHaveBeenRemoved(TimeoutPersister timeoutPersister)
+        public static async Task AssertAllTimeoutsThatHaveBeenRemoved(TimeoutPersister timeoutPersister)
         {
-            DateTime nextRun;
-            var timeouts = timeoutPersister.GetNextChunk(DateTime.Now.AddYears(-3), out nextRun).ToList();
-            Assert.IsFalse(timeouts.Any());
+            var timeouts = await timeoutPersister.GetNextChunk(DateTime.Now.AddYears(-3));
+            Assert.IsFalse(timeouts.DueTimeouts.Any());
         }
 
         internal static void PerformStorageCleanup()
