@@ -13,7 +13,6 @@
     using Extensibility;
     using NServiceBus.Routing;
     using NServiceBus.Unicast.Subscriptions.MessageDrivenSubscriptions;
-    using NServiceBus.Routing;
 
     /// <summary>
     /// Provides Azure Storage Table storage functionality for Subscriptions
@@ -91,8 +90,6 @@
             var table = client.GetTableReference(subscriptionTableName);
             var encodedAddress = EncodeTo64(subscriber.Endpoint.ToString());
 
-            var encodedAddress = EncodeTo64(subscriber.TransportAddress);
-
             var query = from s in table.CreateQuery<Subscription>()
                 where s.PartitionKey == messageType.ToString() && s.RowKey == encodedAddress
                 select s;
@@ -101,9 +98,8 @@
             if (subscription != null)
             {
                 var operation = TableOperation.Delete(subscription);
-                return table.ExecuteAsync(operation);
+                await table.ExecuteAsync(operation).ConfigureAwait(false);
             }
-            return TaskEx.CompletedTask;
         }
 
         /// <summary>
@@ -121,9 +117,9 @@
             {
                 var query = from s in table.CreateQuery<Subscription>()
                             where s.PartitionKey == messageType.ToString()
-                            select new Subscriber(s.TransportAddress, new EndpointName(DecodeFrom64(s.RowKey)));
+                            select new Subscriber(DecodeFrom64(s.RowKey), new EndpointName(s.EndpointName));
                 
-                subscribers.AddRange(query.ToList().Select(s => new Subscriber(DecodeFrom64(s.RowKey),new EndpointName(s.EndpointName))));
+                subscribers.AddRange(query.ToList().Select(s => new Subscriber(s.TransportAddress, s.Endpoint)));
             }
 
             return Task.FromResult((IEnumerable<Subscriber>)subscribers);

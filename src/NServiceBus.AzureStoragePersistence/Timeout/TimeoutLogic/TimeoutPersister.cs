@@ -108,7 +108,7 @@
             var allTimeouts = result.ToList();
             if (allTimeouts.Count == 0)
             {
-                await Task.FromResult(new TimeoutsChunk(new List<TimeoutsChunk.Timeout>(), now.AddSeconds(1))).ConfigureAwait(false);
+                return new TimeoutsChunk(new List<TimeoutsChunk.Timeout>(), now.AddSeconds(1));
             }
 
             var pastTimeouts = allTimeouts.Where(c => c.Time > startSlice && c.Time <= now).ToList();
@@ -128,7 +128,7 @@
             var timeoutsChunk = new TimeoutsChunk(
                 pastTimeouts.Where(c => !string.IsNullOrEmpty(c.RowKey))
                     .Select(c => new TimeoutsChunk.Timeout(c.RowKey, c.Time))
-                    .Distinct()
+                    .GroupBy(c => new { Id = c.Id, DueDate = c.DueTime }).First()
                     .ToList(),
                 nextTimeToRunQuery);
 
