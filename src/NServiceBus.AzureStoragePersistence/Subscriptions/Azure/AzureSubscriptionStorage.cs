@@ -85,7 +85,7 @@
         /// <param name="subscriber">The subscriber to unsubscribe</param>
         /// <param name="messageType">The message type to unsubscribed</param>
         /// <param name="context">The current pipeline context</param>
-        public async Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
+        public Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
         {
             var table = client.GetTableReference(subscriptionTableName);
             var encodedAddress = EncodeTo64(subscriber.Endpoint.ToString());
