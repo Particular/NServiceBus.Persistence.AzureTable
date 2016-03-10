@@ -7,6 +7,8 @@
     /// </summary>
     public class Subscription : TableEntity
     {
+        public string TransportAddress { get; internal set; }
+
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -19,14 +21,16 @@
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.RowKey, RowKey) && Equals(other.PartitionKey, PartitionKey);
+            return Equals(other.RowKey, RowKey) 
+                && Equals(other.PartitionKey, PartitionKey)
+                && Equals(other.TransportAddress, TransportAddress);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return ((RowKey != null ? RowKey.GetHashCode() : 0) * 397) ^ (PartitionKey != null ? PartitionKey.GetHashCode() : 0);
+                return ((RowKey != null ? RowKey.GetHashCode() : 0) * 397) ^ (PartitionKey != null ? PartitionKey.GetHashCode() : 0) ^ (TransportAddress != null ? TransportAddress.GetHashCode() : 0);
             }
         }
     }
