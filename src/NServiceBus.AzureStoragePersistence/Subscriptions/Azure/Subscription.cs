@@ -7,7 +7,7 @@
     /// </summary>
     public class Subscription : TableEntity
     {
-        public string TransportAddress { get; internal set; }
+        public string TransportAddress { get; set; }
 
         public override bool Equals(object obj)
         {
