@@ -13,7 +13,6 @@
     using Extensibility;
     using NServiceBus.Routing;
     using NServiceBus.Unicast.Subscriptions.MessageDrivenSubscriptions;
-    using NServiceBus.Routing;
 
     /// <summary>
     /// Provides Azure Storage Table storage functionality for Subscriptions
@@ -86,12 +85,10 @@
         /// <param name="subscriber">The subscriber to unsubscribe</param>
         /// <param name="messageType">The message type to unsubscribed</param>
         /// <param name="context">The current pipeline context</param>
-        public async Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
+        public Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
         {
             var table = client.GetTableReference(subscriptionTableName);
             var encodedAddress = EncodeTo64(subscriber.Endpoint.ToString());
-
-            var encodedAddress = EncodeTo64(subscriber.TransportAddress);
 
             var query = from s in table.CreateQuery<Subscription>()
                 where s.PartitionKey == messageType.ToString() && s.RowKey == encodedAddress
@@ -121,7 +118,7 @@
             {
                 var query = from s in table.CreateQuery<Subscription>()
                             where s.PartitionKey == messageType.ToString()
-                            select new Subscriber(s.TransportAddress, new EndpointName(DecodeFrom64(s.RowKey)));
+                            select s;
                 
                 subscribers.AddRange(query.ToList().Select(s => new Subscriber(DecodeFrom64(s.RowKey),new EndpointName(s.EndpointName))));
             }
