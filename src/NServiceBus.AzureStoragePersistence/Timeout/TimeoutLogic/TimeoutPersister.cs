@@ -88,8 +88,8 @@
             if (lastSuccessfulRead.HasValue)
             {
                 query = from c in timeoutDataTable.CreateQuery<TimeoutDataEntity>()
-                            where c.PartitionKey.CompareTo(lastSuccessfulRead.Value.ToString(partitionKeyScope)) >= 0
-                            && c.PartitionKey.CompareTo(now.ToString(partitionKeyScope)) <= 0
+                            where string.Compare(c.PartitionKey, lastSuccessfulRead.Value.ToString(partitionKeyScope), StringComparison.InvariantCultureIgnoreCase) != 0
+                                && string.Compare(c.PartitionKey, now.ToString(partitionKeyScope),StringComparison.InvariantCultureIgnoreCase) != 0
                                 && c.OwningTimeoutManager == endpointName
                         select c;
             }

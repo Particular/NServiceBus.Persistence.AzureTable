@@ -54,7 +54,7 @@ namespace NServiceBus
 
             context.Container.ConfigureComponent(()=>
                 new TimeoutPersister(connectionString, timeoutDataTableName, timeoutManagerDataTableName, timeoutStateContainerName, catchUpInterval, 
-                                     partitionKeyScope, endpointName, hostDisplayName), 
+                                     partitionKeyScope, endpointName.ToString(), hostDisplayName), 
                 DependencyLifecycle.InstancePerCall);
         }
     }

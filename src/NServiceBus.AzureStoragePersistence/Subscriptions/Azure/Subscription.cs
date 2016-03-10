@@ -7,6 +7,8 @@
     /// </summary>
     public class Subscription : TableEntity
     {
+        public string EndpointName { get; set; }
+
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;

@@ -128,8 +128,6 @@
     <Compile Include="Timeout\AzureTimeoutStorageDefaults.cs" />
     <Compile Include="Timeout\ConfigureAzureTimeoutStorage.cs" />
     <Compile Include="Timeout\Config\AzureStorageTimeoutPersistence.cs" />
-    <Compile Include="Timeout\TimeoutLogic\AutoRenewLease.cs" />
-    <Compile Include="Timeout\TimeoutLogic\LeaseExtensions.cs" />
     <Compile Include="Timeout\TimeoutLogic\TimeoutDataEntity.cs" />
     <Compile Include="Timeout\TimeoutLogic\TimeoutPersister.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -4,11 +4,14 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
+    using System.Threading.Tasks;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.RetryPolicies;
     using Microsoft.WindowsAzure.Storage.Table;
     using Microsoft.WindowsAzure.Storage.Table.Queryable;
     using NServiceBus.Azure;
+    using NServiceBus.Extensibility;
+    using NServiceBus.Routing;
     using NServiceBus.Unicast.Subscriptions.MessageDrivenSubscriptions;
 
     /// <summary>
@@ -36,33 +39,31 @@
         }
 
         /// <summary>
-        /// Stores a subscription
+        /// Subscribes the given client to messages of a given type.
         /// </summary>
-        /// <param name="address">The address that is being subscribed to</param>
-        /// <param name="messageTypes">The types of messages that are being subscribed to</param>
-        void ISubscriptionStorage.Subscribe(Address address, IEnumerable<MessageType> messageTypes)
+        /// <param name="subscriber">The subscriber</param>
+        /// <param name="messageType">The types of messages that are being subscribed to</param>
+        /// <param name="context">The current pipeline context</param>
+        public async Task Subscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
         {
             var table = client.GetTableReference(subscriptionTableName);
 
-
-            foreach (var messageType in messageTypes)
+            try
             {
-                try
+                var subscription = new Subscription
                 {
-                    var subscription = new Subscription
-                    {
-                        RowKey = EncodeTo64(address.ToString()),
-                        PartitionKey = messageType.ToString()
-                    };
-                    var operation = TableOperation.Insert(subscription);
-                    table.Execute(operation);
-                }
-                catch (StorageException ex)
+                    RowKey = EncodeTo64(subscriber.TransportAddress),
+                    PartitionKey = messageType.ToString(),
+                    EndpointName = subscriber.Endpoint.ToString()
+                };
+                var operation = TableOperation.Insert(subscription);
+                await table.ExecuteAsync(operation).ConfigureAwait(false);
+            }
+            catch (StorageException ex)
+            {
+                if (ex.RequestInformation.HttpStatusCode != 409)
                 {
-                    if (ex.RequestInformation.HttpStatusCode != 409)
-                    {
-                        throw;
-                    }
+                    throw;
                 }
             }
         }
@@ -70,35 +71,36 @@
         /// <summary>
         /// Removes a subscription
         /// </summary>
-        /// <param name="address">The address that is being unsubscribed from</param>
-        /// <param name="messageTypes">The types of messages that are being unsubscribed</param>
-        void ISubscriptionStorage.Unsubscribe(Address address, IEnumerable<MessageType> messageTypes)
+        /// <param name="subscriber">The subscriber</param>
+        /// <param name="messageType">The types of messages that are being subscribed to</param>
+        /// <param name="context">The current pipeline context</param>
+        public Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
         {
             var table = client.GetTableReference(subscriptionTableName);
 
-            var encodedAddress = EncodeTo64(address.ToString());
-            foreach (var messageType in messageTypes)
+            var encodedAddress = EncodeTo64(subscriber.TransportAddress);
+
+            var query = from s in table.CreateQuery<Subscription>()
+                where s.PartitionKey == messageType.ToString() && s.RowKey == encodedAddress
+                select s;
+            var subscription = query.AsTableQuery().AsEnumerable().SafeFirstOrDefault();
+            if (subscription != null)
             {
-                var query = from s in table.CreateQuery<Subscription>()
-                    where s.PartitionKey == messageType.ToString() && s.RowKey == encodedAddress
-                    select s;
-                var subscription = query.AsTableQuery().AsEnumerable().SafeFirstOrDefault();
-                if (subscription != null)
-                {
-                    var operation = TableOperation.Delete(subscription);
-                    table.Execute(operation);
-                }
+                var operation = TableOperation.Delete(subscription);
+                return table.ExecuteAsync(operation);
             }
+            return TaskEx.CompletedTask;
         }
 
         /// <summary>
         /// Returns the subscription address based on message type
         /// </summary>
-        /// <param name="messageTypes">Types of messages that subscription addresses should be found for</param>
+        /// <param name="messageTypes">Types of messages that subscription addresses should be found for</param>        
+        /// <param name="context">The current pipeline context</param>
         /// <returns>Subscription addresses that were found for the provided messageTypes</returns>
-        IEnumerable<Address> ISubscriptionStorage.GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes)
+        public Task<IEnumerable<Subscriber>> GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes, ContextBag context)
         {
-            var subscribers = new List<Address>();
+            var subscribers = new List<Subscriber>();
             var table = client.GetTableReference(subscriptionTableName);
 
             foreach (var messageType in messageTypes)
@@ -106,16 +108,10 @@
                 var query = from s in table.CreateQuery<Subscription>()
                     where s.PartitionKey == messageType.ToString()
                     select s;
-
-                subscribers.AddRange(query.ToList().Select(s => Address.Parse(DecodeFrom64(s.RowKey))));
+                
+                subscribers.AddRange(query.ToList().Select(s => new Subscriber(DecodeFrom64(s.RowKey),new EndpointName(s.EndpointName))));
             }
-
-            return subscribers;
-        }
-
-        public void Init()
-        {
-            //No-op
+            return Task.FromResult<IEnumerable<Subscriber>>(subscribers);
         }
 
         static string EncodeTo64(string toEncode)
