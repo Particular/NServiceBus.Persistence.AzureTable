@@ -60,8 +60,7 @@
                 .Done(c => c.DidRequestingSagaGetTheResponse)
                 .Run(new RunSettings
                 {
-                    UseSeparateAppDomains = true,
-                    TestExecutionTimeout = TimeSpan.FromSeconds(15)
+                    UseSeparateAppDomains = true
                 });
 
             Assert.True(context.DidRequestingSagaGetTheResponse);
