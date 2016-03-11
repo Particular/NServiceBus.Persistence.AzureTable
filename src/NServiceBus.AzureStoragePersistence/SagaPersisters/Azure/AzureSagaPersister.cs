@@ -55,6 +55,10 @@
             TableQuery<DictionaryTableEntity> query;
 
             var propertyInfo = type.GetProperty(property);
+            if (propertyInfo == null)
+            {
+                return null;
+            }
 
             if (propertyInfo.PropertyType == typeof(byte[]))
             {

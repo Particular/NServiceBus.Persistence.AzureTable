@@ -1,26 +1,26 @@
 ﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Persisters
 {
     using System;
-    using NServiceBus.Saga;
+    using NServiceBus.Sagas;
     using NServiceBus.SagaPersisters.Azure;
     using NUnit.Framework;
 
     public class When_getting_the_saga_entity
     {
         [Test]
-        public void Should_return_null_when_no_saga_data_exists()
+        public async void Should_return_null_when_no_saga_data_exists()
         {
             var connectionString = AzurePersistenceTests.GetConnectionString();
 
             var persister = new AzureSagaPersister(connectionString, false);
 
-            var sagaData = persister.Get<GetSagaData>(Guid.NewGuid());
+            var sagaData = await persister.Get<GetSagaData>(Guid.NewGuid().ToString(), null, null, null);
 
             Assert.IsNull(sagaData);
         }
 
         [Test]
-        public void Should_return_entity()
+        public async void Should_return_entity()
         {
             var connectionString = AzurePersistenceTests.GetConnectionString();
 
@@ -32,8 +32,8 @@
                 OriginalMessageId = "MooId"
             };
 
-            persister.Save(saga);
-            var sagaData = persister.Get<GetSagaData>(saga.Id);
+            await persister.Save(saga, null, null, null);
+            var sagaData = await persister.Get<GetSagaData>(saga.Id, null, null);
 
             Assert.IsNotNull(sagaData);
             Assert.AreEqual(sagaData.OriginalMessageId, saga.OriginalMessageId);
