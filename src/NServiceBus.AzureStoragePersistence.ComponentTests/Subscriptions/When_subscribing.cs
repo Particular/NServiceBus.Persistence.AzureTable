@@ -4,6 +4,8 @@
     using System.Linq;
     using NServiceBus.Unicast.Subscriptions;
     using NUnit.Framework;
+    using Unicast.Subscriptions.MessageDrivenSubscriptions;
+    using Routing;
 
     [TestFixture]
     [Category("AzureStoragePersistence")]
@@ -21,7 +23,7 @@
             var messageType = new MessageType(typeof(TestMessage));
             var messageTypes = new[] { messageType };
 
-            await persister.Subscribe(new Unicast.Subscriptions.MessageDrivenSubscriptions.Subscriber("address://test-queue", new Routing.EndpointName("endpointName")), messageType, null);
+            await persister.Subscribe(new Subscriber("address://test-queue", new EndpointName("endpointName")), messageType, null);
 
             var subscribers = await persister.GetSubscriberAddressesForMessage(messageTypes, null);
 

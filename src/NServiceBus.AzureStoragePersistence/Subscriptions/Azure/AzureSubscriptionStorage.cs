@@ -88,7 +88,7 @@
         public Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
         {
             var table = client.GetTableReference(subscriptionTableName);
-            var encodedAddress = EncodeTo64(subscriber.Endpoint.ToString());
+            var encodedAddress = EncodeTo64(subscriber.TransportAddress);
 
             var query = from s in table.CreateQuery<Subscription>()
                 where s.PartitionKey == messageType.ToString() && s.RowKey == encodedAddress
@@ -100,13 +100,14 @@
                 var operation = TableOperation.Delete(subscription);
                 return table.ExecuteAsync(operation);
             }
+
             return TaskEx.CompletedTask;
         }
 
         /// <summary>
         /// Returns the subscription address based on message type
         /// </summary>
-        /// <param name="messageTypes">Types of messages that subscription addresses should be found for</param>        
+        /// <param name="messageTypes">Types of messages that subscription addresses should sbe found for</param>        
         /// <param name="context">The current pipeline context</param>
         /// <returns>Subscription addresses that were found for the provided messageTypes</returns>
         public Task<IEnumerable<Subscriber>> GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes, ContextBag context)
