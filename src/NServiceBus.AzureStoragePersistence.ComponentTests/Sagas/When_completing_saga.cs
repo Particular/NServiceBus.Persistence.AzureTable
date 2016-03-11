@@ -1,14 +1,14 @@
 ﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Persisters
 {
     using System;
-    using NServiceBus.Saga;
+    using NServiceBus.Sagas;
     using NServiceBus.SagaPersisters.Azure;
     using NUnit.Framework;
 
     public class When_completing_saga
     {
         [Test]
-        public void Should_remove_saga_data()
+        public async void Should_remove_saga_data()
         {
             var connectionString = AzurePersistenceTests.GetConnectionString();
 
@@ -20,17 +20,17 @@
                 OriginalMessageId = "MooId"
             };
 
-            persister.Save(saga);
-            var sagaData = persister.Get<CompleteSagaData>(saga.Id);
+            await persister.Save(saga, null, null, null);
+            var sagaData = await persister.Get<CompleteSagaData>(saga.Id, null, null);
             Assert.IsNotNull(sagaData);
 
-            persister.Complete(saga);
-            sagaData = persister.Get<CompleteSagaData>(saga.Id);
+            await persister.Complete(saga, null, null);
+            sagaData = await persister.Get<CompleteSagaData>(saga.Id, null, null);
             Assert.IsNull(sagaData);
         }
 
         [Test]
-        public void Should_allow_action_twice_without_throwing_error()
+        public async void Should_allow_action_twice_without_throwing_error()
         {
             var connectionString = AzurePersistenceTests.GetConnectionString();
 
@@ -42,19 +42,19 @@
                 OriginalMessageId = "MooId"
             };
 
-            persister.Save(saga);
-            var sagaData = persister.Get<CompleteSagaData>(saga.Id);
+            await persister.Save(saga, null, null, null);
+            var sagaData = await persister.Get<CompleteSagaData>(saga.Id, null, null);
             Assert.IsNotNull(sagaData);
 
-            persister.Complete(saga);
-            persister.Complete(saga);
+            await persister.Complete(saga, null, null);
+            await persister.Complete(saga, null, null);
 
-            sagaData = persister.Get<CompleteSagaData>(saga.Id);
+            sagaData = await persister.Get<CompleteSagaData>(saga.Id, null, null);
             Assert.IsNull(sagaData);
         }
 
         [Test]
-        public void Should_succeed_if_saga_doesnt_exist()
+        public async void Should_succeed_if_saga_doesnt_exist()
         {
             var connectionString = AzurePersistenceTests.GetConnectionString();
 
@@ -66,12 +66,11 @@
                 OriginalMessageId = "MooId"
             };
 
-            persister.Complete(saga);
+            await persister.Complete(saga, null, null);
 
-            var sagaData = persister.Get<CompleteSagaData>(saga.Id);
+            var sagaData = await persister.Get<CompleteSagaData>(saga.Id, null, null);
             Assert.IsNull(sagaData);
         }
-
     }
 
     public class CompleteSagaData : IContainSagaData
