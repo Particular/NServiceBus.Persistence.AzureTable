@@ -7,7 +7,9 @@ namespace NServiceBus.Config
     {
         public AzureSubscriptionStorageConfig()
         {
-            Properties.Add(new ConfigurationProperty("ConnectionString", typeof(string), null,
+            var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
+
+            Properties.Add(new ConfigurationProperty("ConnectionString", typeof(string), defaultConnectionString,
                 null, new CallbackValidator(typeof(string), AzureSubscriptionStorageGuard.CheckConnectionString), ConfigurationPropertyOptions.None));
             
             Properties.Add(new ConfigurationProperty("TableName", typeof(string), AzureSubscriptionStorageDefaults.TableName,
