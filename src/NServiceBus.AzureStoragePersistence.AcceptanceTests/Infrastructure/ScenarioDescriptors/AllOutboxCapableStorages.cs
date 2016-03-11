@@ -10,7 +10,7 @@
         {
             var defaultStorage = Persistence.Default;
 
-            var definitionType = Type.GetType(defaultStorage.Settings["Persistence"]);
+            var definitionType = Type.GetType(defaultStorage.Settings.Get<string>("Persistence"));
 
             var definition = (PersistenceDefinition)Activator.CreateInstance(definitionType, true);
             if (definition.HasSupportFor<StorageType.Outbox>())

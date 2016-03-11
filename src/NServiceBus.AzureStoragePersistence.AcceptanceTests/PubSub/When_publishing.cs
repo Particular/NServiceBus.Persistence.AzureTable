@@ -6,6 +6,7 @@
     using Features;
     using NUnit.Framework;
     using ScenarioDescriptors;
+    using System.Threading.Tasks;
 
     public class When_publishing : NServiceBusAcceptanceTest
     {
@@ -16,10 +17,8 @@
                     .WithEndpoint<Publisher3>(b =>
                         b.When(c => c.Subscriber3Subscribed, bus => bus.Publish<IFoo>())
                      )
-                    .WithEndpoint<Subscriber3>(b => b.Given((bus, context) =>
+                    .WithEndpoint<Subscriber3>(b => b.CustomConfig((endpointCOnfig, context) =>
                     {
-                        bus.Subscribe<IFoo>();
-
                         if (context.HasNativePubSubSupport)
                         {
                             context.Subscriber3Subscribed = true;
@@ -37,15 +36,14 @@
         {
             Scenario.Define<Context>()
                     .WithEndpoint<Publisher>(b =>
-                        b.When(c => c.Subscriber1Subscribed && c.Subscriber2Subscribed, (bus, c) =>
+                        b.When(c => c.Subscriber1Subscribed && c.Subscriber2Subscribed, (endpoint, c) =>
                         {
                             c.AddTrace("Both subscribers is subscribed, going to publish MyEvent");
-                            bus.Publish(new MyEvent());
+                            return endpoint.Publish(new MyEvent());
                         })
                      )
-                    .WithEndpoint<Subscriber1>(b => b.Given((bus, context) =>
+                    .WithEndpoint<Subscriber1>(b => b.CustomConfig((endpointConfig, context) =>
                         {
-                            bus.Subscribe<MyEvent>();
                             if (context.HasNativePubSubSupport)
                             {
                                 context.Subscriber1Subscribed = true;
@@ -56,10 +54,8 @@
                                 context.AddTrace("Subscriber1 has now asked to be subscribed to MyEvent");
                             }
                         }))
-                      .WithEndpoint<Subscriber2>(b => b.Given((bus, context) =>
+                      .WithEndpoint<Subscriber2>(b => b.CustomConfig((endpointConfig, context) =>
                       {
-                          bus.Subscribe<MyEvent>();
-
                           if (context.HasNativePubSubSupport)
                           {
                               context.Subscriber2Subscribed = true;
@@ -99,14 +95,14 @@
                 {
                     b.OnEndpointSubscribed<Context>((s, context) =>
                     {
-                        if (s.SubscriberReturnAddress.Queue.Contains("Subscriber1"))
+                        if (s.SubscriberReturnAddress.Contains("Subscriber1"))
                         {
                             context.Subscriber1Subscribed = true;
                             context.AddTrace("Subscriber1 is now subscribed");
                         }
 
 
-                        if (s.SubscriberReturnAddress.Queue.Contains("Subscriber2"))
+                        if (s.SubscriberReturnAddress.Contains("Subscriber2"))
                         {
                             context.AddTrace("Subscriber2 is now subscribed");
                             context.Subscriber2Subscribed = true;
@@ -123,7 +119,7 @@
             {
                 EndpointSetup<DefaultPublisher>(b => b.OnEndpointSubscribed<Context>((s, context) =>
                 {
-                    if (s.SubscriberReturnAddress.Queue.Contains("Subscriber3"))
+                    if (s.SubscriberReturnAddress.Contains("Subscriber3"))
                     {
                         context.Subscriber3Subscribed = true;
                     }
@@ -143,9 +139,11 @@
             {
                 public Context Context { get; set; }
 
-                public void Handle(IFoo messageThatIsEnlisted)
+                public Task Handle(IFoo messageThatIsEnlisted, IMessageHandlerContext context)
                 {
                     Context.Subscriber3GotTheEvent = true;
+
+                    return Task.FromResult(0);
                 }
             }
 
@@ -163,9 +161,11 @@
             {
                 public Context Context { get; set; }
 
-                public void Handle(MyEvent messageThatIsEnlisted)
+                public Task Handle(MyEvent messageThatIsEnlisted, IMessageHandlerContext context)
                 {
                     Context.Subscriber1GotTheEvent = true;
+
+                    return Task.FromResult(0);
                 }
             }
         }
@@ -182,9 +182,11 @@
             {
                 public Context Context { get; set; }
 
-                public void Handle(MyEvent messageThatIsEnlisted)
+                public Task Handle(MyEvent messageThatIsEnlisted, IMessageHandlerContext context)
                 {
                     Context.Subscriber2GotTheEvent = true;
+
+                    return Task.FromResult(0);
                 }
             }
         }

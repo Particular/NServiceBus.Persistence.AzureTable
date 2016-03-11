@@ -172,7 +172,7 @@
                     context.AttemptedToRemoveTimeout = true;
 
                     using (var tx = new TransactionScope(TransactionScopeOption.Suppress))
-                    { 
+                    {
                         // delete the timeout so it won't be available on retries
                         originalTimeoutPersisterV2.TryRemove(timeoutId);
                         tx.Complete();

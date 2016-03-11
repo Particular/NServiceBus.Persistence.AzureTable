@@ -17,7 +17,7 @@
         {
             lock (context)
             {
-                context.Exceptions += exception + "/n/r";
+                context.Exceptions.Enqueue(exception);
             }
         }
 
@@ -92,7 +92,7 @@
         {
             Trace.WriteLine(message);
 
-            context.RecordEndpointLog(endpointName,"error", message);
+            context.Logs.Enqueue(new ScenarioContext.LogItem { Level = "Error", Message = message });
         }
 
         public void Error(string message, Exception exception)
@@ -100,14 +100,14 @@
             var fullMessage = string.Format("{0} {1}", message, exception);
             Trace.WriteLine(fullMessage);
             Append(exception);
-            context.RecordEndpointLog(endpointName, "error", fullMessage);
+            context.Logs.Enqueue(new ScenarioContext.LogItem { Level = "Error", Message = fullMessage });
         }
 
         public void ErrorFormat(string format, params object[] args)
         {
             var fullMessage = string.Format(format, args);
             Trace.WriteLine(fullMessage);
-            context.RecordEndpointLog(endpointName, "error", fullMessage);
+            context.Logs.Enqueue(new ScenarioContext.LogItem { Level = "Error", Message = fullMessage });
         }
 
         public void Fatal(string message)

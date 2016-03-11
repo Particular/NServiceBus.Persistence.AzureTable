@@ -2,13 +2,15 @@
 {
     using System;
     using System.Linq;
+    using System.Threading.Tasks;
     using NServiceBus.AcceptanceTesting;
     using Pipeline;
     using Pipeline.Contexts;
+    using Transports;
 
     static class SubscriptionBehaviorExtensions
     {
-        public static void OnEndpointSubscribed<TContext>(this BusConfiguration b, Action<SubscriptionEventArgs, TContext> action) where TContext : ScenarioContext
+        public static void OnEndpointSubscribed<TContext>(this EndpointConfiguration b, Action<SubscriptionEventArgs, TContext> action) where TContext : ScenarioContext
         {
             b.Pipeline.Register<SubscriptionBehavior<TContext>.Registration>();
 
@@ -20,10 +22,10 @@
         }
     }
 
-    class SubscriptionBehavior<TContext> : IBehavior<IncomingContext> where TContext : ScenarioContext
+    class SubscriptionBehavior<TContext> : Behavior<IIncomingPhysicalMessageContext> where TContext : ScenarioContext
     {
-        readonly Action<SubscriptionEventArgs, TContext> action;
-        readonly TContext scenarioContext;
+        Action<SubscriptionEventArgs, TContext> action;
+        TContext scenarioContext;
 
         public SubscriptionBehavior(Action<SubscriptionEventArgs, TContext> action, TContext scenarioContext)
         {
@@ -31,21 +33,26 @@
             this.scenarioContext = scenarioContext;
         }
 
-        public void Invoke(IncomingContext context, Action next)
+        public override async Task Invoke(IIncomingPhysicalMessageContext context, Func<Task> next)
         {
-            next();
-            var subscriptionMessageType = GetSubscriptionMessageTypeFrom(context.PhysicalMessage);
+            await next().ConfigureAwait(false);
+            var subscriptionMessageType = GetSubscriptionMessageTypeFrom(context.Message);
             if (subscriptionMessageType != null)
             {
+                string returnAddress;
+                if (!context.Message.Headers.TryGetValue(Headers.SubscriberTransportAddress, out returnAddress))
+                {
+                    context.Message.Headers.TryGetValue(Headers.ReplyToAddress, out returnAddress);
+                }
                 action(new SubscriptionEventArgs
                 {
                     MessageType = subscriptionMessageType,
-                    SubscriberReturnAddress = context.PhysicalMessage.ReplyToAddress
+                    SubscriberReturnAddress = returnAddress
                 }, scenarioContext);
             }
         }
 
-        static string GetSubscriptionMessageTypeFrom(TransportMessage msg)
+        static string GetSubscriptionMessageTypeFrom(IncomingMessage msg)
         {
             return (from header in msg.Headers where header.Key == Headers.SubscriptionMessageType select header.Value).FirstOrDefault();
         }
@@ -55,7 +62,7 @@
             public Registration()
                 : base("SubscriptionBehavior", typeof(SubscriptionBehavior<TContext>), "So we can get subscription events")
             {
-                InsertBefore(WellKnownStep.CreateChildContainer);
+                InsertBeforeIfExists("ProcessSubscriptionRequests");
             }
         }
     }

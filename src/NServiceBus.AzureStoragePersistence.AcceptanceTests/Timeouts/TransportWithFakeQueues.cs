@@ -2,46 +2,106 @@
 namespace NServiceBus.AcceptanceTests.Timeouts
 {
     using System;
+    using Settings;
     using NServiceBus.Transports;
     using NServiceBus.Unicast;
+    using System.Threading.Tasks;
+    using Extensibility;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Routing;
+    using DelayedDelivery;
 
     public class TransportWithFakeQueues : TransportDefinition
     {
-        protected override void Configure(BusConfiguration config)
+        protected override TransportInfrastructure Initialize(SettingsHolder settings, string connectionString)
         {
-            config.RegisterComponents(c => c.ConfigureComponent<FakeDequeuer>(DependencyLifecycle.SingleInstance));
-            config.RegisterComponents(c => c.ConfigureComponent<FakeSender>(DependencyLifecycle.SingleInstance));
-            config.RegisterComponents(c => c.ConfigureComponent<FakeQueueCreator>(DependencyLifecycle.SingleInstance));
+           return new FakeTransportInfrastructure();
         }
+
+        public override string ExampleConnectionStringForErrorMessage { get; } = string.Empty;
     }
 
-    class FakeDequeuer : IDequeueMessages
+    class FakeTransportInfrastructure : TransportInfrastructure
     {
 
-        public void Init(Address address, Unicast.Transport.TransactionSettings transactionSettings, Func<TransportMessage, bool> tryProcessMessage, Action<TransportMessage, Exception> endProcessMessage)
+        public override EndpointInstance BindToLocalEndpoint(EndpointInstance instance)
         {
+            throw new NotImplementedException();
         }
 
-        public void Start(int maximumConcurrencyLevel)
+        public override string ToTransportAddress(LogicalAddress logicalAddress)
         {
+            throw new NotImplementedException();
         }
 
-        public void Stop()
+        public override TransportReceiveInfrastructure ConfigureReceiveInfrastructure()
         {
+            throw new NotImplementedException();
+        }
+
+        public override TransportSendInfrastructure ConfigureSendInfrastructure()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override TransportSubscriptionInfrastructure ConfigureSubscriptionInfrastructure()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override IEnumerable<Type> DeliveryConstraints { get; } = new[] { typeof(DelayDeliveryWith) };
+
+        public override TransportTransactionMode TransactionMode { get; } = TransportTransactionMode.None;
+
+        public override OutboundRoutingPolicy OutboundRoutingPolicy { get; } = new OutboundRoutingPolicy(OutboundRoutingType.Unicast, OutboundRoutingType.Unicast, OutboundRoutingType.Unicast);
+
+
+    }
+
+    class FakeReceiver : IPushMessages
+    {
+        CriticalError criticalError;
+        Exception throwCritical;
+
+        public Task Init(Func<PushContext, Task> pipe, CriticalError criticalError, PushSettings settings)
+        {
+            this.criticalError = criticalError;
+            return Task.FromResult(0);
+        }
+
+        public void Start(PushRuntimeSettings limitations)
+        {
+            if (throwCritical != null)
+            {
+                criticalError.Raise(throwCritical.Message, throwCritical);
+            }
+        }
+
+        public Task Stop()
+        {
+            return Task.FromResult(0);
+        }
+
+        public FakeReceiver(Exception throwCritical)
+        {
+            this.throwCritical = throwCritical;
         }
     }
 
     class FakeQueueCreator : ICreateQueues
     {
-        public void CreateQueueIfNecessary(Address address, string account)
+        public Task CreateQueueIfNecessary(QueueBindings queueBindings, string identity)
         {
+            return Task.FromResult(0);
         }
     }
 
-    class FakeSender : ISendMessages
+    class FakeDispatcher : IDispatchMessages
     {
-        public void Send(TransportMessage message, SendOptions sendOptions)
+        public Task Dispatch(TransportOperations outgoingMessages, ContextBag context)
         {
+            return Task.FromResult(0);
         }
     }
 }

@@ -4,6 +4,7 @@
     using EndpointTemplates;
     using AcceptanceTesting;
     using NUnit.Framework;
+    using System.Threading.Tasks;
 
     public class When_base_event_from_2_publishers : NServiceBusAcceptanceTest
     {
@@ -90,12 +91,14 @@
             {
                 public Context Context { get; set; }
 
-                public void Handle(BaseEvent message)
+                public Task Handle(BaseEvent message, IMessageHandlerContext context)
                 {
                     if (message.GetType().FullName.Contains("DerivedEvent1"))
                         Context.GotTheEventFromPublisher1 = true;
                     if (message.GetType().FullName.Contains("DerivedEvent2"))
                         Context.GotTheEventFromPublisher2 = true;
+
+                    return Task.FromResult(0);
                 }
             }
         }

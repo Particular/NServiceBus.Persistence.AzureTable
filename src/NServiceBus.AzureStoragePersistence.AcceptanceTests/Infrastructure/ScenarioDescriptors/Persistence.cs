@@ -8,6 +8,12 @@
 
     public static class Persistence
     {
+        static Persistence()
+        {
+            InMemoryPersistenceDescriptor = new RunDescriptor(InMemoryPersistenceType.Name);
+            InMemoryPersistenceDescriptor.Settings.Set("Persistence", InMemoryPersistenceType.AssemblyQualifiedName);
+        }
+
         public static RunDescriptor Default
         {
             get
@@ -45,15 +51,7 @@
 
         static Type InMemoryPersistenceType = typeof(InMemoryPersistence);
 
-        static RunDescriptor InMemoryPersistenceDescriptor = new RunDescriptor
-        {
-            Key = InMemoryPersistenceType.Name,
-            Settings =
-                new Dictionary<string, string>
-                {
-                    {"Persistence", InMemoryPersistenceType.AssemblyQualifiedName}
-                }
-        };
+        static RunDescriptor InMemoryPersistenceDescriptor;
 
         static IEnumerable<RunDescriptor> GetAllAvailable()
         {
@@ -65,21 +63,13 @@
             {
                 var key = definition.Name;
 
-                var runDescriptor = new RunDescriptor
-                {
-                    Key = key,
-                    Settings =
-                        new Dictionary<string, string>
-                                {
-                                    {"Persistence", definition.AssemblyQualifiedName}
-                                }
-                };
+                var runDescriptor = new RunDescriptor(key);
+                runDescriptor.Settings.Set("Persistence", definition.AssemblyQualifiedName);
 
                 yield return runDescriptor;
             }
         }
 
         static IList<RunDescriptor> availablePersisters;
-
     }
 }

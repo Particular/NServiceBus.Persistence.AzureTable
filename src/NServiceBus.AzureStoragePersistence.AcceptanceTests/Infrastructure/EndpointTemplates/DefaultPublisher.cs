@@ -2,15 +2,17 @@ namespace NServiceBus.AcceptanceTests.EndpointTemplates
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
     using NServiceBus.AcceptanceTesting;
     using NServiceBus.AcceptanceTesting.Support;
     using NServiceBus.Config.ConfigurationSource;
+    using ObjectBuilder;
     using NServiceBus.Pipeline;
     using NServiceBus.Pipeline.Contexts;
 
     public class DefaultPublisher : IEndpointSetupTemplate
     {
-        public BusConfiguration GetConfiguration(RunDescriptor runDescriptor, EndpointConfiguration endpointConfiguration, IConfigurationSource configSource, Action<BusConfiguration> configurationBuilderCustomization)
+        public Task<EndpointConfiguration> GetConfiguration(RunDescriptor runDescriptor, EndpointCustomizationConfiguration endpointConfiguration, IConfigurationSource configSource, Action<EndpointConfiguration> configurationBuilderCustomization)
         {
             return new DefaultServer(new List<Type> { typeof(SubscriptionTracer), typeof(SubscriptionTracer.Registration) }).GetConfiguration(runDescriptor, endpointConfiguration, configSource, b =>
             {
@@ -19,36 +21,30 @@ namespace NServiceBus.AcceptanceTests.EndpointTemplates
             });
         }
 
-        class SubscriptionTracer : IBehavior<OutgoingContext>
+        class SubscriptionTracer : Behavior<ISubscribeContext>
         {
-            public ScenarioContext Context { get; set; }
+            Registration testContext;
 
-            public void Invoke(OutgoingContext context, Action next)
+            public SubscriptionTracer(Registration testContext)
             {
-                next();
+                this.testContext = testContext;
+            }
 
-                List<Address> subscribers;
+            public override async Task Invoke(ISubscribeContext context, Func<Task> next)
+            {
+                await next().ConfigureAwait(false);
 
-                if (context.TryGet("SubscribersForEvent", out  subscribers))
-                {
-                    Context.AddTrace(string.Format("Subscribers for {0} : {1}", context.OutgoingLogicalMessage.MessageType.Name, string.Join(";", subscribers)));
-                }
-
-                bool nosubscribers;
-
-                if (context.TryGet("NoSubscribersFoundForMessage", out nosubscribers) && nosubscribers)
-                {
-                    Context.AddTrace(string.Format("No Subscribers found for message {0}", context.OutgoingLogicalMessage.MessageType.Name));
-                }
+                testContext.EventsSubscribedTo.Add(context.EventType);
             }
 
             public class Registration : RegisterStep
             {
                 public Registration()
-                    : base("SubscriptionTracer", typeof(SubscriptionTracer), "Traces the list of found subscribers")
+                    : base("SubscriptionTracking", typeof(SubscriptionTracer), "Tracks subscriptions")
                 {
-                    InsertBefore(WellKnownStep.DispatchMessageToTransport);
                 }
+
+                public List<Type> EventsSubscribedTo { get; } = new List<Type>();
             }
         }
     }

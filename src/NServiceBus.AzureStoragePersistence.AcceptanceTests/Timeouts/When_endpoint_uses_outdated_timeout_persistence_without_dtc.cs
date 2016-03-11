@@ -33,8 +33,7 @@
                 EndpointSetup<DefaultServer>(config =>
                 {
                     config.EnableFeature<TimeoutManager>();
-                    config.UseTransport<NonDtcTransportDefinition>();
-                    config.OverrideLocalAddress("FakeQueueName");
+                    config.UseTransport<NonDtcTransportDefinition>().AddAddressTranslationRule(address => "FakeQueueName");
                 });
             }
         }

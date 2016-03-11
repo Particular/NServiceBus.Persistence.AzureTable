@@ -5,52 +5,16 @@
 
     public static class Serializers
     {
-        public static readonly RunDescriptor Binary = new RunDescriptor
-            {
-                Key = "Binary",
-                Settings =
-                    new Dictionary<string, string>
-                        {
-                            {
-                                "Serializer", typeof (BinarySerializer).AssemblyQualifiedName
-                            }
-                        }
-            };
+        static Serializers()
+        {
+            Xml = new RunDescriptor("Xml");
+            Xml.Settings.Set("Serializer", typeof(XmlSerializer).AssemblyQualifiedName);
 
-        public static readonly RunDescriptor Bson = new RunDescriptor
-            {
-                Key = "Bson",
-                Settings =
-                    new Dictionary<string, string>
-                        {
-                            {
-                                "Serializer", typeof (BsonSerializer).AssemblyQualifiedName
-                            }
-                        }
-            };
+            Json = new RunDescriptor("Json");
+            Json.Settings.Set("Serializer", typeof(JsonSerializer).AssemblyQualifiedName);
+        }
 
-        public static readonly RunDescriptor Xml = new RunDescriptor
-            {
-                Key = "Xml",
-                Settings =
-                    new Dictionary<string, string>
-                        {
-                            {
-                                "Serializer", typeof (XmlSerializer).AssemblyQualifiedName
-                            }
-                        }
-            };
-
-        public static readonly RunDescriptor Json = new RunDescriptor
-            {
-                Key = "Json",
-                Settings =
-                    new Dictionary<string, string>
-                        {
-                            {
-                                "Serializer", typeof (JsonSerializer).AssemblyQualifiedName
-                            }
-                        }
-            };
+        public static readonly RunDescriptor Xml;
+        public static readonly RunDescriptor Json;
     }
 }

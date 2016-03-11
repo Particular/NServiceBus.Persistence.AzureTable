@@ -5,7 +5,7 @@ using NServiceBus.SagaPersisters;
 
 public class ConfigureAzureStoragePersistence
 {
-    public void Configure(BusConfiguration config)
+    public void Configure(EndpointConfiguration config)
     {
         var connectionString = Environment.GetEnvironmentVariable("AzureStoragePersistence.ConnectionString");
         config.UsePersistence<AzureStoragePersistence, StorageType.Subscriptions>().ConnectionString(connectionString);

@@ -5,6 +5,7 @@
     using EndpointTemplates;
     using Features;
     using NUnit.Framework;
+    using System.Threading.Tasks;
 
     public class When_multi_subscribing_to_a_polymorphic_event : NServiceBusAcceptanceTest
     {
@@ -96,7 +97,7 @@
             {
                 public Context Context { get; set; }
 
-                public void Handle(IMyEvent messageThatIsEnlisted)
+                public Task Handle(IMyEvent messageThatIsEnlisted, IMessageHandlerContext context)
                 {
                     Context.AddTrace(String.Format("Got event '{0}'", messageThatIsEnlisted));
                     if (messageThatIsEnlisted is MyEvent2)
@@ -107,6 +108,8 @@
                     {
                         Context.SubscriberGotIMyEvent = true;
                     }
+
+                    return Task.FromResult(0);
                 }
             }
         }

@@ -57,15 +57,8 @@
             {
                 var key = transportDefinitionType.Name;
 
-                var runDescriptor = new RunDescriptor
-                {
-                    Key = key,
-                    Settings =
-                        new Dictionary<string, string>
-                                {
-                                    {"Transport", transportDefinitionType.AssemblyQualifiedName}
-                                }
-                };
+                var runDescriptor = new RunDescriptor(key);
+                runDescriptor.Settings.Set("Transport", transportDefinitionType.AssemblyQualifiedName);
 
                 var connectionString = Environment.GetEnvironmentVariable(key + ".ConnectionString");
 
@@ -75,7 +68,7 @@
 
                 if (!string.IsNullOrEmpty(connectionString))
                 {
-                    runDescriptor.Settings.Add("Transport.ConnectionString", connectionString);
+                    runDescriptor.Settings.Set("Transport.ConnectionString", connectionString);
                     yield return runDescriptor;
                 }
             }
