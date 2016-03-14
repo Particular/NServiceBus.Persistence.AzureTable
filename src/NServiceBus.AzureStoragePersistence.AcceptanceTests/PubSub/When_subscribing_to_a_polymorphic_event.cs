@@ -5,26 +5,25 @@
     using AcceptanceTesting;
     using Features;
     using NUnit.Framework;
+    using System.Threading.Tasks;
 
     public class When_subscribing_to_a_polymorphic_event : NServiceBusAcceptanceTest
     {
         [Test]
-        public void Event_should_be_delivered()
+        public async Task Event_should_be_delivered()
         {
-            var cc = new Context();
-
-            Scenario.Define(cc)
+            var testContext = await Scenario.Define<Context>()
                     .WithEndpoint<Publisher>(b => b.When(c => c.Subscriber1Subscribed && c.Subscriber2Subscribed, bus => bus.Publish(new MyEvent())))
-                    .WithEndpoint<Subscriber1>(b => b.Given((bus, context) =>
+                    .WithEndpoint<Subscriber1>(b => b.When(async (session, context) =>
                         {
-                            bus.Subscribe<IMyEvent>();
+                            await session.Subscribe<IMyEvent>();
 
                             if (context.HasNativePubSubSupport)
                                 context.Subscriber1Subscribed = true;
                         }))
-                    .WithEndpoint<Subscriber2>(b => b.Given((bus, context) =>
+                    .WithEndpoint<Subscriber2>(b => b.When(async (session, context) =>
                         {
-                            bus.Subscribe<MyEvent>();
+                            await session.Subscribe<MyEvent>();
 
                             if (context.HasNativePubSubSupport)
                                 context.Subscriber2Subscribed = true;
@@ -32,8 +31,8 @@
                     .Done(c => c.Subscriber1GotTheEvent && c.Subscriber2GotTheEvent)
                     .Run();
 
-            Assert.True(cc.Subscriber1GotTheEvent);
-            Assert.True(cc.Subscriber2GotTheEvent);
+            Assert.True(testContext.Subscriber1GotTheEvent);
+            Assert.True(testContext.Subscriber2GotTheEvent);
         }
 
         public class Context : ScenarioContext
@@ -55,12 +54,12 @@
             {
                 EndpointSetup<DefaultPublisher>(b => b.OnEndpointSubscribed<Context>((args, context) =>
                 {
-                    if (args.SubscriberReturnAddress.Queue.Contains("Subscriber1"))
+                    if (args.SubscriberReturnAddress.Contains("Subscriber1"))
                     {
                         context.Subscriber1Subscribed = true;
                     }
 
-                    if (args.SubscriberReturnAddress.Queue.Contains("Subscriber2"))
+                    if (args.SubscriberReturnAddress.Contains("Subscriber2"))
                     {
                         context.Subscriber2Subscribed = true;
                     }
@@ -80,9 +79,11 @@
             {
                 public Context Context { get; set; }
 
-                public void Handle(IMyEvent messageThatIsEnlisted)
+                public Task Handle(IMyEvent messageThatIsEnlisted, IMessageHandlerContext context)
                 {
                     Context.Subscriber1GotTheEvent = true;
+
+                    return Task.FromResult(0);
                 }
             }
         }
@@ -99,9 +100,11 @@
             {
                 public Context Context { get; set; }
 
-                public void Handle(MyEvent messageThatIsEnlisted)
+                public Task Handle(MyEvent messageThatIsEnlisted, IMessageHandlerContext context)
                 {
                     Context.Subscriber2GotTheEvent = true;
+
+                    return Task.FromResult(0);
                 }
             }
         }

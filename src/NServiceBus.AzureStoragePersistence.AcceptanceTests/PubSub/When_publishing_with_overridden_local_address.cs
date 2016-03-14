@@ -6,28 +6,26 @@
     using Features;
     using NUnit.Framework;
     using ScenarioDescriptors;
+    using System.Threading.Tasks;
 
     public class When_publishing_with_overridden_local_address : NServiceBusAcceptanceTest
     {
-        [Test, Explicit("This test fails against RabbitMQ")]
-        public void Should_be_delivered_to_all_subscribers()
+        [Test, Ignore] // Overide local address doesn't exist anymore
+        public async Task Should_be_delivered_to_all_subscribers()
         {
-            Scenario.Define<Context>()
-                    .WithEndpoint<Publisher>(b =>
-                        b.When(c => c.Subscriber1Subscribed, bus => bus.Publish(new MyEvent()))
-                     )
-                    .WithEndpoint<Subscriber1>(b => b.Given((bus, context) =>
-                        {
-                            bus.Subscribe<MyEvent>();
+            await Scenario.Define<Context>()
+                .WithEndpoint<Publisher>(b => b.When(c => c.Subscriber1Subscribed, session => session.Publish(new MyEvent())))
+                .WithEndpoint<Subscriber1>(b => b.When(async (session, context) =>
+                {
+                    await session.Subscribe<MyEvent>();
 
-                            if (context.HasNativePubSubSupport)
-                                context.Subscriber1Subscribed = true;
-                        }))
-                    .Done(c => c.Subscriber1GotTheEvent)
-                    .Repeat(r => r.For(Transports.Default))
-                    .Should(c => Assert.True(c.Subscriber1GotTheEvent))
-
-                    .Run();
+                    if (context.HasNativePubSubSupport)
+                        context.Subscriber1Subscribed = true;
+                }))
+                .Done(c => c.Subscriber1GotTheEvent)
+                .Repeat(r => r.For(Transports.Default))
+                .Should(c => Assert.True(c.Subscriber1GotTheEvent))
+                .Run();
         }
 
         public class Context : ScenarioContext
@@ -42,7 +40,7 @@
             {
                 EndpointSetup<DefaultPublisher>(b => b.OnEndpointSubscribed<Context>((s, context) =>
                 {
-                    if (s.SubscriberReturnAddress.Queue.Contains("myinputqueue"))
+                    if (s.SubscriberReturnAddress.Contains("myinputqueue"))
                     {
                         context.Subscriber1Subscribed = true;
                     }
@@ -57,18 +55,19 @@
                 EndpointSetup<DefaultServer>(builder =>
                 {
                     builder.DisableFeature<AutoSubscribe>();
-                    builder.OverrideLocalAddress("myinputqueue");
                 })
-                    .AddMapping<MyEvent>(typeof(Publisher));
+                .AddMapping<MyEvent>(typeof(Publisher));
             }
 
             public class MyEventHandler : IHandleMessages<MyEvent>
             {
                 public Context Context { get; set; }
 
-                public void Handle(MyEvent messageThatIsEnlisted)
+                public Task Handle(MyEvent messageThatIsEnlisted, IMessageHandlerContext context)
                 {
                     Context.Subscriber1GotTheEvent = true;
+
+                    return Task.FromResult(0);
                 }
             }
         }

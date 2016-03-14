@@ -6,6 +6,7 @@
     using NUnit.Framework;
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
     using Routing;
+    using System.Threading.Tasks;
 
     [TestFixture]
     [Category("AzureStoragePersistence")]
@@ -17,7 +18,7 @@
         }
 
         [Test]
-        public async void the_subscription_should_be_removed()
+        public async Task the_subscription_should_be_removed()
         {
             var persister = SuscriptionTestHelper.CreateAzureSubscriptionStorage();
             var messageType = new MessageType(typeof(TestMessage));

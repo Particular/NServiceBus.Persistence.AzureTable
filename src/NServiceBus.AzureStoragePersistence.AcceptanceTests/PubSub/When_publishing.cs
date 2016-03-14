@@ -11,51 +11,59 @@
     public class When_publishing : NServiceBusAcceptanceTest
     {
         [Test]
-        public void Issue_1851()
+        public async Task Issue_1852()
         {
-            Scenario.Define<Context>()
-                    .WithEndpoint<Publisher3>(b =>
-                        b.When(c => c.Subscriber3Subscribed, bus => bus.Publish<IFoo>())
-                     )
-                    .WithEndpoint<Subscriber3>(b => b.CustomConfig((endpointCOnfig, context) =>
-                    {
-                        if (context.HasNativePubSubSupport)
-                        {
-                            context.Subscriber3Subscribed = true;
-                        }
-                    }))
+            await Scenario.Define<Context>()
+                .WithEndpoint<Publisher3>(b =>
+                    b.When(c => c.Subscriber3Subscribed, session => session.Publish<IFoo>())
+                    )
+                .WithEndpoint<Subscriber3>(b => b.When(async (session, context) =>
+                {
+                    await session.Subscribe<IFoo>();
 
-                    .Done(c => c.Subscriber3GotTheEvent)
-                    .Repeat(r => r.For(Transports.Default))
-                    .Should(c => Assert.True(c.Subscriber3GotTheEvent))
-                    .Run();
+                    if (context.HasNativePubSubSupport)
+                    {
+                        context.Subscriber3Subscribed = true;
+                    }
+                }))
+                .Done(c => c.Subscriber3GotTheEvent)
+                .Repeat(r => r.For(Transports.Default))
+                .Should(c => Assert.True(c.Subscriber3GotTheEvent))
+                .Run();
         }
 
         [Test]
-        public void Should_be_delivered_to_all_subscribers()
+        public async Task Should_be_delivered_to_all_subscribers()
         {
-            Scenario.Define<Context>()
+            await Scenario.Define<Context>()
                     .WithEndpoint<Publisher>(b =>
-                        b.When(c => c.Subscriber1Subscribed && c.Subscriber2Subscribed, (endpoint, c) =>
+                        b.When(c => c.Subscriber1Subscribed && c.Subscriber2Subscribed, (session, c) =>
                         {
                             c.AddTrace("Both subscribers is subscribed, going to publish MyEvent");
-                            return endpoint.Publish(new MyEvent());
+
+                            var options = new PublishOptions();
+
+                            options.SetHeader("MyHeader", "SomeValue");
+                            return session.Publish(new MyEvent(), options);
                         })
                      )
-                    .WithEndpoint<Subscriber1>(b => b.CustomConfig((endpointConfig, context) =>
+                    .WithEndpoint<Subscriber1>(b => b.When(async (session, context) =>
+                    {
+                        await session.Subscribe<MyEvent>();
+                        if (context.HasNativePubSubSupport)
                         {
-                            if (context.HasNativePubSubSupport)
-                            {
-                                context.Subscriber1Subscribed = true;
-                                context.AddTrace("Subscriber1 is now subscribed (at least we have asked the broker to be subscribed)");
-                            }
-                            else
-                            {
-                                context.AddTrace("Subscriber1 has now asked to be subscribed to MyEvent");
-                            }
-                        }))
-                      .WithEndpoint<Subscriber2>(b => b.CustomConfig((endpointConfig, context) =>
+                            context.Subscriber1Subscribed = true;
+                            context.AddTrace("Subscriber1 is now subscribed (at least we have asked the broker to be subscribed)");
+                        }
+                        else
+                        {
+                            context.AddTrace("Subscriber1 has now asked to be subscribed to MyEvent");
+                        }
+                    }))
+                      .WithEndpoint<Subscriber2>(b => b.When(async (session, context) =>
                       {
+                          await session.Subscribe<MyEvent>();
+
                           if (context.HasNativePubSubSupport)
                           {
                               context.Subscriber2Subscribed = true;
@@ -73,7 +81,6 @@
                         Assert.True(c.Subscriber1GotTheEvent);
                         Assert.True(c.Subscriber2GotTheEvent);
                     })
-
                     .Run(TimeSpan.FromSeconds(10));
         }
 

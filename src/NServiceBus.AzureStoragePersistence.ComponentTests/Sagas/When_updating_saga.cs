@@ -4,11 +4,12 @@
     using NServiceBus.Sagas;
     using NServiceBus.SagaPersisters.Azure;
     using NUnit.Framework;
+    using System.Threading.Tasks;
 
     public class When_updating_saga
     {
         [Test]
-        public async void Should_save_updated_properties()
+        public async Task Should_save_updated_properties()
         {
             var connectionString = AzurePersistenceTests.GetConnectionString();
 

@@ -4,11 +4,12 @@
     using NServiceBus.Sagas;
     using NServiceBus.SagaPersisters.Azure;
     using NUnit.Framework;
+    using System.Threading.Tasks;
 
     public class When_getting_the_saga_entity
     {
         [Test]
-        public async void Should_return_null_when_no_saga_data_exists()
+        public async Task Should_return_null_when_no_saga_data_exists()
         {
             var connectionString = AzurePersistenceTests.GetConnectionString();
 
@@ -20,7 +21,7 @@
         }
 
         [Test]
-        public async void Should_return_entity()
+        public async Task Should_return_entity()
         {
             var connectionString = AzurePersistenceTests.GetConnectionString();
 

@@ -18,7 +18,7 @@
         }
 
         [Test]
-        public async void Should_return_true_when_timeout_is_TryRemoved_successfuly()
+        public async Task Should_return_true_when_timeout_is_TryRemoved_successfuly()
         {
             var timeoutPersister = TestHelper.CreateTimeoutPersister();
 
@@ -34,7 +34,7 @@
         }
 
         [Test]
-        public async void Should_return_correct_headers_when_timeout_is_Peeked()
+        public async Task Should_return_correct_headers_when_timeout_is_Peeked()
         {
             var timeoutPersister = TestHelper.CreateTimeoutPersister();
 
@@ -52,7 +52,7 @@
         }
 
         [Test]
-        public async void Peek_should_return_null_for_non_existing_timeout()
+        public async Task Peek_should_return_null_for_non_existing_timeout()
         {
             var timeoutPersister = TestHelper.CreateTimeoutPersister();
 
@@ -62,7 +62,7 @@
         }
 
         [Test]
-        public async void Should_remove_timeouts_by_id_and_return_true_using_new_interface()
+        public async Task Should_remove_timeouts_by_id_and_return_true_using_new_interface()
         {
             var timeoutPersister = TestHelper.CreateTimeoutPersister();
             var timeout1 = TestHelper.GenerateTimeoutWithHeaders();
@@ -85,7 +85,7 @@
         }
 
         [Test]
-        public async void Should_return_false_if_timeout_already_deleted_for_TryRemove_invocation()
+        public async Task Should_return_false_if_timeout_already_deleted_for_TryRemove_invocation()
         {
             var timeoutPersister = TestHelper.CreateTimeoutPersister();
 
@@ -102,7 +102,7 @@
         }
 
         [Test]
-        public async void Should_remove_timeouts_by_sagaid()
+        public async Task Should_remove_timeouts_by_sagaid()
         {
             var timeoutPersister = TestHelper.CreateTimeoutPersister();
             var sagaId1 = Guid.NewGuid();

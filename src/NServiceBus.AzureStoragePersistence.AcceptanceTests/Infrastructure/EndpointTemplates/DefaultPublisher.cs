@@ -14,11 +14,7 @@ namespace NServiceBus.AcceptanceTests.EndpointTemplates
     {
         public Task<EndpointConfiguration> GetConfiguration(RunDescriptor runDescriptor, EndpointCustomizationConfiguration endpointConfiguration, IConfigurationSource configSource, Action<EndpointConfiguration> configurationBuilderCustomization)
         {
-            return new DefaultServer(new List<Type> { typeof(SubscriptionTracer), typeof(SubscriptionTracer.Registration) }).GetConfiguration(runDescriptor, endpointConfiguration, configSource, b =>
-            {
-                b.Pipeline.Register<SubscriptionTracer.Registration>();
-                configurationBuilderCustomization(b);
-            });
+            return new DefaultServer().GetConfiguration(runDescriptor, endpointConfiguration, configSource, configurationBuilderCustomization);
         }
 
         class SubscriptionTracer : Behavior<ISubscribeContext>

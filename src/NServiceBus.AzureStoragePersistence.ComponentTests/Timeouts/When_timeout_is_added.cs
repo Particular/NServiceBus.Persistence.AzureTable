@@ -1,6 +1,7 @@
 ﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
 {
     using NUnit.Framework;
+    using System.Threading.Tasks;
 
     [TestFixture]
     [Category("AzureStoragePersistence")]
@@ -13,7 +14,7 @@
         }
 
         [Test]
-        public async void Should_retain_timeout_state()
+        public async Task Should_retain_timeout_state()
         {
             var timeoutPersister = TestHelper.CreateTimeoutPersister();
             var timeout = TestHelper.GenerateTimeoutWithHeaders();

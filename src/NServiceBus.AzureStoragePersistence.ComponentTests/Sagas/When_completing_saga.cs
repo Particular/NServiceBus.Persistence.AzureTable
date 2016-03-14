@@ -4,11 +4,12 @@
     using NServiceBus.Sagas;
     using NServiceBus.SagaPersisters.Azure;
     using NUnit.Framework;
+    using System.Threading.Tasks;
 
     public class When_completing_saga
     {
         [Test]
-        public async void Should_remove_saga_data()
+        public async Task Should_remove_saga_data()
         {
             var connectionString = AzurePersistenceTests.GetConnectionString();
 
@@ -30,7 +31,7 @@
         }
 
         [Test]
-        public async void Should_allow_action_twice_without_throwing_error()
+        public async Task Should_allow_action_twice_without_throwing_error()
         {
             var connectionString = AzurePersistenceTests.GetConnectionString();
 
@@ -54,7 +55,7 @@
         }
 
         [Test]
-        public async void Should_succeed_if_saga_doesnt_exist()
+        public async Task Should_succeed_if_saga_doesnt_exist()
         {
             var connectionString = AzurePersistenceTests.GetConnectionString();
 

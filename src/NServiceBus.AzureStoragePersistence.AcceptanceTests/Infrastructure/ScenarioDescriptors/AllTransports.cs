@@ -105,9 +105,11 @@
             var runDescriptors = Transports.AllAvailable;
             foreach (var rundescriptor in runDescriptors)
             {
-                Type type;
-                if (rundescriptor.Settings.TryGet("Transport", out type))
+                string typeName;
+                if (rundescriptor.Settings.TryGet("Transport", out typeName))
                 {
+                    var type = Type.GetType(typeName);
+
                     var configurerTypeName = "ConfigureScenariosFor" + type.Name;
                     var configurerType = Type.GetType(configurerTypeName, false);
 
