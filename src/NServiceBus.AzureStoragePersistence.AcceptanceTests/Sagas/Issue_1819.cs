@@ -4,23 +4,25 @@
     using EndpointTemplates;
     using AcceptanceTesting;
     using NUnit.Framework;
-    using Saga;
+    using System.Threading.Tasks;
+    using NServiceBus.Sagas;
 
     public class Issue_1819 : NServiceBusAcceptanceTest
     {
         [Test]
-        public void Run()
+        public async Task Run()
         {
-            var context = new Context { Id = Guid.NewGuid() };
-
-            Scenario.Define(context)
-                    .WithEndpoint<Endpoint>(b => b.Given((bus, c) => bus.SendLocal(new StartSaga1 { ContextId = c.Id })))
+            var testContext = await Scenario.Define<Context>(c => { c.Id = Guid.NewGuid(); })
+                    .WithEndpoint<Endpoint>(b => {
+                            b.CustomConfig(endpointConfig => { endpointConfig.ExecuteTheseHandlersFirst(typeof(Endpoint.CatchAllMessageHandler)); });
+                            b.When((instance, c) => instance.SendLocal(new StartSaga1 { ContextId = c.Id }));
+                        })
                     .Done(c => (c.Saga1TimeoutFired && c.Saga2TimeoutFired) || c.SagaNotFound)
-                    .Run(TimeSpan.FromSeconds(20));
+                    .Run(TimeSpan.FromSeconds(2000));
 
-            Assert.IsFalse(context.SagaNotFound);
-            Assert.IsTrue(context.Saga1TimeoutFired);
-            Assert.IsTrue(context.Saga2TimeoutFired);
+            Assert.IsFalse(testContext.SagaNotFound);
+            Assert.IsTrue(testContext.Saga1TimeoutFired);
+            Assert.IsTrue(testContext.Saga2TimeoutFired);
         }
 
         public class Context : ScenarioContext
@@ -42,26 +44,39 @@
             {
                 public Context Context { get; set; }
 
-                public void Handle(StartSaga1 message)
+                public async Task Handle(StartSaga1 message, IMessageHandlerContext context)
                 {
-                    if (message.ContextId != Context.Id) return;
+                    if (message.ContextId != Context.Id)
+                    {
+                        return;
+                    }
 
-                    RequestTimeout(TimeSpan.FromSeconds(5), new Saga1Timeout { ContextId = Context.Id });
-                    RequestTimeout(new DateTime(2011, 10, 14, 23, 08, 0, DateTimeKind.Local), new Saga2Timeout { ContextId = Context.Id });
+                    await RequestTimeout(context, TimeSpan.FromSeconds(5), new Saga1Timeout { ContextId = Context.Id });
+                    await RequestTimeout(context, new DateTime(2011, 10, 14, 23, 08, 0, DateTimeKind.Local), new Saga2Timeout { ContextId = Context.Id });
                 }
 
-                public void Timeout(Saga1Timeout state)
+                public Task Timeout(Saga1Timeout state, IMessageHandlerContext context)
                 {
                     MarkAsComplete();
 
-                    if (state.ContextId != Context.Id) return;
+                    if (state.ContextId != Context.Id)
+                    {
+                        return Task.FromResult(0);
+                    }
+
                     Context.Saga1TimeoutFired = true;
+                    return Task.FromResult(0);
                 }
 
-                public void Timeout(Saga2Timeout state)
+                public Task Timeout(Saga2Timeout state, IMessageHandlerContext context)
                 {
-                    if (state.ContextId != Context.Id) return;
+                    if (state.ContextId != Context.Id)
+                    {
+                        return Task.FromResult(0);
+                    }
+
                     Context.Saga2TimeoutFired = true;
+                    return Task.FromResult(0);
                 }
 
                 public class Saga1Data : ContainSagaData
@@ -77,27 +92,23 @@
             {
                 public Context Context { get; set; }
 
-                public void Handle(object message)
+                public Task Handle(object message, IMessageProcessingContext context)
                 {
-                    if (((dynamic)message).ContextId != Context.Id) return;
+                    if (((dynamic)message).ContextId != Context.Id)
+                    {
+                        return Task.FromResult(0);
+                    }
 
                     Context.SagaNotFound = true;
+                    return Task.FromResult(0);
                 }
             }
 
             public class CatchAllMessageHandler : IHandleMessages<object>
             {
-                public void Handle(object message)
+                public Task Handle(object message, IMessageHandlerContext context)
                 {
-
-                }
-            }
-
-            public class Foo : ISpecifyMessageHandlerOrdering
-            {
-                public void SpecifyOrder(Order order)
-                {
-                    order.SpecifyFirst<CatchAllMessageHandler>();
+                    return Task.FromResult(0);
                 }
             }
         }

@@ -98,6 +98,9 @@
     <Compile Include="PubSub\When_publishing_with_only_local_messagehandlers.cs" />
     <Compile Include="PubSub\When_publishing_with_overridden_local_address.cs" />
     <Compile Include="PubSub\When_subscribing_to_a_polymorphic_event.cs" />
+    <Compile Include="Timeouts\CyclingOutageTimeoutPersister.cs" />
+    <Compile Include="Timeouts\TransportWithFakeQueues.cs" />
+    <Compile Include="Timeouts\When_timeout_storage_is_unavailable_temporarily.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -116,7 +119,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Sagas\" />
-    <Folder Include="Timeouts\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
