@@ -50,7 +50,7 @@
             this.catchUpInterval = catchUpInterval;
             this.partitionKeyScope = partitionKeyScope;
             this.endpointName = endpointName;
-            
+
             // Unicast sets the default for this value to the machine name.
             // NServiceBus.Host.AzureCloudService, when running in a cloud environment, sets this value to the current RoleInstanceId.
             if (string.IsNullOrWhiteSpace(hostDisplayName))
@@ -93,7 +93,7 @@
                 // Case insensitive search probably not possible?
                 var greaterThanLastRead = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.GreaterThan, lastSuccessfulRead.Value.ToString(partitionKeyScope));
                 var lessThanNow = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThan, now.ToString(partitionKeyScope));
-                
+
                 var greaterThanLessThan = TableQuery.CombineFilters(greaterThanLastRead, TableOperators.And, lessThanNow);
                 filter = TableQuery.CombineFilters(greaterThanLessThan, TableOperators.And, endpointNameMatch);
             }
@@ -113,7 +113,7 @@
 
             var pastTimeouts = allTimeouts.Where(c => c.Time > startSlice && c.Time <= now).ToList();
             var futureTimeouts = allTimeouts.Where(c => c.Time > now).ToList();
-            
+
             if (lastSuccessfulReadEntity != null)
             {
                 var catchingUp = lastSuccessfulRead.Value.AddSeconds(catchUpInterval);
@@ -133,11 +133,9 @@
                 nextTimeToRunQuery);
 
             await UpdateSuccessfulRead(timeoutManagerDataTable, lastSuccessfulReadEntity).ConfigureAwait(false);
-           
+
             return timeoutsChunk;
         }
-
-        
 
         /// <summary>
         /// Add a new timeout entry
@@ -180,7 +178,7 @@
         {
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
 
-            var timeoutDataEntity = GetTimeoutData(timeoutDataTable, timeoutId, string.Empty);
+            var timeoutDataEntity = GetTimeoutData(timeoutDataTable, timeoutId);
             if (timeoutDataEntity == null)
             {
                 return Task.FromResult<TimeoutData>(null);
@@ -210,7 +208,7 @@
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
 
             // Async?
-            var timeoutDataEntity = GetTimeoutData(timeoutDataTable, timeoutId, string.Empty);
+            var timeoutDataEntity = GetTimeoutData(timeoutDataTable, timeoutId);
             if (timeoutDataEntity == null)
             {
                 return false;
@@ -318,11 +316,19 @@
             return null;
         }
 
+        TimeoutDataEntity GetTimeoutData(CloudTable timeoutDataTable, string timeoutId)
+        {
+            var timeoutDataEntity = (from c in timeoutDataTable.CreateQuery<TimeoutDataEntity>()
+                                     where c.RowKey == timeoutId
+                                     select c).ToList().SafeFirstOrDefault();
+            return timeoutDataEntity;
+        }
+
         TimeoutDataEntity GetTimeoutData(CloudTable timeoutDataTable, string partitionKey, string rowKey)
         {
-             var timeoutDataEntity = (from c in timeoutDataTable.CreateQuery<TimeoutDataEntity>()
-                where c.PartitionKey == partitionKey && c.RowKey == rowKey // issue #191 cannot occur when both partitionkey and rowkey are specified
-                select c).ToList().SafeFirstOrDefault();
+            var timeoutDataEntity = (from c in timeoutDataTable.CreateQuery<TimeoutDataEntity>()
+                                     where c.PartitionKey == partitionKey && c.RowKey == rowKey // issue #191 cannot occur when both partitionkey and rowkey are specified
+                                     select c).ToList().SafeFirstOrDefault();
             return timeoutDataEntity;
         }
 
@@ -346,7 +352,7 @@
                 await blob.DownloadToStreamAsync(stream).ConfigureAwait(false);
                 stream.Position = 0;
 
-                var buffer = new byte[16*1024];
+                var buffer = new byte[16 * 1024];
                 using (var ms = new MemoryStream())
                 {
                     int read;
@@ -424,7 +430,7 @@
                 //Concurrency Exception - PreCondition Failed or Entity Already Exists
                 if (response != null && (response.StatusCode == 412 || response.StatusCode == 409))
                 {
-                    return; 
+                    return;
                     // I assume we can ignore this condition? 
                     // Time between read and update is very small, meaning that another instance has sent 
                     // the timeout messages that this node intended to send and if not we will resend 

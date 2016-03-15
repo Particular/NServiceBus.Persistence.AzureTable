@@ -10,8 +10,8 @@
     {
         static Persistence()
         {
-            InMemoryPersistenceDescriptor = new RunDescriptor(InMemoryPersistenceType.Name);
-            InMemoryPersistenceDescriptor.Settings.Set("Persistence", InMemoryPersistenceType.AssemblyQualifiedName);
+            AzureStoragePersistenceDescriptor = new RunDescriptor(AzureStoragePersistenceType.Name);
+            AzureStoragePersistenceDescriptor.Settings.Set("Persistence", AzureStoragePersistenceType.AssemblyQualifiedName);
         }
 
         public static RunDescriptor Default
@@ -32,7 +32,7 @@
                     return nonCorePersister;
                 }
 
-                return InMemoryPersistenceDescriptor;
+                return AzureStoragePersistenceDescriptor;
             }
         }
 
@@ -49,14 +49,13 @@
             }
         }
 
-        static Type InMemoryPersistenceType = typeof(InMemoryPersistence);
-
-        static RunDescriptor InMemoryPersistenceDescriptor;
+        static Type AzureStoragePersistenceType = typeof(AzureStoragePersistence);
+        static RunDescriptor AzureStoragePersistenceDescriptor;
 
         static IEnumerable<RunDescriptor> GetAllAvailable()
         {
             var foundDefinitions = TypeScanner.GetAllTypesAssignableTo<PersistenceDefinition>()
-                .Where(t => t.Assembly != InMemoryPersistenceType.Assembly &&
+                .Where(t => t.Assembly != AzureStoragePersistenceType.Assembly &&
                 t.Assembly != typeof(Persistence).Assembly);
 
             foreach (var definition in foundDefinitions)

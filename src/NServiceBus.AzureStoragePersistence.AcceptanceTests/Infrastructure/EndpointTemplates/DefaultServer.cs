@@ -49,7 +49,13 @@
 
             builder.RegisterComponents(r => { RegisterInheritanceHierarchyOfContextOnContainer(runDescriptor, r); });
 
-            builder.UsePersistence<InMemoryPersistence>();
+            builder.UsePersistence<AzureStoragePersistence>();
+
+            // Use this to disable synchronization storage by providing an empty implementation
+            // so that when the container tries to resolve an instance if ISynchronizedStorage it
+            // doesn't throw a ComponentNotRegisteredException exception
+            // This is hacky and we need a proper way around this.
+            builder.EnableFeature<FakeSynchronizationStorage>();
 
             configurationBuilderCustomization(builder);
 

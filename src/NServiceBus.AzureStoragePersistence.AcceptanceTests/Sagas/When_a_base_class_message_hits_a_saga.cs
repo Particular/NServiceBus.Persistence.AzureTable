@@ -1,30 +1,24 @@
 ﻿namespace NServiceBus.AcceptanceTests.Sagas
 {
     using System;
+    using System.Threading.Tasks;
     using NServiceBus.AcceptanceTesting;
     using NServiceBus.AcceptanceTests.EndpointTemplates;
-    using NServiceBus.Saga;
+    using NServiceBus.Features;
     using NUnit.Framework;
 
     [TestFixture]
     public class When_a_base_class_message_hits_a_saga
     {
         [Test]
-        public void Should_find_existing_instance()
+        public async Task Should_find_existing_instance()
         {
             var correlationId = Guid.NewGuid();
-            var context = Scenario.Define<Context>()
-                   .WithEndpoint<SagaEndpoint>(b => b.Given(bus =>
+            var context = await Scenario.Define<Context>()
+                   .WithEndpoint<SagaEndpoint>(b => b.When(session => session.SendLocal(new StartSagaMessage
                    {
-                       bus.SendLocal(new StartSagaMessage
-                       {
-                           SomeId = correlationId
-                       });
-                       bus.SendLocal(new StartSagaMessage
-                       {
-                           SomeId = correlationId
-                       });
-                   }))
+                       SomeId = correlationId
+                   })))
                    .Done(c => c.SecondMessageFoundExistingSaga)
                    .Run(TimeSpan.FromSeconds(20));
 
@@ -40,37 +34,39 @@
         {
             public SagaEndpoint()
             {
-                EndpointSetup<DefaultServer>();
+                EndpointSetup<DefaultServer>(c => c.EnableFeature<TimeoutManager>());
             }
 
-
-
-            public class TestSaga : Saga<TestSaga.SagaData>, IAmStartedByMessages<StartSagaMessageBase>
+            public class TestSaga04 : Saga<TestSaga04.SagaData04>, IAmStartedByMessages<StartSagaMessageBase>
             {
-                public Context Context { get; set; }
+                public Context TestContext { get; set; }
 
-                public void Handle(StartSagaMessageBase message)
+                public Task Handle(StartSagaMessageBase message, IMessageHandlerContext context)
                 {
                     if (Data.SomeId != Guid.Empty)
                     {
-                        Context.SecondMessageFoundExistingSaga = true;
+                        TestContext.SecondMessageFoundExistingSaga = true;
                     }
                     else
                     {
-                        Data.SomeId = message.SomeId;
+                        return context.SendLocal(new StartSagaMessage
+                        {
+                            SomeId = message.SomeId
+                        });
                     }
+
+                    return Task.FromResult(0);
                 }
 
-                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<SagaData> mapper)
+                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<SagaData04> mapper)
                 {
                     mapper.ConfigureMapping<StartSagaMessageBase>(m => m.SomeId)
                         .ToSaga(s => s.SomeId);
                 }
 
-                public class SagaData : ContainSagaData
+                public class SagaData04 : ContainSagaData
                 {
-                    [Unique]
-                    public Guid SomeId { get; set; }
+                    public virtual Guid SomeId { get; set; }
                 }
             }
 

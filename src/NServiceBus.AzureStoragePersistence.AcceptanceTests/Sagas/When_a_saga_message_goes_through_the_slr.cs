@@ -4,79 +4,93 @@
     using EndpointTemplates;
     using AcceptanceTesting;
     using NUnit.Framework;
-    using Saga;
+    using NServiceBus.Sagas;
     using ScenarioDescriptors;
+    using Features;
+    using System.Threading.Tasks;
+    using Config;
 
     //repro for issue: https://github.com/NServiceBus/NServiceBus/issues/1020
     public class When_a_saga_message_goes_through_the_slr : NServiceBusAcceptanceTest
     {
         [Test]
-        public void Should_invoke_the_correct_handle_methods_on_the_saga()
+        public async Task Should_invoke_the_correct_handle_methods_on_the_saga()
         {
-            Scenario.Define<Context>()
-                    .WithEndpoint<SagaEndpoint>(b => b.Given(bus => bus.SendLocal(new StartSagaMessage { SomeId = Guid.NewGuid() })))
-                    .AllowExceptions()
-                    .Done(c => c.SecondMessageProcessed)
-                    .Repeat(r => r.For(Transports.Default))
-                    .Run();
+            await Scenario.Define<Context>()
+                .WithEndpoint<SagaMsgThruSlrEndpt>(b => b
+                    .When(session => session.SendLocal(new StartSagaMessage
+                    {
+                        SomeId = Guid.NewGuid()
+                    })))
+                .Done(c => c.SecondMessageProcessed)
+                .Repeat(r => r.For(Transports.Default))
+                .Run();
         }
 
         public class Context : ScenarioContext
         {
             public bool SecondMessageProcessed { get; set; }
 
-
             public int NumberOfTimesInvoked { get; set; }
         }
 
-        public class SagaEndpoint : EndpointConfigurationBuilder
+        public class SagaMsgThruSlrEndpt : EndpointConfigurationBuilder
         {
-            public SagaEndpoint()
+            public SagaMsgThruSlrEndpt()
             {
-                EndpointSetup<DefaultServer>();
+                EndpointSetup<DefaultServer>(b =>
+                {
+                    b.EnableFeature<TimeoutManager>();
+                    b.EnableFeature<SecondLevelRetries>();
+                }).WithConfig<SecondLevelRetriesConfig>(slr =>
+                {
+                    slr.NumberOfRetries = 1;
+                    slr.TimeIncrease = TimeSpan.FromMilliseconds(1);
+                });
             }
 
-            public class TestSaga : Saga<TestSagaData>, IAmStartedByMessages<StartSagaMessage>,IHandleMessages<SecondSagaMessage>
+            public class TestSaga09 : Saga<TestSagaData09>,
+                IAmStartedByMessages<StartSagaMessage>,
+                IHandleMessages<SecondSagaMessage>
             {
-                public Context Context { get; set; }
-                public void Handle(StartSagaMessage message)
+                public Context TestContext { get; set; }
+
+                public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
                     Data.SomeId = message.SomeId;
 
-                    Bus.SendLocal(new SecondSagaMessage
-                        {
-                            SomeId = Data.SomeId
-                        });
+                    return context.SendLocal(new SecondSagaMessage
+                    {
+                        SomeId = Data.SomeId
+                    });
                 }
 
-                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<TestSagaData> mapper)
+                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<TestSagaData09> mapper)
                 {
                     mapper.ConfigureMapping<StartSagaMessage>(m => m.SomeId)
-                        .ToSaga(s=>s.SomeId);
+                        .ToSaga(s => s.SomeId);
                     mapper.ConfigureMapping<SecondSagaMessage>(m => m.SomeId)
                       .ToSaga(s => s.SomeId);
                 }
 
-                public void Handle(SecondSagaMessage message)
+                public Task Handle(SecondSagaMessage message, IMessageHandlerContext context)
                 {
-                    Context.NumberOfTimesInvoked++;
-                    var shouldFail = Context.NumberOfTimesInvoked < 2; //1 FLR and 1 SLR
+                    TestContext.NumberOfTimesInvoked++;
 
-                    if(shouldFail)
-                        throw new Exception("Simulated exception");
+                    if (TestContext.NumberOfTimesInvoked < 2)
+                        throw new SimulatedException();
 
-                    Context.SecondMessageProcessed = true;
+                    TestContext.SecondMessageProcessed = true;
+
+                    return Task.FromResult(0);
                 }
-
             }
 
-            public class TestSagaData : IContainSagaData
+            public class TestSagaData09 : IContainSagaData
             {
                 public virtual Guid Id { get; set; }
                 public virtual string Originator { get; set; }
                 public virtual string OriginalMessageId { get; set; }
-                
-                [Unique]
                 public virtual Guid SomeId { get; set; }
             }
         }
@@ -90,11 +104,9 @@
         {
             public Guid SomeId { get; set; }
         }
-        
+
         public class SomeTimeout
         {
         }
     }
-
-
 }
