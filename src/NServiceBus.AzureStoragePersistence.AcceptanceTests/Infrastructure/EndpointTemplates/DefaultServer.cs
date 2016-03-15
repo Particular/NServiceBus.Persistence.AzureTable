@@ -49,7 +49,7 @@
 
             builder.RegisterComponents(r => { RegisterInheritanceHierarchyOfContextOnContainer(runDescriptor, r); });
 
-            builder.UsePersistence<InMemoryPersistence>();
+            builder.UsePersistence<AzureStoragePersistence>();
 
             configurationBuilderCustomization(builder);
 
