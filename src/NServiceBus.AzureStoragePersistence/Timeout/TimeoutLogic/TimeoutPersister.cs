@@ -82,29 +82,31 @@
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
             var timeoutManagerDataTable = client.GetTableReference(timeoutManagerDataTableName);
 
-            var lastSuccessfulReadEntity = await GetLastSuccessfulRead(timeoutManagerDataTable).ConfigureAwait(false);
+            var lastSuccessfulReadEntity = GetLastSuccessfulRead(timeoutManagerDataTable);
             var lastSuccessfulRead = lastSuccessfulReadEntity?.LastSuccessfullRead;
 
-            var endpointNameMatch = TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName);
+            IQueryable<TimeoutDataEntity> query;
 
-            string filter;
             if (lastSuccessfulRead.HasValue)
             {
-                // Case insensitive search probably not possible?
-                var greaterThanLastRead = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.GreaterThan, lastSuccessfulRead.Value.ToString(partitionKeyScope));
-                var lessThanNow = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThan, now.ToString(partitionKeyScope));
-
-                var greaterThanLessThan = TableQuery.CombineFilters(greaterThanLastRead, TableOperators.And, lessThanNow);
-                filter = TableQuery.CombineFilters(greaterThanLessThan, TableOperators.And, endpointNameMatch);
+                query = from c in timeoutDataTable.CreateQuery<TimeoutDataEntity>()
+                        where string.Compare(c.PartitionKey, lastSuccessfulRead.Value.ToString(partitionKeyScope), StringComparison.InvariantCultureIgnoreCase) != 0
+                            && string.Compare(c.PartitionKey, now.ToString(partitionKeyScope), StringComparison.InvariantCultureIgnoreCase) != 0
+                            && c.OwningTimeoutManager == endpointName
+                        select c;
             }
             else
             {
-                filter = endpointNameMatch;
+                query = from c in timeoutDataTable.CreateQuery<TimeoutDataEntity>()
+                        where c.OwningTimeoutManager == endpointName
+                        select c;
             }
 
-            var querySegment = await timeoutDataTable.ExecuteQuerySegmentedAsync(new TableQuery<TimeoutDataEntity>().Where(filter).Take(1000), new TableContinuationToken()).ConfigureAwait(false);
+            var result = query
+                .Take(1000)
+                .ToList()
+                .OrderBy(c => c.Time);
 
-            var result = querySegment.Results.OrderBy(c => c.Time);
             var allTimeouts = result.ToList();
             if (allTimeouts.Count == 0)
             {
@@ -121,7 +123,7 @@
                 lastSuccessfulReadEntity.LastSuccessfullRead = lastSuccessfulRead.Value;
             }
 
-            var future = futureTimeouts.FirstOrDefault();
+            var future = futureTimeouts.SafeFirstOrDefault();
             var nextTimeToRunQuery = lastSuccessfulRead.HasValue ? lastSuccessfulRead.Value
                                         : (future != null ? future.Time : now.AddSeconds(1));
 
@@ -136,6 +138,8 @@
 
             return timeoutsChunk;
         }
+
+
 
         /// <summary>
         /// Add a new timeout entry
@@ -154,7 +158,7 @@
             }
             timeout.Id = identifier;
 
-            var timeoutDataEntity = GetTimeoutData(timeoutDataTable, timeout.Time.ToString(partitionKeyScope), identifier);
+            var timeoutDataEntity = GetTimeoutData(timeoutDataTable, identifier, string.Empty);
             if (timeoutDataEntity != null) return;
 
             var headers = Serialize(timeout.Headers);
@@ -162,10 +166,12 @@
             var saveActions = new List<Task>
             {
                 SaveCurrentTimeoutState(timeout.State, identifier),
-                timeoutDataTable.ExecuteAsync(SaveTimeoutEntry(timeout, timeoutDataTable, identifier, headers))
+                SaveTimeoutEntry(timeout, timeoutDataTable, identifier, headers),
+                SaveSagaEntry(timeout, timeoutDataTable, identifier, headers)
             };
 
             await Task.WhenAll(saveActions).ConfigureAwait(false);
+            await SaveMainEntry(timeout, identifier, headers, timeoutDataTable).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -178,7 +184,7 @@
         {
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
 
-            var timeoutDataEntity = GetTimeoutData(timeoutDataTable, timeoutId);
+            var timeoutDataEntity = GetTimeoutData(timeoutDataTable, timeoutId, string.Empty);
             if (timeoutDataEntity == null)
             {
                 return Task.FromResult<TimeoutData>(null);
@@ -207,27 +213,23 @@
         {
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
 
-            // Async?
-            var timeoutDataEntity = GetTimeoutData(timeoutDataTable, timeoutId);
+            var timeoutDataEntity = GetTimeoutData(timeoutDataTable, timeoutId, string.Empty);
             if (timeoutDataEntity == null)
             {
                 return false;
             }
 
-            var batchOperation = new TableBatchOperation();
-            batchOperation.Add(DeleteSagaEntity(timeoutDataTable, timeoutDataEntity, timeoutId));
-            batchOperation.Add(DeleteTimeEntity(timeoutDataTable, timeoutDataEntity.Time.ToString(partitionKeyScope), timeoutId));
-
             var deleteTasks = new List<Task>
             {
-                DeleteState(timeoutDataEntity.StateAddress),
-                timeoutDataTable.ExecuteBatchAsync(batchOperation)
+                DeleteSagaEntity(timeoutId, timeoutDataTable, timeoutDataEntity),
+                DeleteTimeEntity(timeoutDataTable, timeoutDataEntity.Time.ToString(partitionKeyScope), timeoutId),
+                DeleteState(timeoutDataEntity.StateAddress)
             };
 
             try
             {
                 await Task.WhenAll(deleteTasks).ConfigureAwait(false);
-                // Maybe also include in batch?
+                await DeleteMainEntity(timeoutDataEntity, timeoutDataTable).ConfigureAwait(false);
             }
             catch (StorageException e)
             {
@@ -251,50 +253,101 @@
         {
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
 
-            var query = new TableQuery<TimeoutDataEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, sagaId.ToString())).Take(1000);
-            var querySegment = await timeoutDataTable.ExecuteQuerySegmentedAsync(query, new TableContinuationToken()).ConfigureAwait(false);
+            var query = (from c in timeoutDataTable.CreateQuery<TimeoutDataEntity>()
+                         where c.PartitionKey == sagaId.ToString()
+                         select c);
 
-            foreach (var timeoutDataEntityBySaga in querySegment)
+            foreach (var timeoutDataEntityBySaga in query.Take(1000))
             {
-                var deleteStateTask = DeleteState(timeoutDataEntityBySaga.StateAddress);
-                var deleteEntitiesTask = DeleteEntities(timeoutDataTable, timeoutDataEntityBySaga);
-                await Task.WhenAll(deleteStateTask, deleteEntitiesTask).ConfigureAwait(false);
+                await DeleteState(timeoutDataEntityBySaga.StateAddress).ConfigureAwait(false);
+                await DeleteTimeEntity(timeoutDataTable, timeoutDataEntityBySaga.Time.ToString(partitionKeyScope), timeoutDataEntityBySaga.RowKey).ConfigureAwait(false);
+                await DeleteMainEntity(timeoutDataTable, timeoutDataEntityBySaga.RowKey, string.Empty).ConfigureAwait(false);
+                await DeleteSagaEntity(timeoutDataTable, timeoutDataEntityBySaga).ConfigureAwait(false);
             }
         }
 
-        private Task DeleteEntities(CloudTable timeoutDataTable, TimeoutDataEntity timeoutDataEntityBySaga)
+        Task DeleteMainEntity(CloudTable timeoutDataTable, string partitionKey, string rowKey)
         {
-            var batchedOperations = new TableBatchOperation();
+            var timeoutDataEntity = GetTimeoutData(timeoutDataTable, partitionKey, rowKey);
 
-            batchedOperations.Add(DeleteTimeEntity(timeoutDataTable, timeoutDataEntityBySaga.Time.ToString(partitionKeyScope), timeoutDataEntityBySaga.RowKey));
-            batchedOperations.Add(DeleteSagaEntity(timeoutDataTable, timeoutDataEntityBySaga, timeoutDataEntityBySaga.RowKey));
-
-            return timeoutDataTable.ExecuteBatchAsync(batchedOperations);
+            if (timeoutDataEntity != null)
+            {
+                return DeleteMainEntity(timeoutDataEntity, timeoutDataTable);
+            }
+            return TaskEx.CompletedTask;
         }
 
-        TableOperation DeleteTimeEntity(CloudTable timeoutDataTable, string partitionKey, string rowKey)
+        Task DeleteMainEntity(TimeoutDataEntity timeoutDataEntity, CloudTable timeoutDataTable)
+        {
+            var deleteOperation = TableOperation.Delete(timeoutDataEntity);
+            return timeoutDataTable.ExecuteAsync(deleteOperation);
+        }
+
+        Task DeleteTimeEntity(CloudTable timeoutDataTable, string partitionKey, string rowKey)
         {
             var timeoutDataEntityByTime = GetTimeoutData(timeoutDataTable, partitionKey, rowKey);
             if (timeoutDataEntityByTime != null)
             {
-                return TableOperation.Delete(timeoutDataEntityByTime);
+                var deleteByTimeOperation = TableOperation.Delete(timeoutDataEntityByTime);
+                return timeoutDataTable.ExecuteAsync(deleteByTimeOperation);
             }
 
-            return null;
+            return TaskEx.CompletedTask;
         }
 
-        TableOperation DeleteSagaEntity(CloudTable timeoutDataTable, TimeoutDataEntity timeoutDataEntity, string timeoutId)
+        Task DeleteSagaEntity(string timeoutId, CloudTable timeoutDataTable, TimeoutDataEntity timeoutDataEntity)
         {
             var timeoutDataEntityBySaga = GetTimeoutData(timeoutDataTable, timeoutDataEntity.SagaId.ToString(), timeoutId);
             if (timeoutDataEntityBySaga != null)
             {
-                return TableOperation.Delete(timeoutDataEntityBySaga);
+                return DeleteSagaEntity(timeoutDataTable, timeoutDataEntityBySaga);
             }
-
-            return null;
+            return TaskEx.CompletedTask;
         }
 
-        TableOperation SaveTimeoutEntry(TimeoutData timeout, CloudTable timeoutDataTable, string identifier, string headers)
+        Task DeleteSagaEntity(CloudTable timeoutDataTable, TimeoutDataEntity sagaEntity)
+        {
+            var deleteSagaOperation = TableOperation.Delete(sagaEntity);
+            return timeoutDataTable.ExecuteAsync(deleteSagaOperation);
+        }
+
+        Task SaveMainEntry(TimeoutData timeout, string identifier, string headers, CloudTable timeoutDataTable)
+        {
+            var timeoutDataObject = new TimeoutDataEntity(identifier, string.Empty)
+            {
+                Destination = timeout.Destination,
+                SagaId = timeout.SagaId,
+                StateAddress = identifier,
+                Time = timeout.Time,
+                OwningTimeoutManager = timeout.OwningTimeoutManager,
+                Headers = headers
+            };
+            var addEntityOperation = TableOperation.Insert(timeoutDataObject);
+            return timeoutDataTable.ExecuteAsync(addEntityOperation);
+        }
+
+        Task SaveSagaEntry(TimeoutData timeout, CloudTable timeoutDataTable, string identifier, string headers)
+        {
+            var timeoutDataEntity = GetTimeoutData(timeoutDataTable, timeout.SagaId.ToString(), identifier);
+            if (timeout.SagaId != default(Guid) && timeoutDataEntity == null)
+            {
+                var timeoutData = new TimeoutDataEntity(timeout.SagaId.ToString(), identifier)
+                {
+                    Destination = timeout.Destination,
+                    SagaId = timeout.SagaId,
+                    StateAddress = identifier,
+                    Time = timeout.Time,
+                    OwningTimeoutManager = timeout.OwningTimeoutManager,
+                    Headers = headers
+                };
+
+                var addOperation = TableOperation.Insert(timeoutData);
+                return timeoutDataTable.ExecuteAsync(addOperation);
+            }
+            return TaskEx.CompletedTask;
+        }
+
+        Task SaveTimeoutEntry(TimeoutData timeout, CloudTable timeoutDataTable, string identifier, string headers)
         {
             var timeoutDataEntity = GetTimeoutData(timeoutDataTable, timeout.Time.ToString(partitionKeyScope), identifier);
 
@@ -309,19 +362,10 @@
                     OwningTimeoutManager = timeout.OwningTimeoutManager,
                     Headers = headers
                 };
-
-                return TableOperation.Insert(timeoutData);
+                var addOperation = TableOperation.Insert(timeoutData);
+                return timeoutDataTable.ExecuteAsync(addOperation);
             }
-
-            return null;
-        }
-
-        TimeoutDataEntity GetTimeoutData(CloudTable timeoutDataTable, string timeoutId)
-        {
-            var timeoutDataEntity = (from c in timeoutDataTable.CreateQuery<TimeoutDataEntity>()
-                                     where c.RowKey == timeoutId
-                                     select c).ToList().SafeFirstOrDefault();
-            return timeoutDataEntity;
+            return TaskEx.CompletedTask;
         }
 
         TimeoutDataEntity GetTimeoutData(CloudTable timeoutDataTable, string partitionKey, string rowKey)
@@ -397,18 +441,20 @@
             return n;
         }
 
-        async Task<TimeoutManagerDataEntity> GetLastSuccessfulRead(CloudTable timeoutManagerDataTable)
+        TimeoutManagerDataEntity GetLastSuccessfulRead(CloudTable timeoutManagerDataTable)
         {
-            var query = new TableQuery<TimeoutManagerDataEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, sanitizedEndpointInstanceName)).Take(1);
-            var querySegment = await timeoutManagerDataTable.ExecuteQuerySegmentedAsync(query, new TableContinuationToken()).ConfigureAwait(false);
-            return querySegment.SafeFirstOrDefault();
+
+            var query = from m in timeoutManagerDataTable.CreateQuery<TimeoutManagerDataEntity>()
+                        where m.PartitionKey == sanitizedEndpointInstanceName
+                        select m;
+
+            return query.SafeFirstOrDefault();
         }
 
-        async Task UpdateSuccessfulRead(CloudTable table, TimeoutManagerDataEntity read)
+        Task UpdateSuccessfulRead(CloudTable table, TimeoutManagerDataEntity read)
         {
             try
             {
-                TableOperation operation;
                 if (read == null)
                 {
                     read = new TimeoutManagerDataEntity(sanitizedEndpointInstanceName, string.Empty)
@@ -416,13 +462,14 @@
                         LastSuccessfullRead = DateTime.UtcNow
                     };
 
-                    operation = TableOperation.Insert(read);
+                    var addOperation = TableOperation.Insert(read);
+                    return table.ExecuteAsync(addOperation);
                 }
                 else
                 {
-                    operation = TableOperation.Replace(read);
+                    var updateOperation = TableOperation.Replace(read);
+                    return table.ExecuteAsync(updateOperation);
                 }
-                await table.ExecuteAsync(operation).ConfigureAwait(false);
             }
             catch (DataServiceRequestException ex) // handle concurrency issues
             {
@@ -430,7 +477,7 @@
                 //Concurrency Exception - PreCondition Failed or Entity Already Exists
                 if (response != null && (response.StatusCode == 412 || response.StatusCode == 409))
                 {
-                    return;
+                    return TaskEx.CompletedTask;
                     // I assume we can ignore this condition? 
                     // Time between read and update is very small, meaning that another instance has sent 
                     // the timeout messages that this node intended to send and if not we will resend 
