@@ -1,19 +1,20 @@
 ﻿namespace NServiceBus.AcceptanceTests.Sagas
 {
     using System;
+    using System.Threading.Tasks;
     using EndpointTemplates;
     using AcceptanceTesting;
+    using NServiceBus.Features;
     using NUnit.Framework;
-    using Saga;
     using ScenarioDescriptors;
 
     public class When_sending_from_a_saga_timeout : NServiceBusAcceptanceTest
     {
         [Test]
-        public void Should_match_different_saga()
+        public async Task Should_match_different_saga()
         {
-            Scenario.Define<Context>()
-                    .WithEndpoint<Endpoint>(b => b.Given(bus => bus.SendLocal(new StartSaga1())))
+            await Scenario.Define<Context>()
+                    .WithEndpoint<Endpoint>(b => b.When(session => session.SendLocal(new StartSaga1 { DataId = Guid.NewGuid() })))
                     .Done(c => c.DidSaga2ReceiveMessage)
                     .Repeat(r => r.For(Transports.Default))
                     .Should(c => Assert.True(c.DidSaga2ReceiveMessage))
@@ -27,50 +28,62 @@
 
         public class Endpoint : EndpointConfigurationBuilder
         {
-
             public Endpoint()
             {
-                EndpointSetup<DefaultServer>();
+                EndpointSetup<DefaultServer>(config => config.EnableFeature<TimeoutManager>());
             }
 
-            public class Saga1 : Saga<Saga1.Saga1Data>, IAmStartedByMessages<StartSaga1>, IHandleTimeouts<Saga1Timeout>
+            public class SendFromTimeoutSaga1 : Saga<SendFromTimeoutSaga1.SendFromTimeoutSaga1Data>,
+                IAmStartedByMessages<StartSaga1>,
+                IHandleTimeouts<Saga1Timeout>
             {
-                public Context Context { get; set; }
+                public Context TestContext { get; set; }
 
-                public void Handle(StartSaga1 message)
+                public Task Handle(StartSaga1 message, IMessageHandlerContext context)
                 {
-                    RequestTimeout(TimeSpan.FromSeconds(1), new Saga1Timeout());
+                    Data.DataId = message.DataId;
+                    return RequestTimeout(context, TimeSpan.FromMilliseconds(1), new Saga1Timeout());
                 }
 
-                public void Timeout(Saga1Timeout state)
+                public async Task Timeout(Saga1Timeout state, IMessageHandlerContext context)
                 {
-                    Bus.SendLocal(new StartSaga2());
+                    await context.SendLocal(new StartSaga2
+                    {
+                        DataId = Data.DataId
+                    });
                     MarkAsComplete();
                 }
-                public class Saga1Data : ContainSagaData
+
+                public class SendFromTimeoutSaga1Data : ContainSagaData
                 {
+                    public virtual Guid DataId { get; set; }
                 }
 
-                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<Saga1Data> mapper)
+                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<SendFromTimeoutSaga1Data> mapper)
                 {
+                    mapper.ConfigureMapping<StartSaga1>(m => m.DataId).ToSaga(s => s.DataId);
                 }
             }
 
-            public class Saga2 : Saga<Saga2.Saga2Data>, IAmStartedByMessages<StartSaga2>
+            public class SendFromTimeoutSaga2 : Saga<SendFromTimeoutSaga2.SendFromTimeoutSaga2Data>, IAmStartedByMessages<StartSaga2>
             {
                 public Context Context { get; set; }
 
-                public void Handle(StartSaga2 message)
+                public Task Handle(StartSaga2 message, IMessageHandlerContext context)
                 {
+                    Data.DataId = message.DataId;
                     Context.DidSaga2ReceiveMessage = true;
+                    return Task.FromResult(0);
                 }
 
-                public class Saga2Data : ContainSagaData
+                public class SendFromTimeoutSaga2Data : ContainSagaData
                 {
+                    public virtual Guid DataId { get; set; }
                 }
 
-                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<Saga2Data> mapper)
+                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<SendFromTimeoutSaga2Data> mapper)
                 {
+                    mapper.ConfigureMapping<StartSaga2>(m => m.DataId).ToSaga(s => s.DataId);
                 }
             }
 
@@ -80,11 +93,13 @@
         [Serializable]
         public class StartSaga1 : ICommand
         {
+            public Guid DataId { get; set; }
         }
 
         [Serializable]
         public class StartSaga2 : ICommand
         {
+            public Guid DataId { get; set; }
         }
 
         public class Saga1Timeout : IMessage
