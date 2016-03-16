@@ -23,7 +23,7 @@
         readonly CloudTableClient client;
         static readonly ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
         static readonly ConditionalWeakTable<object, string> etags = new ConditionalWeakTable<object, string>();
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -62,35 +62,35 @@
 
             if (propertyInfo.PropertyType == typeof(byte[]))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForBinary(property, QueryComparisons.Equal, (byte[]) value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForBinary(property, QueryComparisons.Equal, (byte[])value));
             }
             else if (propertyInfo.PropertyType == typeof(bool))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForBool(property, QueryComparisons.Equal, (bool) value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForBool(property, QueryComparisons.Equal, (bool)value));
             }
             else if (propertyInfo.PropertyType == typeof(DateTime))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForDate(property, QueryComparisons.Equal, (DateTime) value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForDate(property, QueryComparisons.Equal, (DateTime)value));
             }
             else if (propertyInfo.PropertyType == typeof(Guid))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForGuid(property, QueryComparisons.Equal, (Guid) value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForGuid(property, QueryComparisons.Equal, (Guid)value));
             }
             else if (propertyInfo.PropertyType == typeof(Int32))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForInt(property, QueryComparisons.Equal, (int) value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForInt(property, QueryComparisons.Equal, (int)value));
             }
             else if (propertyInfo.PropertyType == typeof(Int64))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForLong(property, QueryComparisons.Equal, (long) value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForLong(property, QueryComparisons.Equal, (long)value));
             }
             else if (propertyInfo.PropertyType == typeof(Double))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForDouble(property, QueryComparisons.Equal, (double) value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForDouble(property, QueryComparisons.Equal, (double)value));
             }
             else if (propertyInfo.PropertyType == typeof(string))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterCondition(property, QueryComparisons.Equal, (string) value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterCondition(property, QueryComparisons.Equal, (string)value));
             }
             else
             {
@@ -115,7 +115,7 @@
             }
 
             var partitionKey = saga.Id.ToString();
-                
+
             var batch = new TableBatchOperation();
 
             AddObjectToBatch(batch, saga, partitionKey);
@@ -133,7 +133,7 @@
 
             var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
-            var toPersist = ToDictionaryTableEntity(entity, new DictionaryTableEntity { PartitionKey = partitionKey, RowKey = rowkey, ETag = etag}, properties);
+            var toPersist = ToDictionaryTableEntity(entity, new DictionaryTableEntity { PartitionKey = partitionKey, RowKey = rowkey, ETag = etag }, properties);
 
             //no longer using InsertOrReplace as it ignores concurrency checks
             batch.Add(update ? TableOperation.Replace(toPersist) : TableOperation.Insert(toPersist));
@@ -143,27 +143,27 @@
         {
             foreach (var propertyInfo in properties)
             {
-                if (propertyInfo.PropertyType == typeof (byte[]))
+                if (propertyInfo.PropertyType == typeof(byte[]))
                 {
-                    toPersist[propertyInfo.Name]= new EntityProperty((byte[]) propertyInfo.GetValue(entity, null)) ;
+                    toPersist[propertyInfo.Name] = new EntityProperty((byte[])propertyInfo.GetValue(entity, null));
                 }
-                else if (propertyInfo.PropertyType == typeof (bool))
+                else if (propertyInfo.PropertyType == typeof(bool))
                 {
                     toPersist[propertyInfo.Name] = new EntityProperty((bool)propertyInfo.GetValue(entity, null));
                 }
-                else if (propertyInfo.PropertyType == typeof (DateTime))
+                else if (propertyInfo.PropertyType == typeof(DateTime))
                 {
                     toPersist[propertyInfo.Name] = new EntityProperty((DateTime)propertyInfo.GetValue(entity, null));
                 }
-                else if (propertyInfo.PropertyType == typeof (Guid))
+                else if (propertyInfo.PropertyType == typeof(Guid))
                 {
                     toPersist[propertyInfo.Name] = new EntityProperty((Guid)propertyInfo.GetValue(entity, null));
                 }
-                else if (propertyInfo.PropertyType == typeof (Int32))
+                else if (propertyInfo.PropertyType == typeof(Int32))
                 {
                     toPersist[propertyInfo.Name] = new EntityProperty((Int32)propertyInfo.GetValue(entity, null));
                 }
-                else if (propertyInfo.PropertyType == typeof (Int64))
+                else if (propertyInfo.PropertyType == typeof(Int64))
                 {
                     toPersist[propertyInfo.Name] = new EntityProperty((Int64)propertyInfo.GetValue(entity, null));
                 }
@@ -171,7 +171,7 @@
                 {
                     toPersist[propertyInfo.Name] = new EntityProperty((Double)propertyInfo.GetValue(entity, null));
                 }
-                else if (propertyInfo.PropertyType == typeof (string))
+                else if (propertyInfo.PropertyType == typeof(string))
                 {
                     toPersist[propertyInfo.Name] = new EntityProperty((string)propertyInfo.GetValue(entity, null));
                 }
@@ -303,7 +303,7 @@
                 {
                     etags.Add(entity, tableEntity.ETag);
                 }
-            
+
                 return Task.FromResult(entity);
             }
             catch (WebException ex)
@@ -347,7 +347,24 @@
                 return; // should not try to delete saga data that does not exist, this situation can occur on retry or parallel execution
             }
 
-            await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(true);
+            try
+            {
+                await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(true);
+            }
+            catch (Exception ex)
+            {
+                // Horrible logic to check if item has already been deleted or not
+                var webException = ex.InnerException as WebException;
+                if (webException != null && webException.Response != null)
+                {
+                    var response = (HttpWebResponse)webException.Response;
+                    if ((int)response.StatusCode != 404)
+                    {
+                        // Was not a previously deleted exception, throw again
+                        throw;
+                    }
+                }
+            }
         }
     }
 }

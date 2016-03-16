@@ -49,7 +49,8 @@
 
             builder.RegisterComponents(r => { RegisterInheritanceHierarchyOfContextOnContainer(runDescriptor, r); });
 
-            builder.UsePersistence<AzureStoragePersistence>();
+            var connectionString = Environment.GetEnvironmentVariable("AzureStoragePersistence.ConnectionString");
+            builder.UsePersistence<AzureStoragePersistence>().ConnectionString(connectionString);
 
             // Use this to disable synchronization storage by providing an empty implementation
             // so that when the container tries to resolve an instance if ISynchronizedStorage it

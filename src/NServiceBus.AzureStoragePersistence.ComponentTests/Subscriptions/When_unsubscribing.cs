@@ -12,6 +12,7 @@
     [Category("AzureStoragePersistence")]
     public class When_unsubscribing
     {
+        [SetUp]
         public void Setup()
         {
             SuscriptionTestHelper.PerformStorageCleanup();

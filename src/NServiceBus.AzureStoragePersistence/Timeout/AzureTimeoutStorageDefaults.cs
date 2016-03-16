@@ -3,10 +3,6 @@
     public class AzureTimeoutStorageDefaults
     {
         /// <summary>
-        /// Azure Storage connection string. Default is to use Development Storage.
-        /// </summary>
-        public const string ConnectionString = "UseDevelopmentStorage=true";
-        /// <summary>
         /// Azure Storage table name for Timeout Manager Data. Default is 'TimeoutManagerDataTable'.
         /// </summary>
         public const string TimeoutManagerDataTableName = "TimeoutManagerDataTable";

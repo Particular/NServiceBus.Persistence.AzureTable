@@ -10,7 +10,9 @@ namespace NServiceBus.Config
     {
         public AzureTimeoutPersisterConfig()
         {
-            Properties.Add(new ConfigurationProperty("ConnectionString", typeof(string), AzureTimeoutStorageDefaults.ConnectionString,
+            var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
+
+            Properties.Add(new ConfigurationProperty("ConnectionString", typeof(string), defaultConnectionString,
                 null, new CallbackValidator(typeof(string), AzureTimeoutStorageGuard.CheckConnectionString), ConfigurationPropertyOptions.None));
 
             Properties.Add(new ConfigurationProperty("TimeoutManagerDataTableName", typeof(string), AzureTimeoutStorageDefaults.TimeoutManagerDataTableName,

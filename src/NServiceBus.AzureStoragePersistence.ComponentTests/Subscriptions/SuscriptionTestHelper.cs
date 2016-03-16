@@ -33,6 +33,7 @@
             var cloudStorageAccount = CloudStorageAccount.Parse(AzurePersistenceTests.GetConnectionString());
             var table = cloudStorageAccount.CreateCloudTableClient().GetTableReference(tableName);
 
+            table.DeleteIfExists();
             table.CreateIfNotExists();
 
             var projectionQuery = new TableQuery<DynamicTableEntity>().Select(new[] { "Destination" });

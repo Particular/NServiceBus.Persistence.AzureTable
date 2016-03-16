@@ -104,7 +104,7 @@
 
             var result = query
                 .Take(1000)
-                .ToList()
+                .ToList() //must happen locally because OrderBy is not supported by native Azure Storage Table service
                 .OrderBy(c => c.Time);
 
             var allTimeouts = result.ToList();
@@ -124,8 +124,7 @@
             }
 
             var future = futureTimeouts.SafeFirstOrDefault();
-            var nextTimeToRunQuery = lastSuccessfulRead.HasValue ? lastSuccessfulRead.Value
-                                        : (future != null ? future.Time : now.AddSeconds(1));
+            var nextTimeToRunQuery = lastSuccessfulRead ?? (future?.Time ?? now.AddSeconds(1));
 
             var timeoutsChunk = new TimeoutsChunk(
                 pastTimeouts.Where(c => !string.IsNullOrEmpty(c.RowKey))

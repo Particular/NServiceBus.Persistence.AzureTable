@@ -10,8 +10,10 @@ namespace NServiceBus.Config
     {
         public AzureSagaPersisterConfig()
         {
-            Properties.Add(new ConfigurationProperty("ConnectionString", typeof(string), AzureStorageSagaDefaults.ConnectionString,
-    null, new CallbackValidator(typeof(string), AzureStorageSagaGuard.CheckConnectionString), ConfigurationPropertyOptions.None));
+            var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
+
+            Properties.Add(new ConfigurationProperty("ConnectionString", typeof(string), defaultConnectionString,
+                null, new CallbackValidator(typeof(string), AzureStorageSagaGuard.CheckConnectionString), ConfigurationPropertyOptions.None));
 
             Properties.Add(new ConfigurationProperty("CreateSchema", typeof(bool), AzureStorageSagaDefaults.CreateSchema,
                 ConfigurationPropertyOptions.None));
