@@ -80,7 +80,5 @@
         {
             public Guid SomeId { get; set; }
         }
-
-
     }
 }
