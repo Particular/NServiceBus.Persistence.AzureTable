@@ -151,7 +151,7 @@
             config.UseContainer(builderType);
         }
 
-        public static bool ContainsKey(this RunSettings settings, string key)
+        static bool ContainsKey(this RunSettings settings, string key)
         {
             return settings.Any(setting => setting.Key == key);
         }

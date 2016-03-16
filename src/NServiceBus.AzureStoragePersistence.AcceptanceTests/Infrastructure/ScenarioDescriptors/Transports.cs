@@ -43,7 +43,7 @@
             }
         }
 
-        public static RunDescriptor Msmq
+        private static RunDescriptor Msmq
         {
             get { return AllAvailable.SingleOrDefault(r => r.Key == "MsmqTransport"); }
         }
@@ -83,7 +83,5 @@
                 {"SqlServerTransport", @"Server=localhost\sqlexpress;Database=nservicebus;Trusted_Connection=True;"},
                 {"MsmqTransport", @"cacheSendConnection=false;journal=false;"}
             };
-
-
     }
 }

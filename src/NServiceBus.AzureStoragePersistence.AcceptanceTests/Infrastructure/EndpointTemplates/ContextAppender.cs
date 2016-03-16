@@ -7,10 +7,9 @@
 
     public class ContextAppender : ILoggerFactory, ILog
     {
-        public ContextAppender(ScenarioContext context, string endpointName)
+        public ContextAppender(ScenarioContext context)
         {
             this.context = context;
-            this.endpointName = endpointName;
         }
 
         void Append(Exception exception)
@@ -22,7 +21,6 @@
         }
 
         ScenarioContext context;
-        readonly string endpointName;
 
         public ILog GetLogger(Type type)
         {
