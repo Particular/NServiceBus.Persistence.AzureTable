@@ -1,12 +1,11 @@
 ﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Subscriptions
 {
-    using System.Collections.Generic;
     using System.Linq;
-    using NServiceBus.Unicast.Subscriptions;
-    using NUnit.Framework;
-    using Unicast.Subscriptions.MessageDrivenSubscriptions;
-    using Routing;
     using System.Threading.Tasks;
+    using NServiceBus.Routing;
+    using NServiceBus.Unicast.Subscriptions;
+    using NServiceBus.Unicast.Subscriptions.MessageDrivenSubscriptions;
+    using NUnit.Framework;
 
     [TestFixture]
     [Category("AzureStoragePersistence")]
@@ -23,7 +22,10 @@
         {
             var persister = SuscriptionTestHelper.CreateAzureSubscriptionStorage();
             var messageType = new MessageType(typeof(TestMessage));
-            var messageTypes = new[] { messageType };
+            var messageTypes = new[]
+            {
+                messageType
+            };
 
             await persister.Subscribe(new Subscriber("address://test-queue", new EndpointName("endpointName")), messageType, null);
 

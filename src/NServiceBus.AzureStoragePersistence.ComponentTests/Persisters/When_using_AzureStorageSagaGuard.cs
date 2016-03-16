@@ -1,8 +1,8 @@
 ﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Persisters
 {
     using System;
-    using Config;
-    using SagaPersisters;
+    using NServiceBus.Config;
+    using NServiceBus.SagaPersisters;
     using NUnit.Framework;
 
     public class When_using_AzureStorageSagaGuard

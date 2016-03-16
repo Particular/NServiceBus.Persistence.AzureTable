@@ -4,11 +4,9 @@ namespace NServiceBus.AcceptanceTests.Timeouts
     using System;
     using Settings;
     using NServiceBus.Transports;
-    using NServiceBus.Unicast;
     using System.Threading.Tasks;
     using Extensibility;
     using System.Collections.Generic;
-    using System.Linq;
     using Routing;
     using DelayedDelivery;
 

@@ -4,10 +4,7 @@
     using EndpointTemplates;
     using AcceptanceTesting;
     using NUnit.Framework;
-    using NServiceBus.Sagas;
-    using ScenarioDescriptors;
     using System.Threading.Tasks;
-    using System.Linq;
 
     public class When_a_existing_saga_instance_exists : NServiceBusAcceptanceTest
     {

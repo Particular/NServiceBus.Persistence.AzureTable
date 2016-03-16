@@ -1,7 +1,7 @@
 ﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
 {
-    using NUnit.Framework;
     using System.Threading.Tasks;
+    using NUnit.Framework;
 
     [TestFixture]
     [Category("AzureStoragePersistence")]

@@ -1,10 +1,9 @@
 ﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Persisters
 {
     using System;
-    using NServiceBus.Sagas;
+    using System.Threading.Tasks;
     using NServiceBus.SagaPersisters.Azure;
     using NUnit.Framework;
-    using System.Threading.Tasks;
 
     public class When_completing_saga
     {
@@ -80,5 +79,4 @@
         public string Originator { get; set; }
         public string OriginalMessageId { get; set; }
     }
-
 }

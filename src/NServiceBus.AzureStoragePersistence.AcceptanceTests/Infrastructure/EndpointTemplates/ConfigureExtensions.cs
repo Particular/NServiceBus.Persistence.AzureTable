@@ -158,7 +158,7 @@
 
         public static T GetOrNull<T>(this RunSettings settings, string key) where T : class
         {
-            T result = null;
+            T result;
             settings.TryGet(key, out result);
 
             return result;

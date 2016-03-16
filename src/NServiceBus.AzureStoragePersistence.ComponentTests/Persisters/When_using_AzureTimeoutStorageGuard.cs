@@ -1,8 +1,8 @@
 ﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Persisters
 {
     using System;
-    using Config;
-    using Timeout;
+    using NServiceBus.Config;
+    using NServiceBus.Timeout;
     using NUnit.Framework;
 
     public class When_using_AzureTimeoutStorageGuard

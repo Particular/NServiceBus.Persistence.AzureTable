@@ -7,7 +7,6 @@
     using System.Threading.Tasks;
     using Extensibility;
     using Persistence;
-    using System;
 
     [TestFixture]
     public class When_a_finder_exists

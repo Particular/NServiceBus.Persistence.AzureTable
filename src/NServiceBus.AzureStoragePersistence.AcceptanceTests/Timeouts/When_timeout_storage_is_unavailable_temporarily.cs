@@ -4,7 +4,6 @@
     using AcceptanceTesting;
     using EndpointTemplates;
     using Features;
-    using Timeout.Core;
     using NUnit.Framework;
     using System.Threading.Tasks;
     using ScenarioDescriptors;

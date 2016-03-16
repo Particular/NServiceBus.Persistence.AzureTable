@@ -5,7 +5,6 @@
     using System.Threading.Tasks;
     using NServiceBus.AcceptanceTesting;
     using Pipeline;
-    using Pipeline.Contexts;
     using Transports;
 
     static class SubscriptionBehaviorExtensions

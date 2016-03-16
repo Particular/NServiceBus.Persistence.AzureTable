@@ -12,7 +12,7 @@
 
         public int GetHashCode(TimeoutsChunk.Timeout obj)
         {
-            return ((obj.DueTime != null ? obj.DueTime.GetHashCode() : 0) * 397) ^ (obj.Id != null ? obj.Id.GetHashCode() : 0);
+            return (obj.DueTime.GetHashCode() * 397) ^ (obj.Id?.GetHashCode() ?? 0);
         }
     }
 }

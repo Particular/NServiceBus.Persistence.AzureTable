@@ -3,12 +3,9 @@ namespace NServiceBus.AcceptanceTests.EndpointTemplates
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using NServiceBus.AcceptanceTesting;
     using NServiceBus.AcceptanceTesting.Support;
     using NServiceBus.Config.ConfigurationSource;
-    using ObjectBuilder;
     using NServiceBus.Pipeline;
-    using NServiceBus.Pipeline.Contexts;
 
     public class DefaultPublisher : IEndpointSetupTemplate
     {

@@ -6,13 +6,9 @@
     using System.Reflection;
     using AcceptanceTesting.Support;
     using Hosting.Helpers;
-    using Logging;
     using NServiceBus;
-    using NServiceBus.AcceptanceTesting;
     using NServiceBus.Config.ConfigurationSource;
-    using NServiceBus.Configuration.AdvanceExtensibility;
     using System.Threading.Tasks;
-    using NServiceBus.AcceptanceTesting.Customization;
     using Features;
     using ObjectBuilder;
 
@@ -39,7 +35,6 @@
             var builder = new EndpointConfiguration();
 
             builder.EndpointName(endpointConfiguration.EndpointName);
-            builder.TypesToIncludeInScan(typesToInclude);
             builder.CustomConfigurationSource(configSource);
             builder.EnableInstallers();
 

@@ -1,10 +1,9 @@
 ﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Persisters
 {
     using System;
-    using NServiceBus.Sagas;
+    using System.Threading.Tasks;
     using NServiceBus.SagaPersisters.Azure;
     using NUnit.Framework;
-    using System.Threading.Tasks;
 
     public class When_getting_the_saga_entity
     {
@@ -39,7 +38,6 @@
             Assert.IsNotNull(sagaData);
             Assert.AreEqual(sagaData.OriginalMessageId, saga.OriginalMessageId);
         }
-
     }
 
     public class GetSagaData : IContainSagaData
@@ -48,5 +46,4 @@
         public string Originator { get; set; }
         public string OriginalMessageId { get; set; }
     }
-
 }

@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using NServiceBus.Timeout.Core;
     using NUnit.Framework;
 
     [TestFixture]
@@ -48,7 +47,11 @@
             var timeoutId = timeouts.First().Item1;
             var timeoutData = await timeoutPersister.Peek(timeoutId, null);
 
-            CollectionAssert.AreEqual(new Dictionary<string, string> { { "Prop1", "1234" }, { "Prop2", "text" } }, timeoutData.Headers);
+            CollectionAssert.AreEqual(new Dictionary<string, string>
+            {
+                {"Prop1", "1234"},
+                {"Prop2", "text"}
+            }, timeoutData.Headers);
         }
 
         [Test]
