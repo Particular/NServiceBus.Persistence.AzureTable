@@ -124,7 +124,7 @@
                 subscribers.AddRange(query.ToList());
             }
 
-            return Task.FromResult((IEnumerable<Subscriber>)subscribers);
+            return Task.FromResult<IEnumerable<Subscriber>>(subscribers);
         }
     }
 }

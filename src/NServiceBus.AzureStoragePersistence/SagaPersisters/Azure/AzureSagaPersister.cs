@@ -120,7 +120,7 @@
 
             AddObjectToBatch(batch, saga, partitionKey);
 
-            await table.ExecuteBatchAsync(batch).ConfigureAwait(true);
+            await table.ExecuteBatchAsync(batch).ConfigureAwait(false);
         }
 
         void AddObjectToBatch(TableBatchOperation batch, object entity, string partitionKey, string rowkey = "")
@@ -349,9 +349,9 @@
 
             try
             {
-                await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(true);
+                await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (StorageException ex)
             {
                 // Horrible logic to check if item has already been deleted or not
                 var webException = ex.InnerException as WebException;

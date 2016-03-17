@@ -49,7 +49,14 @@
                 {
                     ETag = "*"
                 };
-                table.Execute(TableOperation.Delete(tableEntity));
+
+                try
+                {
+                    table.Execute(TableOperation.Delete(tableEntity));
+                }
+                catch (StorageException)
+                {
+                }
             }
         }
     }
