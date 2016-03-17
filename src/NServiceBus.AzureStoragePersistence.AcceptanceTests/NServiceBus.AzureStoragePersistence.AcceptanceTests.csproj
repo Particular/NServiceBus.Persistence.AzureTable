@@ -44,6 +44,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Reactive.Core, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Rx-Core.2.2.5\lib\net45\System.Reactive.Core.dll</HintPath>
@@ -112,6 +113,7 @@
     <Compile Include="Sagas\When_saga_has_a_non_empty_constructor.cs" />
     <Compile Include="Sagas\When_saga_id_changed.cs" />
     <Compile Include="Sagas\When_saga_is_mapped_to_complex_expression.cs" />
+    <Compile Include="Sagas\When_saga_is_started_by_two_types_of_messages.cs" />
     <Compile Include="Sagas\When_sending_from_a_saga_handle.cs" />
     <Compile Include="Sagas\When_sending_from_a_saga_timeout.cs" />
     <Compile Include="Sagas\When_started_by_base_event_from_other_saga.cs" />

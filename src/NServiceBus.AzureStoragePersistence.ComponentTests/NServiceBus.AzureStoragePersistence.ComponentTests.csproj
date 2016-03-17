@@ -93,10 +93,12 @@
   <ItemGroup>
     <Compile Include="AzurePersistenceTests.cs" />
     <Compile Include="Persisters\When_using_GlobalConnectionStringConfiguration.cs" />
+    <Compile Include="Sagas\IndexDefinitionTests.cs" />
     <Compile Include="Sagas\When_completing_saga.cs" />
     <Compile Include="Sagas\When_updating_saga.cs" />
     <Compile Include="Sagas\When_saving_saga.cs" />
     <Compile Include="Sagas\When_getting_the_saga_entity.cs" />
+    <Compile Include="Sagas\LRUCacheTests.cs" />
     <Compile Include="Persisters\When_using_AzureTimeoutStorageGuard.cs" />
     <Compile Include="Persisters\When_using_AzureStorageSagaGuard.cs" />
     <Compile Include="Persisters\When_using_AzureSubscriptionStorageGuard.cs" />

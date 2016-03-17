@@ -1,27 +1,33 @@
 ﻿namespace NServiceBus.AcceptanceTests.Sagas
 {
     using System;
-    using EndpointTemplates;
-    using AcceptanceTesting;
+    using NServiceBus.AcceptanceTesting;
+    using NServiceBus.AcceptanceTests.EndpointTemplates;
+    using NServiceBus.AcceptanceTests.ScenarioDescriptors;
+    using NServiceBus.Saga;
     using NUnit.Framework;
-    using Saga;
-    using ScenarioDescriptors;
 
     public class When_saga_is_mapped_to_complex_expression : NServiceBusAcceptanceTest
     {
-
         [Test]
         public void Should_hydrate_and_invoke_the_existing_instance()
         {
             Scenario.Define<Context>()
-                    .WithEndpoint<SagaEndpoint>(b => b.Given(bus =>
-                        {
-                            bus.SendLocal(new StartSagaMessage { Key = "Part1_Part2"});
-                            bus.SendLocal(new OtherMessage { Part1 = "Part1", Part2 = "Part2" });                                    
-                        }))
-                    .Done(c => c.SecondMessageReceived)
-                    .Repeat(r => r.For(Persistence.Default))
-                    .Run();
+                .WithEndpoint<SagaEndpoint>(b => b.Given(bus =>
+                {
+                    bus.SendLocal(new StartSagaMessage
+                    {
+                        Key = "Part1_Part2"
+                    });
+                    bus.SendLocal(new OtherMessage
+                    {
+                        Part1 = "Part1",
+                        Part2 = "Part2"
+                    });
+                }))
+                .Done(c => c.SecondMessageReceived)
+                .Repeat(r => r.For(Persistence.Default))
+                .Run();
         }
 
         public class Context : ScenarioContext
@@ -34,7 +40,6 @@
             public SagaEndpoint()
             {
                 EndpointSetup<DefaultServer>(
-                    
                     builder => builder.Transactions().DoNotWrapHandlersExecutionInATransactionScope());
             }
 
@@ -42,9 +47,15 @@
                 IAmStartedByMessages<StartSagaMessage>, IHandleMessages<OtherMessage>
             {
                 public Context Context { get; set; }
+
                 public void Handle(StartSagaMessage message)
                 {
                     Data.KeyValue = message.Key;
+                }
+
+                public void Handle(OtherMessage message)
+                {
+                    Context.SecondMessageReceived = true;
                 }
 
                 protected override void ConfigureHowToFindSaga(SagaPropertyMapper<TestSagaData> mapper)
@@ -52,19 +63,16 @@
                     mapper.ConfigureMapping<OtherMessage>(m => m.Part1 + "_" + m.Part2)
                         .ToSaga(s => s.KeyValue);
                 }
-
-                public void Handle(OtherMessage message)
-                {
-                    Context.SecondMessageReceived = true;
-                }
             }
 
             public class TestSagaData : IContainSagaData
             {
+                [Unique]
+                public virtual string KeyValue { get; set; }
+
                 public virtual Guid Id { get; set; }
                 public virtual string Originator { get; set; }
                 public virtual string OriginalMessageId { get; set; }
-                public virtual string KeyValue { get; set; }
             }
         }
 
@@ -73,6 +81,7 @@
         {
             public string Key { get; set; }
         }
+
         [Serializable]
         public class OtherMessage : ICommand
         {

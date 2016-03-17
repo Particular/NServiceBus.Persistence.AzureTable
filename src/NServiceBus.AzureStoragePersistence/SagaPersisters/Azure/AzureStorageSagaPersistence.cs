@@ -24,8 +24,8 @@
         {
             var connectionstring = context.Settings.Get<string>("AzureSagaStorage.ConnectionString");
             var updateSchema = context.Settings.Get<bool>("AzureSagaStorage.CreateSchema");
-            
-            context.Container.ConfigureComponent(() => new AzureSagaPersister(connectionstring, updateSchema), DependencyLifecycle.InstancePerCall);
+
+            context.Container.ConfigureComponent(builder => new AzureSagaPersister(connectionstring, updateSchema), DependencyLifecycle.InstancePerCall);
         }
     }
 }
