@@ -10,6 +10,7 @@
     using NServiceBus.Config.ConfigurationSource;
     using System.Threading.Tasks;
     using Features;
+    using NServiceBus.AcceptanceTesting.Customization;
     using ObjectBuilder;
 
     public class DefaultServer : IEndpointSetupTemplate
@@ -35,6 +36,7 @@
             var builder = new EndpointConfiguration();
 
             builder.EndpointName(endpointConfiguration.EndpointName);
+            builder.TypesToIncludeInScan(typesToInclude);
             builder.CustomConfigurationSource(configSource);
             builder.EnableInstallers();
 
