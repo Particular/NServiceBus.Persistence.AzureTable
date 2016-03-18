@@ -1,10 +1,7 @@
 ﻿namespace NServiceBus
 {
     using Microsoft.WindowsAzure.Storage.Table;
-    using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -17,7 +14,7 @@
 
             do
             {
-                var seg = await table.ExecuteQuerySegmentedAsync<T>(query, token).ConfigureAwait(false);
+                var seg = await table.ExecuteQuerySegmentedAsync(query, token, ct).ConfigureAwait(false);
                 token = seg.ContinuationToken;
                 items.AddRange(seg);
 

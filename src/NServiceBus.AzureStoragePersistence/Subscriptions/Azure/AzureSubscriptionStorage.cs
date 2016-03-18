@@ -8,7 +8,6 @@
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.RetryPolicies;
     using Microsoft.WindowsAzure.Storage.Table;
-    using Microsoft.WindowsAzure.Storage.Table.Queryable;
     using NServiceBus.Azure;
     using Extensibility;
     using NServiceBus.Routing;
