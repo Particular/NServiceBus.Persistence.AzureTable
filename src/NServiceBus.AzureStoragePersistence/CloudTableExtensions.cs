@@ -10,7 +10,7 @@
         public static async Task<IList<T>> ExecuteQueryAsync<T>(this CloudTable table, TableQuery<T> query, CancellationToken ct = default(CancellationToken)) where T : ITableEntity, new()
         {
             var items = new List<T>();
-            var token = (TableContinuationToken)null;
+            TableContinuationToken token = null;
 
             do
             {

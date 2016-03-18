@@ -53,10 +53,14 @@
                 var tableEntity = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).SafeFirstOrDefault();
                 return tableEntity;
             }
-            catch (StorageException)
+            catch (StorageException e)
             {
-                // Not found
-                return null;
+                if (e.RequestInformation.HttpStatusCode == (int)HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
+
+                throw;
             }
         }
 
