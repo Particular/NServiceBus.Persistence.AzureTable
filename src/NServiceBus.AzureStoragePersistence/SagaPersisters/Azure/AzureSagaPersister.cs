@@ -355,7 +355,7 @@
             {
                 // Horrible logic to check if item has already been deleted or not
                 var webException = ex.InnerException as WebException;
-                if (webException != null && webException.Response != null)
+                if (webException?.Response != null)
                 {
                     var response = (HttpWebResponse)webException.Response;
                     if ((int)response.StatusCode != 404)
