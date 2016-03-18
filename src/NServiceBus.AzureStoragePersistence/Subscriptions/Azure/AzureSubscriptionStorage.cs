@@ -85,23 +85,19 @@
         /// <param name="subscriber">The subscriber to unsubscribe</param>
         /// <param name="messageType">The message type to unsubscribed</param>
         /// <param name="context">The current pipeline context</param>
-        public Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
+        public async Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
         {
             var table = client.GetTableReference(subscriptionTableName);
             var encodedAddress = EncodeTo64(subscriber.TransportAddress);
 
-            var query = from s in table.CreateQuery<Subscription>()
-                where s.PartitionKey == messageType.ToString() && s.RowKey == encodedAddress
-                select s;
+            var retrieveOperation = TableOperation.Retrieve<TimeoutDataEntity>(messageType.ToString(), encodedAddress);
 
-            var subscription = query.AsTableQuery().AsEnumerable().SafeFirstOrDefault();
+            var subscription = (await table.ExecuteAsync(retrieveOperation).ConfigureAwait(false)).Result as TimeoutDataEntity;
             if (subscription != null)
             {
                 var operation = TableOperation.Delete(subscription);
-                return table.ExecuteAsync(operation);
+                await table.ExecuteAsync(operation).ConfigureAwait(false);
             }
-
-            return TaskEx.CompletedTask;
         }
 
         /// <summary>
@@ -110,21 +106,21 @@
         /// <param name="messageTypes">Types of messages that subscription addresses should sbe found for</param>        
         /// <param name="context">The current pipeline context</param>
         /// <returns>Subscription addresses that were found for the provided messageTypes</returns>
-        public Task<IEnumerable<Subscriber>> GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes, ContextBag context)
+        public async Task<IEnumerable<Subscriber>> GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes, ContextBag context)
         {
             var subscribers = new List<Subscriber>();
             var table = client.GetTableReference(subscriptionTableName);
 
             foreach (var messageType in messageTypes)
             {
-                var query = from s in table.CreateQuery<Subscription>()
-                            where s.PartitionKey == messageType.ToString()
-                            select new Subscriber(DecodeFrom64(s.RowKey), new EndpointName(s.EndpointName));
+                var query = new TableQuery<Subscription>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, messageType.ToString()));
+
+                var results = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).Select(s => new Subscriber(DecodeFrom64(s.RowKey), new EndpointName(s.EndpointName)));
                 
-                subscribers.AddRange(query.ToList());
+                subscribers.AddRange(results);
             }
 
-            return Task.FromResult<IEnumerable<Subscriber>>(subscribers);
+            return subscribers;
         }
     }
 }

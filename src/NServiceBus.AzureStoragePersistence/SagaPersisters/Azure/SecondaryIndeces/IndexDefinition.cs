@@ -14,9 +14,8 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
         static readonly IndexDefinition NullValue = new IndexDefinition();
 
         static readonly ParameterExpression ObjectParameter = Expression.Parameter(typeof(object));
-        readonly string propertyName;
-
         readonly string sagaDataTypeName;
+        readonly string propertyName;
 
         private IndexDefinition()
         {
@@ -26,10 +25,7 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
         {
             sagaDataTypeName = sagaDataType.FullName;
             propertyName = pi.Name;
-            Accessor = Expression.Lambda<Func<object, object>>(Expression.Convert(Expression.MakeMemberAccess(Expression.Convert(ObjectParameter, sagaDataType), pi), typeof(object)), ObjectParameter).Compile();
         }
-
-        public Func<object, object> Accessor { get; }
 
         public static IndexDefinition Get(Type sagaDataType, SagaCorrelationProperty correlationProperty)
         {

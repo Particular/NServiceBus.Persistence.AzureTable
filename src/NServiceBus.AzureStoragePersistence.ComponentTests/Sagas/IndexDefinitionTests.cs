@@ -9,24 +9,6 @@
     public class IndexDefinitionTests
     {
         [Test]
-        public void Should_access_value_properly()
-        {
-            const string id = "FF4E1C4E-D2F2-4601-8D8E-CB3E91872043";
-            var sagaData = new SagaData
-            {
-                AdditionalId = id
-            };
-
-            var metadata = SagaMetadata.Create(typeof(TestSaga));
-            SagaMetadata.CorrelationPropertyMetadata sagaProp;
-            metadata.TryGetCorrelationProperty(out sagaProp);
-
-            var index = IndexDefinition.Get(typeof(SagaData), new SagaCorrelationProperty(sagaProp.Name, sagaData.AdditionalId));
-
-            Assert.AreEqual(id, index.Accessor(sagaData));
-        }
-
-        [Test]
         public void Should_validate_property()
         {
             var metadata = SagaMetadata.Create(typeof(TestSaga));

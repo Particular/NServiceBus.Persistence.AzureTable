@@ -9,15 +9,15 @@
 
     public class SecondaryIndexPersister
     {
-        public delegate Guid? ScanForSaga(Type sagaType, string propertyName, object propertyValue);
+        public delegate Task<Guid?> ScanForSaga(Type sagaType, string propertyName, object propertyValue);
 
         const int LRUCapacity = 1000;
         readonly LRUCache<PartitionRowKeyTuple, Guid> cache = new LRUCache<PartitionRowKeyTuple, Guid>(LRUCapacity);
-        readonly Func<Type, CloudTable> getTableForSaga;
+        readonly Func<Type, Task<CloudTable>> getTableForSaga;
         readonly Func<IContainSagaData, Task> persist;
         readonly ScanForSaga scanner;
 
-        public SecondaryIndexPersister(Func<Type, CloudTable> getTableForSaga, ScanForSaga scanner, Func<IContainSagaData, Task> persist)
+        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSaga scanner, Func<IContainSagaData, Task> persist)
         {
             this.getTableForSaga = getTableForSaga;
             this.scanner = scanner;
@@ -27,7 +27,7 @@
         public async Task Insert(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty)
         {
             var sagaType = sagaData.GetType();
-            var table = getTableForSaga(sagaType);
+            var table = await getTableForSaga(sagaType).ConfigureAwait(false);
 
             var ix = IndexDefinition.Get(sagaType, correlationProperty);
             if (ix == null)
@@ -35,8 +35,7 @@
                 return;
             }
 
-            var propertyValue = ix.Accessor(sagaData);
-            var key = ix.BuildTableKey(propertyValue);
+            var key = ix.BuildTableKey(correlationProperty.Value);
 
             var entity = new SecondaryIndexTableEntity
             {
@@ -60,7 +59,7 @@
                 var indexRowAlreadyExists = IsConflict(ex);
                 if (indexRowAlreadyExists)
                 {
-                    var indexRow = table.Execute(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey)).Result as SecondaryIndexTableEntity;
+                    var indexRow = (await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey)).ConfigureAwait(false)).Result as SecondaryIndexTableEntity;
                     var data = indexRow?.InitialSagaData;
                     if (data != null)
                     {
@@ -107,7 +106,7 @@
                 return guid;
             }
 
-            var table = getTableForSaga(sagaType);
+            var table = await getTableForSaga(sagaType).ConfigureAwait(false);
             var secondaryIndexEntry = (await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey)).ConfigureAwait(false)).Result as SecondaryIndexTableEntity;
             if (secondaryIndexEntry != null)
             {
@@ -115,7 +114,7 @@
                 return secondaryIndexEntry.SagaId;
             }
 
-            var sagaId = scanner(sagaType, propertyName, propertyValue);
+            var sagaId = await scanner(sagaType, propertyName, propertyValue).ConfigureAwait(false);
             if (sagaId == null)
             {
                 return null;
