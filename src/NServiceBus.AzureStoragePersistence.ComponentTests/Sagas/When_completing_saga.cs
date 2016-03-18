@@ -43,7 +43,6 @@
             };
 
             await persister.Save(sagaData, null, null, null);
-            var loadedSagaData = await persister.Get<CompleteSagaData>(sagaData.Id, null, null);
             Assert.IsNotNull(sagaData);
 
             await persister.Complete(sagaData, null, null);

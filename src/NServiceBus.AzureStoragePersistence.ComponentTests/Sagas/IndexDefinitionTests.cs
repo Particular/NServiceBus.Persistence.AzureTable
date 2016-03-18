@@ -78,10 +78,5 @@
         {
             public string AdditionalId { get; set; }
         }
-
-        public IndexDefinitionTests()
-        {
-            
-        }
     }
 }
