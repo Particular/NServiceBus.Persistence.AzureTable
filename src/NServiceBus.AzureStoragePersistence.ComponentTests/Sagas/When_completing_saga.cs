@@ -35,21 +35,21 @@
             var connectionString = AzurePersistenceTests.GetConnectionString();
 
             var persister = new AzureSagaPersister(connectionString, true);
-            var saga = new CompleteSagaData
+            var sagaData = new CompleteSagaData
             {
                 Id = Guid.NewGuid(),
                 Originator = "Moo",
                 OriginalMessageId = "MooId"
             };
 
-            await persister.Save(saga, null, null, null);
-            var sagaData = await persister.Get<CompleteSagaData>(saga.Id, null, null);
+            await persister.Save(sagaData, null, null, null);
+            var loadedSagaData = await persister.Get<CompleteSagaData>(sagaData.Id, null, null);
             Assert.IsNotNull(sagaData);
 
-            await persister.Complete(saga, null, null);
-            await persister.Complete(saga, null, null);
+            await persister.Complete(sagaData, null, null);
+            await persister.Complete(sagaData, null, null);
 
-            sagaData = await persister.Get<CompleteSagaData>(saga.Id, null, null);
+            sagaData = await persister.Get<CompleteSagaData>(sagaData.Id, null, null);
             Assert.IsNull(sagaData);
         }
 
@@ -70,6 +70,18 @@
 
             var sagaData = await persister.Get<CompleteSagaData>(saga.Id, null, null);
             Assert.IsNull(sagaData);
+        }
+    }
+
+    public class TestSaga : Saga<CompleteSagaData>, IAmStartedByMessages<CompleteSagaData>
+    {
+        public Task Handle(CompleteSagaData message, IMessageHandlerContext context)
+        {
+            return TaskEx.CompletedTask;
+        }
+
+        protected override void ConfigureHowToFindSaga(SagaPropertyMapper<CompleteSagaData> mapper)
+        {
         }
     }
 

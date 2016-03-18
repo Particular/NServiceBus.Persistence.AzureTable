@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
-    using System.Net;
     using System.Reflection;
     using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
@@ -11,8 +10,10 @@
     using Microsoft.WindowsAzure.Storage.Table;
     using NServiceBus.Azure;
     using Extensibility;
+    using NServiceBus.SagaPersisters.Azure.SecondaryIndeces;
     using Persistence;
     using Sagas;
+    using System.Net;
 
     /// <summary>
     /// Saga persister implementation using azure table storage.
@@ -21,6 +22,8 @@
     {
         readonly bool autoUpdateSchema;
         readonly CloudTableClient client;
+        readonly SecondaryIndexPersister secondaryIndeces;
+
         static readonly ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
         static readonly ConditionalWeakTable<object, string> etags = new ConditionalWeakTable<object, string>();
 
@@ -34,6 +37,8 @@
             this.autoUpdateSchema = autoUpdateSchema;
             var account = CloudStorageAccount.Parse(connectionString);
             client = account.CreateCloudTableClient();
+
+            secondaryIndeces = new SecondaryIndexPersister(GetTable, ScanForSaga, Persist);
         }
 
         DictionaryTableEntity GetDictionaryTableEntity(string sagaId, Type entityType)
@@ -106,13 +111,7 @@
         async Task Persist(IContainSagaData saga)
         {
             var type = saga.GetType();
-            var tableName = type.Name;
-            var table = client.GetTableReference(tableName);
-            if (autoUpdateSchema && !tableCreated.ContainsKey(tableName))
-            {
-                table.CreateIfNotExists();
-                tableCreated[tableName] = true;
-            }
+            var table = GetTable(type);
 
             var partitionKey = saga.Id.ToString();
 
@@ -123,6 +122,29 @@
             await table.ExecuteBatchAsync(batch).ConfigureAwait(false);
         }
 
+        private CloudTable GetTable(Type sagaType)
+        {
+            var tableName = sagaType.Name;
+            var table = client.GetTableReference(tableName);
+            if (autoUpdateSchema && !tableCreated.ContainsKey(tableName))
+            {
+                table.CreateIfNotExists();
+                tableCreated[tableName] = true;
+            }
+            return table;
+        }
+
+        private Guid? ScanForSaga(Type sagatype, string propertyName, object propertyValue)
+        {
+            var entity = GetDictionaryTableEntity(sagatype, propertyName, propertyValue);
+            if (entity == null)
+            {
+                return null;
+            }
+
+            return Guid.ParseExact(entity.PartitionKey, "D");
+        }
+
         void AddObjectToBatch(TableBatchOperation batch, object entity, string partitionKey, string rowkey = "")
         {
             if (rowkey == "") rowkey = partitionKey; // just to be backward compat with original implementation
@@ -131,12 +153,17 @@
             string etag;
             var update = etags.TryGetValue(entity, out etag);
 
-            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var properties = SelectPropertiesToPersist(type);
 
             var toPersist = ToDictionaryTableEntity(entity, new DictionaryTableEntity { PartitionKey = partitionKey, RowKey = rowkey, ETag = etag }, properties);
 
             //no longer using InsertOrReplace as it ignores concurrency checks
             batch.Add(update ? TableOperation.Replace(toPersist) : TableOperation.Insert(toPersist));
+        }
+
+        internal static PropertyInfo[] SelectPropertiesToPersist(Type sagaType)
+        {
+            return sagaType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
         }
 
         DictionaryTableEntity ToDictionaryTableEntity(object entity, DictionaryTableEntity toPersist, IEnumerable<PropertyInfo> properties)
@@ -253,7 +280,7 @@
         /// <param name="context">The current context.</param>
         public Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context)
         {
-            return Persist(sagaData);
+            return Task.WhenAll(new [] { secondaryIndeces.Insert(sagaData, correlationProperty), Persist(sagaData) });
         }
 
         /// <summary>
@@ -271,7 +298,7 @@
         /// <summary>
         /// Gets a saga entity from the injected session factory's current session
         /// using the given saga id.
-        /// </summary>
+        /// </summary>\
         /// <param name="sagaId">The saga id to use in the lookup.</param>
         /// <param name="session">The synchronization session.</param>
         /// <param name="context">The current context.</param>

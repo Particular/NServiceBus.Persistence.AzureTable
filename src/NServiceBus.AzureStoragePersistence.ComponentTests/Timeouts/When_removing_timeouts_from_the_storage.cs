@@ -125,7 +125,6 @@
         }
 
         [Test]
-        [Explicit]
         public async Task TryRemove_should_work_with_concurrent_operations()
         {
             var timeoutPersister = TestHelper.CreateTimeoutPersister();
@@ -133,8 +132,8 @@
 
             await timeoutPersister.Add(timeout, null);
 
-            var task1 = Task.Run(() => timeoutPersister.TryRemove(timeout.Id, null));
-            var task2 = Task.Run(() => timeoutPersister.TryRemove(timeout.Id, null));
+            var task1 = timeoutPersister.TryRemove(timeout.Id, null);
+            var task2 = timeoutPersister.TryRemove(timeout.Id, null);
 
             await Task.WhenAll(task1, task2).ConfigureAwait(false);
 
