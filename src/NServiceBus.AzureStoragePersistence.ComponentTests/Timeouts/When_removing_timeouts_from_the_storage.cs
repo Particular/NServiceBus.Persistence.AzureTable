@@ -138,7 +138,6 @@
             await Task.WhenAll(task1, task2).ConfigureAwait(false);
 
             Assert.IsTrue(task1.Result || task2.Result);
-            Assert.IsFalse(task1.Result && task2.Result);
         }
     }
 }

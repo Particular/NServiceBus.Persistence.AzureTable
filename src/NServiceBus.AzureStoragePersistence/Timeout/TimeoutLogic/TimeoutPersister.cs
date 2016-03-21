@@ -85,27 +85,29 @@
             var lastSuccessfulReadEntity = GetLastSuccessfulRead(timeoutManagerDataTable);
             var lastSuccessfulRead = lastSuccessfulReadEntity?.LastSuccessfullRead;
 
-            IQueryable<TimeoutDataEntity> query;
+            TableQuery<TimeoutDataEntity> query;
 
             if (lastSuccessfulRead.HasValue)
             {
-                query = from c in timeoutDataTable.CreateQuery<TimeoutDataEntity>()
-                        where string.Compare(c.PartitionKey, lastSuccessfulRead.Value.ToString(partitionKeyScope), StringComparison.InvariantCultureIgnoreCase) != 0
-                            && string.Compare(c.PartitionKey, now.ToString(partitionKeyScope), StringComparison.InvariantCultureIgnoreCase) != 0
-                            && c.OwningTimeoutManager == endpointName
-                        select c;
+                query = new TableQuery<TimeoutDataEntity>()
+                    .Where(
+                    TableQuery.CombineFilters(
+                        TableQuery.CombineFilters(
+                            TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.NotEqual, now.ToString(partitionKeyScope)),
+                            TableOperators.And,
+                            TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.NotEqual, lastSuccessfulRead.Value.ToString(partitionKeyScope))),
+                        TableOperators.And,
+                        TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName))
+                    );
+
             }
             else
             {
-                query = from c in timeoutDataTable.CreateQuery<TimeoutDataEntity>()
-                        where c.OwningTimeoutManager == endpointName
-                        select c;
+                query = new TableQuery<TimeoutDataEntity>()
+                    .Where(TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName));
             }
 
-            var result = query
-                .Take(1000)
-                .ToList() //must happen locally because OrderBy is not supported by native Azure Storage Table service
-                .OrderBy(c => c.Time);
+            var result = (await timeoutDataTable.ExecuteQueryAsync(query, take: 1000).ConfigureAwait(false)).OrderBy(c => c.Time);
 
             var allTimeouts = result.ToList();
             if (allTimeouts.Count == 0)
