@@ -406,8 +406,7 @@
         string Serialize(Dictionary<string, string> headers)
         {
             var serializer = new JavaScriptSerializer();
-            var result = serializer.Serialize(headers);
-            return result;
+            return serializer.Serialize(headers);
         }
 
         Dictionary<string, string> Deserialize(string state)
