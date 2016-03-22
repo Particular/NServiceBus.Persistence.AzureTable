@@ -33,9 +33,8 @@
 
             typesToInclude.AddRange(types);
 
-            var builder = new EndpointConfiguration();
+            var builder = new EndpointConfiguration(endpointConfiguration.EndpointName);
 
-            builder.EndpointName(endpointConfiguration.EndpointName);
             builder.TypesToIncludeInScan(typesToInclude);
             builder.CustomConfigurationSource(configSource);
             builder.EnableInstallers();
@@ -48,12 +47,6 @@
 
             var connectionString = Environment.GetEnvironmentVariable("AzureStoragePersistence.ConnectionString");
             builder.UsePersistence<AzureStoragePersistence>().ConnectionString(connectionString);
-
-            // Use this to disable synchronization storage by providing an empty implementation
-            // so that when the container tries to resolve an instance if ISynchronizedStorage it
-            // doesn't throw a ComponentNotRegisteredException exception
-            // This is hacky and we need a proper way around this.
-            builder.EnableFeature<FakeSynchronizationStorage>();
 
             configurationBuilderCustomization(builder);
 

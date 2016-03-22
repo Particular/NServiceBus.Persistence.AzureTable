@@ -82,7 +82,7 @@
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
             var timeoutManagerDataTable = client.GetTableReference(timeoutManagerDataTableName);
 
-            var lastSuccessfulReadEntity = GetLastSuccessfulRead(timeoutManagerDataTable);
+            var lastSuccessfulReadEntity = await GetLastSuccessfulRead(timeoutManagerDataTable).ConfigureAwait(false);
             var lastSuccessfulRead = lastSuccessfulReadEntity?.LastSuccessfullRead;
 
             TableQuery<TimeoutDataEntity> query;
@@ -254,11 +254,12 @@
         {
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
 
-            var query = (from c in timeoutDataTable.CreateQuery<TimeoutDataEntity>()
-                         where c.PartitionKey == sagaId.ToString()
-                         select c);
+            var query = new TableQuery<TimeoutDataEntity>()
+                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, sagaId.ToString()));
 
-            foreach (var timeoutDataEntityBySaga in query.Take(1000))
+            var results = await timeoutDataTable.ExecuteQueryAsync(query, take: 1000).ConfigureAwait(false);
+
+            foreach (var timeoutDataEntityBySaga in results)
             {
                 await DeleteState(timeoutDataEntityBySaga.StateAddress).ConfigureAwait(false);
                 await DeleteTimeEntity(timeoutDataTable, timeoutDataEntityBySaga.Time.ToString(partitionKeyScope), timeoutDataEntityBySaga.RowKey).ConfigureAwait(false);
@@ -434,14 +435,14 @@
             return n;
         }
 
-        TimeoutManagerDataEntity GetLastSuccessfulRead(CloudTable timeoutManagerDataTable)
+        async Task<TimeoutManagerDataEntity> GetLastSuccessfulRead(CloudTable timeoutManagerDataTable)
         {
+            var query = new TableQuery<TimeoutManagerDataEntity>()
+                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, sanitizedEndpointInstanceName));
 
-            var query = from m in timeoutManagerDataTable.CreateQuery<TimeoutManagerDataEntity>()
-                        where m.PartitionKey == sanitizedEndpointInstanceName
-                        select m;
+            var results = await timeoutManagerDataTable.ExecuteQueryAsync(query, take: 1).ConfigureAwait(false);
 
-            return query.SafeFirstOrDefault();
+            return results.SafeFirstOrDefault();
         }
 
         Task UpdateSuccessfulRead(CloudTable table, TimeoutManagerDataEntity read)
