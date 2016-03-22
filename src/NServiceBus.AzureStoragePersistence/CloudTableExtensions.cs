@@ -19,10 +19,10 @@
                 var seg = await table.ExecuteQuerySegmentedAsync(query, token, ct).ConfigureAwait(false);
                 token = seg.ContinuationToken;
 
-                if (items.Count + seg.Count() > take)
+                if (items.Count + seg.Results.Count > take)
                 {
-                    var numberToTake = items.Count + seg.Count() - take;
-                    items.AddRange(seg.Take(seg.Count() - numberToTake));
+                    var numberToTake = items.Count + seg.Results.Count - take;
+                    items.AddRange(seg.Take(seg.Results.Count - numberToTake));
                 }
                 else
                 {
