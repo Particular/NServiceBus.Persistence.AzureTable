@@ -13,7 +13,7 @@
         {
             var connectionString = "UseDevelopmentStorage=true";
 
-            var endpointConfig = new EndpointConfiguration();
+            var endpointConfig = new EndpointConfiguration("Testendpoint");
             var persistence = endpointConfig.UsePersistence<AzureStoragePersistence>().ConnectionString(connectionString);
 
             var settings = persistence.GetSettings();
