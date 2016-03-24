@@ -5,43 +5,39 @@
     using EndpointTemplates;
     using Features;
     using NUnit.Framework;
+    using System.Threading.Tasks;
+    using ScenarioDescriptors;
 
     public class When_multi_subscribing_to_a_polymorphic_event : NServiceBusAcceptanceTest
     {
         [Test]
-        public void Both_events_should_be_delivered()
+        public async Task Both_events_should_be_delivered()
         {
-            var rootContext = new Context();
-
-            Scenario.Define(rootContext)
-                .WithEndpoint<Publisher1>(b => b.When(c => c.Publisher1HasASubscriberForIMyEvent, (bus, c) =>
+            await Scenario.Define<Context>()
+                .WithEndpoint<Publisher1>(b => b.When(c => c.Publisher1HasASubscriberForIMyEvent, (session, c) =>
                 {
                     c.AddTrace("Publishing MyEvent1");
-                    bus.Publish(new MyEvent1());
+                    return session.Publish(new MyEvent1());
                 }))
-                .WithEndpoint<Publisher2>(b => b.When(c => c.Publisher2HasDetectedASubscriberForEvent2, (bus, c) =>
+                .WithEndpoint<Publisher2>(b => b.When(c => c.Publisher2HasDetectedASubscriberForEvent2, (session, c) =>
                 {
                     c.AddTrace("Publishing MyEvent2");
-                    bus.Publish(new MyEvent2());
+                    return session.Publish(new MyEvent2());
                 }))
-                .WithEndpoint<Subscriber1>(b => b.Given((bus, context) =>
+                .WithEndpoint<Subscriber1>(b => b.When(async (session, c) =>
                 {
-                    context.AddTrace("Subscriber1 subscribing to both events");
-                    bus.Subscribe<IMyEvent>();
-                    bus.Subscribe<MyEvent2>();
-
-                    if (context.HasNativePubSubSupport)
-                    {
-                        context.Publisher1HasASubscriberForIMyEvent = true;
-                        context.Publisher2HasDetectedASubscriberForEvent2 = true;
-                    }
+                    c.AddTrace("Subscriber1 subscribing to both events");
+                    await session.Subscribe<IMyEvent>();
+                    await session.Subscribe<MyEvent2>();
                 }))
-                .AllowExceptions(e => e.Message.Contains("Oracle.DataAccess.Client.OracleException: ORA-00001") || e.Message.Contains("System.Data.SqlClient.SqlException: Violation of PRIMARY KEY constraint"))
                 .Done(c => c.SubscriberGotIMyEvent && c.SubscriberGotMyEvent2)
+                .Repeat(r => r.For<AllTransportsWithMessageDrivenPubSub>())
+                .Should(c =>
+                {
+                    Assert.True(c.SubscriberGotIMyEvent);
+                    Assert.True(c.SubscriberGotMyEvent2);
+                })
                 .Run();
-
-            Assert.True(rootContext.SubscriberGotIMyEvent);
-            Assert.True(rootContext.SubscriberGotMyEvent2);
         }
 
         public class Context : ScenarioContext
@@ -96,7 +92,7 @@
             {
                 public Context Context { get; set; }
 
-                public void Handle(IMyEvent messageThatIsEnlisted)
+                public Task Handle(IMyEvent messageThatIsEnlisted, IMessageHandlerContext context)
                 {
                     Context.AddTrace(String.Format("Got event '{0}'", messageThatIsEnlisted));
                     if (messageThatIsEnlisted is MyEvent2)
@@ -107,6 +103,8 @@
                     {
                         Context.SubscriberGotIMyEvent = true;
                     }
+
+                    return Task.FromResult(0);
                 }
             }
         }

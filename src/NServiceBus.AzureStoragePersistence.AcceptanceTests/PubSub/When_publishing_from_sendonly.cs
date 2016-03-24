@@ -10,16 +10,17 @@
     using NServiceBus.Unicast.Subscriptions;
     using NServiceBus.Unicast.Subscriptions.MessageDrivenSubscriptions;
     using NUnit.Framework;
+    using System.Threading.Tasks;
+    using Extensibility;
+    using System.Linq;
 
     public class When_publishing_from_sendonly : NServiceBusAcceptanceTest
     {
         [Test]
-        public void Should_be_delivered_to_all_subscribers()
+        public async Task Should_be_delivered_to_all_subscribers()
         {
-            var context = new Context();
-
-            Scenario.Define(context)
-                .WithEndpoint<SendOnlyPublisher>(b => b.Given((bus, c) => bus.Publish(new MyEvent())))
+            await Scenario.Define<Context>()
+                .WithEndpoint<SendOnlyPublisher>(b => b.When((session, c) => session.Publish(new MyEvent())))
                 .WithEndpoint<Subscriber>()
                 .Done(c => c.SubscriberGotTheEvent)
                 .Repeat(r => r.For<AllTransportsWithMessageDrivenPubSub>())
@@ -56,9 +57,11 @@
             {
                 public Context Context { get; set; }
 
-                public void Handle(MyEvent messageThatIsEnlisted)
+                public Task Handle(MyEvent messageThatIsEnlisted, IMessageHandlerContext context)
                 {
                     Context.SubscriberGotTheEvent = true;
+
+                    return Task.FromResult(0);
                 }
             }
         }
@@ -76,35 +79,40 @@
             }
         }
 
-        public class HardCodedPersistenceFeature:Feature
+        public class HardCodedPersistenceFeature : Feature
         {
             protected override void Setup(FeatureConfigurationContext context)
             {
-                context.Container.ConfigureComponent<HardCodedPersistenceImpl>(DependencyLifecycle.SingleInstance);
+                context.Container.ConfigureComponent<HardcodedSubscriptionManager>(DependencyLifecycle.SingleInstance);
             }
         }
 
-        public class HardCodedPersistenceImpl : ISubscriptionStorage
+        public class HardcodedSubscriptionManager : ISubscriptionStorage
         {
-            public void Subscribe(Address client, IEnumerable<MessageType> messageTypes)
+            public HardcodedSubscriptionManager()
             {
-            }
-
-            public void Unsubscribe(Address client, IEnumerable<MessageType> messageTypes)
-            {
-            }
-
-            public IEnumerable<Address> GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes)
-            {
-                return new[]
+                addressTask = Task.FromResult(new[]
                 {
-                    Address.Parse("publishingfromsendonly.subscriber")
-                };
+                    new Unicast.Subscriptions.MessageDrivenSubscriptions.Subscriber("publishingFromSendonly.subscriber", null)
+                }.AsEnumerable());
             }
 
-            public void Init()
+            public Task Subscribe(Unicast.Subscriptions.MessageDrivenSubscriptions.Subscriber subscriber, MessageType messageType, ContextBag context)
             {
+                return Task.FromResult(0);
             }
+
+            public Task Unsubscribe(Unicast.Subscriptions.MessageDrivenSubscriptions.Subscriber subscriber, MessageType messageType, ContextBag context)
+            {
+                return Task.FromResult(0);
+            }
+
+            public Task<IEnumerable<Unicast.Subscriptions.MessageDrivenSubscriptions.Subscriber>> GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes, ContextBag context)
+            {
+                return addressTask;
+            }
+
+            Task<IEnumerable<Unicast.Subscriptions.MessageDrivenSubscriptions.Subscriber>> addressTask;
         }
     }
 }

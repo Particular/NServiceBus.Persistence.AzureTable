@@ -1,46 +1,47 @@
 ﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Subscriptions
 {
-    using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
+    using NServiceBus.Routing;
     using NServiceBus.Unicast.Subscriptions;
+    using NServiceBus.Unicast.Subscriptions.MessageDrivenSubscriptions;
     using NUnit.Framework;
 
     [TestFixture]
     [Category("AzureStoragePersistence")]
     public class When_unsubscribing
     {
+        [SetUp]
         public void Setup()
         {
             SuscriptionTestHelper.PerformStorageCleanup();
         }
 
         [Test]
-        public void the_subscription_should_be_removed()
+        public async Task the_subscription_should_be_removed()
         {
             var persister = SuscriptionTestHelper.CreateAzureSubscriptionStorage();
-
-            var messageTypes = new List<MessageType>
+            var messageType = new MessageType(typeof(TestMessage));
+            var messageTypes = new[]
             {
-                new MessageType(typeof(TestMessage))
+                messageType
             };
 
-            var address = new Address("test-queue", "test-machine");
+            var subscriber = new Subscriber("address://test-queue", new EndpointName("endpointName"));
+            await persister.Subscribe(subscriber, messageType, null);
 
-            persister.Subscribe(address, messageTypes);
-
-            var subscribers = persister.GetSubscriberAddressesForMessage(messageTypes);
+            var subscribers = await persister.GetSubscriberAddressesForMessage(messageTypes, null);
 
             Assert.That(subscribers.Count(), Is.EqualTo(1));
 
             var subscription = subscribers.ToArray()[0];
-            Assert.That(subscription.Machine, Is.EqualTo(address.Machine));
-            Assert.That(subscription.Queue, Is.EqualTo(address.Queue));
+            Assert.That(subscription.Endpoint, Is.EqualTo(subscriber.Endpoint));
+            Assert.That(subscription.TransportAddress, Is.EqualTo(subscriber.TransportAddress));
 
-            persister.Unsubscribe(address,messageTypes);
-
-            var postUnsubscribe = persister.GetSubscriberAddressesForMessage(messageTypes);
+            await persister.Unsubscribe(subscriber, messageType, null);
+            var postUnsubscribe = await persister.GetSubscriberAddressesForMessage(messageTypes, null);
 
             Assert.That(postUnsubscribe.Count(), Is.EqualTo(0));
-        } 
+        }
     }
 }

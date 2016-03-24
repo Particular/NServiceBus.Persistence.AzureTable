@@ -43,7 +43,7 @@
             }
         }
 
-        public static RunDescriptor Msmq
+        private static RunDescriptor Msmq
         {
             get { return AllAvailable.SingleOrDefault(r => r.Key == "MsmqTransport"); }
         }
@@ -52,20 +52,12 @@
         {
             var foundTransportDefinitions = TypeScanner.GetAllTypesAssignableTo<TransportDefinition>();
 
-            
             foreach (var transportDefinitionType in foundTransportDefinitions)
             {
                 var key = transportDefinitionType.Name;
 
-                var runDescriptor = new RunDescriptor
-                {
-                    Key = key,
-                    Settings =
-                        new Dictionary<string, string>
-                                {
-                                    {"Transport", transportDefinitionType.AssemblyQualifiedName}
-                                }
-                };
+                var runDescriptor = new RunDescriptor(key);
+                runDescriptor.Settings.Set("Transport", transportDefinitionType.AssemblyQualifiedName);
 
                 var connectionString = Environment.GetEnvironmentVariable(key + ".ConnectionString");
 
@@ -75,7 +67,7 @@
 
                 if (!string.IsNullOrEmpty(connectionString))
                 {
-                    runDescriptor.Settings.Add("Transport.ConnectionString", connectionString);
+                    runDescriptor.Settings.Set("Transport.ConnectionString", connectionString);
                     yield return runDescriptor;
                 }
             }
@@ -90,7 +82,5 @@
                 {"SqlServerTransport", @"Server=localhost\sqlexpress;Database=nservicebus;Trusted_Connection=True;"},
                 {"MsmqTransport", @"cacheSendConnection=false;journal=false;"}
             };
-
-
     }
 }

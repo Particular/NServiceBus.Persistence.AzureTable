@@ -1,8 +1,8 @@
 ﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Persisters
 {
-    using NServiceBus;
-    using NUnit.Framework;
     using NServiceBus.Configuration.AdvanceExtensibility;
+    using NUnit.Framework;
+    using NServiceBus;
 
     [TestFixture]
     [Category("Azure")]
@@ -13,8 +13,8 @@
         {
             var connectionString = "UseDevelopmentStorage=true";
 
-            var busConfig = new BusConfiguration();
-            var persistence = busConfig.UsePersistence<AzureStoragePersistence>().ConnectionString(connectionString);
+            var endpointConfig = new EndpointConfiguration("Testendpoint");
+            var persistence = endpointConfig.UsePersistence<AzureStoragePersistence>().ConnectionString(connectionString);
 
             var settings = persistence.GetSettings();
 

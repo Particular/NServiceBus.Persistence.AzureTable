@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using ScenarioDescriptors;
+    using AcceptanceTesting.Support;
 
     public static class ConfigureExtensions
     {
@@ -39,7 +40,7 @@
             return null;
         }
 
-        public static void DefineTransport(this BusConfiguration builder, IDictionary<string, string> settings, Type endpointBuilderType)
+        public static void DefineTransport(this EndpointConfiguration builder, RunSettings settings, Type endpointBuilderType)
         {
             if (!settings.ContainsKey("Transport"))
             {
@@ -48,7 +49,7 @@
 
             const string typeName = "ConfigureTransport";
 
-            var transportType = GetTypePersistent(settings["Transport"]);
+            var transportType = GetTypePersistent(settings.Get<string>("Transport"));
 
             if (transportType == null)
             {
@@ -56,7 +57,7 @@
                     .Select(a => a.FullName)
                     .ToArray();
 
-                var msg = $"Requested Transport: `{settings["Transport"]}` but got null. Loaded Assemblies: {String.Join(", ", assemblies)}";
+                var msg = $"Requested Transport: `{settings.Get<string>("Transport")}` but got null. Loaded Assemblies: {String.Join(", ", assemblies)}";
                 throw new InvalidOperationException(msg);
             }
 
@@ -75,29 +76,29 @@
                 return;
             }
 
-            builder.UseTransport(transportType).ConnectionString(settings["Transport.ConnectionString"]);
+            builder.UseTransport(transportType).ConnectionString(settings.Get<string>("Transport.ConnectionString"));
         }
 
-        public static void DefineTransactions(this BusConfiguration config, IDictionary<string, string> settings)
+        public static void DefineTransactions(this EndpointConfiguration config, RunSettings settings)
         {
             if (settings.ContainsKey("Transactions.Disable"))
             {
-                config.Transactions().Disable();
+                config.UseTransport(GetTypePersistent(settings.Get<string>("Transport"))).Transactions(TransportTransactionMode.None);
             }
             if (settings.ContainsKey("Transactions.SuppressDistributedTransactions"))
             {
-                config.Transactions().DisableDistributedTransactions();
+                config.UseTransport(GetTypePersistent(settings.Get<string>("Transport"))).Transactions(TransportTransactionMode.ReceiveOnly);
             }
         }
 
-        public static void DefinePersistence(this BusConfiguration config, IDictionary<string, string> settings)
+        public static void DefinePersistence(this EndpointConfiguration config, RunSettings settings)
         {
             if (!settings.ContainsKey("Persistence"))
             {
                 settings = Persistence.Default.Settings;
             }
 
-            var persistenceType = Type.GetType(settings["Persistence"]);
+            var persistenceType = Type.GetType(settings.Get<string>("Persistence"));
 
 
             var typeName = "Configure" + persistenceType.Name;
@@ -117,7 +118,7 @@
             config.UsePersistence(persistenceType);
         }
 
-        public static void DefineBuilder(this BusConfiguration config, IDictionary<string, string> settings)
+        public static void DefineBuilder(this EndpointConfiguration config, RunSettings settings)
         {
             if (!settings.ContainsKey("Builder"))
             {
@@ -131,7 +132,7 @@
                 settings = builderDescriptor.Settings;
             }
 
-            var builderType = Type.GetType(settings["Builder"]);
+            var builderType = Type.GetType(settings.Get<string>("Builder"));
 
 
             var typeName = "Configure" + builderType.Name;
@@ -148,6 +149,19 @@
             }
 
             config.UseContainer(builderType);
+        }
+
+        static bool ContainsKey(this RunSettings settings, string key)
+        {
+            return settings.Any(setting => setting.Key == key);
+        }
+
+        public static T GetOrNull<T>(this RunSettings settings, string key) where T : class
+        {
+            T result;
+            settings.TryGet(key, out result);
+
+            return result;
         }
     }
 }

@@ -4,50 +4,51 @@
     using AcceptanceTesting;
     using EndpointTemplates;
     using Features;
-    using Timeout.Core;
     using NUnit.Framework;
+    using System.Threading.Tasks;
+    using ScenarioDescriptors;
 
     class When_timeout_storage_is_unavailable_temporarily : NServiceBusAcceptanceTest
     {
         [Test]
-        public void Endpoint_should_start()
+        public async Task Endpoint_should_start()
         {
-            var context = new TestContext();
-
-            Scenario.Define(context)
+            await Scenario.Define<TimeoutTestContext>()
                 .WithEndpoint<EndpointWithFlakyTimeoutPersister>()
                 .Done(c => c.EndpointsStarted)
+                .Repeat(r => r.For<AllTransportsWithoutNativeDeferral>())
+                .Should(c => Assert.IsTrue(c.EndpointsStarted))
                 .Run();
-
-            Assert.IsTrue(context.EndpointsStarted);
         }
-
 
         [Test]
-        public void Endpoint_should_not_shutdown()
+        public async Task Endpoint_should_not_shutdown()
         {
-            var context = new TestContext{SecondsToWait = 10};
             var stopTime = DateTime.Now.AddSeconds(45);
 
-            Scenario.Define(context)
-                .AllowExceptions(ex => ex.Message.Contains("Persister is temporarily unavailable"))
-                .WithEndpoint<EndpointWithFlakyTimeoutPersister>(b =>
+            var testContext =
+                await Scenario.Define<TimeoutTestContext>(c =>
                 {
-                    b.CustomConfig(busConfig =>
-                    {
-                        busConfig.DefineCriticalErrorAction((s, ex) =>
-                        {
-                            context.FatalErrorOccurred = true;
-                        });
-                    });
+                    c.SecondsToWait = 10;
                 })
-                .Done(c => context.FatalErrorOccurred || stopTime <= DateTime.Now)
-                .Run();
+                    .WithEndpoint<EndpointWithFlakyTimeoutPersister>(b =>
+                    {
+                        b.CustomConfig((busConfig, context) =>
+                        {
+                            busConfig.DefineCriticalErrorAction(criticalErrorContext =>
+                            {
+                                context.FatalErrorOccurred = true;
+                                return Task.FromResult(true);
+                            });
+                        });
+                    })
+                    .Done(c => c.FatalErrorOccurred || stopTime <= DateTime.Now)
+                    .Run();
 
-            Assert.IsFalse(context.FatalErrorOccurred, "Circuit breaker was trigged too soon.");
+            Assert.IsFalse(testContext.FatalErrorOccurred, "Circuit breaker was triggered too soon.");
         }
 
-        public class TestContext : ScenarioContext
+        public class TimeoutTestContext : ScenarioContext
         {
             public int SecondsToWait { get; set; }
             public bool FatalErrorOccurred { get; set; }
@@ -64,8 +65,6 @@
                 EndpointSetup<DefaultServer>(config =>
                 {
                     config.EnableFeature<TimeoutManager>();
-                    config.Transactions().DisableDistributedTransactions();
-                    config.SuppressOutdatedTimeoutPersistenceWarning();
                 });
             }
 
@@ -78,9 +77,10 @@
 
                 protected override void Setup(FeatureConfigurationContext context)
                 {
+                    var testContext = context.Settings.Get<TimeoutTestContext>();
                     context.Container
-                        .ConfigureComponent<TemporarilyUnavailableTimeoutPersister>(DependencyLifecycle.SingleInstance)
-                        .ConfigureProperty(tp => tp.SecondsToWait, 10);
+                        .ConfigureComponent<CyclingOutageTimeoutPersister>(DependencyLifecycle.SingleInstance)
+                        .ConfigureProperty(tp => tp.SecondsToWait, testContext.SecondsToWait);
                 }
             }
         }

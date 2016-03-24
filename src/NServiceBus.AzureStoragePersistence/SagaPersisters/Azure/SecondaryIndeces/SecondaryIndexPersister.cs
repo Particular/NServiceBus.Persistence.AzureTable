@@ -2,39 +2,40 @@
 {
     using System;
     using System.Net;
+    using System.Threading.Tasks;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
-    using NServiceBus.Saga;
+    using Sagas;
 
     public class SecondaryIndexPersister
     {
-        public delegate Guid? ScanForSaga(Type sagaType, string propertyName, object propertyValue);
+        public delegate Task<Guid?> ScanForSaga(Type sagaType, string propertyName, object propertyValue);
 
         const int LRUCapacity = 1000;
         readonly LRUCache<PartitionRowKeyTuple, Guid> cache = new LRUCache<PartitionRowKeyTuple, Guid>(LRUCapacity);
-        readonly Func<Type, CloudTable> getTableForSaga;
-        readonly Action<IContainSagaData> persist;
+        readonly Func<Type, Task<CloudTable>> getTableForSaga;
+        readonly Func<IContainSagaData, Task> persist;
         readonly ScanForSaga scanner;
 
-        public SecondaryIndexPersister(Func<Type, CloudTable> getTableForSaga, ScanForSaga scanner, Action<IContainSagaData> persist)
+        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSaga scanner, Func<IContainSagaData, Task> persist)
         {
             this.getTableForSaga = getTableForSaga;
             this.scanner = scanner;
             this.persist = persist;
         }
 
-        public void Insert(IContainSagaData sagaData)
+        public async Task Insert(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty)
         {
             var sagaType = sagaData.GetType();
-            var table = getTableForSaga(sagaType);
-            var ix = IndexDefintion.Get(sagaType);
+            var table = await getTableForSaga(sagaType).ConfigureAwait(false);
+
+            var ix = IndexDefinition.Get(sagaType, correlationProperty);
             if (ix == null)
             {
                 return;
             }
 
-            var propertyValue = ix.Accessor(sagaData);
-            var key = ix.BuildTableKey(propertyValue);
+            var key = ix.BuildTableKey(correlationProperty.Value);
 
             var entity = new SecondaryIndexTableEntity
             {
@@ -51,14 +52,14 @@
 
             try
             {
-                table.Execute(TableOperation.Insert(entity));
+                await table.ExecuteAsync(TableOperation.Insert(entity)).ConfigureAwait(false);
             }
             catch (StorageException ex)
             {
                 var indexRowAlreadyExists = IsConflict(ex);
                 if (indexRowAlreadyExists)
                 {
-                    var indexRow = table.Execute(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey)).Result as SecondaryIndexTableEntity;
+                    var indexRow = (await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey)).ConfigureAwait(false)).Result as SecondaryIndexTableEntity;
                     var data = indexRow?.InitialSagaData;
                     if (data != null)
                     {
@@ -67,7 +68,7 @@
                         // saga hasn't been saved under primary key. Try to store it
                         try
                         {
-                            persist(deserializeSagaData);
+                            await persist(deserializeSagaData).ConfigureAwait(false);
                         }
                         catch (StorageException e)
                         {
@@ -85,11 +86,11 @@
             }
         }
 
-        public Guid? FindPossiblyCreatingIndexEntry<TSagaData>(string propertyName, object propertyValue)
+        public async Task<Guid?> FindPossiblyCreatingIndexEntry<TSagaData>(string propertyName, object propertyValue, SagaCorrelationProperty correlationProperty)
             where TSagaData : IContainSagaData
         {
             var sagaType = typeof(TSagaData);
-            var ix = IndexDefintion.Get(sagaType);
+            var ix = IndexDefinition.Get(sagaType, correlationProperty);
             if (ix == null)
             {
                 throw new ArgumentException($"Saga '{typeof(TSagaData)}' has no correlation properties. Ensure that your saga is correlated by this property and only then, mark it with `Unique` attribute.");
@@ -105,15 +106,15 @@
                 return guid;
             }
 
-            var table = getTableForSaga(sagaType);
-            var secondaryIndexEntry = table.Execute(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey)).Result as SecondaryIndexTableEntity;
+            var table = await getTableForSaga(sagaType).ConfigureAwait(false);
+            var secondaryIndexEntry = (await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey)).ConfigureAwait(false)).Result as SecondaryIndexTableEntity;
             if (secondaryIndexEntry != null)
             {
                 cache.Put(key, secondaryIndexEntry.SagaId);
                 return secondaryIndexEntry.SagaId;
             }
 
-            var sagaId = scanner(sagaType, propertyName, propertyValue);
+            var sagaId = await scanner(sagaType, propertyName, propertyValue).ConfigureAwait(false);
             if (sagaId == null)
             {
                 return null;

@@ -5,11 +5,15 @@
     using System.Collections.Generic;
     using System.Reflection;
     using System.Runtime.CompilerServices;
+    using System.Threading.Tasks;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
     using NServiceBus.Azure;
+    using Extensibility;
     using NServiceBus.SagaPersisters.Azure.SecondaryIndeces;
-    using Saga;
+    using Persistence;
+    using Sagas;
+    using System.Net;
 
     /// <summary>
     /// Saga persister implementation using azure table storage.
@@ -33,74 +37,34 @@
             this.autoUpdateSchema = autoUpdateSchema;
             var account = CloudStorageAccount.Parse(connectionString);
             client = account.CreateCloudTableClient();
+
             secondaryIndeces = new SecondaryIndexPersister(GetTable, ScanForSaga, Persist);
         }
 
-        /// <summary>
-        /// Saves the given saga entity using the current session of the
-        /// injected session factory.
-        /// </summary>
-        /// <param name="saga">The saga entity that will be saved.</param>
-        public void Save(IContainSagaData saga)
-        {
-            secondaryIndeces.Insert(saga);
-            Persist(saga);
-        }
-
-        /// <summary>
-        /// Updates the given saga entity using the current session of the
-        /// injected session factory.
-        /// </summary>
-        /// <param name="saga">The saga entity that will be updated.</param>
-        public void Update(IContainSagaData saga)
-        {
-            Persist(saga);
-        }
-
-        /// <summary>
-        /// Gets a saga entity from the injected session factory's current session
-        /// using the given saga id.
-        /// </summary>
-        /// <param name="sagaId">The saga id to use in the lookup.</param>
-        /// <returns>The saga entity if found, otherwise null.</returns>
-        public T Get<T>(Guid sagaId) where T : IContainSagaData
-        {
-            var id = sagaId.ToString();
-            var entityType = typeof(T);
-            var tableEntity = GetDictionaryTableEntity(id, entityType);
-            var entity = (T)ToEntity(entityType, tableEntity);
-
-            if (!Equals(entity, default(T)))
-            {
-                etags.Add(entity, tableEntity.ETag);
-            }
-
-            return entity;
-        }
-
-        DictionaryTableEntity GetDictionaryTableEntity(string sagaId, Type entityType)
+        async Task<DictionaryTableEntity> GetDictionaryTableEntity(string sagaId, Type entityType)
         {
             var tableName = entityType.Name;
             var table = client.GetTableReference(tableName);
 
             var query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, sagaId));
 
-            var tableEntity = table.ExecuteQuery(query).SafeFirstOrDefault();
-            return tableEntity;
-        }
-
-        T ISagaPersister.Get<T>(string property, object value)
-        {
-            var sagaId = secondaryIndeces.FindPossiblyCreatingIndexEntry<T>(property, value);
-            if (sagaId != null)
+            try
             {
-                return Get<T>(sagaId.Value);
+                var tableEntity = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).SafeFirstOrDefault();
+                return tableEntity;
             }
+            catch (StorageException e)
+            {
+                if (e.RequestInformation.HttpStatusCode == (int)HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
 
-            return default(T);
+                throw;
+            }
         }
 
-        DictionaryTableEntity GetDictionaryTableEntity(Type type, string property, object value)
+        async Task<DictionaryTableEntity> GetDictionaryTableEntity(Type type, string property, object value)
         {
             var tableName = type.Name;
             var table = client.GetTableReference(tableName);
@@ -108,6 +72,10 @@
             TableQuery<DictionaryTableEntity> query;
 
             var propertyInfo = type.GetProperty(property);
+            if (propertyInfo == null)
+            {
+                return null;
+            }
 
             if (propertyInfo.PropertyType == typeof(byte[]))
             {
@@ -147,35 +115,15 @@
                     string.Format("The property type '{0}' is not supported in windows azure table storage",
                         propertyInfo.PropertyType.Name));
             }
-            var tableEntity = table.ExecuteQuery(query).SafeFirstOrDefault();
+
+            var tableEntity = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).SafeFirstOrDefault();
             return tableEntity;
         }
 
-        /// <summary>
-        /// Deletes the given saga from the injected session factory's
-        /// current session.
-        /// </summary>
-        /// <param name="saga">The saga entity that will be deleted.</param>
-        public void Complete(IContainSagaData saga)
-        {
-            var tableName = saga.GetType().Name;
-            var table = client.GetTableReference(tableName);
-
-            var query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, saga.Id.ToString()));
-
-            var entity = table.ExecuteQuery(query).SafeFirstOrDefault();
-            if (entity == null)
-            {
-                return; // should not try to delete saga data that does not exist, this situation can occur on retry or parallel execution
-            }
-
-            table.Execute(TableOperation.Delete(entity));
-        }
-
-        void Persist(IContainSagaData saga)
+        async Task Persist(IContainSagaData saga)
         {
             var type = saga.GetType();
-            var table = GetTable(type);
+            var table = await GetTable(type).ConfigureAwait(false);
 
             var partitionKey = saga.Id.ToString();
 
@@ -183,24 +131,24 @@
 
             AddObjectToBatch(batch, saga, partitionKey);
 
-            table.ExecuteBatch(batch);
+            await table.ExecuteBatchAsync(batch).ConfigureAwait(false);
         }
 
-        private CloudTable GetTable(Type sagaType)
+        private async Task<CloudTable> GetTable(Type sagaType)
         {
             var tableName = sagaType.Name;
             var table = client.GetTableReference(tableName);
             if (autoUpdateSchema && !tableCreated.ContainsKey(tableName))
             {
-                table.CreateIfNotExists();
+                await table.CreateIfNotExistsAsync().ConfigureAwait(false);
                 tableCreated[tableName] = true;
             }
             return table;
         }
 
-        private Guid? ScanForSaga(Type sagatype, string propertyName, object propertyValue)
+        private async Task<Guid?> ScanForSaga(Type sagatype, string propertyName, object propertyValue)
         {
-            var entity = GetDictionaryTableEntity(sagatype, propertyName, propertyValue);
+            var entity = await GetDictionaryTableEntity(sagatype, propertyName, propertyValue).ConfigureAwait(false);
             if (entity == null)
             {
                 return null;
@@ -333,7 +281,117 @@
             }
             return toCreate;
         }
+
+        /// <summary>
+        /// Saves the given saga entity using the current session of the
+        /// injected session factory.
+        /// </summary>
+        /// <param name="sagaData">The saga entity that will be saved.</param>
+        /// <param name="correlationProperty">The correlation property.</param>
+        /// <param name="session">The synchronization session.</param>
+        /// <param name="context">The current context.</param>
+        public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context)
+        {
+            // These operations must be executed sequentially
+            await secondaryIndeces.Insert(sagaData, correlationProperty).ConfigureAwait(false);
+            await Persist(sagaData).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Updates the given saga entity using the current session of the
+        /// injected session factory.
+        /// </summary>
+        /// <param name="sagaData">The saga entity that will be updated.</param>
+        /// <param name="session">The synchronization session.</param>
+        /// <param name="context">The current context.</param>
+        public Task Update(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
+        {
+            return Persist(sagaData);
+        }
+
+        /// <summary>
+        /// Gets a saga entity from the injected session factory's current session
+        /// using the given saga id.
+        /// </summary>\
+        /// <param name="sagaId">The saga id to use in the lookup.</param>
+        /// <param name="session">The synchronization session.</param>
+        /// <param name="context">The current context.</param>
+        /// <returns>The saga entity if found, otherwise null.</returns>
+        public async Task<TSagaData> Get<TSagaData>(Guid sagaId, SynchronizedStorageSession session, ContextBag context) where TSagaData : IContainSagaData
+        {
+            var id = sagaId.ToString();
+            var entityType = typeof(TSagaData);
+            var tableEntity = await GetDictionaryTableEntity(id, entityType).ConfigureAwait(false);
+            var entity = (TSagaData)ToEntity(entityType, tableEntity);
+
+            if (!Equals(entity, default(TSagaData)))
+            {
+                etags.Add(entity, tableEntity.ETag);
+            }
+
+            return entity;
+        }
+
+        public async Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context) where TSagaData : IContainSagaData
+        {
+            var type = typeof(TSagaData);
+            try
+            {
+                var tableEntity = await GetDictionaryTableEntity(type, propertyName, propertyValue).ConfigureAwait(false);
+                var entity = (TSagaData)ToEntity(type, tableEntity);
+
+                if (!Equals(entity, default(TSagaData)))
+                {
+                    etags.Add(entity, tableEntity.ETag);
+                }
+
+                return entity;
+            }
+            catch (StorageException)
+            {
+                // can occur when table has not yet been created, but already looking for absence of instance
+                return default(TSagaData);
+            }
+        }
+
+        /// <summary>
+        /// Deletes the given saga from the injected session factory's
+        /// current session.
+        /// </summary>
+        /// <param name="sagaData">The saga entity that will be deleted.</param>
+        /// <param name="session">The storage session.</param>
+        /// <param name="context">The current context.</param>
+        public async Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
+        {
+            var tableName = sagaData.GetType().Name;
+            var table = client.GetTableReference(tableName);
+
+            var query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, sagaData.Id.ToString()));
+
+            var entity = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).SafeFirstOrDefault();
+            if (entity == null)
+            {
+                return; // should not try to delete saga data that does not exist, this situation can occur on retry or parallel execution
+            }
+
+            try
+            {
+                await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
+            }
+            catch (StorageException ex)
+            {
+                // Horrible logic to check if item has already been deleted or not
+                var webException = ex.InnerException as WebException;
+                if (webException?.Response != null)
+                {
+                    var response = (HttpWebResponse)webException.Response;
+                    if ((int)response.StatusCode != 404)
+                    {
+                        // Was not a previously deleted exception, throw again
+                        throw;
+                    }
+                }
+            }
+        }
     }
-
-
 }

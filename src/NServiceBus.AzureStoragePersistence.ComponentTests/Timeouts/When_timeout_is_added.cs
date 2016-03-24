@@ -1,5 +1,6 @@
 ﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
 {
+    using System.Threading.Tasks;
     using NUnit.Framework;
 
     [TestFixture]
@@ -13,13 +14,13 @@
         }
 
         [Test]
-        public void Should_retain_timeout_state()
+        public async Task Should_retain_timeout_state()
         {
             var timeoutPersister = TestHelper.CreateTimeoutPersister();
             var timeout = TestHelper.GenerateTimeoutWithHeaders();
-            timeoutPersister.Add(timeout);
+            await timeoutPersister.Add(timeout, null);
 
-            var peekedTimeout = timeoutPersister.Peek(timeout.Id);
+            var peekedTimeout = await timeoutPersister.Peek(timeout.Id, null);
 
             Assert.AreEqual(timeout.State, peekedTimeout.State);
 

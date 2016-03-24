@@ -6,28 +6,31 @@
     using Features;
     using NUnit.Framework;
     using ScenarioDescriptors;
+    using System.Threading.Tasks;
 
     public class When_publishing_using_root_type : NServiceBusAcceptanceTest
     {
         [Test]
-        public void Event_should_be_published_using_instance_type()
+        public async Task Event_should_be_published_using_instance_type()
         {
-            Scenario.Define<Context>()
+            await Scenario.Define<Context>()
                     .WithEndpoint<Publisher>(b =>
-                        b.When(c => c.Subscriber1Subscribed, bus =>
+                        b.When(c => c.Subscriber1Subscribed, (session, context) =>
                         {
                             IMyEvent message = new EventMessage();
 
-                            bus.Publish(message);
+                            return session.Publish(message);
                         }))
-                    .WithEndpoint<Subscriber1>(b => b.Given((bus, context) =>
+                    .WithEndpoint<Subscriber1>(b => b.When((session, context) =>
                     {
-                        bus.Subscribe<EventMessage>();
+                        session.Subscribe<EventMessage>();
 
                         if (context.HasNativePubSubSupport)
                         {
                             context.Subscriber1Subscribed = true;
                         }
+
+                        return Task.FromResult(0);
                     }))
                     .Done(c => c.Subscriber1GotTheEvent)
                     .Repeat(r => r.For(Transports.Default))
@@ -47,7 +50,7 @@
             {
                 EndpointSetup<DefaultPublisher>(b => b.OnEndpointSubscribed<Context>((s, context) =>
                 {
-                    if (s.SubscriberReturnAddress.Queue.Contains("Subscriber1"))
+                    if (s.SubscriberReturnAddress.Contains("Subscriber1"))
                     {
                         context.Subscriber1Subscribed = true;
                     }
@@ -67,9 +70,11 @@
             {
                 public Context Context { get; set; }
 
-                public void Handle(EventMessage messageThatIsEnlisted)
+                public Task Handle(EventMessage messageThatIsEnlisted, IMessageHandlerContext context)
                 {
                     Context.Subscriber1GotTheEvent = true;
+
+                    return Task.FromResult(0);
                 }
             }
         }

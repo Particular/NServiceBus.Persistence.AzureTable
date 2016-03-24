@@ -1,37 +1,22 @@
-﻿using System.Collections.Generic;
-
-namespace NServiceBus.AcceptanceTests.ScenarioDescriptors
+﻿namespace NServiceBus.AcceptanceTests.ScenarioDescriptors
 {
     using NServiceBus.AcceptanceTesting.Support;
 
-
     public static class TransactionSettings
     {
-        public static readonly RunDescriptor DistributedTransaction = new RunDescriptor
+        static TransactionSettings()
         {
-            Key = "DistributedTransaction",
-            Settings =
-                new Dictionary<string, string>()
-        };
+            DistributedTransaction = new RunDescriptor("DistributedTransaction");
 
-        public static readonly RunDescriptor LocalTransaction = new RunDescriptor
-        {
-            Key = "LocalTransaction",
-            Settings =
-                new Dictionary<string, string>
-                {
-                    {"Transactions.SuppressDistributedTransactions", bool.TrueString}
-                }
-        };
+            LocalTransaction = new RunDescriptor("LocalTransaction");
+            LocalTransaction.Settings.Set("Transactions.SuppressDistributedTransactions", bool.TrueString);
 
-        public static readonly RunDescriptor NoTransaction = new RunDescriptor
-        {
-            Key = "NoTransaction",
-            Settings =
-                new Dictionary<string, string>
-                {
-                    {"Transactions.Disable", bool.TrueString},
-                }
-        };
+            NoTransaction = new RunDescriptor("NoTransaction");
+            NoTransaction.Settings.Set("Transactions.Disable", bool.TrueString);
+        }
+
+        public static readonly RunDescriptor DistributedTransaction;
+        public static readonly RunDescriptor LocalTransaction;
+        public static readonly RunDescriptor NoTransaction;
     }
 }

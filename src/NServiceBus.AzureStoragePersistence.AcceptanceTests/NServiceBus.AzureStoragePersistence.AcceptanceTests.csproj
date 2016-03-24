@@ -30,12 +30,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="NServiceBus.AcceptanceTesting, Version=5.0.0.0, Culture=neutral, PublicKeyToken=9fc386479f8a226c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NServiceBus.AcceptanceTesting.5.2.12\lib\net45\NServiceBus.AcceptanceTesting.dll</HintPath>
+    <Reference Include="NServiceBus.AcceptanceTesting, Version=6.0.0.0, Culture=neutral, PublicKeyToken=9fc386479f8a226c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NServiceBus.AcceptanceTesting.6.0.0-unstable1711\lib\net452\NServiceBus.AcceptanceTesting.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="NServiceBus.Core, Version=5.0.0.0, Culture=neutral, PublicKeyToken=9fc386479f8a226c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NServiceBus.5.2.12\lib\net45\NServiceBus.Core.dll</HintPath>
+    <Reference Include="NServiceBus.Core, Version=6.0.0.0, Culture=neutral, PublicKeyToken=9fc386479f8a226c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NServiceBus.6.0.0-unstable1711\lib\net452\NServiceBus.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="nunit.framework, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
@@ -71,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConfigureScenariosForMsmqTransport.cs" />
     <Compile Include="Infrastructure\EndpointTemplates\ConfigureExtensions.cs" />
     <Compile Include="Infrastructure\EndpointTemplates\ContextAppender.cs" />
     <Compile Include="Infrastructure\EndpointTemplates\DefaultPublisher.cs" />
@@ -84,6 +85,9 @@
     <Compile Include="Infrastructure\ScenarioDescriptors\Serializers.cs" />
     <Compile Include="Infrastructure\ScenarioDescriptors\TransactionSettings.cs" />
     <Compile Include="Infrastructure\ScenarioDescriptors\Transports.cs" />
+    <Compile Include="ConfigureAzureStoragePersistence.cs" />
+    <Compile Include="Infrastructure\SubscriptionBehaviorExtensions.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PubSub\SubscriptionBehavior.cs" />
     <Compile Include="PubSub\SubscriptionEventArgs.cs" />
     <Compile Include="PubSub\When_base_event_from_2_publishers.cs" />
@@ -96,8 +100,6 @@
     <Compile Include="PubSub\When_publishing_with_only_local_messagehandlers.cs" />
     <Compile Include="PubSub\When_publishing_with_overridden_local_address.cs" />
     <Compile Include="PubSub\When_subscribing_to_a_polymorphic_event.cs" />
-    <Compile Include="Sagas\Issue_1819.cs" />
-    <Compile Include="Sagas\Issue_2044.cs" />
     <Compile Include="Sagas\When_an_endpoint_replies_to_a_saga.cs" />
     <Compile Include="Sagas\When_a_base_class_message_hits_a_saga.cs" />
     <Compile Include="Sagas\When_a_existing_saga_instance_exists.cs" />
@@ -108,12 +110,10 @@
     <Compile Include="Sagas\When_receiving_that_completes_the_saga.cs" />
     <Compile Include="Sagas\When_receiving_that_should_start_a_saga.cs" />
     <Compile Include="Sagas\When_replies_to_message_published_by_a_saga.cs" />
-    <Compile Include="Sagas\When_reply_from_a_finder.cs" />
     <Compile Include="Sagas\When_sagas_cant_be_found.cs" />
     <Compile Include="Sagas\When_saga_has_a_non_empty_constructor.cs" />
     <Compile Include="Sagas\When_saga_id_changed.cs" />
     <Compile Include="Sagas\When_saga_is_mapped_to_complex_expression.cs" />
-    <Compile Include="Sagas\When_saga_is_started_by_two_types_of_messages.cs" />
     <Compile Include="Sagas\When_sending_from_a_saga_handle.cs" />
     <Compile Include="Sagas\When_sending_from_a_saga_timeout.cs" />
     <Compile Include="Sagas\When_started_by_base_event_from_other_saga.cs" />
@@ -123,22 +123,15 @@
     <Compile Include="Sagas\When_using_a_received_message_for_timeout.cs" />
     <Compile Include="Sagas\When_using_contain_saga_data.cs" />
     <Compile Include="Sagas\When_using_ReplyToOriginator.cs" />
-    <Compile Include="Timeouts\OutdatedTimeoutPersister.cs" />
-    <Compile Include="Timeouts\TemporarilyUnavailableTimeoutPersister.cs" />
+    <Compile Include="Timeouts\CyclingOutageTimeoutPersister.cs" />
     <Compile Include="Timeouts\TransportWithFakeQueues.cs" />
-    <Compile Include="Timeouts\UpdatedTimeoutPersister.cs" />
-    <Compile Include="Timeouts\When_dispatched_timeout_already_removed_from_timeout_storage.cs" />
-    <Compile Include="Timeouts\When_endpoint_uses_outdated_timeout_persistence_without_dtc.cs" />
-    <Compile Include="Timeouts\When_endpoint_uses_outdated_timeout_persistence_with_disabled_dtc.cs" />
-    <Compile Include="Timeouts\When_endpoint_uses_outdated_timeout_persistence_with_dtc.cs" />
-    <Compile Include="Timeouts\When_endpoint_uses_updated_timeout_persistence.cs" />
     <Compile Include="Timeouts\When_timeout_storage_is_unavailable_temporarily.cs" />
-    <Compile Include="ConfigureAzureStoragePersistence.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NServiceBus.AzureStoragePersistence\NServiceBus.AzureStoragePersistence.csproj">
@@ -149,6 +142,7 @@
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

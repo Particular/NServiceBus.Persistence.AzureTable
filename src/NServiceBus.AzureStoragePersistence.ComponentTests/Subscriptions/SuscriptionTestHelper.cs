@@ -19,7 +19,7 @@
             table.CreateIfNotExists();
 
             return new AzureSubscriptionStorage(
-                config.TableName, 
+                config.TableName,
                 connectionString);
         }
 
@@ -35,15 +35,28 @@
 
             table.CreateIfNotExists();
 
-            var projectionQuery = new TableQuery<DynamicTableEntity>().Select(new[] { "Destination" });
+            var projectionQuery = new TableQuery<DynamicTableEntity>().Select(new[]
+            {
+                "Destination"
+            });
 
             // Define an entity resolver to work with the entity after retrieval.
             EntityResolver<Tuple<string, string>> resolver = (pk, rk, ts, props, etag) => props.ContainsKey("Destination") ? new Tuple<string, string>(pk, rk) : null;
 
             foreach (var tuple in table.ExecuteQuery(projectionQuery, resolver))
             {
-                var tableEntity = new DynamicTableEntity(tuple.Item1, tuple.Item2) { ETag = "*" };
-                table.Execute(TableOperation.Delete(tableEntity));
+                var tableEntity = new DynamicTableEntity(tuple.Item1, tuple.Item2)
+                {
+                    ETag = "*"
+                };
+
+                try
+                {
+                    table.Execute(TableOperation.Delete(tableEntity));
+                }
+                catch (StorageException)
+                {
+                }
             }
         }
     }

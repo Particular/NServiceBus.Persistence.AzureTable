@@ -2,17 +2,20 @@
 {
     using NServiceBus.AcceptanceTesting;
     using NServiceBus.AcceptanceTests.EndpointTemplates;
-    using NServiceBus.Saga;
+    using NServiceBus.Sagas;
     using NUnit.Framework;
+    using System.Threading.Tasks;
+    using Extensibility;
+    using Persistence;
 
     [TestFixture]
     public class When_a_finder_exists
     {
         [Test]
-        public void Should_use_it_to_find_saga()
+        public async Task Should_use_it_to_find_saga()
         {
-            var context = Scenario.Define<Context>()
-                   .WithEndpoint<SagaEndpoint>(b => b.Given(bus => bus.SendLocal(new StartSagaMessage())))
+            var context = await Scenario.Define<Context>()
+                   .WithEndpoint<SagaEndpoint>(b => b.When(instance => instance.SendLocal(new StartSagaMessage())))
                    .Done(c => c.FinderUsed)
                    .Run();
 
@@ -34,10 +37,11 @@
             class CustomFinder : IFindSagas<TestSaga.SagaData>.Using<StartSagaMessage>
             {
                 public Context Context { get; set; }
-                public TestSaga.SagaData FindBy(StartSagaMessage message)
+
+                public Task<TestSaga.SagaData> FindBy(StartSagaMessage message, SynchronizedStorageSession storageSession, ReadOnlyContextBag context)
                 {
                     Context.FinderUsed = true;
-                    return null;
+                    return Task.FromResult((TestSaga.SagaData)null);
                 }
             }
 
@@ -45,8 +49,9 @@
             {
                 public Context Context { get; set; }
 
-                public void Handle(StartSagaMessage message)
+                public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
+                    return Task.FromResult(0);
                 }
 
                 protected override void ConfigureHowToFindSaga(SagaPropertyMapper<SagaData> mapper)

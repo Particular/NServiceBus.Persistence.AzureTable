@@ -1,14 +1,14 @@
 ﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Persisters
 {
     using System;
-    using NServiceBus.Saga;
+    using System.Threading.Tasks;
     using NServiceBus.SagaPersisters.Azure;
     using NUnit.Framework;
 
     public class When_updating_saga
     {
         [Test]
-        public void Should_save_updated_properties()
+        public async Task Should_save_updated_properties()
         {
             var connectionString = AzurePersistenceTests.GetConnectionString();
 
@@ -23,13 +23,13 @@
                 MyProps = originalProp
             };
 
-            persister.Save(saga);
-            var sagaData = persister.Get<UpdateSagaData>(saga.Id);
+            await persister.Save(saga, null, null, null);
+            var sagaData = await persister.Get<UpdateSagaData>(saga.Id, null, null);
             Assert.AreEqual(sagaData.MyProps, saga.MyProps);
             sagaData.MyProps = newProp;
-            persister.Update(sagaData);
+            await persister.Update(sagaData, null, null);
 
-            var updatedSaga = persister.Get<UpdateSagaData>(saga.Id);
+            var updatedSaga = await persister.Get<UpdateSagaData>(saga.Id, null, null);
 
             Assert.AreEqual(updatedSaga.MyProps, newProp);
         }
@@ -37,10 +37,9 @@
 
     public class UpdateSagaData : IContainSagaData
     {
+        public string MyProps { get; set; }
         public Guid Id { get; set; }
         public string Originator { get; set; }
         public string OriginalMessageId { get; set; }
-        public string MyProps { get; set; }
     }
-
 }

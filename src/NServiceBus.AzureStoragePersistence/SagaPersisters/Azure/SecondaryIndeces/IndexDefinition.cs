@@ -6,38 +6,37 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
     using System.Linq.Expressions;
     using System.Reflection;
     using Newtonsoft.Json;
-    using NServiceBus.Saga;
+    using NServiceBus.Sagas;
 
-    public sealed class IndexDefintion
+    public sealed class IndexDefinition
     {
-        static readonly ConcurrentDictionary<Type, object> sagaToIndex = new ConcurrentDictionary<Type, object>();
-        static readonly object NullValue = new object();
+        static readonly ConcurrentDictionary<Type, IndexDefinition> sagaToIndex = new ConcurrentDictionary<Type, IndexDefinition>();
+        static readonly IndexDefinition NullValue = new IndexDefinition();
 
         static readonly ParameterExpression ObjectParameter = Expression.Parameter(typeof(object));
+        readonly string sagaDataTypeName;
         readonly string propertyName;
 
-        readonly string sagaTypeName;
-
-        private IndexDefintion(Type sagaType, PropertyInfo pi)
+        private IndexDefinition()
         {
-            sagaTypeName = sagaType.FullName;
-            propertyName = pi.Name;
-            Accessor = Expression.Lambda<Func<object, object>>(Expression.Convert(Expression.MakeMemberAccess(Expression.Convert(ObjectParameter, sagaType), pi), typeof(object)), ObjectParameter).Compile();
         }
 
-        public Func<object, object> Accessor { get; }
-
-        public static IndexDefintion Get(Type sagaType)
+        private IndexDefinition(Type sagaDataType, PropertyInfo pi)
         {
-            var index = sagaToIndex.GetOrAdd(sagaType, type =>
+            sagaDataTypeName = sagaDataType.FullName;
+            propertyName = pi.Name;
+        }
+
+        public static IndexDefinition Get(Type sagaDataType, SagaCorrelationProperty correlationProperty)
+        {
+            var index = sagaToIndex.GetOrAdd(sagaDataType, type =>
             {
-                var pi = UniqueAttribute.GetUniqueProperty(sagaType);
-                if (pi == null)
+                if (correlationProperty == null)
                 {
                     return NullValue;
                 }
 
-                return new IndexDefintion(sagaType, pi);
+                return new IndexDefinition(sagaDataType, sagaDataType.GetProperty(correlationProperty.Name));
             });
 
             if (ReferenceEquals(index, NullValue))
@@ -45,21 +44,21 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
                 return null;
             }
 
-            return (IndexDefintion) index;
+            return index;
         }
 
         public void ValidateProperty(string propertyName)
         {
             if (this.propertyName != propertyName)
             {
-                throw new ArgumentException($"The following saga '{sagaTypeName}' is not indexed by '{propertyName}'. The only secondary index is defined for '{this.propertyName}'. " +
+                throw new ArgumentException($"The following saga '{sagaDataTypeName}' is not indexed by '{propertyName}'. The only secondary index is defined for '{this.propertyName}'. " +
                                             $"Ensure that the saga is correlated properly.");
             }
         }
 
         public PartitionRowKeyTuple BuildTableKey(object propertyValue)
         {
-            return new PartitionRowKeyTuple($"Index_{sagaTypeName}_{propertyName}_{Serialize(propertyValue)}", "");
+            return new PartitionRowKeyTuple($"Index_{sagaDataTypeName}_{propertyName}_{Serialize(propertyValue)}", "");
         }
 
         private static string Serialize(object propertyValue)

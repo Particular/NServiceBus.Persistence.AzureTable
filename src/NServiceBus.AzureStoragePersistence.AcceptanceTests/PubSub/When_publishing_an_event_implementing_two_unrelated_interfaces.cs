@@ -6,26 +6,27 @@
     using Features;
     using NUnit.Framework;
     using ScenarioDescriptors;
+    using System.Threading.Tasks;
 
     public class When_publishing_an_event_implementing_two_unrelated_interfaces : NServiceBusAcceptanceTest
     {
         [Test]
-        public void Event_should_be_published_using_instance_type()
+        public async Task Event_should_be_published_using_instance_type()
         {
-            Scenario.Define(() => new Context { Id = Guid.NewGuid() })
+            await Scenario.Define<Context>(c => { c.Id = Guid.NewGuid(); })
                     .WithEndpoint<Publisher>(b =>
-                        b.When(c => c.EventASubscribed && c.EventBSubscribed, (bus, ctx) =>
+                        b.When(c => c.EventASubscribed && c.EventBSubscribed, (session, ctx) =>
                         {
                             var message = new CompositeEvent
                             {
                                 ContextId = ctx.Id
                             };
-                            bus.Publish(message);
+                            return session.Publish(message);
                         }))
-                    .WithEndpoint<Subscriber>(b => b.Given((bus, context) =>
+                    .WithEndpoint<Subscriber>(b => b.When(async (session, context) =>
                     {
-                        bus.Subscribe<IEventA>();
-                        bus.Subscribe<IEventB>();
+                        await session.Subscribe<IEventA>();
+                        await session.Subscribe<IEventB>();
 
                         if (context.HasNativePubSubSupport)
                         {
@@ -58,7 +59,7 @@
             {
                 EndpointSetup<DefaultPublisher>(b => b.OnEndpointSubscribed<Context>((s, context) =>
                 {
-                    if (s.SubscriberReturnAddress.Queue.Contains("Subscriber"))
+                    if (s.SubscriberReturnAddress.Contains("Subscriber"))
                     {
                         if (s.MessageType == typeof(IEventA).AssemblyQualifiedName)
                         {
@@ -95,13 +96,15 @@
             {
                 public Context Context { get; set; }
 
-                public void Handle(IEventA evnt)
+                public Task Handle(IEventA message, IMessageHandlerContext context)
                 {
-                    if (evnt.ContextId != Context.Id)
+                    if (message.ContextId != Context.Id)
                     {
-                        return;
+                        return Task.FromResult(0);
                     }
                     Context.GotEventA = true;
+
+                    return Task.FromResult(0);
                 }
             }
 
@@ -109,13 +112,16 @@
             {
                 public Context Context { get; set; }
 
-                public void Handle(IEventB evnt)
+                public Task Handle(IEventB message, IMessageHandlerContext context)
                 {
-                    if (evnt.ContextId != Context.Id)
+                    if (message.ContextId != Context.Id)
                     {
-                        return;
+                        return Task.FromResult(0);
                     }
+
                     Context.GotEventB = true;
+
+                    return Task.FromResult(0);
                 }
             }
         }

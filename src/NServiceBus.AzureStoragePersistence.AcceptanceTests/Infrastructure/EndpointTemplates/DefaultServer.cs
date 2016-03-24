@@ -6,15 +6,16 @@
     using System.Reflection;
     using AcceptanceTesting.Support;
     using Hosting.Helpers;
-    using Logging;
     using NServiceBus;
-    using NServiceBus.AcceptanceTesting;
     using NServiceBus.Config.ConfigurationSource;
-    using NServiceBus.Configuration.AdvanceExtensibility;
+    using System.Threading.Tasks;
+    using Features;
+    using NServiceBus.AcceptanceTesting.Customization;
+    using ObjectBuilder;
 
     public class DefaultServer : IEndpointSetupTemplate
     {
-        readonly List<Type> typesToInclude;
+        List<Type> typesToInclude;
 
         public DefaultServer()
         {
@@ -26,54 +27,54 @@
             this.typesToInclude = typesToInclude;
         }
 
-        public BusConfiguration GetConfiguration(RunDescriptor runDescriptor, EndpointConfiguration endpointConfiguration, IConfigurationSource configSource, Action<BusConfiguration> configurationBuilderCustomization)
+        public Task<EndpointConfiguration> GetConfiguration(RunDescriptor runDescriptor, EndpointCustomizationConfiguration endpointConfiguration, IConfigurationSource configSource, Action<EndpointConfiguration> configurationBuilderCustomization)
         {
-            var settings = runDescriptor.Settings;
-
-            LogManager.UseFactory(new ContextAppender(runDescriptor.ScenarioContext, endpointConfiguration.EndpointName));
-
             var types = GetTypesScopedByTestClass(endpointConfiguration);
 
             typesToInclude.AddRange(types);
 
-            var builder = new BusConfiguration();
+            var builder = new EndpointConfiguration(endpointConfiguration.EndpointName);
 
-            builder.EndpointName(endpointConfiguration.EndpointName);
-            builder.TypesToScan(typesToInclude);
+            builder.TypesToIncludeInScan(typesToInclude);
             builder.CustomConfigurationSource(configSource);
             builder.EnableInstallers();
-            builder.DefineTransport(settings, endpointConfiguration.BuilderType);
-            builder.DefineTransactions(settings);
-            builder.DefineBuilder(settings);
-            builder.RegisterComponents(r =>
-            {
-                r.RegisterSingleton(runDescriptor.ScenarioContext.GetType(), runDescriptor.ScenarioContext);
-                r.RegisterSingleton(typeof(ScenarioContext), runDescriptor.ScenarioContext);
-            });
 
-       
-            var serializer = settings.GetOrNull("Serializer");
+            builder.DisableFeature<TimeoutManager>();
+            builder.DisableFeature<SecondLevelRetries>();
+            builder.DisableFeature<FirstLevelRetries>();
 
-            if (serializer != null)
-            {
-                builder.UseSerialization(Type.GetType(serializer));
-            }
-            builder.DefinePersistence(settings);
+            builder.RegisterComponents(r => { RegisterInheritanceHierarchyOfContextOnContainer(runDescriptor, r); });
 
-            builder.GetSettings().SetDefault("ScaleOut.UseSingleBrokerQueue", true);
+            var connectionString = Environment.GetEnvironmentVariable("AzureStoragePersistence.ConnectionString");
+            builder.UsePersistence<AzureStoragePersistence>().ConnectionString(connectionString);
+
             configurationBuilderCustomization(builder);
 
-
-            return builder;
+            return Task.FromResult(builder);
         }
 
-        static IEnumerable<Type> GetTypesScopedByTestClass(EndpointConfiguration endpointConfiguration)
+        static void RegisterInheritanceHierarchyOfContextOnContainer(RunDescriptor runDescriptor, IConfigureComponents r)
+        {
+            var type = runDescriptor.ScenarioContext.GetType();
+            while (type != typeof(object))
+            {
+                r.RegisterSingleton(type, runDescriptor.ScenarioContext);
+                type = type.BaseType;
+            }
+        }
+
+        static IEnumerable<Type> GetTypesScopedByTestClass(EndpointCustomizationConfiguration endpointConfiguration)
         {
             var assemblies = new AssemblyScanner().GetScannableAssemblies();
 
             var types = assemblies.Assemblies
-                //exclude all test types by default
-                                  .Where(a => a != Assembly.GetExecutingAssembly())
+                                  //exclude all test types by default
+                                  .Where(a =>
+                                  {
+                                      var references = a.GetReferencedAssemblies();
+
+                                      return references.All(an => an.Name != "nunit.framework");
+                                  })
                                   .SelectMany(a => a.GetTypes());
 
 
@@ -86,6 +87,11 @@
 
         static IEnumerable<Type> GetNestedTypeRecursive(Type rootType, Type builderType)
         {
+            if (rootType == null)
+            {
+                throw new InvalidOperationException("Make sure you nest the endpoint infrastructure inside the TestFixture as nested classes");
+            }
+
             yield return rootType;
 
             if (typeof(IEndpointConfigurationFactory).IsAssignableFrom(rootType) && rootType != builderType)
@@ -96,6 +102,5 @@
                 yield return nestedType;
             }
         }
-
     }
 }

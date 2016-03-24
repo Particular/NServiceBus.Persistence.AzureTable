@@ -8,6 +8,12 @@
 
     public static class Persistence
     {
+        static Persistence()
+        {
+            AzureStoragePersistenceDescriptor = new RunDescriptor(AzureStoragePersistenceType.Name);
+            AzureStoragePersistenceDescriptor.Settings.Set("Persistence", AzureStoragePersistenceType.AssemblyQualifiedName);
+        }
+
         public static RunDescriptor Default
         {
             get
@@ -26,7 +32,7 @@
                     return nonCorePersister;
                 }
 
-                return InMemoryPersistenceDescriptor;
+                return AzureStoragePersistenceDescriptor;
             }
         }
 
@@ -43,43 +49,26 @@
             }
         }
 
-        static Type InMemoryPersistenceType = typeof(InMemoryPersistence);
-
-        static RunDescriptor InMemoryPersistenceDescriptor = new RunDescriptor
-        {
-            Key = InMemoryPersistenceType.Name,
-            Settings =
-                new Dictionary<string, string>
-                {
-                    {"Persistence", InMemoryPersistenceType.AssemblyQualifiedName}
-                }
-        };
+        static Type AzureStoragePersistenceType = typeof(AzureStoragePersistence);
+        static RunDescriptor AzureStoragePersistenceDescriptor;
 
         static IEnumerable<RunDescriptor> GetAllAvailable()
         {
             var foundDefinitions = TypeScanner.GetAllTypesAssignableTo<PersistenceDefinition>()
-                .Where(t => t.Assembly != InMemoryPersistenceType.Assembly &&
+                .Where(t => t.Assembly != AzureStoragePersistenceType.Assembly &&
                 t.Assembly != typeof(Persistence).Assembly);
 
             foreach (var definition in foundDefinitions)
             {
                 var key = definition.Name;
 
-                var runDescriptor = new RunDescriptor
-                {
-                    Key = key,
-                    Settings =
-                        new Dictionary<string, string>
-                                {
-                                    {"Persistence", definition.AssemblyQualifiedName}
-                                }
-                };
+                var runDescriptor = new RunDescriptor(key);
+                runDescriptor.Settings.Set("Persistence", definition.AssemblyQualifiedName);
 
                 yield return runDescriptor;
             }
         }
 
         static IList<RunDescriptor> availablePersisters;
-
     }
 }
