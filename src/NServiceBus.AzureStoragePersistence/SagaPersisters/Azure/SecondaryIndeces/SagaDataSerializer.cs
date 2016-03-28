@@ -8,10 +8,7 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;
 
-    /// <summary>
-    /// A helper saga data serializer for internal purposes
-    /// </summary>
-    internal class SagaDataSerializer
+    class SagaDataSerializer
     {
         public static byte[] SerializeSagaData<TSagaData>(TSagaData sagaData) where TSagaData : IContainSagaData
         {
@@ -54,7 +51,7 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
             }
         }
 
-        private class SagaOnlyPropertiesDataContractResolver : DefaultContractResolver
+        class SagaOnlyPropertiesDataContractResolver : DefaultContractResolver
         {
             public SagaOnlyPropertiesDataContractResolver() : base(true) // for performance
             {

@@ -3,25 +3,23 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
     using System;
     using System.Collections.Concurrent;
     using System.IO;
-    using System.Linq.Expressions;
     using System.Reflection;
     using Newtonsoft.Json;
     using NServiceBus.Sagas;
 
     public sealed class IndexDefinition
     {
-        static readonly ConcurrentDictionary<Type, IndexDefinition> sagaToIndex = new ConcurrentDictionary<Type, IndexDefinition>();
-        static readonly IndexDefinition NullValue = new IndexDefinition();
+        static ConcurrentDictionary<Type, IndexDefinition> sagaToIndex = new ConcurrentDictionary<Type, IndexDefinition>();
+        static IndexDefinition NullValue = new IndexDefinition();
+        
+        string sagaDataTypeName;
+        string propertyName;
 
-        static readonly ParameterExpression ObjectParameter = Expression.Parameter(typeof(object));
-        readonly string sagaDataTypeName;
-        readonly string propertyName;
-
-        private IndexDefinition()
+        IndexDefinition()
         {
         }
 
-        private IndexDefinition(Type sagaDataType, PropertyInfo pi)
+        IndexDefinition(Type sagaDataType, PropertyInfo pi)
         {
             sagaDataTypeName = sagaDataType.FullName;
             propertyName = pi.Name;
@@ -61,7 +59,7 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
             return new PartitionRowKeyTuple($"Index_{sagaDataTypeName}_{propertyName}_{Serialize(propertyValue)}", "");
         }
 
-        private static string Serialize(object propertyValue)
+        static string Serialize(object propertyValue)
         {
             using (var sw = new StringWriter())
             {

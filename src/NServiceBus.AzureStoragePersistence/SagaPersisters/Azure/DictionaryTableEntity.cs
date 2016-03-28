@@ -5,17 +5,11 @@
     using System.Collections.Generic;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
-
-    /// <summary>
-    /// 
-    /// </summary>
+    
     public class DictionaryTableEntity : TableEntity, IDictionary<string, EntityProperty>
     {
         IDictionary<string, EntityProperty> properties;
-
-        /// <summary>
-        /// 
-        /// </summary>
+        
         public DictionaryTableEntity()
         {
             properties = new Dictionary<string, EntityProperty>();
@@ -35,92 +29,47 @@
         {
             properties.Add(key, value);
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
+        
         public void Add(string key, bool value)
         {
             properties.Add(key, new EntityProperty(value));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
         public void Add(string key, byte[] value)
         {
             properties.Add(key, new EntityProperty(value));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
         public void Add(string key, DateTime? value)
         {
             properties.Add(key, new EntityProperty(value));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
         public void Add(string key, DateTimeOffset? value)
         {
             properties.Add(key, new EntityProperty(value));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
         public void Add(string key, double value)
         {
             properties.Add(key, new EntityProperty(value));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
         public void Add(string key, Guid value)
         {
             properties.Add(key, new EntityProperty(value));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
         public void Add(string key, int value)
         {
             properties.Add(key, new EntityProperty(value));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
         public void Add(string key, long value)
         {
             properties.Add(key, new EntityProperty(value));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
         public void Add(string key, string value)
         {
             properties.Add(key, new EntityProperty(value));
@@ -131,10 +80,7 @@
             return properties.ContainsKey(key);
         }
 
-        public ICollection<string> Keys
-        {
-            get { return properties.Keys; }
-        }
+        public ICollection<string> Keys => properties.Keys;
 
         public bool Remove(string key)
         {
@@ -146,10 +92,7 @@
             return properties.TryGetValue(key, out value);
         }
 
-        public ICollection<EntityProperty> Values
-        {
-            get { return properties.Values; }
-        }
+        public ICollection<EntityProperty> Values => properties.Values;
 
         public EntityProperty this[string key]
         {
@@ -177,15 +120,9 @@
             properties.CopyTo(array, arrayIndex);
         }
 
-        public int Count
-        {
-            get { return properties.Count; }
-        }
+        public int Count => properties.Count;
 
-        public bool IsReadOnly
-        {
-            get { return properties.IsReadOnly; }
-        }
+        public bool IsReadOnly => properties.IsReadOnly;
 
         public bool Remove(KeyValuePair<string, EntityProperty> item)
         {

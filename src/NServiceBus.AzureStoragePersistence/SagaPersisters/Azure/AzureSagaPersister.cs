@@ -20,12 +20,12 @@
     /// </summary>
     public class AzureSagaPersister : ISagaPersister
     {
-        readonly bool autoUpdateSchema;
-        readonly CloudTableClient client;
-        readonly SecondaryIndexPersister secondaryIndeces;
+        bool autoUpdateSchema;
+        CloudTableClient client;
+        SecondaryIndexPersister secondaryIndeces;
 
-        static readonly ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
-        static readonly ConditionalWeakTable<object, string> etags = new ConditionalWeakTable<object, string>();
+        static ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
+        static ConditionalWeakTable<object, string> etags = new ConditionalWeakTable<object, string>();
 
         /// <summary>
         /// 
@@ -111,13 +111,10 @@
             }
             else
             {
-                throw new NotSupportedException(
-                    string.Format("The property type '{0}' is not supported in windows azure table storage",
-                        propertyInfo.PropertyType.Name));
+                throw new NotSupportedException($"The property type '{propertyInfo.PropertyType.Name}' is not supported in windows azure table storage");
             }
 
-            var tableEntity = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).SafeFirstOrDefault();
-            return tableEntity;
+            return (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).SafeFirstOrDefault();
         }
 
         async Task Persist(IContainSagaData saga)
@@ -134,7 +131,7 @@
             await table.ExecuteBatchAsync(batch).ConfigureAwait(false);
         }
 
-        private async Task<CloudTable> GetTable(Type sagaType)
+        async Task<CloudTable> GetTable(Type sagaType)
         {
             var tableName = sagaType.Name;
             var table = client.GetTableReference(tableName);
@@ -146,7 +143,7 @@
             return table;
         }
 
-        private async Task<Guid?> ScanForSaga(Type sagatype, string propertyName, object propertyValue)
+        async Task<Guid?> ScanForSaga(Type sagatype, string propertyName, object propertyValue)
         {
             var entity = await GetDictionaryTableEntity(sagatype, propertyName, propertyValue).ConfigureAwait(false);
             if (entity == null)
@@ -159,7 +156,11 @@
 
         void AddObjectToBatch(TableBatchOperation batch, object entity, string partitionKey, string rowkey = "")
         {
-            if (rowkey == "") rowkey = partitionKey; // just to be backward compat with original implementation
+            if (rowkey == "")
+            {
+                // just to be backward compat with original implementation
+                rowkey = partitionKey; 
+            }
 
             var type = entity.GetType();
             string etag;
@@ -216,9 +217,7 @@
                 }
                 else
                 {
-                    throw new NotSupportedException(
-                        string.Format("The property type '{0}' is not supported in windows azure table storage",
-                                      propertyInfo.PropertyType.Name));
+                    throw new NotSupportedException($"The property type '{propertyInfo.PropertyType.Name}' is not supported in windows azure table storage");
                 }
             }
             return toPersist;
@@ -273,9 +272,7 @@
                     }
                     else
                     {
-                        throw new NotSupportedException(
-                            string.Format("The property type '{0}' is not supported in windows azure table storage",
-                                propertyInfo.PropertyType.Name));
+                        throw new NotSupportedException($"The property type '{propertyInfo.PropertyType.Name}' is not supported in windows azure table storage");
                     }
                 }
             }

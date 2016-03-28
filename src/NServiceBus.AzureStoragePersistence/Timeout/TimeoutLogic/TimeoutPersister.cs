@@ -22,12 +22,12 @@
     /// </summary>
     public class TimeoutPersister : IPersistTimeouts, IQueryTimeouts
     {
-        readonly string timeoutDataTableName;
-        readonly string timeoutManagerDataTableName;
-        readonly string timeoutStateContainerName;
-        readonly int catchUpInterval;
-        readonly string partitionKeyScope;
-        readonly string endpointName;
+        string timeoutDataTableName;
+        string timeoutManagerDataTableName;
+        string timeoutStateContainerName;
+        int catchUpInterval;
+        string partitionKeyScope;
+        string endpointName;
         string sanitizedEndpointInstanceName;
         CloudTableClient client;
         CloudBlobClient cloudBlobclient;
