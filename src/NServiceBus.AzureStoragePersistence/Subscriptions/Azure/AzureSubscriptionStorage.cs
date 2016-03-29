@@ -18,7 +18,7 @@
     /// </summary>
     public class AzureSubscriptionStorage : ISubscriptionStorage
     {
-        readonly string subscriptionTableName;
+        string subscriptionTableName;
         CloudTableClient client;
 
         /// <summary>

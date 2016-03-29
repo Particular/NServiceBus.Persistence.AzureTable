@@ -40,10 +40,8 @@ namespace NServiceBus.Config
         /// </summary>
         public bool CreateSchema
         {
-
             get
             {
-
                 return (bool)this["CreateSchema"];
             }
             set

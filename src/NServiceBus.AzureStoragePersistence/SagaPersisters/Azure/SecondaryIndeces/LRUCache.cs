@@ -2,15 +2,15 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
 {
     using System.Collections.Generic;
 
-    public sealed class LRUCache<TKey, TValue>
+    class LRUCache<TKey, TValue>
     {
-        readonly LinkedList<Item> lru = new LinkedList<Item>();
-        readonly Dictionary<TKey, LinkedListNode<Item>> items = new Dictionary<TKey, LinkedListNode<Item>>();
+        LinkedList<Item> lru = new LinkedList<Item>();
+        Dictionary<TKey, LinkedListNode<Item>> items = new Dictionary<TKey, LinkedListNode<Item>>();
 
-        readonly int capacity;
-        readonly object @lock = new object();
+        int capacity;
+        object @lock = new object();
 
-        private class Item
+        class Item
         {
             public TKey Key;
             public TValue Value;
@@ -80,7 +80,7 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
             }
         }
 
-        private void TrimOneIfNeeded()
+        void TrimOneIfNeeded()
         {
             if (items.Count > 0 && items.Count > capacity)
             {

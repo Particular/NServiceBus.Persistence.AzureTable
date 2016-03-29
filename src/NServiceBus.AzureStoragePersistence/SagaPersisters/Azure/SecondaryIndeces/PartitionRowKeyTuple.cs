@@ -19,7 +19,7 @@
             entity.RowKey = RowKey;
         }
 
-        private bool Equals(PartitionRowKeyTuple other)
+        bool Equals(PartitionRowKeyTuple other)
         {
             return string.Equals(PartitionKey, other.PartitionKey) && string.Equals(RowKey, other.RowKey);
         }

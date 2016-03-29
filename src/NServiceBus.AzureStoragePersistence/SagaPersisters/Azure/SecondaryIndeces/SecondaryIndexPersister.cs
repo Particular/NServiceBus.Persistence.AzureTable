@@ -12,10 +12,10 @@
         public delegate Task<Guid?> ScanForSaga(Type sagaType, string propertyName, object propertyValue);
 
         const int LRUCapacity = 1000;
-        readonly LRUCache<PartitionRowKeyTuple, Guid> cache = new LRUCache<PartitionRowKeyTuple, Guid>(LRUCapacity);
-        readonly Func<Type, Task<CloudTable>> getTableForSaga;
-        readonly Func<IContainSagaData, Task> persist;
-        readonly ScanForSaga scanner;
+        LRUCache<PartitionRowKeyTuple, Guid> cache = new LRUCache<PartitionRowKeyTuple, Guid>(LRUCapacity);
+        Func<Type, Task<CloudTable>> getTableForSaga;
+        Func<IContainSagaData, Task> persist;
+        ScanForSaga scanner;
 
         public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSaga scanner, Func<IContainSagaData, Task> persist)
         {
@@ -137,7 +137,7 @@
             return sagaId;
         }
 
-        private static bool IsConflict(StorageException ex)
+        static bool IsConflict(StorageException ex)
         {
             return ex.RequestInformation.HttpStatusCode == (int) HttpStatusCode.Conflict;
         }

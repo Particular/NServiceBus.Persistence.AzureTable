@@ -3,9 +3,6 @@ namespace NServiceBus.Config
     using System.Configuration;
     using Timeout;
 
-    /// <summary>
-    /// 
-    /// </summary>
     public class AzureTimeoutPersisterConfig : ConfigurationSection
     {
         public AzureTimeoutPersisterConfig()

@@ -13,14 +13,14 @@
         /// </summary>
         /// <param name="config">The configuration.</param>
         /// <param name="connectionString">The connection string.</param>
-        /// <returns></returns>
         public static PersistenceExtentions<AzureStoragePersistence> ConnectionString(this PersistenceExtentions<AzureStoragePersistence> config, string connectionString)
         {
             AzureStorageSagaGuard.CheckConnectionString(connectionString);
 
-            config.GetSettings().Set("AzureSagaStorage.ConnectionString", connectionString);
-            config.GetSettings().Set("AzureSubscriptionStorage.ConnectionString", connectionString);
-            config.GetSettings().Set("AzureTimeoutStorage.ConnectionString", connectionString);
+            var settings = config.GetSettings();
+            settings.Set("AzureSagaStorage.ConnectionString", connectionString);
+            settings.Set("AzureSubscriptionStorage.ConnectionString", connectionString);
+            settings.Set("AzureTimeoutStorage.ConnectionString", connectionString);
 
             return config;
         }

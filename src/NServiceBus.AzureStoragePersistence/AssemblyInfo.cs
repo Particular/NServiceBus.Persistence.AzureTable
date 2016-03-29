@@ -3,8 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("NServiceBus.AzureStoragePersistence")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyCopyright("Copyright 2010-2015 NServiceBus. All rights reserved")]
+[assembly: AssemblyCopyright("Copyright 2010-2016 NServiceBus. All rights reserved")]
 [assembly: AssemblyProduct("NServiceBus.AzureStoragePersistence")]
 [assembly: AssemblyCompany("NServiceBus Ltd.")]
 [assembly: AssemblyConfiguration("release")]
