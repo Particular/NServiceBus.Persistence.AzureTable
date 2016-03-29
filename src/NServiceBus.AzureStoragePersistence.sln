@@ -14,6 +14,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuget.packaging", "nuget.pa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBus.AzureStoragePersistence.AcceptanceTests", "NServiceBus.AzureStoragePersistence.AcceptanceTests\NServiceBus.AzureStoragePersistence.AcceptanceTests.csproj", "{EB7993F8-1F30-4688-B30B-E11370116EB0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBus.AzureStoragePersistence.SagaDeduplicator", "NServiceBus.AzureStoragePersistence.SagaDeduplicator\NServiceBus.AzureStoragePersistence.SagaDeduplicator.csproj", "{5676CFFD-8264-4415-AC92-AC2B55675E0F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBus.AzureStoragePersistence.SagaDeduplicator.Tests", "NServiceBus.AzureStoragePersistence.SagaDeduplicator.Tests\NServiceBus.AzureStoragePersistence.SagaDeduplicator.Tests.csproj", "{89F7D14D-928E-4B7D-AA44-8AB9BFCBF5EA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +36,14 @@ Global
 		{EB7993F8-1F30-4688-B30B-E11370116EB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EB7993F8-1F30-4688-B30B-E11370116EB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EB7993F8-1F30-4688-B30B-E11370116EB0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5676CFFD-8264-4415-AC92-AC2B55675E0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5676CFFD-8264-4415-AC92-AC2B55675E0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5676CFFD-8264-4415-AC92-AC2B55675E0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5676CFFD-8264-4415-AC92-AC2B55675E0F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89F7D14D-928E-4B7D-AA44-8AB9BFCBF5EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89F7D14D-928E-4B7D-AA44-8AB9BFCBF5EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89F7D14D-928E-4B7D-AA44-8AB9BFCBF5EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89F7D14D-928E-4B7D-AA44-8AB9BFCBF5EA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

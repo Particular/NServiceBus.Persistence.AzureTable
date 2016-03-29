@@ -39,16 +39,16 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Data.OData, Version=5.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Data.OData.5.7.0-beta\lib\net40\Microsoft.Data.OData.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Data.OData.5.7.0\lib\net40\Microsoft.Data.OData.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Data.Services.Client, Version=5.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Data.Services.Client.5.7.0-beta\lib\net40\Microsoft.Data.Services.Client.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Data.Services.Client.5.7.0\lib\net40\Microsoft.Data.Services.Client.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.WindowsAzure.Storage, Version=6.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.WindowsAzure.Storage, Version=6.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\WindowsAzure.Storage.6.2.2-preview\lib\net40\Microsoft.WindowsAzure.Storage.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -93,6 +93,7 @@
     </Reference>
     <Reference Include="System.Spatial, Version=5.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Spatial.5.7.0-beta\lib\net40\System.Spatial.dll</HintPath>
+      <HintPath>..\packages\System.Spatial.5.7.0\lib\net40\System.Spatial.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Transactions" />
@@ -146,8 +147,10 @@
     <Compile Include="Sagas\When_replies_to_message_published_by_a_saga.cs" />
     <Compile Include="Sagas\When_sagas_cant_be_found.cs" />
     <Compile Include="Sagas\When_saga_has_a_non_empty_constructor.cs" />
+    <Compile Include="Sagas\When_saga_has_duplicate_instances.cs" />
     <Compile Include="Sagas\When_saga_id_changed.cs" />
     <Compile Include="Sagas\When_saga_is_mapped_to_complex_expression.cs" />
+    <Compile Include="Sagas\When_saga_is_started_by_two_types_of_messages.cs" />
     <Compile Include="Sagas\When_sending_from_a_saga_handle.cs" />
     <Compile Include="Sagas\When_sending_from_a_saga_timeout.cs" />
     <Compile Include="Sagas\When_started_by_base_event_from_other_saga.cs" />
