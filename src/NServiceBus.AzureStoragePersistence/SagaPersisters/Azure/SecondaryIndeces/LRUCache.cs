@@ -2,7 +2,7 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
 {
     using System.Collections.Generic;
 
-    public sealed class LRUCache<TKey, TValue>
+    class LRUCache<TKey, TValue>
     {
         LinkedList<Item> lru = new LinkedList<Item>();
         Dictionary<TKey, LinkedListNode<Item>> items = new Dictionary<TKey, LinkedListNode<Item>>();

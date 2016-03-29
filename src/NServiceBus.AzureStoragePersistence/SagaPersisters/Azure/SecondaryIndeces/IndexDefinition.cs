@@ -7,7 +7,7 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
     using Newtonsoft.Json;
     using NServiceBus.Sagas;
 
-    public sealed class IndexDefinition
+    class IndexDefinition
     {
         static ConcurrentDictionary<Type, IndexDefinition> sagaToIndex = new ConcurrentDictionary<Type, IndexDefinition>();
         static IndexDefinition NullValue = new IndexDefinition();

@@ -6,7 +6,7 @@
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
     
-    public class DictionaryTableEntity : TableEntity, IDictionary<string, EntityProperty>
+    class DictionaryTableEntity : TableEntity, IDictionary<string, EntityProperty>
     {
         IDictionary<string, EntityProperty> properties;
         
