@@ -4,15 +4,24 @@
 
     public static class Serializers
     {
-        static Serializers()
+        public static RunDescriptor Xml
         {
-            Xml = new RunDescriptor("Xml");
-            Xml.Settings.Set("Serializer", typeof(XmlSerializer).AssemblyQualifiedName);
-
-            var json = new RunDescriptor("Json");
-            json.Settings.Set("Serializer", typeof(JsonSerializer).AssemblyQualifiedName);
+            get
+            {
+                var xml = new RunDescriptor("Xml");
+                xml.Settings.Set("Serializer", typeof(XmlSerializer));
+                return xml;
+            }
         }
 
-        public static readonly RunDescriptor Xml;
+        public static RunDescriptor Json
+        {
+            get
+            {
+                var json = new RunDescriptor("Json");
+                json.Settings.Set("Serializer", typeof(JsonSerializer));
+                return json;
+            }
+        }
     }
 }

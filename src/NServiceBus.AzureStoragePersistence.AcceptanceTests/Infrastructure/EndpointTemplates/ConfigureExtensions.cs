@@ -1,126 +1,39 @@
 ﻿namespace NServiceBus.AcceptanceTests.EndpointTemplates
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using ScenarioDescriptors;
-    using AcceptanceTesting.Support;
+    using System.Threading.Tasks;
+    using NServiceBus.AcceptanceTesting.Support;
+    using NServiceBus.AcceptanceTests.ScenarioDescriptors;
+    using NServiceBus.ObjectBuilder;
 
     public static class ConfigureExtensions
     {
-        public static string GetOrNull(this IDictionary<string, string> dictionary, string key)
+        public static Task DefineTransport(this EndpointConfiguration config, RunSettings settings, string endpointName)
         {
-            if (!dictionary.ContainsKey(key))
+            Type transportType;
+            if (!settings.TryGet("Transport", out transportType))
             {
-                return null;
+                settings.Merge(Transports.Default.Settings);
             }
 
-            return dictionary[key];
+            return ConfigureTestExecution(TestDependencyType.Transport, config, settings, endpointName);
         }
 
-        private static Type GetTypePersistent(string typeName)
+        public static Task DefinePersistence(this EndpointConfiguration config, RunSettings settings, string endpointName)
         {
-            var type = Type.GetType(typeName);
-            if (type != null)
-                return type;
-
-            int firstComma = typeName.IndexOf(',');
-            string assemName = typeName.Substring(firstComma + 1).TrimStart();
-            string className = typeName.Substring(0, firstComma);
-            foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
+            Type persistenceType;
+            if (!settings.TryGet("Persistence", out persistenceType))
             {
-                if (string.Equals(a.FullName, assemName, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    type = a.GetType(className);
-                    if (type != null)
-                        return type;
-                }
+                settings.Merge(Persistence.Default.Settings);
             }
 
-            return null;
-        }
-
-        public static void DefineTransport(this EndpointConfiguration builder, RunSettings settings, Type endpointBuilderType)
-        {
-            if (!settings.ContainsKey("Transport"))
-            {
-                settings = Transports.Default.Settings;
-            }
-
-            const string typeName = "ConfigureTransport";
-
-            var transportType = GetTypePersistent(settings.Get<string>("Transport"));
-
-            if (transportType == null)
-            {
-                var assemblies = AppDomain.CurrentDomain.GetAssemblies()
-                    .Select(a => a.FullName)
-                    .ToArray();
-
-                var msg = $"Requested Transport: `{settings.Get<string>("Transport")}` but got null. Loaded Assemblies: {String.Join(", ", assemblies)}";
-                throw new InvalidOperationException(msg);
-            }
-
-            var transportTypeName = "Configure" + transportType.Name;
-
-            var configurerType = endpointBuilderType.GetNestedType(typeName) ??
-                                 Type.GetType(transportTypeName, false);
-
-            if (configurerType != null)
-            {
-                var configurer = Activator.CreateInstance(configurerType);
-
-                dynamic dc = configurer;
-
-                dc.Configure(builder);
-                return;
-            }
-
-            builder.UseTransport(transportType).ConnectionString(settings.Get<string>("Transport.ConnectionString"));
-        }
-
-        public static void DefineTransactions(this EndpointConfiguration config, RunSettings settings)
-        {
-            if (settings.ContainsKey("Transactions.Disable"))
-            {
-                config.UseTransport(GetTypePersistent(settings.Get<string>("Transport"))).Transactions(TransportTransactionMode.None);
-            }
-            if (settings.ContainsKey("Transactions.SuppressDistributedTransactions"))
-            {
-                config.UseTransport(GetTypePersistent(settings.Get<string>("Transport"))).Transactions(TransportTransactionMode.ReceiveOnly);
-            }
-        }
-
-        public static void DefinePersistence(this EndpointConfiguration config, RunSettings settings)
-        {
-            if (!settings.ContainsKey("Persistence"))
-            {
-                settings = Persistence.Default.Settings;
-            }
-
-            var persistenceType = Type.GetType(settings.Get<string>("Persistence"));
-
-
-            var typeName = "Configure" + persistenceType.Name;
-
-            var configurerType = Type.GetType(typeName, false);
-
-            if (configurerType != null)
-            {
-                var configurer = Activator.CreateInstance(configurerType);
-
-                dynamic dc = configurer;
-
-                dc.Configure(config);
-                return;
-            }
-
-            config.UsePersistence(persistenceType);
+            return ConfigureTestExecution(TestDependencyType.Persistence, config, settings, endpointName);
         }
 
         public static void DefineBuilder(this EndpointConfiguration config, RunSettings settings)
         {
-            if (!settings.ContainsKey("Builder"))
+            Type builderType;
+            if (!settings.TryGet("Builder", out builderType))
             {
                 var builderDescriptor = Builders.Default;
 
@@ -129,11 +42,10 @@
                     return; //go with the default builder
                 }
 
-                settings = builderDescriptor.Settings;
+                settings.Merge(builderDescriptor.Settings);
             }
 
-            var builderType = Type.GetType(settings.Get<string>("Builder"));
-
+            builderType = settings.Get<Type>("Builder");
 
             var typeName = "Configure" + builderType.Name;
 
@@ -151,17 +63,59 @@
             config.UseContainer(builderType);
         }
 
-        static bool ContainsKey(this RunSettings settings, string key)
+        public static void RegisterComponentsAndInheritanceHierarchy(this EndpointConfiguration builder, RunDescriptor runDescriptor)
         {
-            return settings.Any(setting => setting.Key == key);
+            builder.RegisterComponents(r => { RegisterInheritanceHierarchyOfContextOnContainer(runDescriptor, r); });
         }
 
-        public static T GetOrNull<T>(this RunSettings settings, string key) where T : class
+        static async Task ConfigureTestExecution(TestDependencyType type, EndpointConfiguration config, RunSettings settings, string endpointName)
         {
-            T result;
-            settings.TryGet(key, out result);
+            var dependencyTypeString = type.ToString();
 
-            return result;
+            var dependencyType = settings.Get<Type>(dependencyTypeString);
+
+            var typeName = "ConfigureEndpoint" + dependencyType.Name;
+
+            var configurerType = Type.GetType(typeName, false);
+
+            if (configurerType == null)
+            {
+                throw new InvalidOperationException($"Acceptance Test project must include a non-namespaced class named '{typeName}' implementing {typeof(IConfigureEndpointTestExecution).Name}. See {typeof(ConfigureEndpointMsmqTransport).FullName} for an example.");
+            }
+
+            var configurer = Activator.CreateInstance(configurerType) as IConfigureEndpointTestExecution;
+
+            if (configurer == null)
+            {
+                throw new InvalidOperationException($"{typeName} does not implement {typeof(IConfigureEndpointTestExecution).Name}.");
+            }
+
+            await configurer.Configure(endpointName, config, settings).ConfigureAwait(false);
+
+            ActiveTestExecutionConfigurer cleaners;
+            var cleanerKey = "ConfigureTestExecution." + endpointName;
+            if (!settings.TryGet(cleanerKey, out cleaners))
+            {
+                cleaners = new ActiveTestExecutionConfigurer();
+                settings.Set(cleanerKey, cleaners);
+            }
+            cleaners.Add(configurer);
+        }
+
+        static void RegisterInheritanceHierarchyOfContextOnContainer(RunDescriptor runDescriptor, IConfigureComponents r)
+        {
+            var type = runDescriptor.ScenarioContext.GetType();
+            while (type != typeof(object))
+            {
+                r.RegisterSingleton(type, runDescriptor.ScenarioContext);
+                type = type.BaseType;
+            }
+        }
+
+        enum TestDependencyType
+        {
+            Transport,
+            Persistence
         }
     }
 }

@@ -5,7 +5,7 @@
     using System.Linq;
     using System.Reflection;
     using AcceptanceTesting.Support;
-    using Hosting.Helpers;
+    using NServiceBus.Hosting.Helpers;
 
     public class AllTransports : ScenarioDescriptor
     {
@@ -14,7 +14,10 @@
             AddRange(ActiveTransports);
         }
 
-        static IEnumerable<RunDescriptor> ActiveTransports => new List<RunDescriptor> { Transports.Default };
+        static IEnumerable<RunDescriptor> ActiveTransports => new List<RunDescriptor>
+        {
+            Transports.Default
+        };
     }
 
     public class AllDtcTransports : AllTransports
@@ -104,17 +107,15 @@
             var runDescriptors = Transports.AllAvailable;
             foreach (var rundescriptor in runDescriptors)
             {
-                string typeName;
-                if (rundescriptor.Settings.TryGet("Transport", out typeName))
+                Type type;
+                if (rundescriptor.Settings.TryGet("Transport", out type))
                 {
-                    var type = Type.GetType(typeName);
-
                     var configurerTypeName = "ConfigureScenariosFor" + type.Name;
                     var configurerType = Type.GetType(configurerTypeName, false);
 
                     if (configurerType == null)
                     {
-                        throw new InvalidOperationException($"Acceptance Test project must include a non-namespaced class named '{configurerTypeName}' implementing {typeof(IConfigureSupportedScenariosForTestExecution).Name}.");
+                        throw new InvalidOperationException($"Acceptance Test project must include a non-namespaced class named '{configurerTypeName}' implementing {typeof(IConfigureSupportedScenariosForTestExecution).Name}. See {typeof(ConfigureScenariosForMsmqTransport).FullName} for an example.");
                     }
 
                     var configurer = Activator.CreateInstance(configurerType) as IConfigureSupportedScenariosForTestExecution;
@@ -123,7 +124,6 @@
                     {
                         throw new InvalidOperationException($"{configurerTypeName} does not implement {typeof(IConfigureSupportedScenariosForTestExecution).Name}.");
                     }
-
 
                     if (configurer.UnsupportedScenarioDescriptorTypes.Contains(scenarioDescriptor.GetType()))
                     {

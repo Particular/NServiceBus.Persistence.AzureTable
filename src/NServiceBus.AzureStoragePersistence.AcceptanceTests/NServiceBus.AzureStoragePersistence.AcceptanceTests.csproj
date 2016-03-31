@@ -30,12 +30,40 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Azure.KeyVault.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Azure.KeyVault.Core.1.0.0\lib\net40\Microsoft.Azure.KeyVault.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Data.Edm, Version=5.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Data.Edm.5.7.0-beta\lib\net40\Microsoft.Data.Edm.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Data.OData, Version=5.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Data.OData.5.7.0-beta\lib\net40\Microsoft.Data.OData.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Data.Services.Client, Version=5.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Data.Services.Client.5.7.0-beta\lib\net40\Microsoft.Data.Services.Client.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.WindowsAzure.Storage, Version=6.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\WindowsAzure.Storage.6.2.2-preview\lib\net40\Microsoft.WindowsAzure.Storage.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="NServiceBus.AcceptanceTesting, Version=6.0.0.0, Culture=neutral, PublicKeyToken=9fc386479f8a226c, processorArchitecture=MSIL">
       <HintPath>..\packages\NServiceBus.AcceptanceTesting.6.0.0-unstable1782\lib\net452\NServiceBus.AcceptanceTesting.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="NServiceBus.Core, Version=6.0.0.0, Culture=neutral, PublicKeyToken=9fc386479f8a226c, processorArchitecture=MSIL">
       <HintPath>..\packages\NServiceBus.6.0.0-unstable1782\lib\net452\NServiceBus.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="NServiceBus.Azure.Transports.WindowsAzureStorageQueues, Version=7.0.0.0, Culture=neutral, PublicKeyToken=9fc386479f8a226c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NServiceBus.Azure.Transports.WindowsAzureStorageQueues.7.0.0-unstable0094\lib\net452\NServiceBus.Azure.Transports.WindowsAzureStorageQueues.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="nunit.framework, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
@@ -46,6 +74,7 @@
     <Reference Include="System.configuration" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Messaging" />
     <Reference Include="System.Reactive.Core, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Rx-Core.2.2.5\lib\net45\System.Reactive.Core.dll</HintPath>
       <Private>True</Private>
@@ -62,6 +91,10 @@
       <HintPath>..\packages\Rx-PlatformServices.2.2.5\lib\net45\System.Reactive.PlatformServices.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Spatial, Version=5.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Spatial.5.7.0-beta\lib\net40\System.Spatial.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Transactions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -71,19 +104,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConfigureScenariosForMsmqTransport.cs" />
+    <Compile Include="ConfigureEndpointAzureStorageQueueTransport.cs" />
+    <Compile Include="ConfigureScenariosForAzureStorageQueueTransport.cs" />
+    <Compile Include="Infrastructure\EndpointTemplates\ConfigureEndpointMsmqTransport.cs" />
     <Compile Include="Infrastructure\EndpointTemplates\ConfigureExtensions.cs" />
-    <Compile Include="Infrastructure\EndpointTemplates\ContextAppender.cs" />
     <Compile Include="Infrastructure\EndpointTemplates\DefaultPublisher.cs" />
     <Compile Include="Infrastructure\EndpointTemplates\DefaultServer.cs" />
+    <Compile Include="Infrastructure\EndpointTemplates\EndpointCustomizationConfigurationExtensions.cs" />
+    <Compile Include="Infrastructure\EndpointTemplates\ServerWithNoDefaultPersistenceDefinitions.cs" />
     <Compile Include="Infrastructure\NServiceBusAcceptanceTest.cs" />
     <Compile Include="Infrastructure\ScenarioDescriptors\AllOutboxCapableStorages.cs" />
-    <Compile Include="Infrastructure\ScenarioDescriptors\AllTransactionSettings.cs" />
     <Compile Include="Infrastructure\ScenarioDescriptors\AllTransports.cs" />
     <Compile Include="Infrastructure\ScenarioDescriptors\Builders.cs" />
+    <Compile Include="Infrastructure\ScenarioDescriptors\EnvironmentHelper.cs" />
     <Compile Include="Infrastructure\ScenarioDescriptors\Persistence.cs" />
     <Compile Include="Infrastructure\ScenarioDescriptors\Serializers.cs" />
-    <Compile Include="Infrastructure\ScenarioDescriptors\TransactionSettings.cs" />
     <Compile Include="Infrastructure\ScenarioDescriptors\Transports.cs" />
     <Compile Include="ConfigureAzureStoragePersistence.cs" />
     <Compile Include="Infrastructure\SubscriptionBehaviorExtensions.cs" />
