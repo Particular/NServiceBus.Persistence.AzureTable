@@ -8,85 +8,99 @@ namespace NServiceBus.AcceptanceTests.Sagas
     using Microsoft.WindowsAzure.Storage.Table;
     using NServiceBus.AcceptanceTesting;
     using NServiceBus.AcceptanceTests.EndpointTemplates;
+    using NServiceBus.AcceptanceTests.ScenarioDescriptors;
     using NServiceBus.SagaPersisters.Azure;
-    using NServiceBus.Sagas;
     using NUnit.Framework;
 
     public class When_saga_has_duplicate_instances : NServiceBusAcceptanceTest
     {
         [Test]
-        public void Dispatching_message_should_fail()
+        public async Task Dispatching_message_should_fail()
         {
-            var id1 = Guid.NewGuid();
-            var id2 = Guid.NewGuid();
-            var orderId = Guid.NewGuid().ToString();
-
             var connectionString = Environment.GetEnvironmentVariable("AzureStoragePersistence.ConnectionString");
             var account = CloudStorageAccount.Parse(connectionString);
             var table = account.CreateCloudTableClient().GetTableReference(typeof(TwoInstanceSaga.TwoInstanceSagaState).Name);
 
-            table.CreateIfNotExists();
+            await table.CreateIfNotExistsAsync().ConfigureAwait(false);
+            await ClearTable(table).ConfigureAwait(false);
 
-            ClearTable(table);
+            await Scenario.Define<Context>(c => c.OrderId = Guid.NewGuid().ToString())
+                .WithEndpoint<ReceiverWithSagas>(b =>
+                {
+                    b.DoNotFailOnErrorMessages();
 
-            table.Execute(TableOperation.Insert(CreateState(id1, orderId)));
-            table.Execute(TableOperation.Insert(CreateState(id2, orderId)));
+                    b.When((session, c) => session.SendLocal(new Start
+                    {
+                        OrderId = c.OrderId
+                    }));
 
-            var ex = Assert.Throws<AggregateException>(async () =>
-                await Scenario.Define<Context>()
-                    .WithEndpoint<ReceiverWithSagas>(b => b.When(
-                        session => session.SendLocal(new Complete
+                    b.When(c => c.StartSagaMessageReceived, (session, c) =>
+                    {
+                        var wait = new SpinWait();
+                        DynamicTableEntity[] entries;
+                        do
                         {
-                            OrderId = orderId
-                        })))
-                    //.AllowExceptions(ex => ex.Message.Contains(typeof(DuplicatedSagaFoundException).Name) || ex.Message.Contains(ReceiverWithSagas.ThrowOnSagaNotFound.Message))
-                    .Run(TimeSpan.FromMinutes(5)));
+                            wait.SpinOnce();
+                            entries = table.ExecuteQuery(new TableQuery()).ToArray();
+                        } while (entries.Length < 2);
 
-            Assert.IsInstanceOf<DuplicatedSagaFoundException>(ex.InnerExceptions.Single());
+                        // select saga row
+                        var id = new Guid();
+                        var saga = entries.First(dte => Guid.TryParse(dte.PartitionKey, out id));
+
+                        // copy saga
+                        var newId = Guid.NewGuid();
+                        saga.PartitionKey = newId.ToString();
+                        saga.RowKey = newId.ToString();
+                        saga.ETag = null;
+                        table.Execute(TableOperation.Insert(saga));
+
+                        c.SagasIds = new[]
+                        {
+                            id,
+                            newId
+                        };
+
+                        // delete the index entry making a real duplicate
+                        var indexEntry = entries.First(dte => ReferenceEquals(dte, saga) == false);
+                        table.Execute(TableOperation.Delete(indexEntry));
+
+                        return session.SendLocal(new Complete
+                        {
+                            OrderId = c.OrderId
+                        }).ContinueWith(t => session.SendLocal(new FinalMessage()));
+                    });
+                })
+                .Done(c => c.FinalMessageReceived)
+                .Repeat(r => r.For(Transports.Default))
+                .Should(c =>
+                {
+                    var failedMessage = c.FailedMessages.SelectMany(kvp => kvp.Value).Single();
+                    Assert.IsInstanceOf<DuplicatedSagaFoundException>(failedMessage.Exception);
+
+                    foreach (var sagasId in c.SagasIds)
+                    {
+                        Assert.True(failedMessage.Exception.Message.Contains(sagasId.ToString()));
+                    }
+                })
+                .Run();
         }
 
-        private void ClearTable(CloudTable table)
+        private static async Task ClearTable(CloudTable table)
         {
             foreach (var entity in table.ExecuteQuery(new TableQuery()).ToArray())
             {
-                table.Execute(TableOperation.Delete(entity));
+                await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
             }
-        }
-
-        private static TwoInstanceSaga.StateEntity CreateState(Guid id, string correlatingId)
-        {
-            var partitionKey = id.ToString();
-
-            return new TwoInstanceSaga.StateEntity
-            {
-                Id = id,
-                PartitionKey = partitionKey,
-                RowKey = partitionKey,
-                OriginalMessageId = null,
-                Originator = "test",
-                Timestamp = DateTimeOffset.Now.AddSeconds(-30),
-                OrderId = correlatingId
-            };
         }
 
         public class Context : ScenarioContext
         {
-            private long _completes;
-            private long _starts;
             public bool Completed { get; set; }
             public string OrderId { get; set; }
-            public long StartsMessages => _starts;
-            public long CompleteMessages => _completes;
-
-            public void RegisterStart()
-            {
-                Interlocked.Increment(ref _starts);
-            }
-
-            public void RegisterComplete()
-            {
-                Interlocked.Increment(ref _completes);
-            }
+            public bool StartSagaMessageReceived { get; set; }
+            public bool FinalMessageReceived { get; set; }
+            public Guid[] SagasIds { get; set; }
         }
 
         private class ReceiverWithSagas : EndpointConfigurationBuilder
@@ -94,17 +108,7 @@ namespace NServiceBus.AcceptanceTests.Sagas
             public ReceiverWithSagas()
             {
                 EndpointSetup<DefaultServer>(
-                    config => { });
-            }
-
-            public class ThrowOnSagaNotFound : IHandleSagaNotFound
-            {
-                public const string Message = "Moving non existent saga message to the error queue";
-
-                public Task Handle(object message, IMessageProcessingContext context)
-                {
-                    throw new Exception(Message);
-                }
+                    config => { config.LimitMessageProcessingConcurrencyTo(1); });
             }
         }
 
@@ -112,27 +116,19 @@ namespace NServiceBus.AcceptanceTests.Sagas
             IAmStartedByMessages<Start>,
             IHandleMessages<Complete>
         {
-            // ReSharper disable once MemberCanBePrivate.Global
             public Context Context { get; set; }
-
+            // ReSharper disable once MemberCanBePrivate.Global
             public Task Handle(Start message, IMessageHandlerContext context)
             {
-                Context.RegisterStart();
                 Data.OrderId = message.OrderId;
+                Context.StartSagaMessageReceived = true;
 
                 return Task.FromResult(0);
             }
 
             public Task Handle(Complete message, IMessageHandlerContext context)
             {
-                Context.RegisterStart();
-                MarkAsComplete();
-                if (message.OrderId == Context.OrderId)
-                {
-                    Context.Completed = true;
-                }
-
-                return Task.FromResult(0);
+                throw new InvalidOperationException("Shouldn't have receive it.");
             }
 
             protected override void ConfigureHowToFindSaga(SagaPropertyMapper<TwoInstanceSagaState> mapper)
@@ -143,13 +139,7 @@ namespace NServiceBus.AcceptanceTests.Sagas
                     .ToSaga(s => s.OrderId);
             }
 
-            private interface IState : IContainSagaData
-            {
-                // ReSharper disable once UnusedMemberInSuper.Global
-                string OrderId { get; set; }
-            }
-
-            public class TwoInstanceSagaState : IState
+            public class TwoInstanceSagaState : IContainSagaData
             {
                 public virtual string OrderId { get; set; }
 
@@ -157,24 +147,34 @@ namespace NServiceBus.AcceptanceTests.Sagas
                 public virtual string Originator { get; set; }
                 public virtual string OriginalMessageId { get; set; }
             }
+        }
 
-            public class StateEntity : TableEntity, IState
+        public class FinalMessageHandler : IHandleMessages<FinalMessage>
+        {
+            public Context Context { get; set; }
+
+            public Task Handle(FinalMessage message, IMessageHandlerContext context)
             {
-                public Guid Id { get; set; }
-                public string Originator { get; set; }
-                public string OriginalMessageId { get; set; }
-                public string OrderId { get; set; }
+                Context.FinalMessageReceived = true;
+                return Task.FromResult(0);
             }
         }
 
+        [Serializable]
         public class Start : ICommand
         {
             public string OrderId { get; set; }
         }
 
+        [Serializable]
         public class Complete : ICommand
         {
             public string OrderId { get; set; }
+        }
+
+        [Serializable]
+        public class FinalMessage : ICommand
+        {
         }
     }
 }
