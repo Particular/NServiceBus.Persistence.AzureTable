@@ -1,12 +1,12 @@
 ﻿namespace NServiceBus.AcceptanceTests.Timeouts
 {
     using System;
-    using AcceptanceTesting;
-    using EndpointTemplates;
-    using Features;
-    using NUnit.Framework;
     using System.Threading.Tasks;
-    using ScenarioDescriptors;
+    using NServiceBus.AcceptanceTesting;
+    using NServiceBus.AcceptanceTests.EndpointTemplates;
+    using NServiceBus.AcceptanceTests.ScenarioDescriptors;
+    using NServiceBus.Features;
+    using NUnit.Framework;
 
     class When_timeout_storage_is_unavailable_temporarily : NServiceBusAcceptanceTest
     {
@@ -27,10 +27,7 @@
             var stopTime = DateTime.Now.AddSeconds(45);
 
             var testContext =
-                await Scenario.Define<TimeoutTestContext>(c =>
-                {
-                    c.SecondsToWait = 10;
-                })
+                await Scenario.Define<TimeoutTestContext>(c => { c.SecondsToWait = 10; })
                     .WithEndpoint<EndpointWithFlakyTimeoutPersister>(b =>
                     {
                         b.CustomConfig((busConfig, context) =>
@@ -55,18 +52,18 @@
         }
 
         [Serializable]
-        public class MyMessage : IMessage { }
+        public class MyMessage : IMessage
+        {
+        }
 
         public class EndpointWithFlakyTimeoutPersister : EndpointConfigurationBuilder
         {
-            public TestContext TestContext { get; set; }
             public EndpointWithFlakyTimeoutPersister()
             {
-                EndpointSetup<DefaultServer>(config =>
-                {
-                    config.EnableFeature<TimeoutManager>();
-                });
+                EndpointSetup<DefaultServer>(config => { config.EnableFeature<TimeoutManager>(); });
             }
+
+            public TestContext TestContext { get; set; }
 
             class Initalizer : Feature
             {
@@ -79,7 +76,7 @@
                 {
                     var testContext = context.Settings.Get<TimeoutTestContext>();
                     context.Container
-                        .ConfigureComponent(builder => new CyclingOutageTimeoutPersister
+                        .ConfigureComponent(() => new CyclingOutageTimeoutPersister
                         {
                             SecondsToWait = testContext.SecondsToWait
                         }, DependencyLifecycle.SingleInstance);

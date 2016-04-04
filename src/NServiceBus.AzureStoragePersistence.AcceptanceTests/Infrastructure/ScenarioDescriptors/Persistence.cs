@@ -8,31 +8,28 @@
 
     public static class Persistence
     {
-        static Persistence()
-        {
-            AzureStoragePersistenceDescriptor = new RunDescriptor(AzureStoragePersistenceType.Name);
-            AzureStoragePersistenceDescriptor.Settings.Set("Persistence", AzureStoragePersistenceType.AssemblyQualifiedName);
-        }
-
         public static RunDescriptor Default
         {
             get
             {
-                var specificPersistence = Environment.GetEnvironmentVariable("Persistence.UseSpecific");
+                var specificPersistence = EnvironmentHelper.GetEnvironmentVariable("Persistence.UseSpecific");
+                var runDescriptors = AllAvailable;
 
                 if (!string.IsNullOrEmpty(specificPersistence))
                 {
-                    return AllAvailable.Single(r => r.Key == specificPersistence);
+                    return runDescriptors.Single(r => r.Key == specificPersistence);
                 }
 
-                var nonCorePersister = AllAvailable.FirstOrDefault();
+                var nonCorePersister = runDescriptors.FirstOrDefault();
 
                 if (nonCorePersister != null)
                 {
                     return nonCorePersister;
                 }
 
-                return AzureStoragePersistenceDescriptor;
+                var inMemory = new RunDescriptor(InMemoryPersistenceType.Name);
+                inMemory.Settings.Set("Persistence", InMemoryPersistenceType);
+                return inMemory;
             }
         }
 
@@ -40,35 +37,33 @@
         {
             get
             {
-                if (availablePersisters == null)
+                foreach (var definition in foundDefinitions.Value)
                 {
-                    availablePersisters = GetAllAvailable().ToList();
+                    var key = definition.Name;
+
+                    var runDescriptor = new RunDescriptor(key);
+                    runDescriptor.Settings.Set("Persistence", definition);
+
+                    var connectionString = Environment.GetEnvironmentVariable(key + ".ConnectionString");
+
+                    if (!string.IsNullOrEmpty(connectionString))
+                    {
+                        runDescriptor.Settings.Set("Persistence.ConnectionString", connectionString);
+                    }
+
+                    yield return runDescriptor;
                 }
-
-                return availablePersisters;
             }
         }
 
-        static Type AzureStoragePersistenceType = typeof(AzureStoragePersistence);
-        static RunDescriptor AzureStoragePersistenceDescriptor;
+        static Type InMemoryPersistenceType = typeof(InMemoryPersistence);
 
-        static IEnumerable<RunDescriptor> GetAllAvailable()
+        static Lazy<List<Type>> foundDefinitions = new Lazy<List<Type>>(() =>
         {
-            var foundDefinitions = TypeScanner.GetAllTypesAssignableTo<PersistenceDefinition>()
-                .Where(t => t.Assembly != AzureStoragePersistenceType.Assembly &&
-                t.Assembly != typeof(Persistence).Assembly);
-
-            foreach (var definition in foundDefinitions)
-            {
-                var key = definition.Name;
-
-                var runDescriptor = new RunDescriptor(key);
-                runDescriptor.Settings.Set("Persistence", definition.AssemblyQualifiedName);
-
-                yield return runDescriptor;
-            }
-        }
-
-        static IList<RunDescriptor> availablePersisters;
+            return TypeScanner.GetAllTypesAssignableTo<PersistenceDefinition>()
+                .Where(t => t.Assembly != InMemoryPersistenceType.Assembly &&
+                            t.Assembly != typeof(Persistence).Assembly)
+                .ToList();
+        });
     }
 }

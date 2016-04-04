@@ -1,19 +1,24 @@
 ﻿using System;
+using System.Threading.Tasks;
 using NServiceBus;
+using NServiceBus.AcceptanceTesting.Support;
 using NServiceBus.Persistence;
 using NServiceBus.SagaPersisters;
 
-public class ConfigureAzureStoragePersistence
+public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestExecution
 {
-    public void Configure(EndpointConfiguration config)
+    public Task Configure(string endpointName, EndpointConfiguration config, RunSettings settings)
     {
         var connectionString = Environment.GetEnvironmentVariable("AzureStoragePersistence.ConnectionString");
         config.UsePersistence<AzureStoragePersistence, StorageType.Subscriptions>().ConnectionString(connectionString);
         config.UsePersistence<AzureStoragePersistence, StorageType.Sagas>().ConnectionString(connectionString);
         config.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>().ConnectionString(connectionString);
+
+        return Task.FromResult(0);
     }
 
-    public void Cleanup()
+    Task IConfigureEndpointTestExecution.Cleanup()
     {
+        return Task.FromResult(0);
     }
 }
