@@ -79,8 +79,10 @@
                 {
                     var testContext = context.Settings.Get<TimeoutTestContext>();
                     context.Container
-                        .ConfigureComponent<CyclingOutageTimeoutPersister>(DependencyLifecycle.SingleInstance)
-                        .ConfigureProperty(tp => tp.SecondsToWait, testContext.SecondsToWait);
+                        .ConfigureComponent(builder => new CyclingOutageTimeoutPersister
+                        {
+                            SecondsToWait = testContext.SecondsToWait
+                        }, DependencyLifecycle.SingleInstance);
                 }
             }
         }
