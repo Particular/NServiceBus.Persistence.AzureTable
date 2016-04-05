@@ -1,5 +1,11 @@
 namespace NServiceBus.AzureStoragePersistence.SagaDeduplicator.Index
 {
+    /// <summary>
+    ///     The family of Murmur hash functions provides a fast non-cryptograhpic hashing functions with a good distribution.
+    /// </summary>
+    /// <remarks>
+    ///     <see cref="http://en.wikipedia.org/wiki/MurmurHash" />
+    /// </remarks>
     public static unsafe class Murmur3
     {
         private const uint Seed = 0xc58f1a7b;

@@ -1,6 +1,5 @@
 ﻿namespace NServiceBus.AzureStoragePersistence.SagaDeduplicator
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.WindowsAzure.Storage.Table;
@@ -11,21 +10,25 @@
         {
             var query = new TableQuery
             {
-                TakeCount = 1
+                SelectColumns = new[]
+                {
+                    propertyName
+                }
             };
-            EntityProperty propertyValue;
-            var entity = table.ExecuteQuery(query).SingleOrDefault();
-            if (entity == null)
-            {
-                throw new ArgumentException($"There are not entities in the table '{table.Name}'. Ensure that a proper table is selected.");
-            }
 
-            if (entity.Properties.TryGetValue(propertyName, out propertyValue) == false)
+            TableContinuationToken token = null;
+            do
             {
-                throw new KeyNotFoundException($"The property {propertyName} is not present in table {table.Name}. Ensure that you selected an existing property of {table.Name}.");
-            }
+                var segment = table.ExecuteQuerySegmented(query, token);
+                token = segment.ContinuationToken;
+                var entityHavingProperty = segment.Results.FirstOrDefault(dte => dte.Properties.ContainsKey(propertyName));
+                if (entityHavingProperty != null)
+                {
+                    return entityHavingProperty.Properties[propertyName].PropertyType;
+                }
+            } while (token != null);
 
-            return propertyValue.PropertyType;
+            throw new KeyNotFoundException($"The property {propertyName} is not present in table {table.Name}. Ensure that you selected an existing property of {table.Name}.");
         }
     }
 }
