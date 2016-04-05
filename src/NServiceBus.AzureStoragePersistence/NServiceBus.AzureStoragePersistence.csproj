@@ -110,8 +110,9 @@
     <Compile Include="SagaPersisters\AzureStorageSagaGuard.cs" />
     <Compile Include="SagaPersisters\AzureStorageSagaDefaults.cs" />
     <Compile Include="SagaPersisters\Azure\AzureStorageSagaPersistence.cs" />
+    <Compile Include="SagaPersisters\Azure\DuplicatedSagaFoundException.cs" />
     <Compile Include="SagaPersisters\Azure\RetryNeededException.cs" />
-    <Compile Include="SagaPersisters\Azure\SecondaryIndeces\IndexDefinition.cs" />
+    <Compile Include="SagaPersisters\Azure\SecondaryIndeces\SecondaryIndexKeyBuilder.cs" />
     <Compile Include="SagaPersisters\Azure\SecondaryIndeces\LRUCache.cs" />
     <Compile Include="SagaPersisters\Azure\SecondaryIndeces\PartitionRowKeyTuple.cs" />
     <Compile Include="SagaPersisters\Azure\SecondaryIndeces\SagaDataSerializer.cs" />

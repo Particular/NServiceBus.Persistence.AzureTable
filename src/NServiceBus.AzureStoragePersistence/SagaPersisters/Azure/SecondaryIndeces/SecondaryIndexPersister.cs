@@ -5,19 +5,19 @@
     using System.Threading.Tasks;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
-    using Sagas;
+    using NServiceBus.Sagas;
 
     public class SecondaryIndexPersister
     {
-        public delegate Task<Guid?> ScanForSaga(Type sagaType, string propertyName, object propertyValue);
+        public delegate Task<Guid[]> ScanForSagas(Type sagaType, string propertyName, object propertyValue);
 
         const int LRUCapacity = 1000;
         LRUCache<PartitionRowKeyTuple, Guid> cache = new LRUCache<PartitionRowKeyTuple, Guid>(LRUCapacity);
         Func<Type, Task<CloudTable>> getTableForSaga;
         Func<IContainSagaData, Task> persist;
-        ScanForSaga scanner;
+        ScanForSagas scanner;
 
-        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSaga scanner, Func<IContainSagaData, Task> persist)
+        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, Func<IContainSagaData, Task> persist)
         {
             this.getTableForSaga = getTableForSaga;
             this.scanner = scanner;
@@ -26,16 +26,15 @@
 
         public async Task Insert(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty)
         {
-            var sagaType = sagaData.GetType();
-            var table = await getTableForSaga(sagaType).ConfigureAwait(false);
-
-            var ix = IndexDefinition.Get(sagaType, correlationProperty);
-            if (ix == null)
+            if (correlationProperty == SagaCorrelationProperty.None)
             {
                 return;
             }
 
-            var key = ix.BuildTableKey(correlationProperty.Value);
+            var sagaType = sagaData.GetType();
+            var table = await getTableForSaga(sagaType).ConfigureAwait(false);
+
+            var key = SecondaryIndexKeyBuilder.BuildTableKey(sagaType, correlationProperty);
 
             var entity = new SecondaryIndexTableEntity
             {
@@ -59,7 +58,8 @@
                 var indexRowAlreadyExists = IsConflict(ex);
                 if (indexRowAlreadyExists)
                 {
-                    var indexRow = (await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey)).ConfigureAwait(false)).Result as SecondaryIndexTableEntity;
+                    var exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey)).ConfigureAwait(false);
+                    var indexRow = exec.Result as SecondaryIndexTableEntity;
                     var data = indexRow?.InitialSagaData;
                     if (data != null)
                     {
@@ -86,19 +86,16 @@
             }
         }
 
-        public async Task<Guid?> FindPossiblyCreatingIndexEntry<TSagaData>(string propertyName, object propertyValue, SagaCorrelationProperty correlationProperty)
+        public async Task<Guid?> FindPossiblyCreatingIndexEntry<TSagaData>(string propertyName, object propertyValue)
             where TSagaData : IContainSagaData
         {
-            var sagaType = typeof(TSagaData);
-            var ix = IndexDefinition.Get(sagaType, correlationProperty);
-            if (ix == null)
+            if (string.IsNullOrEmpty(propertyName) || propertyValue == null)
             {
-                throw new ArgumentException($"Saga '{typeof(TSagaData)}' has no correlation properties. Ensure that your saga is correlated by this property and only then, mark it with `Unique` attribute.");
+                return null;
             }
 
-            ix.ValidateProperty(propertyName);
-
-            var key = ix.BuildTableKey(propertyValue);
+            var sagaType = typeof(TSagaData);
+            var key = SecondaryIndexKeyBuilder.BuildTableKey(sagaType, new SagaCorrelationProperty(propertyName, propertyValue));
 
             Guid guid;
             if (cache.TryGet(key, out guid))
@@ -107,34 +104,42 @@
             }
 
             var table = await getTableForSaga(sagaType).ConfigureAwait(false);
-            var secondaryIndexEntry = (await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey)).ConfigureAwait(false)).Result as SecondaryIndexTableEntity;
+            var exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey));
+            var secondaryIndexEntry = exec.Result as SecondaryIndexTableEntity;
             if (secondaryIndexEntry != null)
             {
                 cache.Put(key, secondaryIndexEntry.SagaId);
                 return secondaryIndexEntry.SagaId;
             }
 
-            var sagaId = await scanner(sagaType, propertyName, propertyValue).ConfigureAwait(false);
-            if (sagaId == null)
+            var ids = await scanner(sagaType, propertyName, propertyValue);
+            if (ids == null || ids.Length == 0)
             {
                 return null;
             }
 
+            if (ids.Length > 1)
+            {
+                throw new DuplicatedSagaFoundException(sagaType, propertyName, ids);
+            }
+
+            var id = ids[0];
+
             var entity = new SecondaryIndexTableEntity();
             key.Apply(entity);
-            entity.SagaId = sagaId.Value;
+            entity.SagaId = id;
 
             try
             {
-                table.Execute(TableOperation.Insert(entity));
+                await table.ExecuteAsync(TableOperation.Insert(entity)).ConfigureAwait(false);
             }
             catch (StorageException)
             {
                 throw new RetryNeededException();
             }
 
-            cache.Put(key, sagaId.Value);
-            return sagaId;
+            cache.Put(key, id);
+            return id;
         }
 
         static bool IsConflict(StorageException ex)
