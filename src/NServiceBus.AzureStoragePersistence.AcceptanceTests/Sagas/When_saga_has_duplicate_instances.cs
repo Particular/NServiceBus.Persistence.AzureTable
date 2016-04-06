@@ -53,6 +53,7 @@ namespace NServiceBus.AcceptanceTests.Sagas
                         saga.PartitionKey = newId.ToString();
                         saga.RowKey = newId.ToString();
                         saga.ETag = null;
+                        saga.Properties["Id"].GuidValue = newId;
                         table.Execute(TableOperation.Insert(saga));
 
                         c.SagasIds = new[]

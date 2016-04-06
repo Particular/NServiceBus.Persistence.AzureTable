@@ -13,21 +13,12 @@
     public class Program
     {
         public const string ConnectionStringName = "sagas";
-
-        public class Keys
-        {
-            public const string Directory = "directory=";
-            public const string SagaTypeName = "sagaTypeName=";
-            public const string SagaProperty = "sagaProperty=";
-            public const string Operation = "operation=";
-            public const string ConnectionString = "connectionString=";
-        }
+        readonly CloudTable cloudTable;
 
         readonly string connectionString;
-        readonly string sagaTypeName;
         readonly string propertyName;
         readonly string sagaDirectory;
-        readonly CloudTable cloudTable;
+        readonly string sagaTypeName;
 
         private Program(string connectionString, string sagaTypeName, string propertyName, string directory)
         {
@@ -45,10 +36,10 @@
             string propertyName;
             string op;
 
-            if (TryFetch(args, Keys.Directory, out directory) == false||
-                TryFetch(args, Keys.SagaTypeName, out sagaTypeName) == false||
-                TryFetch(args, Keys.SagaProperty, out propertyName) == false||
-                TryFetch(args, Keys.Operation, out op) == false)
+            if (TryFetchWithInfo(args, Keys.Directory, out directory) == false ||
+                TryFetchWithInfo(args, Keys.SagaTypeName, out sagaTypeName) == false ||
+                TryFetchWithInfo(args, Keys.SagaProperty, out propertyName) == false ||
+                TryFetchWithInfo(args, Keys.Operation, out op) == false)
             {
                 return;
             }
@@ -56,15 +47,13 @@
             string connectionString;
             if (TryFetch(args, Keys.ConnectionString, out connectionString) == false)
             {
-                if (ConfigurationManager.ConnectionStrings.Count != 1)
+                connectionString = ConfigurationManager.ConnectionStrings[ConnectionStringName].ConnectionString;
+                if (string.IsNullOrWhiteSpace(connectionString))
                 {
                     Console.WriteLine("Provide one connection string in the standard 'connectionStrings' App.config section with following name: '{0}'", ConnectionStringName);
                     return;
                 }
-
-                connectionString = ConfigurationManager.ConnectionStrings[ConnectionStringName].ConnectionString;
             }
-
 
             var operation = (OperationType) Enum.Parse(typeof(OperationType), op, true);
 
@@ -82,6 +71,17 @@
             }
         }
 
+        private static bool TryFetchWithInfo(string[] args, string name, out string value)
+        {
+            if (TryFetch(args, name, out value))
+            {
+                return true;
+            }
+
+            Console.WriteLine("Parameter not set {0}", name);
+            return false;
+        }
+
         private static bool TryFetch(string[] args, string name, out string value)
         {
             foreach (var arg in args)
@@ -93,7 +93,6 @@
                 }
             }
 
-            Console.WriteLine("Parameter not set {0}", name);
             value = null;
             return false;
         }
@@ -210,6 +209,15 @@
             }
 
             return !Directory.EnumerateFileSystemEntries(directory).Any();
+        }
+
+        public class Keys
+        {
+            public const string Directory = "directory=";
+            public const string SagaTypeName = "sagaTypeName=";
+            public const string SagaProperty = "sagaProperty=";
+            public const string Operation = "operation=";
+            public const string ConnectionString = "connectionString=";
         }
     }
 }
