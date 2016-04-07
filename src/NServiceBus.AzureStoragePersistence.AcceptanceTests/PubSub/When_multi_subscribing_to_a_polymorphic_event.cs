@@ -94,7 +94,7 @@
 
                 public Task Handle(IMyEvent messageThatIsEnlisted, IMessageHandlerContext context)
                 {
-                    Context.AddTrace(String.Format("Got event '{0}'", messageThatIsEnlisted));
+                    Context.AddTrace($"Got event '{messageThatIsEnlisted}'");
                     if (messageThatIsEnlisted is MyEvent2)
                     {
                         Context.SubscriberGotMyEvent2 = true;
@@ -108,7 +108,7 @@
                 }
             }
         }
-        
+
         [Serializable]
         public class MyEvent1 : IMyEvent
         {

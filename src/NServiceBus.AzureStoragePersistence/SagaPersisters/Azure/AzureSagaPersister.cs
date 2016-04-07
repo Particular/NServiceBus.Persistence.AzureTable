@@ -224,9 +224,7 @@
             }
             else
             {
-                throw new NotSupportedException(
-                    string.Format("The property type '{0}' is not supported in windows azure table storage",
-                        propertyInfo.PropertyType.Name));
+                throw new NotSupportedException($"The property type '{propertyInfo.PropertyType.Name}' is not supported in windows azure table storage");
             }
             return query;
         }
