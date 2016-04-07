@@ -44,15 +44,11 @@
                 return;
             }
 
-            string connectionString;
-            if (TryFetch(args, Keys.ConnectionString, out connectionString) == false)
+            var connectionString = ConfigurationManager.ConnectionStrings[ConnectionStringName].ConnectionString;
+            if (string.IsNullOrWhiteSpace(connectionString))
             {
-                connectionString = ConfigurationManager.ConnectionStrings[ConnectionStringName].ConnectionString;
-                if (string.IsNullOrWhiteSpace(connectionString))
-                {
-                    Console.WriteLine("Provide one connection string in the standard 'connectionStrings' App.config section with following name: '{0}'", ConnectionStringName);
-                    return;
-                }
+                Console.WriteLine("Provide one connection string in the standard 'connectionStrings' App.config section with following name: '{0}'", ConnectionStringName);
+                return;
             }
 
             var operation = (OperationType) Enum.Parse(typeof(OperationType), op, true);
@@ -217,7 +213,6 @@
             public const string SagaTypeName = "sagaTypeName=";
             public const string SagaProperty = "sagaProperty=";
             public const string Operation = "operation=";
-            public const string ConnectionString = "connectionString=";
         }
     }
 }
