@@ -9,14 +9,15 @@
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
     using NServiceBus.AzureStoragePersistence.SagaDeduplicator.Index;
+    using NServiceBus.Saga;
     using NUnit.Framework;
 
     public class ProgramTests
     {
         readonly CloudTableClient cloudTableClient;
+        readonly string connectionString;
         readonly string testDataDirectory;
         CloudTable cloudTable;
-        readonly string connectionString;
 
         public ProgramTests()
         {
@@ -32,7 +33,7 @@
         [SetUp]
         public void SetUp()
         {
-            cloudTable = cloudTableClient.GetTableReference("Deduplicator" + Guid.NewGuid().ToString().Replace("-", ""));
+            cloudTable = cloudTableClient.GetTableReference(typeof(SagaState).Name);
             cloudTable.CreateIfNotExists();
 
             if (Directory.Exists(testDataDirectory))
@@ -44,7 +45,7 @@
         [TearDown]
         public void TearDown()
         {
-            cloudTable.DeleteAsync();
+            cloudTable.Delete();
         }
 
         [Test]
@@ -73,13 +74,18 @@
                 {Program.Keys.Directory, testDataDirectory},
                 {Program.Keys.Operation, "Download"},
                 {Program.Keys.SagaProperty, "CorrelatingId"},
-                {Program.Keys.SagaTypeName, cloudTable.Name},
-                {Program.Keys.ConnectionString, connectionString},
+                {Program.Keys.SagaTypeName, cloudTable.Name}
             };
 
-            Program.Main(BuildOptions(options));
+            var additional = new[]
+            {
+                connectionString
+            };
+            Program.Main(BuildOptions(options).Concat(additional).ToArray());
 
-            var files = new DirectoryInfo(testDataDirectory).GetFiles("*.*", SearchOption.AllDirectories);
+            var di = new DirectoryInfo(testDataDirectory);
+            Assert.True(di.Exists);
+            var files = di.GetFiles("*.*", SearchOption.AllDirectories);
 
             // assert files
             var file1 = files.Single(f => f.Name == g1_1.ToString());
@@ -97,7 +103,7 @@
             });
 
             options[Program.Keys.Operation] = "Upload";
-            Program.Main(BuildOptions(options));
+            Program.Main(BuildOptions(options).Concat(additional).ToArray());
         }
 
         private static string[] BuildOptions(Dictionary<string, string> options)
@@ -113,7 +119,10 @@
             {
                 using (var sw = new StreamWriter(stream))
                 {
-                    using (var jsonTextWriter = new JsonTextWriter(sw) { Formatting = Formatting.Indented })
+                    using (var jsonTextWriter = new JsonTextWriter(sw)
+                    {
+                        Formatting = Formatting.Indented
+                    })
                     {
                         jo.WriteTo(jsonTextWriter);
                         jsonTextWriter.Flush();
@@ -125,10 +134,10 @@
         private static void AssertFile(FileInfo f, string name, int correlatingId)
         {
             var jo = LoadFile(f);
-            Assert.AreEqual(name, (string)((JValue)jo["Name"]).Value);
-            Assert.AreEqual(correlatingId, (long)((JValue)jo["CorrelatingId"]).Value);
-            Assert.AreEqual(false, (bool)((JValue)jo[SagaJsonMapper.ChooseThisSaga]).Value);
-            Assert.IsNotNullOrEmpty((string)((JValue)jo[SagaJsonMapper.ETag]).Value);
+            Assert.AreEqual(name, (string) ((JValue) jo["Name"]).Value);
+            Assert.AreEqual(correlatingId, (long) ((JValue) jo["CorrelatingId"]).Value);
+            Assert.AreEqual(false, (bool) ((JValue) jo[SagaJsonMapper.ChooseThisSaga]).Value);
+            Assert.IsNotNullOrEmpty((string) ((JValue) jo[SagaJsonMapper.ETag]).Value);
         }
 
         private static JObject LoadFile(FileInfo f)
@@ -145,9 +154,9 @@
             }
         }
 
-        private static SagaState CreateEntity(Guid g, int correlatingId, string name)
+        private static SagaStateEntity CreateEntity(Guid g, int correlatingId, string name)
         {
-            return new SagaState
+            return new SagaStateEntity
             {
                 PartitionKey = g.ToString(),
                 RowKey = g.ToString(),
@@ -156,11 +165,21 @@
             };
         }
 
-        private class SagaState : TableEntity
+        private class SagaStateEntity : TableEntity
         {
             public long CorrelatingId { get; set; }
             public string Name { get; set; }
         }
 
+        private class SagaState : IContainSagaData
+        {
+            [Unique]
+            public long CorrelatingId { get; set; }
+
+            public string Name { get; set; }
+            public Guid Id { get; set; }
+            public string Originator { get; set; }
+            public string OriginalMessageId { get; set; }
+        }
     }
 }
