@@ -16,7 +16,7 @@
     <dependencies>
       <dependency id="WindowsAzure.Storage" version="[6.2.0, 7.0.0)" />
       <dependency id="Microsoft.Data.Services.Client" version="[5.7.0, 6.0.0)" />
-      <dependency id="NServiceBus" version="[6.0.0-unstable, 7.0.0)" />
+      <dependency id="NServiceBus" version="[6.0.0-beta, 7.0.0)" />
     </dependencies>
   </metadata>
   <files>
