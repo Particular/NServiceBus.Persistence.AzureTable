@@ -39,13 +39,9 @@
         public static void Main(string[] args)
         {
             string directory;
-            string sagaTypeName;
-            string propertyName;
             string op;
 
             if (TryFetchWithInfo(args, Keys.Directory, out directory) == false ||
-                TryFetchWithInfo(args, Keys.SagaTypeName, out sagaTypeName) == false ||
-                TryFetchWithInfo(args, Keys.SagaProperty, out propertyName) == false ||
                 TryFetchWithInfo(args, Keys.Operation, out op) == false)
             {
                 return;
@@ -308,8 +304,6 @@
         public class Keys
         {
             public const string Directory = "directory=";
-            public const string SagaTypeName = "sagaTypeName=";
-            public const string SagaProperty = "sagaProperty=";
             public const string Operation = "operation=";
         }
     }
