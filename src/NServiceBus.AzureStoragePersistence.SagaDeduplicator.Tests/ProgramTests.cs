@@ -9,14 +9,15 @@
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
     using NServiceBus.AzureStoragePersistence.SagaDeduplicator.Index;
+    using NServiceBus.Saga;
     using NUnit.Framework;
 
     public class ProgramTests
     {
         readonly CloudTableClient cloudTableClient;
+        readonly string connectionString;
         readonly string testDataDirectory;
         CloudTable cloudTable;
-        readonly string connectionString;
 
         public ProgramTests()
         {
@@ -32,7 +33,7 @@
         [SetUp]
         public void SetUp()
         {
-            cloudTable = cloudTableClient.GetTableReference("Deduplicator" + Guid.NewGuid().ToString().Replace("-", ""));
+            cloudTable = cloudTableClient.GetTableReference(typeof(TwoInstanceSagaState).Name);
             cloudTable.CreateIfNotExists();
 
             if (Directory.Exists(testDataDirectory))
@@ -44,7 +45,7 @@
         [TearDown]
         public void TearDown()
         {
-            cloudTable.DeleteAsync();
+            cloudTable.Delete();
         }
 
         [Test]
@@ -58,28 +59,31 @@
 
             const string name1_1 = "name_1";
             const string name1_2 = "name_2";
-            const int correlatingId_1 = 1;
-            const int correlatingId_2 = 2;
+            const string correlatingId_1 = "1";
+            const string correlatingId_2 = "2";
 
-            cloudTable.Execute(TableOperation.Insert(CreateEntity(g1_1, correlatingId_1, name1_1)));
-            cloudTable.Execute(TableOperation.Insert(CreateEntity(g1_2, correlatingId_1, name1_2)));
+            cloudTable.Execute(TableOperation.Insert(CreateEntity(g1_1, correlatingId_1)));
+            cloudTable.Execute(TableOperation.Insert(CreateEntity(g1_2, correlatingId_1)));
 
-            cloudTable.Execute(TableOperation.Insert(CreateEntity(g2_1, correlatingId_2, "anything")));
-            cloudTable.Execute(TableOperation.Insert(CreateEntity(g2_2, correlatingId_2, "something")));
-            cloudTable.Execute(TableOperation.Insert(CreateEntity(g2_3, correlatingId_2, "test")));
+            cloudTable.Execute(TableOperation.Insert(CreateEntity(g2_1, correlatingId_2)));
+            cloudTable.Execute(TableOperation.Insert(CreateEntity(g2_2, correlatingId_2)));
+            cloudTable.Execute(TableOperation.Insert(CreateEntity(g2_3, correlatingId_2)));
 
             var options = new Dictionary<string, string>
             {
                 {Program.Keys.Directory, testDataDirectory},
-                {Program.Keys.Operation, "Download"},
-                {Program.Keys.SagaProperty, "CorrelatingId"},
-                {Program.Keys.SagaTypeName, cloudTable.Name},
-                {Program.Keys.ConnectionString, connectionString},
+                {Program.Keys.Operation, "Download"}
             };
 
-            Program.Main(BuildOptions(options));
+            var additional = new[]
+            {
+                connectionString
+            };
+            Program.Main(BuildOptions(options).Concat(additional).ToArray());
 
-            var files = new DirectoryInfo(testDataDirectory).GetFiles("*.*", SearchOption.AllDirectories);
+            var di = new DirectoryInfo(testDataDirectory);
+            Assert.True(di.Exists);
+            var files = di.GetFiles("*.*", SearchOption.AllDirectories);
 
             // assert files
             var file1 = files.Single(f => f.Name == g1_1.ToString());
@@ -88,16 +92,10 @@
             AssertFile(file2, name1_2, correlatingId_1);
 
             // modify and run upload
-            const string newName = "the_only_one";
-
-            Update(file1, jo =>
-            {
-                jo.Property(SagaJsonMapper.ChooseThisSaga).Value = new JValue(true);
-                jo.Property("Name").Value = new JValue(newName);
-            });
+            Update(file1, jo => { jo.Property(SagaJsonMapper.ChooseThisSaga).Value = new JValue(true); });
 
             options[Program.Keys.Operation] = "Upload";
-            Program.Main(BuildOptions(options));
+            Program.Main(BuildOptions(options).Concat(additional).ToArray());
         }
 
         private static string[] BuildOptions(Dictionary<string, string> options)
@@ -113,7 +111,10 @@
             {
                 using (var sw = new StreamWriter(stream))
                 {
-                    using (var jsonTextWriter = new JsonTextWriter(sw) { Formatting = Formatting.Indented })
+                    using (var jsonTextWriter = new JsonTextWriter(sw)
+                    {
+                        Formatting = Formatting.Indented
+                    })
                     {
                         jo.WriteTo(jsonTextWriter);
                         jsonTextWriter.Flush();
@@ -122,13 +123,12 @@
             }
         }
 
-        private static void AssertFile(FileInfo f, string name, int correlatingId)
+        private static void AssertFile(FileInfo f, string name, string correlatingId)
         {
             var jo = LoadFile(f);
-            Assert.AreEqual(name, (string)((JValue)jo["Name"]).Value);
-            Assert.AreEqual(correlatingId, (long)((JValue)jo["CorrelatingId"]).Value);
-            Assert.AreEqual(false, (bool)((JValue)jo[SagaJsonMapper.ChooseThisSaga]).Value);
-            Assert.IsNotNullOrEmpty((string)((JValue)jo[SagaJsonMapper.ETag]).Value);
+            Assert.AreEqual(correlatingId, (string) ((JValue) jo["OrderId"]).Value);
+            Assert.AreEqual(false, (bool) ((JValue) jo[SagaJsonMapper.ChooseThisSaga]).Value);
+            Assert.IsNotNullOrEmpty((string) ((JValue) jo[SagaJsonMapper.ETag]).Value);
         }
 
         private static JObject LoadFile(FileInfo f)
@@ -145,22 +145,31 @@
             }
         }
 
-        private static SagaState CreateEntity(Guid g, int correlatingId, string name)
+        private static TwoInstanceSagaStateEntity CreateEntity(Guid g, string correlatingId)
         {
-            return new SagaState
+            return new TwoInstanceSagaStateEntity
             {
                 PartitionKey = g.ToString(),
                 RowKey = g.ToString(),
-                CorrelatingId = correlatingId,
-                Name = name
+                OrderId = correlatingId,
+                Id = g
             };
         }
 
-        private class SagaState : TableEntity
+        private class TwoInstanceSagaStateEntity : TableEntity
         {
-            public long CorrelatingId { get; set; }
-            public string Name { get; set; }
+            public string OrderId { get; set; }
+            public Guid Id { get; set; }
         }
 
+        private class TwoInstanceSagaState : IContainSagaData
+        {
+            [Unique]
+            public string OrderId { get; set; }
+
+            public Guid Id { get; set; }
+            public string Originator { get; set; }
+            public string OriginalMessageId { get; set; }
+        }
     }
 }

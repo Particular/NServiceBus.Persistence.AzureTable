@@ -11,13 +11,13 @@ namespace NServiceBus.AzureStoragePersistence.SagaDeduplicator.Index
 
     public sealed class SagaIndexer
     {
-        private const int InitialBufferSize = 1024 * 1024;
+        private const int InitialBufferSize = 1024*1024;
+        private readonly string[] columns;
+        private readonly IEqualityComparer<object> equalityComparer;
+        private readonly Func<object, ulong> hashingTransformer;
 
         private readonly string indexPropertyName;
         private readonly CloudTable table;
-        private readonly Func<object, ulong> hashingTransformer;
-        private readonly IEqualityComparer<object> equalityComparer;
-        private readonly string[] columns;
 
         public SagaIndexer(CloudTable table, string indexPropertyName, Func<object, ulong> hashingTransformer, IEqualityComparer<object> equalityComparer)
         {
@@ -27,7 +27,9 @@ namespace NServiceBus.AzureStoragePersistence.SagaDeduplicator.Index
             this.table = table;
             columns = new[]
             {
-                "PartitionKey", "RowKey", this.indexPropertyName
+                "PartitionKey",
+                "RowKey",
+                this.indexPropertyName
             };
         }
 
@@ -61,7 +63,7 @@ namespace NServiceBus.AzureStoragePersistence.SagaDeduplicator.Index
 
                         if (buffer.TryWrite(id, hash) == false)
                         {
-                            buffer = new IdHashBuffer(buffer.Size * 2);
+                            buffer = new IdHashBuffer(buffer.Size*2);
                             buffers.Add(buffer);
 
                             if (buffer.TryWrite(id, hash) == false)
@@ -123,12 +125,7 @@ namespace NServiceBus.AzureStoragePersistence.SagaDeduplicator.Index
         {
             var account = CloudStorageAccount.Parse(connectionString);
             var client = account.CreateCloudTableClient();
-            var table = client.GetTableReference(sagaTypeName);
-            if (table.Exists() == false)
-            {
-                throw new ArgumentException("Could not find the table '{0}'. Ensure that the name of the passed saga is correct", sagaTypeName);
-            }
-            return table;
+            return client.GetTableReference(sagaTypeName);
         }
     }
 }
