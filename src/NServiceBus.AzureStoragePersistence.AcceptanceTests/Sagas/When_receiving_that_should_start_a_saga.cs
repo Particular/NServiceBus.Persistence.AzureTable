@@ -4,7 +4,7 @@
     using System.Threading.Tasks;
     using EndpointTemplates;
     using AcceptanceTesting;
-    using NServiceBus.AcceptanceTests.ScenarioDescriptors;
+    using ScenarioDescriptors;
     using NUnit.Framework;
 
     public class When_receiving_that_should_start_a_saga : NServiceBusAcceptanceTest

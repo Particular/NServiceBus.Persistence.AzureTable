@@ -5,11 +5,11 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using NServiceBus.AcceptanceTesting;
-    using NServiceBus.AcceptanceTests.EndpointTemplates;
-    using NServiceBus.Config;
-    using NServiceBus.Features;
-    using NServiceBus.SagaPersisters.Azure;
+    using AcceptanceTesting;
+    using EndpointTemplates;
+    using Config;
+    using Features;
+    using SagaPersisters.Azure;
     using NUnit.Framework;
 
     public class When_saga_is_started_by_two_types_of_messages : NServiceBusAcceptanceTest

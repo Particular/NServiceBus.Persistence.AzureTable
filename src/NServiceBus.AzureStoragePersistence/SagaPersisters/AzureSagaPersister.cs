@@ -11,10 +11,10 @@
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
     using NServiceBus.Azure;
-    using NServiceBus.Extensibility;
-    using NServiceBus.Persistence;
-    using NServiceBus.SagaPersisters.Azure.SecondaryIndeces;
-    using NServiceBus.Sagas;
+    using Extensibility;
+    using Persistence;
+    using SecondaryIndeces;
+    using Sagas;
 
     class AzureSagaPersister : ISagaPersister
     {
@@ -24,8 +24,6 @@
         CloudTableClient client;
         SecondaryIndexPersister secondaryIndeces;
 
-        /// <param name="connectionString">The Azure storage connection string</param>
-        /// <param name="autoUpdateSchema">Indicates if the storage tables should be auto created if they do not exist</param>
         public AzureSagaPersister(string connectionString, bool autoUpdateSchema)
         {
             this.autoUpdateSchema = autoUpdateSchema;
@@ -35,14 +33,6 @@
             secondaryIndeces = new SecondaryIndexPersister(GetTable, ScanForSaga, Persist);
         }
 
-        /// <summary>
-        ///     Saves the given saga entity using the current session of the
-        ///     injected session factory.
-        /// </summary>
-        /// <param name="sagaData">The saga entity that will be saved.</param>
-        /// <param name="correlationProperty">The correlation property.</param>
-        /// <param name="session">The synchronization session.</param>
-        /// <param name="context">The current context.</param>
         public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context)
         {
             // These operations must be executed sequentially
@@ -50,26 +40,11 @@
             await Persist(sagaData).ConfigureAwait(false);
         }
 
-        /// <summary>
-        ///     Updates the given saga entity using the current session of the
-        ///     injected session factory.
-        /// </summary>
-        /// <param name="sagaData">The saga entity that will be updated.</param>
-        /// <param name="session">The synchronization session.</param>
-        /// <param name="context">The current context.</param>
         public Task Update(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
         {
             return Persist(sagaData);
         }
 
-        /// <summary>
-        ///     Gets a saga entity from the injected session factory's current session
-        ///     using the given saga id.
-        /// </summary>
-        /// <param name="sagaId">The saga id to use in the lookup.</param>
-        /// <param name="session">The synchronization session.</param>
-        /// <param name="context">The current context.</param>
-        /// <returns>The saga entity if found, otherwise null.</returns>
         public async Task<TSagaData> Get<TSagaData>(Guid sagaId, SynchronizedStorageSession session, ContextBag context) where TSagaData : IContainSagaData
         {
             var id = sagaId.ToString();
@@ -96,13 +71,6 @@
             return await Get<TSagaData>(id.Value, session, context);
         }
 
-        /// <summary>
-        ///     Deletes the given saga from the injected session factory's
-        ///     current session.
-        /// </summary>
-        /// <param name="sagaData">The saga entity that will be deleted.</param>
-        /// <param name="session">The storage session.</param>
-        /// <param name="context">The current context.</param>
         public async Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
         {
             var tableName = sagaData.GetType().Name;
@@ -257,7 +225,6 @@
                 "PartitionKey",
                 "RowKey"
             };
-
 
             var tableName = sagaType.Name;
             var table = client.GetTableReference(tableName);

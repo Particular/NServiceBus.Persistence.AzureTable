@@ -10,6 +10,6 @@
             {
                 throw new ArgumentException("ConnectionString should not be an empty string.", "connectionString");
             }
-        }      
+        }
     }
 }

@@ -4,7 +4,7 @@
     using System.Threading.Tasks;
     using EndpointTemplates;
     using AcceptanceTesting;
-    using NServiceBus.Features;
+    using Features;
     using NServiceBus.Sagas;
     using NUnit.Framework;
 

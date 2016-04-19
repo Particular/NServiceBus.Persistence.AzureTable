@@ -1,7 +1,7 @@
 ﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Persisters
 {
     using System;
-    using NServiceBus.Config;
+    using Config;
     using NServiceBus.Subscriptions;
     using NUnit.Framework;
 

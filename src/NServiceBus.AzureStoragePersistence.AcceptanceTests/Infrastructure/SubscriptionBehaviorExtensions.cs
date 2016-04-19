@@ -1,7 +1,7 @@
 ﻿namespace NServiceBus.AcceptanceTests
 {
     using System;
-    using NServiceBus.AcceptanceTesting;
+    using AcceptanceTesting;
     using PubSub;
 
     static class SubscriptionBehaviorExtensions

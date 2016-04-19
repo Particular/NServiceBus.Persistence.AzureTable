@@ -3,7 +3,7 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
     using System;
     using System.IO;
     using Newtonsoft.Json;
-    using NServiceBus.Sagas;
+    using Sagas;
 
    static class SecondaryIndexKeyBuilder
     {

@@ -49,14 +49,13 @@
             }
 
             var partitionKeyRegex = new Regex(@"^[a-zA-Z0-9\-_]{4,}$");
-            if (!partitionKeyRegex.IsMatch((string)partitionKeyScope))
+            if (!partitionKeyRegex.IsMatch((string) partitionKeyScope))
             {
-                const string errorMessage = "Invalid partition key scope. Valid key should follow the following regular expression:"
-                                            + @" ^[a-zA-Z0-9\-_]{4,}$ "
-                                            + " and comply with .NET DateTime formatting string rules. Examples are:\n"
-                                            + @" yyyy-MM-dd-mm\n"
-                                            + @" yyyyMMddHH (default)\n"
-                                            + @" yyyy_MM_dd";
+                var errorMessage =
+                    @"Invalid partition key scope. Valid key should follow the following regular expression: ^[a-zA-Z0-9\-_]{4,}$ and comply with .NET DateTime formatting string rules. Examples are:
+yyyy-MM-dd-mm
+yyyyMMddHH (default)
+yyyy_MM_dd";
                 throw new ArgumentException(errorMessage, "partitionKeyScope");
             }
         }

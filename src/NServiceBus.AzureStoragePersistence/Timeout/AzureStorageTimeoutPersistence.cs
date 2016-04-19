@@ -5,7 +5,7 @@ namespace NServiceBus
     using Config;
     using Features;
     using Microsoft.WindowsAzure.Storage;
-    using NServiceBus.Logging;
+    using Logging;
 
     public class AzureStorageTimeoutPersistence : Feature
     {

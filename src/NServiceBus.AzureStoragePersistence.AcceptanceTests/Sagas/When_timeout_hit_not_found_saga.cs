@@ -4,8 +4,8 @@
     using System.Threading.Tasks;
     using EndpointTemplates;
     using AcceptanceTesting;
-    using NServiceBus.AcceptanceTests;
-    using NServiceBus.Features;
+    using AcceptanceTests;
+    using Features;
     using NUnit.Framework;
     using ScenarioDescriptors;
 

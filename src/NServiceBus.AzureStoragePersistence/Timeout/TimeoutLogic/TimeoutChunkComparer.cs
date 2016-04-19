@@ -1,6 +1,6 @@
 ﻿namespace NServiceBus.Timeout.TimeoutLogic
 {
-    using NServiceBus.Timeout.Core;
+    using Core;
     using System.Collections.Generic;
 
     class TimoutChunkComparer : IEqualityComparer<TimeoutsChunk.Timeout>

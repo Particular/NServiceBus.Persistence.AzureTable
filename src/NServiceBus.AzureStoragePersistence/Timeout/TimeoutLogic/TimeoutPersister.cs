@@ -12,7 +12,7 @@
     using Microsoft.WindowsAzure.Storage.Blob;
     using Microsoft.WindowsAzure.Storage.RetryPolicies;
     using Microsoft.WindowsAzure.Storage.Table;
-    using NServiceBus.Extensibility;
+    using Extensibility;
     using Timeout.Core;
     using Timeout.TimeoutLogic;
     using System.Net;
@@ -29,16 +29,6 @@
         CloudTableClient client;
         CloudBlobClient cloudBlobclient;
 
-        /// <summary>
-        /// </summary>
-        /// <param name="timeoutConnectionString">Connection string for the Azure table store</param>
-        /// <param name="timeoutDataTableName">Name of the timeout data table</param>
-        /// <param name="timeoutManagerDataTableName">Name of the timeout manager data table</param>
-        /// <param name="timeoutStateContainerName">Name of the timeout state container</param>
-        /// <param name="catchUpInterval">Amount of time in seconds to increment last successful read time by</param>
-        /// <param name="partitionKeyScope">DateTime format to use in Partition Key</param>
-        /// <param name="endpointName">Endpoint Name</param>
-        /// <param name="hostDisplayName">Host Display Name</param>
         public TimeoutPersister(string timeoutConnectionString, string timeoutDataTableName, string timeoutManagerDataTableName, string timeoutStateContainerName, int catchUpInterval, string partitionKeyScope, string endpointName, string hostDisplayName)
         {
             this.timeoutDataTableName = timeoutDataTableName;
@@ -67,11 +57,6 @@
             cloudBlobclient = account.CreateCloudBlobClient();
         }
 
-        /// <summary>
-        /// Retrieves the next range of timeouts that are due.
-        /// </summary>
-        /// <param name="startSlice">The time where to start retrieving the next slice, the slice should exclude this date.</param>
-        /// <returns>Returns the next range of timeouts that are due.</returns>
         public async Task<TimeoutsChunk> GetNextChunk(DateTime startSlice)
         {
             var now = DateTime.UtcNow;
@@ -137,13 +122,6 @@
             return timeoutsChunk;
         }
 
-
-
-        /// <summary>
-        /// Add a new timeout entry
-        /// </summary>
-        /// <param name="timeout">The timeout to be added</param>
-        /// <param name="context">The current pipeline context</param>
         public async Task Add(TimeoutData timeout, ContextBag context)
         {
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
@@ -172,12 +150,6 @@
             await SaveMainEntry(timeout, identifier, headers, timeoutDataTable).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// Peek at an existing timeout entry
-        /// </summary>
-        /// <param name="timeoutId">The ID of the timeout that is being requested</param>
-        /// <param name="context">The current pipeline context</param>
-        /// <returns>The requested timeout entry</returns>
         public async Task<TimeoutData> Peek(string timeoutId, ContextBag context)
         {
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
@@ -201,12 +173,6 @@
             return timeoutData;
         }
 
-        /// <summary>
-        /// Safe method for removing a timeout entry
-        /// </summary>
-        /// <param name="timeoutId">ID of the timeout you want to try deleting</param>
-        /// <param name="context">The current pipeline context</param>
-        /// <returns>True/False indicating successful or unssucessful deletion</returns>
         public async Task<bool> TryRemove(string timeoutId, ContextBag context)
         {
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
@@ -242,11 +208,6 @@
             return true;
         }
 
-        /// <summary>
-        /// Remove a single timeout entry
-        /// </summary>
-        /// <param name="sagaId">The saga ID used to find the timeout that will be removed</param>
-        /// <param name="context">The current pipeline context</param>
         public async Task RemoveTimeoutBy(Guid sagaId, ContextBag context)
         {
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
@@ -427,8 +388,7 @@
         string Sanitize(string s)
         {
             var rgx = new Regex(@"[^a-zA-Z0-9\-_]");
-            var n = rgx.Replace(s, "");
-            return n;
+            return rgx.Replace(s, "");
         }
 
         async Task<TimeoutManagerDataEntity> GetLastSuccessfulRead(CloudTable timeoutManagerDataTable)

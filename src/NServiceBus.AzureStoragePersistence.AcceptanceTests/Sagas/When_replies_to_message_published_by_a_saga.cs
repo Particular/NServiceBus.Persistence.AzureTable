@@ -5,7 +5,7 @@
     using EndpointTemplates;
     using AcceptanceTesting;
     using Features;
-    using NServiceBus.Config;
+    using Config;
     using NUnit.Framework;
     using ScenarioDescriptors;
 

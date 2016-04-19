@@ -6,10 +6,10 @@ namespace NServiceBus.AcceptanceTests.Sagas
     using System.Threading.Tasks;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
-    using NServiceBus.AcceptanceTesting;
-    using NServiceBus.AcceptanceTests.EndpointTemplates;
-    using NServiceBus.AcceptanceTests.ScenarioDescriptors;
-    using NServiceBus.SagaPersisters.Azure;
+    using AcceptanceTesting;
+    using EndpointTemplates;
+    using ScenarioDescriptors;
+    using SagaPersisters.Azure;
     using NUnit.Framework;
 
     public class When_saga_has_duplicate_instances : NServiceBusAcceptanceTest

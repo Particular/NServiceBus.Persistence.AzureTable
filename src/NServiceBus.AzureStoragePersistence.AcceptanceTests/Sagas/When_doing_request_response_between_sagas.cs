@@ -4,7 +4,7 @@
     using System.Threading.Tasks;
     using EndpointTemplates;
     using AcceptanceTesting;
-    using NServiceBus.Features;
+    using Features;
 
     public class When_doing_request_response_between_sagas : NServiceBusAcceptanceTest
     {

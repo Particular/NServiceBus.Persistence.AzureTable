@@ -2,7 +2,7 @@
 {
     using System;
     using System.Threading.Tasks;
-    using NServiceBus.SagaPersisters.Azure;
+    using SagaPersisters.Azure;
     using NUnit.Framework;
 
     public class When_getting_the_saga_entity

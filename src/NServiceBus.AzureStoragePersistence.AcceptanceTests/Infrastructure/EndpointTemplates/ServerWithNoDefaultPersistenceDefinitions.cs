@@ -6,7 +6,7 @@
     using AcceptanceTesting.Customization;
     using AcceptanceTesting.Support;
     using Features;
-    using NServiceBus.Config.ConfigurationSource;
+    using Config.ConfigurationSource;
 
     public class ServerWithNoDefaultPersistenceDefinitions : IEndpointSetupTemplate
     {

@@ -5,10 +5,10 @@
     using EndpointTemplates;
     using AcceptanceTesting;
     using Features;
-    using NServiceBus.AcceptanceTests.ScenarioDescriptors;
-    using NServiceBus.Persistence;
-    using NServiceBus.Unicast.Subscriptions;
-    using NServiceBus.Unicast.Subscriptions.MessageDrivenSubscriptions;
+    using ScenarioDescriptors;
+    using Persistence;
+    using Unicast.Subscriptions;
+    using Unicast.Subscriptions.MessageDrivenSubscriptions;
     using NUnit.Framework;
     using System.Threading.Tasks;
     using Extensibility;

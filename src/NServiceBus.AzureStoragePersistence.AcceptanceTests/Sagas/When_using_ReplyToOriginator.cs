@@ -2,9 +2,9 @@
 {
     using System;
     using System.Threading.Tasks;
-    using NServiceBus.AcceptanceTests.EndpointTemplates;
-    using NServiceBus.AcceptanceTesting;
-    using NServiceBus.Features;
+    using EndpointTemplates;
+    using AcceptanceTesting;
+    using Features;
     using NUnit.Framework;
 
     public class When_using_ReplyToOriginator : NServiceBusAcceptanceTest

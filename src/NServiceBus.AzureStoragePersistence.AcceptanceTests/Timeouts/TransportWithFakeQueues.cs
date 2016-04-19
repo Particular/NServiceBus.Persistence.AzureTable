@@ -1,9 +1,8 @@
-﻿
-namespace NServiceBus.AcceptanceTests.Timeouts
+﻿namespace NServiceBus.AcceptanceTests.Timeouts
 {
     using System;
     using Settings;
-    using NServiceBus.Transports;
+    using Transports;
     using System.Threading.Tasks;
     using Extensibility;
     using System.Collections.Generic;

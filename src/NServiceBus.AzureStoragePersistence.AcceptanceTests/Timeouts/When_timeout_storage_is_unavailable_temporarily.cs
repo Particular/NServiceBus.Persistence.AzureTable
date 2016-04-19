@@ -2,10 +2,10 @@
 {
     using System;
     using System.Threading.Tasks;
-    using NServiceBus.AcceptanceTesting;
-    using NServiceBus.AcceptanceTests.EndpointTemplates;
-    using NServiceBus.AcceptanceTests.ScenarioDescriptors;
-    using NServiceBus.Features;
+    using AcceptanceTesting;
+    using EndpointTemplates;
+    using ScenarioDescriptors;
+    using Features;
     using NUnit.Framework;
 
     class When_timeout_storage_is_unavailable_temporarily : NServiceBusAcceptanceTest

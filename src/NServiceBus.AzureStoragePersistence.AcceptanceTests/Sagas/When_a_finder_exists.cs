@@ -1,7 +1,7 @@
 ﻿namespace NServiceBus.AcceptanceTests.Sagas
 {
-    using NServiceBus.AcceptanceTesting;
-    using NServiceBus.AcceptanceTests.EndpointTemplates;
+    using AcceptanceTesting;
+    using EndpointTemplates;
     using NServiceBus.Sagas;
     using NUnit.Framework;
     using System.Threading.Tasks;

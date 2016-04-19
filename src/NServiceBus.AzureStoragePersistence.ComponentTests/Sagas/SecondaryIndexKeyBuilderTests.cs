@@ -1,7 +1,7 @@
 ﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Sagas
 {
     using System.Threading.Tasks;
-    using NServiceBus.SagaPersisters.Azure.SecondaryIndeces;
+    using SagaPersisters.Azure.SecondaryIndeces;
     using NServiceBus.Sagas;
     using NUnit.Framework;
 
