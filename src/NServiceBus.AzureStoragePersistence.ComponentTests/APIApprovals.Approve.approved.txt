@@ -1,39 +1,6 @@
 ﻿[assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute(@"NServiceBus.AzureStoragePersistence.Tests, PublicKey=0024000004800000940000000602000000240000525341310004000001000100dde965e6172e019ac82c2639ffe494dd2e7dd16347c34762a05732b492e110f2e4e2e1b5ef2d85c848ccfb671ee20a47c8d1376276708dc30a90ff1121b647ba3b7259a6bc383b2034938ef0e275b58b920375ac605076178123693c6c4f1331661a62eba28c249386855637780e3ff5f23a6d854700eaa6803ef48907513b92")]
 [assembly: System.Runtime.InteropServices.ComVisibleAttribute(false)]
 [assembly: System.Runtime.Versioning.TargetFrameworkAttribute(".NETFramework,Version=v4.5.2", FrameworkDisplayName=".NET Framework 4.5.2")]
-namespace NServiceBus.Azure
-{
-    public class static SafeLinqExtensions
-    {
-        public static TSource SafeFirstOrDefault<TSource>(this System.Collections.Generic.IEnumerable<TSource> source) { }
-    }
-    public class TimeoutDataEntity : Microsoft.WindowsAzure.Storage.Table.TableEntity
-    {
-        public TimeoutDataEntity() { }
-        public TimeoutDataEntity(string partitionKey, string rowKey) { }
-        public string Destination { get; set; }
-        public string Headers { get; set; }
-        public string OwningTimeoutManager { get; set; }
-        public System.Guid SagaId { get; set; }
-        public string StateAddress { get; set; }
-        public System.DateTime Time { get; set; }
-    }
-    public class TimeoutManagerDataEntity : Microsoft.WindowsAzure.Storage.Table.TableEntity
-    {
-        public TimeoutManagerDataEntity() { }
-        public TimeoutManagerDataEntity(string partitionKey, string rowKey) { }
-        public System.DateTime LastSuccessfullRead { get; set; }
-    }
-    public class TimeoutPersister : NServiceBus.Timeout.Core.IPersistTimeouts, NServiceBus.Timeout.Core.IQueryTimeouts
-    {
-        public TimeoutPersister(string timeoutConnectionString, string timeoutDataTableName, string timeoutManagerDataTableName, string timeoutStateContainerName, int catchUpInterval, string partitionKeyScope, string endpointName, string hostDisplayName) { }
-        public async System.Threading.Tasks.Task Add(NServiceBus.Timeout.Core.TimeoutData timeout, NServiceBus.Extensibility.ContextBag context) { }
-        public async System.Threading.Tasks.Task<NServiceBus.Timeout.Core.TimeoutsChunk> GetNextChunk(System.DateTime startSlice) { }
-        public async System.Threading.Tasks.Task<NServiceBus.Timeout.Core.TimeoutData> Peek(string timeoutId, NServiceBus.Extensibility.ContextBag context) { }
-        public async System.Threading.Tasks.Task RemoveTimeoutBy(System.Guid sagaId, NServiceBus.Extensibility.ContextBag context) { }
-        public async System.Threading.Tasks.Task<bool> TryRemove(string timeoutId, NServiceBus.Extensibility.ContextBag context) { }
-    }
-}
 namespace NServiceBus
 {
     public class AzureStoragePersistence : NServiceBus.Persistence.PersistenceDefinition { }
@@ -48,27 +15,6 @@ namespace NServiceBus
     public class AzureStorageTimeoutPersistence : NServiceBus.Features.Feature
     {
         protected override void Setup(NServiceBus.Features.FeatureConfigurationContext context) { }
-    }
-    public class AzureSubscriptionStorageDefaults
-    {
-        public const bool CreateSchema = true;
-        public const string TableName = "Subscription";
-        public AzureSubscriptionStorageDefaults() { }
-    }
-    public class AzureTimeoutStorageDefaults
-    {
-        public const int CatchUpInterval = 3600;
-        public const bool CreateSchema = true;
-        public const string PartitionKeyScope = "yyyyMMddHH";
-        public const string TimeoutDataTableName = "TimeoutDataTableName";
-        public const string TimeoutManagerDataTableName = "TimeoutManagerDataTable";
-        public const string TimeoutStateContainerName = "timeoutstate";
-        public AzureTimeoutStorageDefaults() { }
-    }
-    public class static CloudTableExtensions
-    {
-        public static async System.Threading.Tasks.Task<System.Collections.Generic.IList<T>> ExecuteQueryAsync<T>(this Microsoft.WindowsAzure.Storage.Table.CloudTable table, Microsoft.WindowsAzure.Storage.Table.TableQuery<T> query, int take = 2147483647, System.Threading.CancellationToken ct = null)
-            where T : Microsoft.WindowsAzure.Storage.Table.ITableEntity, new () { }
     }
     public class static ConfigureAzureStorage
     {
@@ -120,17 +66,6 @@ namespace NServiceBus.Config
 }
 namespace NServiceBus.SagaPersisters.Azure
 {
-    public class AzureSagaPersister : NServiceBus.Sagas.ISagaPersister
-    {
-        public AzureSagaPersister(string connectionString, bool autoUpdateSchema) { }
-        public async System.Threading.Tasks.Task Complete(NServiceBus.IContainSagaData sagaData, NServiceBus.Persistence.SynchronizedStorageSession session, NServiceBus.Extensibility.ContextBag context) { }
-        public async System.Threading.Tasks.Task<TSagaData> Get<TSagaData>(System.Guid sagaId, NServiceBus.Persistence.SynchronizedStorageSession session, NServiceBus.Extensibility.ContextBag context)
-            where TSagaData : NServiceBus.IContainSagaData { }
-        public async System.Threading.Tasks.Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, NServiceBus.Persistence.SynchronizedStorageSession session, NServiceBus.Extensibility.ContextBag context)
-            where TSagaData : NServiceBus.IContainSagaData { }
-        public async System.Threading.Tasks.Task Save(NServiceBus.IContainSagaData sagaData, NServiceBus.Sagas.SagaCorrelationProperty correlationProperty, NServiceBus.Persistence.SynchronizedStorageSession session, NServiceBus.Extensibility.ContextBag context) { }
-        public System.Threading.Tasks.Task Update(NServiceBus.IContainSagaData sagaData, NServiceBus.Persistence.SynchronizedStorageSession session, NServiceBus.Extensibility.ContextBag context) { }
-    }
     public class DuplicatedSagaFoundException : System.Exception
     {
         public DuplicatedSagaFoundException(System.Type sagaType, string propertyName, params System.Guid[] identifiers) { }
@@ -143,64 +78,11 @@ namespace NServiceBus.SagaPersisters.Azure
         public RetryNeededException() { }
     }
 }
-namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
-{
-    public sealed class PartitionRowKeyTuple
-    {
-        public PartitionRowKeyTuple(string partitionKey, string rowKey) { }
-        public string PartitionKey { get; }
-        public string RowKey { get; }
-        public void Apply(Microsoft.WindowsAzure.Storage.Table.ITableEntity entity) { }
-        public override bool Equals(object obj) { }
-        public override int GetHashCode() { }
-    }
-    public class static SecondaryIndexKeyBuilder
-    {
-        public static NServiceBus.SagaPersisters.Azure.SecondaryIndeces.PartitionRowKeyTuple BuildTableKey(System.Type sagaType, NServiceBus.Sagas.SagaCorrelationProperty correlationProperty) { }
-    }
-    public class SecondaryIndexPersister
-    {
-        public SecondaryIndexPersister(System.Func<System.Type, System.Threading.Tasks.Task<Microsoft.WindowsAzure.Storage.Table.CloudTable>> getTableForSaga, NServiceBus.SagaPersisters.Azure.SecondaryIndeces.SecondaryIndexPersister.ScanForSagas scanner, System.Func<NServiceBus.IContainSagaData, System.Threading.Tasks.Task> persist) { }
-        public async System.Threading.Tasks.Task<System.Nullable<System.Guid>> FindPossiblyCreatingIndexEntry<TSagaData>(string propertyName, object propertyValue)
-            where TSagaData : NServiceBus.IContainSagaData { }
-        public async System.Threading.Tasks.Task Insert(NServiceBus.IContainSagaData sagaData, NServiceBus.Sagas.SagaCorrelationProperty correlationProperty) { }
-        public delegate System.Threading.Tasks.Task<System.Guid[]> ScanForSagas(System.Type sagaType, string propertyName, object propertyValue);
-    }
-    public class SecondaryIndexTableEntity : Microsoft.WindowsAzure.Storage.Table.TableEntity
-    {
-        public SecondaryIndexTableEntity() { }
-        public byte[] InitialSagaData { get; set; }
-        public System.Guid SagaId { get; set; }
-    }
-}
 namespace NServiceBus.SagaPersisters
 {
-    public class AzureStorageSagaDefaults
-    {
-        public const bool CreateSchema = true;
-        public AzureStorageSagaDefaults() { }
-    }
     public class static ConfigureAzureSagaStorage
     {
         public static NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> ConnectionString(this NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> config, string connectionString) { }
         public static NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> CreateSchema(this NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> config, bool createSchema) { }
-    }
-}
-namespace NServiceBus.Unicast.Subscriptions
-{
-    public class AzureSubscriptionStorage : NServiceBus.Unicast.Subscriptions.MessageDrivenSubscriptions.ISubscriptionStorage
-    {
-        public AzureSubscriptionStorage(string subscriptionTableName, string subscriptionConnectionString) { }
-        public async System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<NServiceBus.Unicast.Subscriptions.MessageDrivenSubscriptions.Subscriber>> GetSubscriberAddressesForMessage(System.Collections.Generic.IEnumerable<NServiceBus.Unicast.Subscriptions.MessageType> messageTypes, NServiceBus.Extensibility.ContextBag context) { }
-        public async System.Threading.Tasks.Task Subscribe(NServiceBus.Unicast.Subscriptions.MessageDrivenSubscriptions.Subscriber subscriber, NServiceBus.Unicast.Subscriptions.MessageType messageType, NServiceBus.Extensibility.ContextBag context) { }
-        public async System.Threading.Tasks.Task Unsubscribe(NServiceBus.Unicast.Subscriptions.MessageDrivenSubscriptions.Subscriber subscriber, NServiceBus.Unicast.Subscriptions.MessageType messageType, NServiceBus.Extensibility.ContextBag context) { }
-    }
-    public class Subscription : Microsoft.WindowsAzure.Storage.Table.TableEntity
-    {
-        public Subscription() { }
-        public string EndpointName { get; set; }
-        public override bool Equals(object obj) { }
-        public virtual bool Equals(NServiceBus.Unicast.Subscriptions.Subscription other) { }
-        public override int GetHashCode() { }
     }
 }
