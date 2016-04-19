@@ -104,7 +104,8 @@
             }
 
             var table = await getTableForSaga(sagaType).ConfigureAwait(false);
-            var exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey));
+            var exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey))
+                .ConfigureAwait(false);
             var secondaryIndexEntry = exec.Result as SecondaryIndexTableEntity;
             if (secondaryIndexEntry != null)
             {
@@ -112,7 +113,8 @@
                 return secondaryIndexEntry.SagaId;
             }
 
-            var ids = await scanner(sagaType, propertyName, propertyValue);
+            var ids = await scanner(sagaType, propertyName, propertyValue)
+                .ConfigureAwait(false);
             if (ids == null || ids.Length == 0)
             {
                 return null;

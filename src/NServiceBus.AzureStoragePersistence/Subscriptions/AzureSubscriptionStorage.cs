@@ -84,7 +84,8 @@
 
             var retrieveOperation = TableOperation.Retrieve<TimeoutDataEntity>(messageType.ToString(), encodedAddress);
 
-            var subscription = (await table.ExecuteAsync(retrieveOperation).ConfigureAwait(false)).Result as TimeoutDataEntity;
+            var tableResult = await table.ExecuteAsync(retrieveOperation).ConfigureAwait(false);
+            var subscription = tableResult.Result as TimeoutDataEntity;
             if (subscription != null)
             {
                 var operation = TableOperation.Delete(subscription);
@@ -107,7 +108,8 @@
             {
                 var query = new TableQuery<Subscription>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, messageType.ToString()));
 
-                var results = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).Select(s => new Subscriber(DecodeFrom64(s.RowKey), new EndpointName(s.EndpointName)));
+                var subscriptions = await table.ExecuteQueryAsync(query).ConfigureAwait(false);
+                var results = subscriptions.Select(s => new Subscriber(DecodeFrom64(s.RowKey), new EndpointName(s.EndpointName)));
 
                 subscribers.AddRange(results);
             }

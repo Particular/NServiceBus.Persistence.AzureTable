@@ -68,7 +68,7 @@
                 return default(TSagaData);
             }
 
-            return await Get<TSagaData>(id.Value, session, context);
+            return await Get<TSagaData>(id.Value, session, context).ConfigureAwait(false);
         }
 
         public async Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)

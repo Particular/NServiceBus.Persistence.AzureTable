@@ -89,7 +89,8 @@
                     .Where(TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName));
             }
 
-            var result = (await timeoutDataTable.ExecuteQueryAsync(query, take: 1000).ConfigureAwait(false)).OrderBy(c => c.Time);
+            var timeoutDataEntities = await timeoutDataTable.ExecuteQueryAsync(query, take: 1000).ConfigureAwait(false);
+            var result = timeoutDataEntities.OrderBy(c => c.Time);
 
             var allTimeouts = result.ToList();
             if (allTimeouts.Count == 0)
