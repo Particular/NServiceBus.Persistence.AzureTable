@@ -81,22 +81,23 @@
         {
             public Context Context { get; set; }
 
-            public async Task Handle(OrderBilled message, IMessageHandlerContext context)
+            public Task Handle(OrderBilled message, IMessageHandlerContext context)
             {
                 Data.OrderId = message.OrderId;
                 Data.Billed = true;
 
                 TryComplete();
 
-                Task.FromResult(0);
+                return Task.FromResult(0);
             }
 
-            public async Task Handle(OrderPlaced message, IMessageHandlerContext context)
+            public Task Handle(OrderPlaced message, IMessageHandlerContext context)
             {
                 Data.OrderId = message.OrderId;
                 Data.Placed = true;
 
                 TryComplete();
+                return Task.FromResult(0);
             }
 
             void TryComplete()
