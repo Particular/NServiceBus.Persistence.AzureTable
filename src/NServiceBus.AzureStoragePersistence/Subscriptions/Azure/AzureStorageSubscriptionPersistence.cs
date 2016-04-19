@@ -1,13 +1,10 @@
 namespace NServiceBus
 {
-    using System;
     using System.Threading.Tasks;
     using Config;
     using Features;
     using Microsoft.WindowsAzure.Storage;
-    using Microsoft.WindowsAzure.Storage.RetryPolicies;
-    using Microsoft.WindowsAzure.Storage.Table;
-    using NServiceBus.Logging;
+    using Logging;
     using Unicast.Subscriptions;
 
     public class AzureStorageSubscriptionPersistence : Feature
