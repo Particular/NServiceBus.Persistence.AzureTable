@@ -1,11 +1,8 @@
 ﻿namespace NServiceBus.Unicast.Subscriptions
 {
     using Microsoft.WindowsAzure.Storage.Table;
-    
-    /// <summary>
-    /// Entity containing subscription data
-    /// </summary>
-    public class Subscription : TableEntity
+
+    class Subscription : TableEntity
     {
         public string EndpointName { get; set; }
 

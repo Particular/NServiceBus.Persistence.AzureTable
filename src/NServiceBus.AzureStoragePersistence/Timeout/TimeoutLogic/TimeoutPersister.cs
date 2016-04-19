@@ -17,10 +17,7 @@
     using Timeout.TimeoutLogic;
     using System.Net;
 
-    /// <summary>
-    /// Provides that ability to save and retrieve timeout information
-    /// </summary>
-    public class TimeoutPersister : IPersistTimeouts, IQueryTimeouts
+    class TimeoutPersister : IPersistTimeouts, IQueryTimeouts
     {
         string timeoutDataTableName;
         string timeoutManagerDataTableName;
@@ -471,9 +468,9 @@
                 if (response != null && (response.StatusCode == 412 || response.StatusCode == 409))
                 {
                     return TaskEx.CompletedTask;
-                    // I assume we can ignore this condition? 
-                    // Time between read and update is very small, meaning that another instance has sent 
-                    // the timeout messages that this node intended to send and if not we will resend 
+                    // I assume we can ignore this condition?
+                    // Time between read and update is very small, meaning that another instance has sent
+                    // the timeout messages that this node intended to send and if not we will resend
                     // anything after the other node's last read value anyway on next request.
                 }
 

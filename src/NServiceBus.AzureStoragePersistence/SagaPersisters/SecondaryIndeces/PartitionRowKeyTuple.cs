@@ -2,7 +2,7 @@
 {
     using Microsoft.WindowsAzure.Storage.Table;
 
-    public sealed class PartitionRowKeyTuple
+    sealed class PartitionRowKeyTuple
     {
         public string PartitionKey { get; }
         public string RowKey { get; }

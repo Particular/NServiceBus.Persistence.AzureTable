@@ -5,7 +5,7 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
     using Newtonsoft.Json;
     using NServiceBus.Sagas;
 
-    public static class SecondaryIndexKeyBuilder
+   static class SecondaryIndexKeyBuilder
     {
         public static PartitionRowKeyTuple BuildTableKey(Type sagaType, SagaCorrelationProperty correlationProperty)
         {

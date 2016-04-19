@@ -7,7 +7,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public static class CloudTableExtensions
+    static class CloudTableExtensions
     {
         public static async Task<IList<T>> ExecuteQueryAsync<T>(this CloudTable table, TableQuery<T> query, int take = Int32.MaxValue, CancellationToken ct = default(CancellationToken)) where T : ITableEntity, new()
         {

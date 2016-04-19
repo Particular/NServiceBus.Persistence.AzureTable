@@ -3,10 +3,8 @@
     using System;
     using Microsoft.WindowsAzure.Storage.Table;
 
-    /// <summary>
-    /// An entity holding information about the secondary index.
-    /// </summary>
-    public class SecondaryIndexTableEntity : TableEntity
+    // An entity holding information about the secondary index.
+    class SecondaryIndexTableEntity : TableEntity
     {
         public Guid SagaId { get; set; }
 

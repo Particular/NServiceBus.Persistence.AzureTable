@@ -7,7 +7,7 @@
     using Microsoft.WindowsAzure.Storage.Table;
     using NServiceBus.Sagas;
 
-    public class SecondaryIndexPersister
+    class SecondaryIndexPersister
     {
         public delegate Task<Guid[]> ScanForSagas(Type sagaType, string propertyName, object propertyValue);
 
