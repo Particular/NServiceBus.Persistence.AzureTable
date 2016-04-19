@@ -110,7 +110,7 @@ namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
             RemoveAllBlobs();
         }
 
-        private static void RemoveAllRowsForTable(string tableName)
+        static void RemoveAllRowsForTable(string tableName)
         {
             var cloudStorageAccount = CloudStorageAccount.Parse(AzurePersistenceTests.GetConnectionString());
             var table = cloudStorageAccount.CreateCloudTableClient().GetTableReference(tableName);
@@ -135,7 +135,7 @@ namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
             }
         }
 
-        private static void RemoveAllBlobs()
+        static void RemoveAllBlobs()
         {
             var cloudStorageAccount = CloudStorageAccount.Parse(AzurePersistenceTests.GetConnectionString());
             var container = cloudStorageAccount.CreateCloudBlobClient().GetContainerReference("timeoutstate");

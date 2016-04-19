@@ -17,7 +17,7 @@
         }
 
         [Test]
-        public async Task Should_return_true_when_timeout_is_TryRemoved_successfuly()
+        public async Task Should_return_true_when_timeout_is_TryRemoved_successfully()
         {
             var timeoutPersister = TestHelper.CreateTimeoutPersister();
 

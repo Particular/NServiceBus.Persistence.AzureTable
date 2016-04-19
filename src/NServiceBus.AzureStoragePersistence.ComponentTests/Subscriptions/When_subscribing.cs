@@ -14,13 +14,13 @@
         [SetUp]
         public void Setup()
         {
-            SuscriptionTestHelper.PerformStorageCleanup();
+            SubscriptionTestHelper.PerformStorageCleanup();
         }
 
         [Test]
         public async Task ensure_that_the_subscription_is_persisted()
         {
-            var persister = SuscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = SubscriptionTestHelper.CreateAzureSubscriptionStorage();
             var messageType = new MessageType(typeof(TestMessage));
             var messageTypes = new[]
             {

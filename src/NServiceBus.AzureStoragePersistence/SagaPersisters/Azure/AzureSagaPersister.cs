@@ -21,14 +21,12 @@
     /// </summary>
     public class AzureSagaPersister : ISagaPersister
     {
-        static readonly ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
-        static readonly ConditionalWeakTable<object, string> etags = new ConditionalWeakTable<object, string>();
-        readonly bool autoUpdateSchema;
-        readonly CloudTableClient client;
-        readonly SecondaryIndexPersister secondaryIndeces;
+        static ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
+        static ConditionalWeakTable<object, string> etags = new ConditionalWeakTable<object, string>();
+        bool autoUpdateSchema;
+        CloudTableClient client;
+        SecondaryIndexPersister secondaryIndeces;
 
-        /// <summary>
-        /// </summary>
         /// <param name="connectionString">The Azure storage connection string</param>
         /// <param name="autoUpdateSchema">Indicates if the storage tables should be auto created if they do not exist</param>
         public AzureSagaPersister(string connectionString, bool autoUpdateSchema)
@@ -71,7 +69,6 @@
         ///     Gets a saga entity from the injected session factory's current session
         ///     using the given saga id.
         /// </summary>
-        /// \
         /// <param name="sagaId">The saga id to use in the lookup.</param>
         /// <param name="session">The synchronization session.</param>
         /// <param name="context">The current context.</param>
@@ -180,7 +177,7 @@
             return tableEntity;
         }
 
-        private static TableQuery<DictionaryTableEntity> BuildWherePropertyQuery(Type type, string property, object value)
+        static TableQuery<DictionaryTableEntity> BuildWherePropertyQuery(Type type, string property, object value)
         {
             TableQuery<DictionaryTableEntity> query;
 
@@ -255,7 +252,7 @@
             return table;
         }
 
-        private async Task<Guid[]> ScanForSaga(Type sagaType, string propertyName, object propertyValue)
+        async Task<Guid[]> ScanForSaga(Type sagaType, string propertyName, object propertyValue)
         {
             var query = BuildWherePropertyQuery(sagaType, propertyName, propertyValue);
             query.SelectColumns = new List<string>

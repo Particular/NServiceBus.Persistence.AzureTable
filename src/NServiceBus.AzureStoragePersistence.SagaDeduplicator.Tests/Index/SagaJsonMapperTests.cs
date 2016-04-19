@@ -110,12 +110,12 @@
             Assert.AreEqual(SagaJsonMapper.UploadStatus.NotFound, status);
         }
 
-        private SagaDownloaderTestState Download(Guid id)
+        SagaDownloaderTestState Download(Guid id)
         {
             return (SagaDownloaderTestState) cloudTable.Execute(TableOperation.Retrieve<SagaDownloaderTestState>(id.ToString(), id.ToString())).Result;
         }
 
-        private JObject LoadSaga(Guid id)
+        JObject LoadSaga(Guid id)
         {
             using (var sw = new StringWriter())
             {
@@ -124,12 +124,12 @@
             }
         }
 
-        private void EnsureEntity(Guid exisingSagaId, string name, int value)
+        void EnsureEntity(Guid existingSagaId, string name, int value)
         {
             var upsert = TableOperation.InsertOrReplace(new SagaDownloaderTestState
             {
-                PartitionKey = exisingSagaId.ToString(),
-                RowKey = exisingSagaId.ToString(),
+                PartitionKey = existingSagaId.ToString(),
+                RowKey = existingSagaId.ToString(),
                 Name = name,
                 Value = value,
             });
@@ -137,7 +137,7 @@
             cloudTable.Execute(upsert);
         }
 
-        private class SagaDownloaderTestState : TableEntity
+        class SagaDownloaderTestState : TableEntity
         {
             public static class Properties
             {

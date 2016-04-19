@@ -8,10 +8,9 @@ namespace NServiceBus.AzureStoragePersistence.SagaDeduplicator.Index
     /// </remarks>
     public static unsafe class Murmur3
     {
-        private const uint Seed = 0xc58f1a7b;
-
-        private const uint c1 = 0xcc9e2d51;
-        private const uint c2 = 0x1b873593;
+        const uint Seed = 0xc58f1a7b;
+        const uint c1 = 0xcc9e2d51;
+        const uint c2 = 0x1b873593;
 
         public static uint Hash(string s)
         {
@@ -29,7 +28,7 @@ namespace NServiceBus.AzureStoragePersistence.SagaDeduplicator.Index
             }
         }
 
-        private static uint Hash(byte* data, uint len, uint seed)
+        static uint Hash(byte* data, uint len, uint seed)
         {
             var nblocks = len/4;
             var h1 = seed;
@@ -89,7 +88,7 @@ namespace NServiceBus.AzureStoragePersistence.SagaDeduplicator.Index
             return h1;
         }
 
-        private static uint Rotl32(uint x, int r)
+        static uint Rotl32(uint x, int r)
         {
             return (x << r) | (x >> (32 - r));
         }

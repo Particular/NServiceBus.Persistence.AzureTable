@@ -7,7 +7,7 @@
     using NServiceBus.Unicast.Subscriptions;
     using NServiceBus.Unicast.Subscriptions.MessageDrivenSubscriptions;
 
-    public class SuscriptionTestHelper
+    public class SubscriptionTestHelper
     {
         internal static ISubscriptionStorage CreateAzureSubscriptionStorage()
         {

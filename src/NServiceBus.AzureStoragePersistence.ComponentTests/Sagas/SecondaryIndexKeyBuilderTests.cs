@@ -39,7 +39,7 @@
             public string AdditionalId { get; set; }
         }
 
-        private class SagaData : ContainSagaData
+        class SagaData : ContainSagaData
         {
             public string AdditionalId { get; set; }
         }

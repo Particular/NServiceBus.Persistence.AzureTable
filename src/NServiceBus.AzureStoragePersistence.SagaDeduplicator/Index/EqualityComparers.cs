@@ -27,7 +27,7 @@ namespace NServiceBus.AzureStoragePersistence.SagaDeduplicator.Index
             }
         }
 
-        private static bool Compare(byte[] a1, byte[] a2)
+        static bool Compare(byte[] a1, byte[] a2)
         {
             if (a1.Length != a2.Length)
             {
@@ -46,14 +46,14 @@ namespace NServiceBus.AzureStoragePersistence.SagaDeduplicator.Index
             return true;
         }
 
-        private sealed class EqualityComparer : IEqualityComparer<object>
+        sealed class EqualityComparer : IEqualityComparer<object>
         {
-            private Func<object,object,bool> @equals;
-            private Func<object,int> getHashCode;
+            Func<object,object,bool> equals;
+            Func<object,int> getHashCode;
 
-            public EqualityComparer(Func<object, object, bool> @equals, Func<object, int> getHashCode)
+            public EqualityComparer(Func<object, object, bool> equals, Func<object, int> getHashCode)
             {
-                this.@equals = @equals;
+                this.equals = equals;
                 this.getHashCode = getHashCode;
             }
 

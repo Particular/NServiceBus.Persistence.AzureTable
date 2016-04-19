@@ -13,10 +13,10 @@
 
     public class SagaIndexerTests
     {
-        readonly CloudTableClient cloudTableClient;
-        private CloudTable cloudTable;
-        private Stopwatch sw;
-        private int previous;
+        CloudTableClient cloudTableClient;
+        CloudTable cloudTable;
+        Stopwatch sw;
+        int previous;
 
         public SagaIndexerTests()
         {
@@ -91,7 +91,7 @@
             }
         }
 
-        private static SagaState CreateSagaState(Tuple<int, Guid> t, int modulo)
+        static SagaState CreateSagaState(Tuple<int, Guid> t, int modulo)
         {
             return new SagaState
             {
@@ -102,7 +102,7 @@
             };
         }
 
-        private class SagaState : TableEntity
+        class SagaState : TableEntity
         {
             public long CorrelatingId { get; set; }
             public string Name { get; set; }

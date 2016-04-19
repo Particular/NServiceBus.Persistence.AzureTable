@@ -31,41 +31,41 @@ namespace NServiceBus.AzureStoragePersistence.SagaDeduplicator.Index
             }
         }
 
-        private static ulong TransformLong(object o)
+        static ulong TransformLong(object o)
         {
             return (ulong)(long)o;
         }
 
-        private static ulong TransformInt(object o)
+        static ulong TransformInt(object o)
         {
             return (ulong)(int)o;
         }
 
-        private static unsafe ulong TransformGuid(object o)
+        static unsafe ulong TransformGuid(object o)
         {
             var g = (Guid)o;
             return *(ulong*)&g;
         }
 
-        private static ulong TransformDouble(object o)
+        static ulong TransformDouble(object o)
         {
             var dt = (double)o;
             return (ulong)dt;
         }
 
-        private static unsafe ulong TransformDateTime(object o)
+        static unsafe ulong TransformDateTime(object o)
         {
             var dt = (DateTime)o;
             return *(ulong*)&dt;
         }
 
-        private static ulong TransformBytes(object o)
+        static ulong TransformBytes(object o)
         {
             var bytes = (byte[])o;
             return Murmur3.Hash(bytes);
         }
 
-        private static ulong TransformString(object o)
+        static ulong TransformString(object o)
         {
             var str = (string)o;
             return Murmur3.Hash(str);

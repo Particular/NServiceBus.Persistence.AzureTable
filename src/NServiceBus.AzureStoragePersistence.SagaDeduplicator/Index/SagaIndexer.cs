@@ -11,13 +11,12 @@ namespace NServiceBus.AzureStoragePersistence.SagaDeduplicator.Index
 
     public sealed class SagaIndexer
     {
-        private const int InitialBufferSize = 1024*1024;
-        private readonly string[] columns;
-        private readonly IEqualityComparer<object> equalityComparer;
-        private readonly Func<object, ulong> hashingTransformer;
-
-        private readonly string indexPropertyName;
-        private readonly CloudTable table;
+        const int InitialBufferSize = 1024*1024;
+        readonly string[] columns;
+        readonly IEqualityComparer<object> equalityComparer;
+        readonly Func<object, ulong> hashingTransformer;
+        readonly string indexPropertyName;
+        readonly CloudTable table;
 
         public SagaIndexer(CloudTable table, string indexPropertyName, Func<object, ulong> hashingTransformer, IEqualityComparer<object> equalityComparer)
         {

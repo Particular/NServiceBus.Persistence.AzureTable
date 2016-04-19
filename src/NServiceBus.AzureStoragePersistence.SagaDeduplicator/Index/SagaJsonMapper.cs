@@ -87,7 +87,7 @@
             return UploadStatus.DifferentETag;
         }
 
-        private static EntityProperty BuildNewProperty(DynamicTableEntity entity, JProperty jsonProperty, object value)
+        static EntityProperty BuildNewProperty(DynamicTableEntity entity, JProperty jsonProperty, object value)
         {
             EntityProperty entityProperty;
             if (entity.Properties.TryGetValue(jsonProperty.Name, out entityProperty))

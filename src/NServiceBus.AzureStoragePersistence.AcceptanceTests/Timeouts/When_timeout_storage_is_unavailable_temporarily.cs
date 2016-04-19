@@ -65,9 +65,9 @@
 
             public TestContext TestContext { get; set; }
 
-            class Initalizer : Feature
+            class Initializer : Feature
             {
-                public Initalizer()
+                public Initializer()
                 {
                     EnableByDefault();
                 }

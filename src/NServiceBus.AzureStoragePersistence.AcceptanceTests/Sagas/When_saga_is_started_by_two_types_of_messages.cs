@@ -47,7 +47,7 @@
 
         public class Context : ScenarioContext
         {
-            private readonly ConcurrentDictionary<string, string> completed = new ConcurrentDictionary<string, string>();
+            ConcurrentDictionary<string, string> completed = new ConcurrentDictionary<string, string>();
             public int CompletedIdsCount => completed.Count;
             public IEnumerable<string> CompletedIds => completed.Keys;
 
@@ -99,7 +99,7 @@
                 TryComplete();
             }
 
-            private void TryComplete()
+            void TryComplete()
             {
                 if (Data.Billed && Data.Placed)
                 {

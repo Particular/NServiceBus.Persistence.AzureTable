@@ -13,7 +13,7 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
             return new PartitionRowKeyTuple($"Index_{sagaDataTypeName}_{correlationProperty.Name}_{Serialize(correlationProperty.Value)}", "");
         }
 
-        private static string Serialize(object propertyValue)
+        static string Serialize(object propertyValue)
         {
             using (var sw = new StringWriter())
             {

@@ -8,14 +8,14 @@
 
     public class IdHashBufferTests
     {
-        private static readonly Guid G1 = new Guid("11111111-F069-4FF0-8052-6872006DA7B2");
-        private static readonly Guid G2 = new Guid("22222222-F069-4FF0-8052-6872006DA7B2");
-        private static readonly Guid G3 = new Guid("33333333-F069-4FF0-8052-6872006DA7B2");
-        private static readonly Guid G4 = new Guid("44444444-F069-4FF0-8052-6872006DA7B2");
-        private static readonly Guid G5 = new Guid("55555555-F069-4FF0-8052-6872006DA7B2");
-        private static readonly Guid G6 = new Guid("66666666-F069-4FF0-8052-6872006DA7B2");
-        private static readonly Guid G7 = new Guid("77777777-F069-4FF0-8052-6872006DA7B2");
-        private static readonly Guid G8 = new Guid("88888888-F069-4FF0-8052-6872006DA7B2");
+        static readonly Guid G1 = new Guid("11111111-F069-4FF0-8052-6872006DA7B2");
+        static readonly Guid G2 = new Guid("22222222-F069-4FF0-8052-6872006DA7B2");
+        static readonly Guid G3 = new Guid("33333333-F069-4FF0-8052-6872006DA7B2");
+        static readonly Guid G4 = new Guid("44444444-F069-4FF0-8052-6872006DA7B2");
+        static readonly Guid G5 = new Guid("55555555-F069-4FF0-8052-6872006DA7B2");
+        static readonly Guid G6 = new Guid("66666666-F069-4FF0-8052-6872006DA7B2");
+        static readonly Guid G7 = new Guid("77777777-F069-4FF0-8052-6872006DA7B2");
+        static readonly Guid G8 = new Guid("88888888-F069-4FF0-8052-6872006DA7B2");
 
         [Test]
         public void When_buffer_is_full_Should_not_accept_writes()
@@ -52,7 +52,7 @@
         }
 
         [Test]
-        public void When_buffer_searched_for_collisions_with_itself_Should_not_find_singular_occurances()
+        public void When_buffer_searched_for_collisions_with_itself_Should_not_find_singular_occurrences()
         {
             var buffer = new IdHashBuffer(2);
             buffer.TryWrite(G1, 1);

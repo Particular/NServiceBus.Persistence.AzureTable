@@ -7,7 +7,7 @@
     {
         public class When_cache_is_empty
         {
-            private readonly LRUCache<int, int> Empty = new LRUCache<int, int>(0);
+            LRUCache<int, int> Empty = new LRUCache<int, int>(0);
 
             [Test]
             public void Should_not_throw_on_remove()
@@ -24,14 +24,14 @@
 
         public class When_cache_is_full
         {
-            private LRUCache<int, int> cache;
-            private const int Key1 = 1;
-            private const int Key2 = 2;
-            private const int Key3 = 3;
-            private const int Value1 = 11;
-            private const int Value11 = 111;
-            private const int Value2 = 22;
-            private const int Value3 = 32;
+            LRUCache<int, int> cache;
+            const int Key1 = 1;
+            const int Key2 = 2;
+            const int Key3 = 3;
+            const int Value1 = 11;
+            const int Value11 = 111;
+            const int Value2 = 22;
+            const int Value3 = 32;
 
             [SetUp]
             public void SetUp()
@@ -81,14 +81,14 @@
             }
         }
 
-        private static void AssertValue(LRUCache<int, int> lruCache, int key, int expectedValue)
+        static void AssertValue(LRUCache<int, int> lruCache, int key, int expectedValue)
         {
             int value;
             Assert.IsTrue(lruCache.TryGet(key, out value));
             Assert.AreEqual(expectedValue, value);
         }
 
-        private static void AssertNoValue(LRUCache<int, int> lruCache, int key)
+        static void AssertNoValue(LRUCache<int, int> lruCache, int key)
         {
             int value;
             var tryGet = lruCache.TryGet(key, out value);

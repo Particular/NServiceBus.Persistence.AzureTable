@@ -10,7 +10,7 @@
 
     public class When_publishing_with_overridden_local_address : NServiceBusAcceptanceTest
     {
-        [Test, Ignore] // Overide local address doesn't exist anymore
+        [Test, Ignore] // Override local address doesn't exist anymore
         public async Task Should_be_delivered_to_all_subscribers()
         {
             await Scenario.Define<Context>()

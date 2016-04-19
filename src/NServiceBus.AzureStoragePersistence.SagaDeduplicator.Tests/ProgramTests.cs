@@ -98,12 +98,12 @@
             Program.Main(BuildOptions(options).Concat(additional).ToArray());
         }
 
-        private static string[] BuildOptions(Dictionary<string, string> options)
+        static string[] BuildOptions(Dictionary<string, string> options)
         {
             return options.Select(kvp => string.Concat(kvp.Key, kvp.Value)).ToArray();
         }
 
-        private static void Update(FileInfo fi, Action<JObject> update)
+        static void Update(FileInfo fi, Action<JObject> update)
         {
             var jo = LoadFile(fi);
             update(jo);
@@ -123,7 +123,7 @@
             }
         }
 
-        private static void AssertFile(FileInfo f, string name, string correlatingId)
+        static void AssertFile(FileInfo f, string name, string correlatingId)
         {
             var jo = LoadFile(f);
             Assert.AreEqual(correlatingId, (string) ((JValue) jo["OrderId"]).Value);
@@ -131,7 +131,7 @@
             Assert.IsNotNullOrEmpty((string) ((JValue) jo[SagaJsonMapper.ETag]).Value);
         }
 
-        private static JObject LoadFile(FileInfo f)
+        static JObject LoadFile(FileInfo f)
         {
             using (var stream = f.OpenRead())
             {
@@ -145,7 +145,7 @@
             }
         }
 
-        private static TwoInstanceSagaStateEntity CreateEntity(Guid g, string correlatingId)
+        static TwoInstanceSagaStateEntity CreateEntity(Guid g, string correlatingId)
         {
             return new TwoInstanceSagaStateEntity
             {
@@ -156,13 +156,13 @@
             };
         }
 
-        private class TwoInstanceSagaStateEntity : TableEntity
+        class TwoInstanceSagaStateEntity : TableEntity
         {
             public string OrderId { get; set; }
             public Guid Id { get; set; }
         }
 
-        private class TwoInstanceSagaState : IContainSagaData
+        class TwoInstanceSagaState : IContainSagaData
         {
             [Unique]
             public string OrderId { get; set; }

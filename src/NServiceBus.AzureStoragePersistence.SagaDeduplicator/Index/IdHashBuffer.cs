@@ -8,10 +8,10 @@ namespace NServiceBus.AzureStoragePersistence.SagaDeduplicator.Index
     /// </summary>
     public sealed class IdHashBuffer
     {
-        private readonly Guid[] ids;
-        private readonly ulong[] hashes;
-        private int offset;
-        private bool seal;
+        Guid[] ids;
+        ulong[] hashes;
+        int offset;
+        bool seal;
 
         public IdHashBuffer(int size)
         {
@@ -74,7 +74,7 @@ namespace NServiceBus.AzureStoragePersistence.SagaDeduplicator.Index
             }
         }
 
-        private int FindIdsByHash(ulong hash, Guid[] resultIds, Guid skippedIdentifier)
+        int FindIdsByHash(ulong hash, Guid[] resultIds, Guid skippedIdentifier)
         {
             var index = Array.BinarySearch(hashes, 0, offset, hash);
             if (index < 0)

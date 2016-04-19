@@ -87,7 +87,7 @@ namespace NServiceBus.AcceptanceTests.Sagas
                 .Run();
         }
 
-        private static async Task ClearTable(CloudTable table)
+        static async Task ClearTable(CloudTable table)
         {
             foreach (var entity in table.ExecuteQuery(new TableQuery()).ToArray())
             {
@@ -104,7 +104,7 @@ namespace NServiceBus.AcceptanceTests.Sagas
             public Guid[] SagasIds { get; set; }
         }
 
-        private class ReceiverWithSagas : EndpointConfigurationBuilder
+        class ReceiverWithSagas : EndpointConfigurationBuilder
         {
             public ReceiverWithSagas()
             {

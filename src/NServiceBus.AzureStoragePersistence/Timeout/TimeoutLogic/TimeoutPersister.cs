@@ -209,7 +209,7 @@
         /// </summary>
         /// <param name="timeoutId">ID of the timeout you want to try deleting</param>
         /// <param name="context">The current pipeline context</param>
-        /// <returns>True/False indicating successful or unsucessful deletion</returns>
+        /// <returns>True/False indicating successful or unssucessful deletion</returns>
         public async Task<bool> TryRemove(string timeoutId, ContextBag context)
         {
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);

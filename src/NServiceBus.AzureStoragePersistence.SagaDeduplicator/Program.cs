@@ -16,22 +16,21 @@
     public class Program
     {
         public const string ConnectionStringName = "sagas";
+        string connectionString;
+        string directory;
 
-        readonly string connectionString;
-        private readonly string directory;
-
-        private Program(string connectionString, string directory)
+        Program(string connectionString, string directory)
         {
             this.connectionString = connectionString;
             this.directory = directory;
         }
 
-        private string GetSagaDirectory(string sagaTypeName)
+        string GetSagaDirectory(string sagaTypeName)
         {
             return Path.Combine(directory, sagaTypeName);
         }
 
-        private CloudTable GetTable(string sagaTypeName)
+        CloudTable GetTable(string sagaTypeName)
         {
             return SagaIndexer.GetTable(connectionString, sagaTypeName);
         }
@@ -114,7 +113,7 @@
             }
         }
 
-        private static void PrintReport(Dictionary<string, string> sagaToProperty, List<string> sagasWithoutUnique)
+        static void PrintReport(Dictionary<string, string> sagaToProperty, List<string> sagasWithoutUnique)
         {
             Console.WriteLine();
             Console.WriteLine("Following saga types have correlation properties");
@@ -131,7 +130,7 @@
             }
         }
 
-        private static Type[] FindAllSagaTypes()
+        static Type[] FindAllSagaTypes()
         {
             var scanner = new AssemblyScanner
             {
@@ -147,7 +146,7 @@
                 .ToArray();
         }
 
-        private static bool TryFetchWithInfo(string[] args, string name, out string value)
+        static bool TryFetchWithInfo(string[] args, string name, out string value)
         {
             if (TryFetch(args, name, out value))
             {
@@ -158,7 +157,7 @@
             return false;
         }
 
-        private static bool TryFetch(string[] args, string name, out string value)
+        static bool TryFetch(string[] args, string name, out string value)
         {
             foreach (var arg in args)
             {
@@ -173,7 +172,7 @@
             return false;
         }
 
-        private void DownloadConflictingSagas(string sagaTypeName, string propertyName)
+        void DownloadConflictingSagas(string sagaTypeName, string propertyName)
         {
             var sagaDirectory = GetSagaDirectory(sagaTypeName);
             Console.WriteLine();
@@ -226,7 +225,7 @@
             });
         }
 
-        private void UploadResolvedConflicts(string sagaTypeName)
+        void UploadResolvedConflicts(string sagaTypeName)
         {
             var sagaDirectory = GetSagaDirectory(sagaTypeName);
             var cloudTable = GetTable(sagaTypeName);
@@ -290,7 +289,7 @@
             }
         }
 
-        private static bool EnsureEmptyDirectoryExists(string directory)
+        static bool EnsureEmptyDirectoryExists(string directory)
         {
             if (Directory.Exists(directory) == false)
             {
