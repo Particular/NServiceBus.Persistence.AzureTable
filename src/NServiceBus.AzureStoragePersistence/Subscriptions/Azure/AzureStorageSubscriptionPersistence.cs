@@ -1,8 +1,10 @@
 namespace NServiceBus
 {
+    using System.Threading.Tasks;
     using Config;
     using Features;
     using Microsoft.WindowsAzure.Storage;
+    using Logging;
     using Unicast.Subscriptions;
 
     public class AzureStorageSubscriptionPersistence : Feature
@@ -28,12 +30,41 @@ namespace NServiceBus
             var connectionString = context.Settings.Get<string>("AzureSubscriptionStorage.ConnectionString");
             var createIfNotExist = context.Settings.Get<bool>("AzureSubscriptionStorage.CreateSchema");
 
-            var account = CloudStorageAccount.Parse(connectionString);
-
-            var table = account.CreateCloudTableClient().GetTableReference(subscriptionTableName);
-            if (createIfNotExist) table.CreateIfNotExists();
+            if (createIfNotExist)
+            {
+                var startupTask = new StartupTask(subscriptionTableName, connectionString);
+                context.RegisterStartupTask(startupTask);
+            }
 
             context.Container.ConfigureComponent(() => new AzureSubscriptionStorage(subscriptionTableName, connectionString), DependencyLifecycle.InstancePerCall);
         }
+
+        class StartupTask : FeatureStartupTask
+        {
+            ILog log = LogManager.GetLogger<StartupTask>();
+            string subscriptionTableName;
+            string connectionString;
+
+            public StartupTask(string subscriptionTableName, string connectionString)
+            {
+                this.subscriptionTableName = subscriptionTableName;
+                this.connectionString = connectionString;
+            }
+
+            protected override async Task OnStart(IMessageSession session)
+            {
+                log.Info("Creating Subscription Table");
+                var account = CloudStorageAccount.Parse(connectionString);
+                var table = account.CreateCloudTableClient().GetTableReference(subscriptionTableName);
+                await table.CreateIfNotExistsAsync()
+                    .ConfigureAwait(false);
+            }
+
+            protected override Task OnStop(IMessageSession session)
+            {
+                return Task.FromResult(0);
+            }
+        }
     }
+
 }

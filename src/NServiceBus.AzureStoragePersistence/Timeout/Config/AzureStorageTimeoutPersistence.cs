@@ -1,9 +1,11 @@
 namespace NServiceBus
 {
+    using System.Threading.Tasks;
     using Azure;
     using Config;
     using Features;
     using Microsoft.WindowsAzure.Storage;
+    using NServiceBus.Logging;
 
     public class AzureStorageTimeoutPersistence : Feature
     {
@@ -38,25 +40,56 @@ namespace NServiceBus
             var hostDisplayName = context.Settings.GetOrDefault<string>("NServiceBus.HostInformation.DisplayName");
             var timeoutStateContainerName = context.Settings.GetOrDefault<string>("AzureTimeoutStorage.TimeoutStateContainerName");
 
-            var account = CloudStorageAccount.Parse(connectionString);
-
             if (createIfNotExist)
             {
-                var timeoutTable = account.CreateCloudTableClient().GetTableReference(timeoutDataTableName);
-                timeoutTable.CreateIfNotExists();
-
-                var timeoutManagerTable = account.CreateCloudTableClient().GetTableReference(timeoutManagerDataTableName);
-
-                timeoutManagerTable.CreateIfNotExists();
-
-                var container = account.CreateCloudBlobClient().GetContainerReference(timeoutStateContainerName);
-                container.CreateIfNotExists();
+                var startupTask = new StartupTask(timeoutDataTableName, connectionString, timeoutManagerDataTableName, timeoutStateContainerName);
+                context.RegisterStartupTask(startupTask);
             }
 
             context.Container.ConfigureComponent(()=>
-                new TimeoutPersister(connectionString, timeoutDataTableName, timeoutManagerDataTableName, timeoutStateContainerName, catchUpInterval, 
-                                     partitionKeyScope, endpointName.ToString(), hostDisplayName), 
+                new TimeoutPersister(connectionString, timeoutDataTableName, timeoutManagerDataTableName, timeoutStateContainerName, catchUpInterval,
+                                     partitionKeyScope, endpointName.ToString(), hostDisplayName),
                 DependencyLifecycle.InstancePerCall);
+        }
+
+
+        class StartupTask : FeatureStartupTask
+        {
+            ILog log = LogManager.GetLogger<StartupTask>();
+            string timeoutDataTableName;
+            string connectionString;
+            string timeoutManagerDataTableName;
+            string timeoutStateContainerName;
+
+            public StartupTask(string timeoutDataTableName, string connectionString, string timeoutManagerDataTableName, string timeoutStateContainerName)
+            {
+                this.timeoutDataTableName = timeoutDataTableName;
+                this.connectionString = connectionString;
+                this.timeoutManagerDataTableName = timeoutManagerDataTableName;
+                this.timeoutStateContainerName = timeoutStateContainerName;
+            }
+
+            protected override async Task OnStart(IMessageSession session)
+            {
+                log.Info("Creating Timeout Table");
+
+                var account = CloudStorageAccount.Parse(connectionString);
+                var cloudTableClient = account.CreateCloudTableClient();
+                var timeoutTable = cloudTableClient.GetTableReference(timeoutDataTableName);
+                await timeoutTable.CreateIfNotExistsAsync();
+
+                var timeoutManagerTable = cloudTableClient.GetTableReference(timeoutManagerDataTableName);
+                await timeoutManagerTable.CreateIfNotExistsAsync();
+
+                var container = account.CreateCloudBlobClient()
+                    .GetContainerReference(timeoutStateContainerName);
+                await container.CreateIfNotExistsAsync();
+            }
+
+            protected override Task OnStop(IMessageSession session)
+            {
+                return Task.FromResult(0);
+            }
         }
     }
 }
