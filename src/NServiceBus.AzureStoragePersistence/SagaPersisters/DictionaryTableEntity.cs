@@ -5,11 +5,11 @@
     using System.Collections.Generic;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
-    
+
     class DictionaryTableEntity : TableEntity, IDictionary<string, EntityProperty>
     {
         IDictionary<string, EntityProperty> properties;
-        
+
         public DictionaryTableEntity()
         {
             properties = new Dictionary<string, EntityProperty>();
@@ -29,7 +29,7 @@
         {
             properties.Add(key, value);
         }
-        
+
         public void Add(string key, bool value)
         {
             properties.Add(key, new EntityProperty(value));

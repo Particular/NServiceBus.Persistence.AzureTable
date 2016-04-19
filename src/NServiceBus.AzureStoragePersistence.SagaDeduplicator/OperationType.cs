@@ -1,8 +1,5 @@
-﻿namespace NServiceBus.AzureStoragePersistence.SagaDeduplicator
+﻿public enum OperationType
 {
-    public enum OperationType
-    {
-        Download,
-        Upload
-    }
+    Download,
+    Upload
 }
