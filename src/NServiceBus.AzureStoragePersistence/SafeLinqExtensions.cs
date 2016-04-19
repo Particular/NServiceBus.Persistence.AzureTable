@@ -4,7 +4,7 @@ namespace NServiceBus.Azure
     using System.Linq;
     using Microsoft.WindowsAzure.Storage;
 
-    public static class SafeLinqExtensions
+    static class SafeLinqExtensions
     {
         public static TSource SafeFirstOrDefault<TSource>(this IEnumerable<TSource> source)
         {

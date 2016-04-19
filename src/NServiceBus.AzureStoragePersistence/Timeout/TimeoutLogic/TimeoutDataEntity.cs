@@ -2,8 +2,8 @@ namespace NServiceBus.Azure
 {
     using System;
     using Microsoft.WindowsAzure.Storage.Table;
-    
-    public class TimeoutDataEntity : TableEntity
+
+    class TimeoutDataEntity : TableEntity
     {
         public TimeoutDataEntity(){}
 
@@ -41,21 +41,5 @@ namespace NServiceBus.Azure
         /// The serialized headers
         /// </summary>
         public string Headers { get; set; }
-    }
-
-    public class TimeoutManagerDataEntity : TableEntity
-    {
-        public TimeoutManagerDataEntity() { }
-
-        public TimeoutManagerDataEntity(string partitionKey, string rowKey)
-            : base(partitionKey, rowKey)
-        {
-        }
-        
-        /// <summary>
-        /// The last successfull chunk read.
-        /// </summary>
-        public DateTime LastSuccessfullRead { get; set; }
-        
     }
 }

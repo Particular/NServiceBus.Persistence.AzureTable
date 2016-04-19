@@ -128,6 +128,7 @@
     <Compile Include="Timeout\Config\AzureStorageTimeoutPersistence.cs" />
     <Compile Include="Timeout\TimeoutLogic\TimeoutChunkComparer.cs" />
     <Compile Include="Timeout\TimeoutLogic\TimeoutDataEntity.cs" />
+    <Compile Include="Timeout\TimeoutLogic\TimeoutManagerDataEntity.cs" />
     <Compile Include="Timeout\TimeoutLogic\TimeoutPersister.cs" />
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Subscriptions\Azure\AzureSubscriptionStorage.cs" />

@@ -13,18 +13,11 @@
     using NServiceBus.Routing;
     using NServiceBus.Unicast.Subscriptions.MessageDrivenSubscriptions;
 
-    /// <summary>
-    /// Provides Azure Storage Table storage functionality for Subscriptions
-    /// </summary>
-    public class AzureSubscriptionStorage : ISubscriptionStorage
+    class AzureSubscriptionStorage : ISubscriptionStorage
     {
         string subscriptionTableName;
         CloudTableClient client;
 
-        /// <summary>
-        /// </summary>
-        /// <param name="subscriptionTableName">Table name used to store subscription information</param>
-        /// <param name="subscriptionConnectionString">Subscription connection string</param>
         public AzureSubscriptionStorage(string subscriptionTableName, string subscriptionConnectionString)
         {
             this.subscriptionTableName = subscriptionTableName;
@@ -102,7 +95,7 @@
         /// <summary>
         /// Returns the subscription address based on message type
         /// </summary>
-        /// <param name="messageTypes">Types of messages that subscription addresses should sbe found for</param>        
+        /// <param name="messageTypes">Types of messages that subscription addresses should sbe found for</param>
         /// <param name="context">The current pipeline context</param>
         /// <returns>Subscription addresses that were found for the provided messageTypes</returns>
         public async Task<IEnumerable<Subscriber>> GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes, ContextBag context)
@@ -115,7 +108,7 @@
                 var query = new TableQuery<Subscription>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, messageType.ToString()));
 
                 var results = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).Select(s => new Subscriber(DecodeFrom64(s.RowKey), new EndpointName(s.EndpointName)));
-                
+
                 subscribers.AddRange(results);
             }
 

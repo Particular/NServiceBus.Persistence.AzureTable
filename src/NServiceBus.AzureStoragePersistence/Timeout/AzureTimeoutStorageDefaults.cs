@@ -1,6 +1,6 @@
 ﻿namespace NServiceBus
 {
-    public class AzureTimeoutStorageDefaults
+    class AzureTimeoutStorageDefaults
     {
         /// <summary>
         /// Azure Storage table name for Timeout Manager Data. Default is 'TimeoutManagerDataTable'.

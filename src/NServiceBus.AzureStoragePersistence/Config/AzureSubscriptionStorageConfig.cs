@@ -11,11 +11,11 @@ namespace NServiceBus.Config
 
             Properties.Add(new ConfigurationProperty("ConnectionString", typeof(string), defaultConnectionString,
                 null, new CallbackValidator(typeof(string), AzureSubscriptionStorageGuard.CheckConnectionString), ConfigurationPropertyOptions.None));
-            
+
             Properties.Add(new ConfigurationProperty("TableName", typeof(string), AzureSubscriptionStorageDefaults.TableName,
                 null, new CallbackValidator(typeof(string), AzureSubscriptionStorageGuard.CheckTableName), ConfigurationPropertyOptions.None));
 
-            Properties.Add(new ConfigurationProperty("CreateSchema", typeof(bool), AzureSubscriptionStorageDefaults.CreateSchema, 
+            Properties.Add(new ConfigurationProperty("CreateSchema", typeof(bool), AzureSubscriptionStorageDefaults.CreateSchema,
                 ConfigurationPropertyOptions.None));
         }
 

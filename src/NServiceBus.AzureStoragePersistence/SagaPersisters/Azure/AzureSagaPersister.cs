@@ -16,10 +16,7 @@
     using NServiceBus.SagaPersisters.Azure.SecondaryIndeces;
     using NServiceBus.Sagas;
 
-    /// <summary>
-    ///     Saga persister implementation using azure table storage.
-    /// </summary>
-    public class AzureSagaPersister : ISagaPersister
+    class AzureSagaPersister : ISagaPersister
     {
         static ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
         static ConditionalWeakTable<object, string> etags = new ConditionalWeakTable<object, string>();

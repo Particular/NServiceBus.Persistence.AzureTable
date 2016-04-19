@@ -5,7 +5,7 @@ namespace NServiceBus
 
     public class AzureStoragePersistence : PersistenceDefinition
     {
-        internal AzureStoragePersistence()
+        AzureStoragePersistence()
         {
             Supports<StorageType.Timeouts>(s => s.EnableFeatureByDefault<AzureStorageTimeoutPersistence>());
             Supports<StorageType.Sagas>(s => s.EnableFeatureByDefault<AzureStorageSagaPersistence>());
