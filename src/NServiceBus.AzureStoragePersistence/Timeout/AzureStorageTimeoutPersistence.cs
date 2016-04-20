@@ -4,8 +4,8 @@ namespace NServiceBus
     using Azure;
     using Config;
     using Features;
-    using Microsoft.WindowsAzure.Storage;
     using Logging;
+    using Microsoft.WindowsAzure.Storage;
 
     public class AzureStorageTimeoutPersistence : Feature
     {
@@ -46,12 +46,11 @@ namespace NServiceBus
                 context.RegisterStartupTask(startupTask);
             }
 
-            context.Container.ConfigureComponent(()=>
+            context.Container.ConfigureComponent(() =>
                 new TimeoutPersister(connectionString, timeoutDataTableName, timeoutManagerDataTableName, timeoutStateContainerName, catchUpInterval,
                                      partitionKeyScope, endpointName.ToString(), hostDisplayName),
                 DependencyLifecycle.InstancePerCall);
         }
-
 
         class StartupTask : FeatureStartupTask
         {
@@ -76,14 +75,14 @@ namespace NServiceBus
                 var account = CloudStorageAccount.Parse(connectionString);
                 var cloudTableClient = account.CreateCloudTableClient();
                 var timeoutTable = cloudTableClient.GetTableReference(timeoutDataTableName);
-                await timeoutTable.CreateIfNotExistsAsync();
+                await timeoutTable.CreateIfNotExistsAsync().ConfigureAwait(false);
 
                 var timeoutManagerTable = cloudTableClient.GetTableReference(timeoutManagerDataTableName);
-                await timeoutManagerTable.CreateIfNotExistsAsync();
+                await timeoutManagerTable.CreateIfNotExistsAsync().ConfigureAwait(false);
 
                 var container = account.CreateCloudBlobClient()
                     .GetContainerReference(timeoutStateContainerName);
-                await container.CreateIfNotExistsAsync();
+                await container.CreateIfNotExistsAsync().ConfigureAwait(false);
             }
 
             protected override Task OnStop(IMessageSession session)
