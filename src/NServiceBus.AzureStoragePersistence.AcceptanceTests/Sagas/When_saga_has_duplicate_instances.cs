@@ -4,13 +4,13 @@ namespace NServiceBus.AcceptanceTests.Sagas
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.WindowsAzure.Storage;
-    using Microsoft.WindowsAzure.Storage.Table;
     using AcceptanceTesting;
     using EndpointTemplates;
-    using ScenarioDescriptors;
-    using SagaPersisters.Azure;
+    using Microsoft.WindowsAzure.Storage;
+    using Microsoft.WindowsAzure.Storage.Table;
     using NUnit.Framework;
+    using SagaPersisters.Azure;
+    using ScenarioDescriptors;
 
     public class When_saga_has_duplicate_instances : NServiceBusAcceptanceTest
     {
@@ -72,7 +72,7 @@ namespace NServiceBus.AcceptanceTests.Sagas
                         }).ContinueWith(t => session.SendLocal(new FinalMessage()));
                     });
                 })
-                .Done(c => c.FinalMessageReceived)
+                .Done(c => c.FailedMessages.IsEmpty == false)
                 .Repeat(r => r.For(Transports.Default))
                 .Should(c =>
                 {
@@ -100,7 +100,6 @@ namespace NServiceBus.AcceptanceTests.Sagas
             public bool Completed { get; set; }
             public string OrderId { get; set; }
             public bool StartSagaMessageReceived { get; set; }
-            public bool FinalMessageReceived { get; set; }
             public Guid[] SagasIds { get; set; }
         }
 
@@ -147,17 +146,6 @@ namespace NServiceBus.AcceptanceTests.Sagas
                 public virtual Guid Id { get; set; }
                 public virtual string Originator { get; set; }
                 public virtual string OriginalMessageId { get; set; }
-            }
-        }
-
-        public class FinalMessageHandler : IHandleMessages<FinalMessage>
-        {
-            public Context Context { get; set; }
-
-            public Task Handle(FinalMessage message, IMessageHandlerContext context)
-            {
-                Context.FinalMessageReceived = true;
-                return Task.FromResult(0);
             }
         }
 
