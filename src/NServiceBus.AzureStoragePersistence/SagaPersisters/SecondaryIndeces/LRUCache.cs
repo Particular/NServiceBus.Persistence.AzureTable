@@ -2,20 +2,19 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
 {
     using System.Collections.Generic;
 
+    /// <summary>
+    /// This is a simple implementation of LRU cache.
+    /// </summary>
+    /// <remarks>
+    /// The LRUCache uses two fields in every operation:
+    /// <see cref="lru" /> - to provide last-recently-used behavior
+    /// <see cref="items" /> - to provide key-value mapping with O(1)
+    /// Locking everywhere ensures that these two parts can be updated atomically.
+    /// ConcurrentDictionary does not ensure lru behavior as it cannot remove the last item that was used,
+    /// hence a custom implementation for a thread safe LRU has been introduced.
+    /// </remarks>
     class LRUCache<TKey, TValue>
     {
-        LinkedList<Item> lru = new LinkedList<Item>();
-        Dictionary<TKey, LinkedListNode<Item>> items = new Dictionary<TKey, LinkedListNode<Item>>();
-
-        int capacity;
-        object @lock = new object();
-
-        class Item
-        {
-            public TKey Key;
-            public TValue Value;
-        }
-
         public LRUCache(int capacity)
         {
             this.capacity = capacity;
@@ -88,6 +87,18 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
                 lru.Remove(node);
                 items.Remove(node.Value.Key);
             }
+        }
+
+        LinkedList<Item> lru = new LinkedList<Item>();
+        Dictionary<TKey, LinkedListNode<Item>> items = new Dictionary<TKey, LinkedListNode<Item>>();
+
+        int capacity;
+        object @lock = new object();
+
+        class Item
+        {
+            public TKey Key;
+            public TValue Value;
         }
     }
 }
