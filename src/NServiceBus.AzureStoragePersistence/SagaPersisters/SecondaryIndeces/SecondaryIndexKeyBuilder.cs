@@ -15,11 +15,11 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
 
         static string Serialize(object propertyValue)
         {
-            using (var sw = new StringWriter())
+            using (var writer = new StringWriter())
             {
-                new JsonSerializer().Serialize(sw, propertyValue);
-                sw.Flush();
-                return sw.ToString();
+                new JsonSerializer().Serialize(writer, propertyValue);
+                writer.Flush();
+                return writer.ToString();
             }
         }
     }

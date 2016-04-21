@@ -17,18 +17,16 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
                 ContractResolver = new SagaOnlyPropertiesDataContractResolver()
             };
 
-            using (var ms = new MemoryStream())
+            using (var memoryStream = new MemoryStream())
             {
-                using (var zipped = new GZipStream(ms, CompressionMode.Compress))
+                using (var zipped = new GZipStream(memoryStream, CompressionMode.Compress))
+                using (var writer = new StreamWriter(zipped))
                 {
-                    using (var sw = new StreamWriter(zipped))
-                    {
-                        serializer.Serialize(sw, sagaData);
-                        sw.Flush();
-                    }
+                    serializer.Serialize(writer, sagaData);
+                    writer.Flush();
                 }
 
-                return ms.ToArray();
+                return memoryStream.ToArray();
             }
         }
 
@@ -39,15 +37,11 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
                 ContractResolver = new SagaOnlyPropertiesDataContractResolver()
             };
 
-            using (var ms = new MemoryStream(value))
+            using (var memoryStream = new MemoryStream(value))
+            using (var zipped = new GZipStream(memoryStream, CompressionMode.Decompress))
+            using (var reader = new StreamReader(zipped))
             {
-                using (var zipped = new GZipStream(ms, CompressionMode.Decompress))
-                {
-                    using (var sr = new StreamReader(zipped))
-                    {
-                        return (IContainSagaData)serializer.Deserialize(sr, sagaType);
-                    }
-                }
+                return (IContainSagaData) serializer.Deserialize(reader, sagaType);
             }
         }
 
@@ -60,7 +54,9 @@ namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
             protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
             {
                 var properties = new HashSet<string>(AzureSagaPersister.SelectPropertiesToPersist(type).Select(pi => pi.Name));
-                return base.CreateProperties(type, memberSerialization).Where(p => properties.Contains(p.PropertyName)).ToArray();
+                return base.CreateProperties(type, memberSerialization)
+                    .Where(p => properties.Contains(p.PropertyName))
+                    .ToArray();
             }
         }
     }
