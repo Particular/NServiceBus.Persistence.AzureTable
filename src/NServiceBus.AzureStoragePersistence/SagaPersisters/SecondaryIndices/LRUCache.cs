@@ -1,4 +1,4 @@
-namespace NServiceBus.SagaPersisters.Azure.SecondaryIndeces
+namespace NServiceBus.SagaPersisters.AzureStoragePersistence.SecondaryIndices
 {
     using System.Collections.Generic;
 

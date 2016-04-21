@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.SagaPersisters.Azure
+﻿namespace NServiceBus.SagaPersisters.AzureStoragePersistence
 {
     using System;
 

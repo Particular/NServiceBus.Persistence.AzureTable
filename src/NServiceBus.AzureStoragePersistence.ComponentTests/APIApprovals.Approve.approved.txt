@@ -64,7 +64,7 @@ namespace NServiceBus.Config
         public string TimeoutStateContainerName { get; set; }
     }
 }
-namespace NServiceBus.SagaPersisters.Azure
+namespace NServiceBus.SagaPersisters.AzureStoragePersistence
 {
     public class DuplicatedSagaFoundException : System.Exception
     {

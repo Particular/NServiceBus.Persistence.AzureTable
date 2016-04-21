@@ -8,7 +8,7 @@ namespace NServiceBus.AcceptanceTests.Sagas
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
     using NUnit.Framework;
-    using SagaPersisters.Azure;
+    using SagaPersisters.AzureStoragePersistence;
     using ScenarioDescriptors;
 
     public class When_saga_has_duplicate_instances : NServiceBusAcceptanceTest

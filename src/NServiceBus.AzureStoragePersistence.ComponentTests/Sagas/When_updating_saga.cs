@@ -2,7 +2,7 @@
 {
     using System;
     using System.Threading.Tasks;
-    using SagaPersisters.Azure;
+    using SagaPersisters.AzureStoragePersistence;
     using NUnit.Framework;
 
     public class When_updating_saga

@@ -2,7 +2,7 @@
 {
     using Config;
     using Features;
-    using SagaPersisters.Azure;
+    using SagaPersisters.AzureStoragePersistence;
 
     public class AzureStorageSagaPersistence : Feature
     {

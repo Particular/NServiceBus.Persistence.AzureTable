@@ -2,7 +2,7 @@
 {
     using System;
     using Microsoft.WindowsAzure.Storage;
-    using SagaPersisters.Azure;
+    using SagaPersisters.AzureStoragePersistence;
     using NUnit.Framework;
 
     public class When_saving_saga

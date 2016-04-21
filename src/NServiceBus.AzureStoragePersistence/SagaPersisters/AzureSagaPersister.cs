@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.SagaPersisters.Azure
+﻿namespace NServiceBus.SagaPersisters.AzureStoragePersistence
 {
     using System;
     using System.Collections.Concurrent;
@@ -13,7 +13,7 @@
     using NServiceBus.Azure;
     using Extensibility;
     using Persistence;
-    using SecondaryIndeces;
+    using SecondaryIndices;
     using Sagas;
 
     class AzureSagaPersister : ISagaPersister
@@ -22,7 +22,7 @@
         static ConditionalWeakTable<object, string> etags = new ConditionalWeakTable<object, string>();
         bool autoUpdateSchema;
         CloudTableClient client;
-        SecondaryIndexPersister secondaryIndeces;
+        SecondaryIndexPersister secondaryIndices;
 
         public AzureSagaPersister(string connectionString, bool autoUpdateSchema)
         {
@@ -30,13 +30,13 @@
             var account = CloudStorageAccount.Parse(connectionString);
             client = account.CreateCloudTableClient();
 
-            secondaryIndeces = new SecondaryIndexPersister(GetTable, ScanForSaga, Persist);
+            secondaryIndices = new SecondaryIndexPersister(GetTable, ScanForSaga, Persist);
         }
 
         public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context)
         {
             // These operations must be executed sequentially
-            await secondaryIndeces.Insert(sagaData, correlationProperty).ConfigureAwait(false);
+            await secondaryIndices.Insert(sagaData, correlationProperty).ConfigureAwait(false);
             await Persist(sagaData).ConfigureAwait(false);
         }
 
@@ -62,7 +62,7 @@
 
         public async Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context) where TSagaData : IContainSagaData
         {
-            var id = await secondaryIndeces.FindPossiblyCreatingIndexEntry<TSagaData>(propertyName, propertyValue).ConfigureAwait(false);
+            var id = await secondaryIndices.FindPossiblyCreatingIndexEntry<TSagaData>(propertyName, propertyValue).ConfigureAwait(false);
             if (id == null)
             {
                 return default(TSagaData);
