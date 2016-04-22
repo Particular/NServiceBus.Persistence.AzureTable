@@ -2,7 +2,6 @@ namespace NServiceBus.AcceptanceTests.Sagas
 {
     using System;
     using System.Linq;
-    using System.Threading;
     using System.Threading.Tasks;
     using AcceptanceTesting;
     using EndpointTemplates;
@@ -28,63 +27,59 @@ namespace NServiceBus.AcceptanceTests.Sagas
                 .WithEndpoint<ReceiverWithSagas>(b =>
                 {
                     b.DoNotFailOnErrorMessages();
-
-                    b.When((session, c) => session.SendLocal(new Start
+                    b.When((session, c) =>
                     {
-                        OrderId = c.OrderId
-                    }));
-
-                    b.When(c => c.StartSagaMessageReceived, (session, c) =>
-                    {
-                        var wait = new SpinWait();
-                        DynamicTableEntity[] entries;
-                        do
-                        {
-                            wait.SpinOnce();
-                            entries = table.ExecuteQuery(new TableQuery()).ToArray();
-                        } while (entries.Length < 2);
-
-                        // select saga row
-                        var id = new Guid();
-                        var saga = entries.First(dte => Guid.TryParse(dte.PartitionKey, out id));
-
-                        // copy saga
-                        var newId = Guid.NewGuid();
-                        saga.PartitionKey = newId.ToString();
-                        saga.RowKey = newId.ToString();
-                        saga.ETag = null;
-                        saga.Properties["Id"].GuidValue = newId;
-                        table.Execute(TableOperation.Insert(saga));
+                        var id1 = Guid.NewGuid();
+                        var id2 = Guid.NewGuid();
 
                         c.SagasIds = new[]
                         {
-                            id,
-                            newId
+                            id1,
+                            id2
                         };
 
-                        // delete the index entry making a real duplicate
-                        var indexEntry = entries.First(dte => ReferenceEquals(dte, saga) == false);
-                        table.Execute(TableOperation.Delete(indexEntry));
+                        var e1 = CreateSagaEntityWithOrderId(id1, c.OrderId);
+                        var e2 = CreateSagaEntityWithOrderId(id2, c.OrderId);
+
+                        // insert sagas duplicates
+                        table.Execute(TableOperation.Insert(e1));
+                        table.Execute(TableOperation.Insert(e2));
 
                         return session.SendLocal(new Complete
                         {
                             OrderId = c.OrderId
-                        }).ContinueWith(t => session.SendLocal(new FinalMessage()));
+                        });
                     });
                 })
                 .Done(c => c.FailedMessages.IsEmpty == false)
                 .Repeat(r => r.For(Transports.Default))
                 .Should(c =>
                 {
-                    var failedMessage = c.FailedMessages.SelectMany(kvp => kvp.Value).Single();
-                    Assert.IsInstanceOf<DuplicatedSagaFoundException>(failedMessage.Exception);
+                    CollectionAssert.IsNotEmpty(c.FailedMessages, "Should include at least one failed message.");
 
-                    foreach (var sagasId in c.SagasIds)
+                    var failedMessages = c.FailedMessages.SelectMany(kvp => kvp.Value).ToArray();
+                    foreach (var failedMessage in failedMessages)
                     {
-                        Assert.True(failedMessage.Exception.Message.Contains(sagasId.ToString()));
+                        Assert.IsInstanceOf<DuplicatedSagaFoundException>(failedMessage.Exception);
+
+                        foreach (var sagasId in c.SagasIds)
+                        {
+                            Assert.True(failedMessage.Exception.Message.Contains(sagasId.ToString()));
+                        }
                     }
                 })
                 .Run();
+        }
+
+        static TwoInstanceSaga.TwoInstanceSagaEntity CreateSagaEntityWithOrderId(Guid id, string orderId)
+        {
+            return new TwoInstanceSaga.TwoInstanceSagaEntity
+            {
+                PartitionKey = id.ToString(),
+                RowKey = id.ToString(),
+                OrderId = orderId,
+                Id = id
+            };
         }
 
         static async Task ClearTable(CloudTable table)
@@ -147,6 +142,14 @@ namespace NServiceBus.AcceptanceTests.Sagas
                 public virtual string Originator { get; set; }
                 public virtual string OriginalMessageId { get; set; }
             }
+
+            public class TwoInstanceSagaEntity : TableEntity
+            {
+                public virtual string OrderId { get; set; }
+                public virtual Guid Id { get; set; }
+                public virtual string Originator { get; set; }
+                public virtual string OriginalMessageId { get; set; }
+            }
         }
 
         [Serializable]
@@ -159,11 +162,6 @@ namespace NServiceBus.AcceptanceTests.Sagas
         public class Complete : ICommand
         {
             public string OrderId { get; set; }
-        }
-
-        [Serializable]
-        public class FinalMessage : ICommand
-        {
         }
     }
 }
