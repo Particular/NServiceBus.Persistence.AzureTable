@@ -10,7 +10,7 @@
     using System.Threading.Tasks;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
-    using NServiceBus.Azure;
+    using Azure;
     using Extensibility;
     using Persistence;
     using SecondaryIndices;
