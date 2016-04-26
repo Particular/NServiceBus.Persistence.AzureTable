@@ -8,10 +8,10 @@
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.RetryPolicies;
     using Microsoft.WindowsAzure.Storage.Table;
-    using Azure;
     using Extensibility;
     using NServiceBus.Routing;
     using MessageDrivenSubscriptions;
+    using Persistence.AzureStorage;
 
     class AzureSubscriptionStorage : ISubscriptionStorage
     {

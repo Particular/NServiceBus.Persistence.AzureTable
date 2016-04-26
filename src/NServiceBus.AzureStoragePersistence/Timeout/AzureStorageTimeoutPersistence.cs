@@ -1,7 +1,7 @@
 namespace NServiceBus
 {
     using System.Threading.Tasks;
-    using Azure;
+    using Persistence.AzureStorage;
     using Config;
     using Features;
     using Logging;

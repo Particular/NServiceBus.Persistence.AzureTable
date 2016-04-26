@@ -1,4 +1,4 @@
-namespace NServiceBus.Azure
+namespace NServiceBus.Persistence.AzureStorage
 {
     using System;
     using Microsoft.WindowsAzure.Storage.Table;

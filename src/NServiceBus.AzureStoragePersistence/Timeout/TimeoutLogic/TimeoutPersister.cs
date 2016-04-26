@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.Azure
+﻿namespace NServiceBus.Persistence.AzureStorage
 {
     using System.Text.RegularExpressions;
     using System;

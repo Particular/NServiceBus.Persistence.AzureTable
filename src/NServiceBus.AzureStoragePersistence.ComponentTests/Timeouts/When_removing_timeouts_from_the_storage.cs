@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
+﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
 {
     using System;
     using System.Collections.Generic;

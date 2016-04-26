@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.AzureStoragePersistence.Tests
+﻿namespace NServiceBus.Persistence.AzureStorage.Tests
 {
     using SagaPersisters.AzureStoragePersistence.SecondaryIndices;
     using NUnit.Framework;

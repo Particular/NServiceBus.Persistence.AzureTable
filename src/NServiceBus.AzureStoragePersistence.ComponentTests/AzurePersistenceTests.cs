@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests
+﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests
 {
     using System;
 

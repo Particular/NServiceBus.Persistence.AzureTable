@@ -1,4 +1,4 @@
-namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
+namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
 {
     using System;
     using System.Collections.Generic;
@@ -9,7 +9,6 @@ namespace NServiceBus.AzureStoragePersistence.ComponentTests.Timeouts
     using Microsoft.WindowsAzure.Storage.Blob;
     using Microsoft.WindowsAzure.Storage.RetryPolicies;
     using Microsoft.WindowsAzure.Storage.Table;
-    using Azure;
     using Config;
     using Support;
     using Timeout.Core;

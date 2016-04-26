@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.AzureStoragePersistence.ComponentTests.Subscriptions
+﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
 {
     using System.Linq;
     using System.Threading.Tasks;

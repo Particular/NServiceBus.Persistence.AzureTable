@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-    <id>NServiceBus.AzureStoragePersistence</id>
+    <id>NServiceBus.Persistence.AzureStorage</id>
     <title>NServiceBus Azure Storage Persistence</title>
     <version>$version$</version>
     <authors>$authors$</authors>
@@ -19,6 +19,6 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="..\..\src\binaries\NServiceBus.AzureStoragePersistence.???" target="lib\net452" />
+    <file src="..\..\src\binaries\NServiceBus.Persistence.AzureStorage.???" target="lib\net452" />
   </files>
 </package>
