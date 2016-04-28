@@ -59,7 +59,7 @@
                 if (indexRowAlreadyExists)
                 {
                     var exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey)).ConfigureAwait(false);
-                    var indexRow = exec.Result as SecondaryIndexTableEntity;
+                    var indexRow = (SecondaryIndexTableEntity)exec.Result;
                     var data = indexRow?.InitialSagaData;
                     if (data != null)
                     {
