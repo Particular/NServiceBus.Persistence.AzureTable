@@ -1,7 +1,7 @@
 # NServiceBus.Persistence.AzureStorage
 The official [NServiceBus](https://github.com/Particular/NServiceBus) persistence implementation for [Azure Storage](https://azure.microsoft.com/en-us/services/storage/).
 
-Learn more about NServiceBus.AzureStoragePersistence through our [documentation](http://docs.particular.net/nservicebus/azure-storage-persistence/).
+Learn more about NServiceBus.Persistence.AzureStorage through our [documentation](http://docs.particular.net/nservicebus/azure-storage-persistence/).
 
 If you are interested in contributing, please follow the instructions [here](https://github.com/Particular/NServiceBus/blob/develop/CONTRIBUTING.md).
 
