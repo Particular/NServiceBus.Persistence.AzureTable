@@ -56,7 +56,7 @@
                 {
                     RowKey = EncodeTo64(subscriber.TransportAddress),
                     PartitionKey = messageType.ToString(),
-                    EndpointName = subscriber.Endpoint.ToString()
+                    EndpointName = subscriber.Endpoint?.ToString()
                 };
 
                 var operation = TableOperation.Insert(subscription);
@@ -96,7 +96,7 @@
         /// <summary>
         /// Returns the subscription address based on message type
         /// </summary>
-        /// <param name="messageTypes">Types of messages that subscription addresses should sbe found for</param>
+        /// <param name="messageTypes">Types of messages that subscription addresses should be found for</param>
         /// <param name="context">The current pipeline context</param>
         /// <returns>Subscription addresses that were found for the provided messageTypes</returns>
         public async Task<IEnumerable<Subscriber>> GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes, ContextBag context)
