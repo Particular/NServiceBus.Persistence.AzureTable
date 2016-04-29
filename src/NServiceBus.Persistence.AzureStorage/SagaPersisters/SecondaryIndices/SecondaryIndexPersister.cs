@@ -72,9 +72,11 @@
                         }
                         catch (StorageException e)
                         {
-                            if (IsConflict(e))
+                            if (!IsConflict(e))
                             {
-                                // swallow ex as another worker created the primary under this key
+                                // If there is no conflict, then include the exception details so we can troubleshoot better.
+                                // Otherwise we can drop through and throw a general RetryNeededException below
+                                throw new RetryNeededException(e);
                             }
                         }
                     }
