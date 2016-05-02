@@ -81,5 +81,6 @@ namespace NServiceBus.Persistence.AzureStorage
     public class RetryNeededException : System.Exception
     {
         public RetryNeededException() { }
+        public RetryNeededException(System.Exception innerException) { }
     }
 }
