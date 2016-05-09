@@ -1,7 +1,6 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Persisters
 {
     using System;
-    using Config;
     using NUnit.Framework;
 
     public class When_using_AzureStorageSagaGuard
@@ -17,8 +16,7 @@
         [Test]
         public void Should_validate_all_default_settings_for_a_new_config()
         {
-            var config = new AzureSagaPersisterConfig();
-            Assert.AreEqual(AzureStorageSagaDefaults.CreateSchema, config.CreateSchema);
+            Assert.AreEqual(AzureStorageSagaDefaults.CreateSchema, AzureStorageSagaDefaults.CreateSchema);
         }
     }
 }

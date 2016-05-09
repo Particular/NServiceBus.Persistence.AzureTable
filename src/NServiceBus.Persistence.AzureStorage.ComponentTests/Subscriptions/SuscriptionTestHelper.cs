@@ -3,7 +3,6 @@
     using System;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
-    using Config;
     using Unicast.Subscriptions;
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
 
@@ -11,21 +10,20 @@
     {
         internal static ISubscriptionStorage CreateAzureSubscriptionStorage()
         {
-            var config = new AzureSubscriptionStorageConfig();
             var connectionString = AzurePersistenceTests.GetConnectionString();
             var account = CloudStorageAccount.Parse(connectionString);
 
-            var table = account.CreateCloudTableClient().GetTableReference(config.TableName);
+            var table = account.CreateCloudTableClient().GetTableReference(AzureSubscriptionStorageDefaults.TableName);
             table.CreateIfNotExists();
 
             return new AzureSubscriptionStorage(
-                config.TableName,
+                AzureSubscriptionStorageDefaults.TableName,
                 connectionString);
         }
 
         internal static void PerformStorageCleanup()
         {
-            RemoveAllRowsForTable(new AzureSubscriptionStorageConfig().TableName);
+            RemoveAllRowsForTable(AzureSubscriptionStorageDefaults.TableName);
         }
 
         static void RemoveAllRowsForTable(string tableName)

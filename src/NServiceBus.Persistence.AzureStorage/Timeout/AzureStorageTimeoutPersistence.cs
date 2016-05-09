@@ -1,8 +1,8 @@
 namespace NServiceBus
 {
+    using System.Configuration;
     using System.Threading.Tasks;
     using Persistence.AzureStorage;
-    using Config;
     using Features;
     using Logging;
     using Microsoft.WindowsAzure.Storage;
@@ -14,14 +14,14 @@ namespace NServiceBus
             DependsOn<TimeoutManager>();
             Defaults(s =>
             {
-                var config = s.GetConfigSection<AzureTimeoutPersisterConfig>() ?? new AzureTimeoutPersisterConfig();
-                s.SetDefault("AzureTimeoutStorage.ConnectionString", config.ConnectionString);
-                s.SetDefault("AzureTimeoutStorage.CreateSchema", config.CreateSchema);
-                s.SetDefault("AzureTimeoutStorage.TimeoutManagerDataTableName", config.TimeoutManagerDataTableName);
-                s.SetDefault("AzureTimeoutStorage.TimeoutDataTableName", config.TimeoutDataTableName);
-                s.SetDefault("AzureTimeoutStorage.CatchUpInterval", config.CatchUpInterval);
-                s.SetDefault("AzureTimeoutStorage.PartitionKeyScope", config.PartitionKeyScope);
-                s.SetDefault("AzureTimeoutStorage.TimeoutStateContainerName", config.TimeoutStateContainerName);
+                var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
+                s.SetDefault("AzureTimeoutStorage.ConnectionString", defaultConnectionString);
+                s.SetDefault("AzureTimeoutStorage.CreateSchema", AzureTimeoutStorageDefaults.CreateSchema);
+                s.SetDefault("AzureTimeoutStorage.TimeoutManagerDataTableName", AzureTimeoutStorageDefaults.TimeoutManagerDataTableName);
+                s.SetDefault("AzureTimeoutStorage.TimeoutDataTableName", AzureTimeoutStorageDefaults.TimeoutDataTableName);
+                s.SetDefault("AzureTimeoutStorage.CatchUpInterval", AzureTimeoutStorageDefaults.CatchUpInterval);
+                s.SetDefault("AzureTimeoutStorage.PartitionKeyScope", AzureTimeoutStorageDefaults.PartitionKeyScope);
+                s.SetDefault("AzureTimeoutStorage.TimeoutStateContainerName", AzureTimeoutStorageDefaults.TimeoutStateContainerName);
             });
         }
 

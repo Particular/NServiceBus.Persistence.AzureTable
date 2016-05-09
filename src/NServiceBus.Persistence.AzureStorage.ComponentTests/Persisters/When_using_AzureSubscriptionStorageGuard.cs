@@ -1,7 +1,6 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Persisters
 {
     using System;
-    using Config;
     using NServiceBus.Subscriptions;
     using NUnit.Framework;
 
@@ -33,9 +32,8 @@
         [Test]
         public void Should_validate_all_default_settings_for_a_new_config()
         {
-            var config = new AzureSubscriptionStorageConfig();
-            Assert.AreEqual(AzureSubscriptionStorageDefaults.CreateSchema, config.CreateSchema);
-            Assert.AreEqual(AzureSubscriptionStorageDefaults.TableName, config.TableName);
+            Assert.AreEqual(AzureSubscriptionStorageDefaults.CreateSchema, AzureSubscriptionStorageDefaults.CreateSchema);
+            Assert.AreEqual(AzureSubscriptionStorageDefaults.TableName, AzureSubscriptionStorageDefaults.TableName);
         }
     }
 }

@@ -42,33 +42,6 @@ namespace NServiceBus
         public static NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> TimeoutStateContainerName(this NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> config, string blobName) { }
     }
 }
-namespace NServiceBus.Config
-{
-    public class AzureSagaPersisterConfig : System.Configuration.ConfigurationSection
-    {
-        public AzureSagaPersisterConfig() { }
-        public string ConnectionString { get; set; }
-        public bool CreateSchema { get; set; }
-    }
-    public class AzureSubscriptionStorageConfig : System.Configuration.ConfigurationSection
-    {
-        public AzureSubscriptionStorageConfig() { }
-        public string ConnectionString { get; set; }
-        public bool CreateSchema { get; set; }
-        public string TableName { get; set; }
-    }
-    public class AzureTimeoutPersisterConfig : System.Configuration.ConfigurationSection
-    {
-        public AzureTimeoutPersisterConfig() { }
-        public int CatchUpInterval { get; set; }
-        public string ConnectionString { get; set; }
-        public bool CreateSchema { get; set; }
-        public string PartitionKeyScope { get; set; }
-        public string TimeoutDataTableName { get; set; }
-        public string TimeoutManagerDataTableName { get; set; }
-        public string TimeoutStateContainerName { get; set; }
-    }
-}
 namespace NServiceBus.Persistence.AzureStorage
 {
     public class DuplicatedSagaFoundException : System.Exception

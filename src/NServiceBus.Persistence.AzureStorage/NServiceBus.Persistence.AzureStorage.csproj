@@ -113,9 +113,6 @@
     <Compile Include="SagaPersisters\ConfigureAzureSagaStorage.cs" />
     <Compile Include="Subscriptions\AzureSubscriptionStorageGuard.cs" />
     <Compile Include="Subscriptions\AzureStorageSubscriptionPersistence.cs" />
-    <Compile Include="Config\AzureSagaPersisterConfig.cs" />
-    <Compile Include="Config\AzureSubscriptionStorageConfig.cs" />
-    <Compile Include="Config\AzureTimeoutPersisterConfig.cs" />
     <Compile Include="SagaPersisters\AzureSagaPersister.cs" />
     <Compile Include="SagaPersisters\DictionaryTableEntity.cs" />
     <Compile Include="SafeLinqExtensions.cs" />

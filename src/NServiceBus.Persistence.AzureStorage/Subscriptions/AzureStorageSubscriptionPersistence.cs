@@ -1,7 +1,7 @@
 namespace NServiceBus
 {
+    using System.Configuration;
     using System.Threading.Tasks;
-    using Config;
     using Features;
     using Microsoft.WindowsAzure.Storage;
     using Logging;
@@ -14,10 +14,10 @@ namespace NServiceBus
             DependsOn<MessageDrivenSubscriptions>();
             Defaults(s =>
             {
-                var configSection = s.GetConfigSection<AzureSubscriptionStorageConfig>() ?? new AzureSubscriptionStorageConfig();
-                s.SetDefault("AzureSubscriptionStorage.ConnectionString", configSection.ConnectionString);
-                s.SetDefault("AzureSubscriptionStorage.TableName", configSection.TableName);
-                s.SetDefault("AzureSubscriptionStorage.CreateSchema", configSection.CreateSchema);
+                var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
+                s.SetDefault("AzureSubscriptionStorage.ConnectionString", defaultConnectionString);
+                s.SetDefault("AzureSubscriptionStorage.TableName", AzureSubscriptionStorageDefaults.TableName);
+                s.SetDefault("AzureSubscriptionStorage.CreateSchema", AzureSubscriptionStorageDefaults.CreateSchema);
             });
         }
 

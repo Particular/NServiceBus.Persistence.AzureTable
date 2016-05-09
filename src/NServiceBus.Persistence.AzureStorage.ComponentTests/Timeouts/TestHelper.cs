@@ -9,7 +9,6 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
     using Microsoft.WindowsAzure.Storage.Blob;
     using Microsoft.WindowsAzure.Storage.RetryPolicies;
     using Microsoft.WindowsAzure.Storage.Table;
-    using Config;
     using Support;
     using Timeout.Core;
     using NUnit.Framework;
@@ -23,12 +22,10 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
             TimeoutPersister persister = null;
             try
             {
-                var azureTimeoutPersisterConfig = new AzureTimeoutPersisterConfig();
-
                 persister = new TimeoutPersister(AzurePersistenceTests.GetConnectionString(),
-                    azureTimeoutPersisterConfig.TimeoutDataTableName, azureTimeoutPersisterConfig.TimeoutManagerDataTableName,
-                    azureTimeoutPersisterConfig.TimeoutStateContainerName, 3600,
-                    azureTimeoutPersisterConfig.PartitionKeyScope, EndpointName, RuntimeEnvironment.MachineName);
+                    AzureTimeoutStorageDefaults.TimeoutDataTableName, AzureTimeoutStorageDefaults.TimeoutManagerDataTableName,
+                    AzureTimeoutStorageDefaults.TimeoutStateContainerName, 3600,
+                    AzureTimeoutStorageDefaults.PartitionKeyScope, EndpointName, RuntimeEnvironment.MachineName);
             }
             catch (WebException exception)
             {
@@ -43,8 +40,6 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
 
         public static CloudBlockBlob CreateTimeoutCloudBlockBlob(string timeoutBlobId)
         {
-            var azureTimeoutPersisterConfig = new AzureTimeoutPersisterConfig();
-
             var account = CloudStorageAccount.Parse(AzurePersistenceTests.GetConnectionString());
             var client = account.CreateCloudTableClient();
             client.DefaultRequestOptions = new TableRequestOptions
@@ -53,7 +48,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
             };
 
             var cloudBlobclient = account.CreateCloudBlobClient();
-            var container = cloudBlobclient.GetContainerReference(azureTimeoutPersisterConfig.TimeoutStateContainerName);
+            var container = cloudBlobclient.GetContainerReference(AzureTimeoutStorageDefaults.TimeoutStateContainerName);
 
             return container.GetBlockBlobReference(timeoutBlobId);
         }
@@ -103,8 +98,8 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
 
         internal static void PerformStorageCleanup()
         {
-            RemoveAllRowsForTable(new AzureTimeoutPersisterConfig().TimeoutDataTableName);
-            RemoveAllRowsForTable(new AzureTimeoutPersisterConfig().TimeoutManagerDataTableName);
+            RemoveAllRowsForTable(AzureTimeoutStorageDefaults.TimeoutDataTableName);
+            RemoveAllRowsForTable(AzureTimeoutStorageDefaults.TimeoutManagerDataTableName);
 
             RemoveAllBlobs();
         }

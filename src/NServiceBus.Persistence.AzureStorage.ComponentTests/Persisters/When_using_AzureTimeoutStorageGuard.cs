@@ -1,7 +1,6 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Persisters
 {
     using System;
-    using Config;
     using Timeout;
     using NUnit.Framework;
 
@@ -37,18 +36,6 @@
         public void Should_not_allow_invalid_partition_key_scope(string partitionKeyScope)
         {
             Assert.Throws<ArgumentException>(() => AzureTimeoutStorageGuard.CheckPartitionKeyScope(partitionKeyScope));
-        }
-
-        [Test]
-        public void Should_validate_all_default_settings_for_a_new_config()
-        {
-            var config = new AzureTimeoutPersisterConfig();
-            Assert.AreEqual(AzureTimeoutStorageDefaults.TimeoutManagerDataTableName, config.TimeoutManagerDataTableName);
-            Assert.AreEqual(AzureTimeoutStorageDefaults.TimeoutDataTableName, config.TimeoutDataTableName);
-            Assert.AreEqual(AzureTimeoutStorageDefaults.PartitionKeyScope, config.PartitionKeyScope);
-            Assert.AreEqual(AzureTimeoutStorageDefaults.CatchUpInterval, config.CatchUpInterval);
-            Assert.AreEqual(AzureTimeoutStorageDefaults.CreateSchema, config.CreateSchema);
-            Assert.AreEqual(AzureTimeoutStorageDefaults.TimeoutStateContainerName, config.TimeoutStateContainerName);
         }
     }
 }
