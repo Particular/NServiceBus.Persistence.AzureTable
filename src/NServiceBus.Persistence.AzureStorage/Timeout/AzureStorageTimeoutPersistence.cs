@@ -18,7 +18,7 @@ namespace NServiceBus
                 var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
                 s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageConnectionString, defaultConnectionString);
                 s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageCreateSchema, AzureTimeoutStorageDefaults.CreateSchema);
-                s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageTimeoutDataTableName, AzureTimeoutStorageDefaults.TimeoutManagerDataTableName);
+                s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageTimeoutManagerDataTableName, AzureTimeoutStorageDefaults.TimeoutManagerDataTableName);
                 s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageTimeoutDataTableName, AzureTimeoutStorageDefaults.TimeoutDataTableName);
                 s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageCatchUpInterval, AzureTimeoutStorageDefaults.CatchUpInterval);
                 s.SetDefault(WellKnownConfigurationKeys.TimeoutStoragePartitionKeyScope, AzureTimeoutStorageDefaults.PartitionKeyScope);
