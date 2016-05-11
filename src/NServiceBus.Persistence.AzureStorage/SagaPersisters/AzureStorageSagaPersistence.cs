@@ -3,6 +3,7 @@
     using System.Configuration;
     using Features;
     using Persistence.AzureStorage;
+    using Persistence.AzureStorage.Config;
 
     public class AzureStorageSagaPersistence : Feature
     {
@@ -12,8 +13,8 @@
             Defaults(s =>
             {
                 var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
-                s.SetDefault("AzureSagaStorage.ConnectionString", defaultConnectionString);
-                s.SetDefault("AzureSagaStorage.CreateSchema", AzureStorageSagaDefaults.CreateSchema);
+                s.SetDefault(WellKnownConfigurationKeys.SagaStorageConnectionString, defaultConnectionString);
+                s.SetDefault(WellKnownConfigurationKeys.SagaStorageCreateSchema, AzureStorageSagaDefaults.CreateSchema);
             });
         }
 
@@ -22,8 +23,8 @@
         /// </summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
-            var connectionstring = context.Settings.Get<string>("AzureSagaStorage.ConnectionString");
-            var updateSchema = context.Settings.Get<bool>("AzureSagaStorage.CreateSchema");
+            var connectionstring = context.Settings.Get<string>(WellKnownConfigurationKeys.SagaStorageConnectionString);
+            var updateSchema = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCreateSchema);
 
             context.Container.ConfigureComponent(builder => new AzureSagaPersister(connectionstring, updateSchema), DependencyLifecycle.InstancePerCall);
         }

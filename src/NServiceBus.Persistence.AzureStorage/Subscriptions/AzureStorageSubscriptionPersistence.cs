@@ -5,6 +5,7 @@ namespace NServiceBus
     using Features;
     using Microsoft.WindowsAzure.Storage;
     using Logging;
+    using Persistence.AzureStorage.Config;
     using Unicast.Subscriptions;
 
     public class AzureStorageSubscriptionPersistence : Feature
@@ -15,9 +16,9 @@ namespace NServiceBus
             Defaults(s =>
             {
                 var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
-                s.SetDefault("AzureSubscriptionStorage.ConnectionString", defaultConnectionString);
-                s.SetDefault("AzureSubscriptionStorage.TableName", AzureSubscriptionStorageDefaults.TableName);
-                s.SetDefault("AzureSubscriptionStorage.CreateSchema", AzureSubscriptionStorageDefaults.CreateSchema);
+                s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageConnectionString, defaultConnectionString);
+                s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageTableName, AzureSubscriptionStorageDefaults.TableName);
+                s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageCreateSchema , AzureSubscriptionStorageDefaults.CreateSchema);
             });
         }
 
@@ -26,9 +27,9 @@ namespace NServiceBus
         /// </summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
-            var subscriptionTableName = context.Settings.Get<string>("AzureSubscriptionStorage.TableName");
-            var connectionString = context.Settings.Get<string>("AzureSubscriptionStorage.ConnectionString");
-            var createIfNotExist = context.Settings.Get<bool>("AzureSubscriptionStorage.CreateSchema");
+            var subscriptionTableName = context.Settings.Get<string>(WellKnownConfigurationKeys.SubscriptionStorageTableName);
+            var connectionString = context.Settings.Get<string>(WellKnownConfigurationKeys.SubscriptionStorageConnectionString);
+            var createIfNotExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SubscriptionStorageCreateSchema);
 
             if (createIfNotExist)
             {
