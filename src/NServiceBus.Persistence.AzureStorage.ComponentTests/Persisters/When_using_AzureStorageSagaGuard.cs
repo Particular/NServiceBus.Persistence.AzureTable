@@ -12,11 +12,5 @@
         {
             AzureStorageSagaGuard.CheckConnectionString(connectionString);
         }
-
-        [Test]
-        public void Should_validate_all_default_settings_for_a_new_config()
-        {
-            Assert.AreEqual(AzureStorageSagaDefaults.CreateSchema, AzureStorageSagaDefaults.CreateSchema);
-        }
     }
 }
