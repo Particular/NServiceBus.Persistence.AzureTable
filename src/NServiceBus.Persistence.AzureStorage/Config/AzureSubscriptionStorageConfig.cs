@@ -6,7 +6,7 @@
     {
         [ObsoleteEx(
             TreatAsErrorFromVersion = "1",
-            RemoveInVersion="7",
+            RemoveInVersion="2",
             Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.ConnectionString` instead.")]
         public string ConnectionString
         {
@@ -22,7 +22,7 @@
 
         [ObsoleteEx(
             TreatAsErrorFromVersion = "1",
-            RemoveInVersion="7",
+            RemoveInVersion="2",
             Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.CreateSchema` instead.")]
         public bool CreateSchema
         {
@@ -39,7 +39,7 @@
 
         [ObsoleteEx(
             TreatAsErrorFromVersion = "1",
-            RemoveInVersion="7",
+            RemoveInVersion="2",
             Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.TableName` instead.")]
         public string TableName
         {

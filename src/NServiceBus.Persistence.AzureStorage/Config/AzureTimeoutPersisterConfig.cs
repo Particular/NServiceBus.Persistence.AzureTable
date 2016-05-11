@@ -7,7 +7,7 @@
 
         [ObsoleteEx(
             TreatAsErrorFromVersion = "1",
-            RemoveInVersion="7",
+            RemoveInVersion="2",
             Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.ConnectionString` instead.")]
         public string ConnectionString
         {
@@ -17,7 +17,7 @@
 
         [ObsoleteEx(
             TreatAsErrorFromVersion = "1",
-            RemoveInVersion="7",
+            RemoveInVersion="2",
             Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.TimeoutManagerDataTableName` instead.")]
         public string TimeoutManagerDataTableName
         {
@@ -27,7 +27,7 @@
 
         [ObsoleteEx(
             TreatAsErrorFromVersion = "1",
-            RemoveInVersion="7",
+            RemoveInVersion="2",
             Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.TimeoutDataTableName` instead.")]
         public string TimeoutDataTableName
         {
@@ -37,7 +37,7 @@
 
         [ObsoleteEx(
             TreatAsErrorFromVersion = "1",
-            RemoveInVersion="7",
+            RemoveInVersion="2",
             Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.CatchUpInterval` instead.")]
         public int CatchUpInterval
         {
@@ -47,7 +47,7 @@
 
         [ObsoleteEx(
             TreatAsErrorFromVersion = "1",
-            RemoveInVersion="7",
+            RemoveInVersion="2",
             Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.ConnectionString` instead.")]
         public string PartitionKeyScope
         {
@@ -57,7 +57,7 @@
 
         [ObsoleteEx(
             TreatAsErrorFromVersion = "1",
-            RemoveInVersion="7",
+            RemoveInVersion="2",
             Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.CreateSchema` instead.")]
         public bool CreateSchema
         {
@@ -67,7 +67,7 @@
 
         [ObsoleteEx(
             TreatAsErrorFromVersion = "1",
-            RemoveInVersion="7",
+            RemoveInVersion="2",
             Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.TimeoutStateContainerName` instead.")]
         public string TimeoutStateContainerName
         {
