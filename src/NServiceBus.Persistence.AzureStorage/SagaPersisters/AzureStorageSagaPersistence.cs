@@ -1,8 +1,9 @@
 ﻿namespace NServiceBus
 {
-    using Config;
+    using System.Configuration;
     using Features;
     using Persistence.AzureStorage;
+    using Persistence.AzureStorage.Config;
 
     public class AzureStorageSagaPersistence : Feature
     {
@@ -11,9 +12,9 @@
             DependsOn<Features.Sagas>();
             Defaults(s =>
             {
-                var configSection = s.GetConfigSection<AzureSagaPersisterConfig>() ?? new AzureSagaPersisterConfig();
-                s.SetDefault("AzureSagaStorage.ConnectionString", configSection.ConnectionString);
-                s.SetDefault("AzureSagaStorage.CreateSchema", configSection.CreateSchema);
+                var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
+                s.SetDefault(WellKnownConfigurationKeys.SagaStorageConnectionString, defaultConnectionString);
+                s.SetDefault(WellKnownConfigurationKeys.SagaStorageCreateSchema, AzureStorageSagaDefaults.CreateSchema);
             });
         }
 
@@ -22,8 +23,8 @@
         /// </summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
-            var connectionstring = context.Settings.Get<string>("AzureSagaStorage.ConnectionString");
-            var updateSchema = context.Settings.Get<bool>("AzureSagaStorage.CreateSchema");
+            var connectionstring = context.Settings.Get<string>(WellKnownConfigurationKeys.SagaStorageConnectionString);
+            var updateSchema = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCreateSchema);
 
             context.Container.ConfigureComponent(builder => new AzureSagaPersister(connectionstring, updateSchema), DependencyLifecycle.InstancePerCall);
         }

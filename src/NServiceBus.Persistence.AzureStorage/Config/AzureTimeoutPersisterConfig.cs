@@ -1,75 +1,77 @@
-namespace NServiceBus.Config
+﻿namespace NServiceBus.Config
 {
     using System.Configuration;
-    using Timeout;
 
     public class AzureTimeoutPersisterConfig : ConfigurationSection
     {
-        public AzureTimeoutPersisterConfig()
-        {
-            var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
 
-            Properties.Add(new ConfigurationProperty("ConnectionString", typeof(string), defaultConnectionString,
-                null, new CallbackValidator(typeof(string), AzureTimeoutStorageGuard.CheckConnectionString), ConfigurationPropertyOptions.None));
-
-            Properties.Add(new ConfigurationProperty("TimeoutManagerDataTableName", typeof(string), AzureTimeoutStorageDefaults.TimeoutManagerDataTableName,
-                null, new CallbackValidator(typeof(string), AzureTimeoutStorageGuard.CheckTableName), ConfigurationPropertyOptions.None));
-
-            Properties.Add(new ConfigurationProperty("TimeoutDataTableName", typeof(string), AzureTimeoutStorageDefaults.TimeoutDataTableName,
-                null, new CallbackValidator(typeof(string), AzureTimeoutStorageGuard.CheckTableName), ConfigurationPropertyOptions.None));
-
-            Properties.Add(new ConfigurationProperty("CatchUpInterval", typeof(int), AzureTimeoutStorageDefaults.CatchUpInterval,
-                null, new CallbackValidator(typeof(int), AzureTimeoutStorageGuard.CheckCatchUpInterval), ConfigurationPropertyOptions.None));
-
-            Properties.Add(new ConfigurationProperty("PartitionKeyScope", typeof(string), AzureTimeoutStorageDefaults.PartitionKeyScope,
-                null, new CallbackValidator(typeof(string), AzureTimeoutStorageGuard.CheckPartitionKeyScope), ConfigurationPropertyOptions.None));
-
-            Properties.Add(new ConfigurationProperty("CreateSchema", typeof(bool), AzureTimeoutStorageDefaults.CreateSchema, ConfigurationPropertyOptions.None));
-
-            Properties.Add(new ConfigurationProperty("TimeoutStateContainerName", typeof(string),AzureTimeoutStorageDefaults.TimeoutStateContainerName,
-                null, new CallbackValidator(typeof(string), AzureTimeoutStorageGuard.CheckTableName), ConfigurationPropertyOptions.None));
-
-        }
-
+        [ObsoleteEx(
+            TreatAsErrorFromVersion = "1",
+            RemoveInVersion="2",
+            Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.ConnectionString` instead.")]
         public string ConnectionString
         {
             get { return (string)this["ConnectionString"]; }
             set { this["ConnectionString"] = value; }
         }
 
+        [ObsoleteEx(
+            TreatAsErrorFromVersion = "1",
+            RemoveInVersion="2",
+            Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.TimeoutManagerDataTableName` instead.")]
         public string TimeoutManagerDataTableName
         {
             get { return (string)this["TimeoutManagerDataTableName"]; }
             set { this["TimeoutManagerDataTableName"] = value; }
         }
 
+        [ObsoleteEx(
+            TreatAsErrorFromVersion = "1",
+            RemoveInVersion="2",
+            Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.TimeoutDataTableName` instead.")]
         public string TimeoutDataTableName
         {
             get { return (string)this["TimeoutDataTableName"]; }
             set { this["TimeoutDataTableName"] = value; }
         }
 
+        [ObsoleteEx(
+            TreatAsErrorFromVersion = "1",
+            RemoveInVersion="2",
+            Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.CatchUpInterval` instead.")]
         public int CatchUpInterval
         {
             get { return (int)this["CatchUpInterval"]; }
             set { this["CatchUpInterval"] = value; }
         }
 
+        [ObsoleteEx(
+            TreatAsErrorFromVersion = "1",
+            RemoveInVersion="2",
+            Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.ConnectionString` instead.")]
         public string PartitionKeyScope
         {
             get { return (string)this["PartitionKeyScope"]; }
             set { this["PartitionKeyScope"] = value; }
         }
 
+        [ObsoleteEx(
+            TreatAsErrorFromVersion = "1",
+            RemoveInVersion="2",
+            Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.CreateSchema` instead.")]
         public bool CreateSchema
         {
             get { return (bool)this["CreateSchema"]; }
             set { this["CreateSchema"] = value; }
         }
 
+        [ObsoleteEx(
+            TreatAsErrorFromVersion = "1",
+            RemoveInVersion="2",
+            Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.TimeoutStateContainerName` instead.")]
         public string TimeoutStateContainerName
         {
-            get { return (string) this["TimeoutStateContainerName"]; }
+            get { return (string)this["TimeoutStateContainerName"]; }
             set { this["TimeoutStateContainerName"] = value; }
         }
     }

@@ -1,10 +1,11 @@
 namespace NServiceBus
 {
+    using System.Configuration;
     using System.Threading.Tasks;
-    using Config;
     using Features;
     using Microsoft.WindowsAzure.Storage;
     using Logging;
+    using Persistence.AzureStorage.Config;
     using Unicast.Subscriptions;
 
     public class AzureStorageSubscriptionPersistence : Feature
@@ -14,10 +15,10 @@ namespace NServiceBus
             DependsOn<MessageDrivenSubscriptions>();
             Defaults(s =>
             {
-                var configSection = s.GetConfigSection<AzureSubscriptionStorageConfig>() ?? new AzureSubscriptionStorageConfig();
-                s.SetDefault("AzureSubscriptionStorage.ConnectionString", configSection.ConnectionString);
-                s.SetDefault("AzureSubscriptionStorage.TableName", configSection.TableName);
-                s.SetDefault("AzureSubscriptionStorage.CreateSchema", configSection.CreateSchema);
+                var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
+                s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageConnectionString, defaultConnectionString);
+                s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageTableName, AzureSubscriptionStorageDefaults.TableName);
+                s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageCreateSchema , AzureSubscriptionStorageDefaults.CreateSchema);
             });
         }
 
@@ -26,9 +27,9 @@ namespace NServiceBus
         /// </summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
-            var subscriptionTableName = context.Settings.Get<string>("AzureSubscriptionStorage.TableName");
-            var connectionString = context.Settings.Get<string>("AzureSubscriptionStorage.ConnectionString");
-            var createIfNotExist = context.Settings.Get<bool>("AzureSubscriptionStorage.CreateSchema");
+            var subscriptionTableName = context.Settings.Get<string>(WellKnownConfigurationKeys.SubscriptionStorageTableName);
+            var connectionString = context.Settings.Get<string>(WellKnownConfigurationKeys.SubscriptionStorageConnectionString);
+            var createIfNotExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SubscriptionStorageCreateSchema);
 
             if (createIfNotExist)
             {

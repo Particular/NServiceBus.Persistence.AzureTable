@@ -1,11 +1,12 @@
 namespace NServiceBus
 {
+    using System.Configuration;
     using System.Threading.Tasks;
     using Persistence.AzureStorage;
-    using Config;
     using Features;
     using Logging;
     using Microsoft.WindowsAzure.Storage;
+    using Persistence.AzureStorage.Config;
 
     public class AzureStorageTimeoutPersistence : Feature
     {
@@ -14,14 +15,14 @@ namespace NServiceBus
             DependsOn<TimeoutManager>();
             Defaults(s =>
             {
-                var config = s.GetConfigSection<AzureTimeoutPersisterConfig>() ?? new AzureTimeoutPersisterConfig();
-                s.SetDefault("AzureTimeoutStorage.ConnectionString", config.ConnectionString);
-                s.SetDefault("AzureTimeoutStorage.CreateSchema", config.CreateSchema);
-                s.SetDefault("AzureTimeoutStorage.TimeoutManagerDataTableName", config.TimeoutManagerDataTableName);
-                s.SetDefault("AzureTimeoutStorage.TimeoutDataTableName", config.TimeoutDataTableName);
-                s.SetDefault("AzureTimeoutStorage.CatchUpInterval", config.CatchUpInterval);
-                s.SetDefault("AzureTimeoutStorage.PartitionKeyScope", config.PartitionKeyScope);
-                s.SetDefault("AzureTimeoutStorage.TimeoutStateContainerName", config.TimeoutStateContainerName);
+                var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
+                s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageConnectionString, defaultConnectionString);
+                s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageCreateSchema, AzureTimeoutStorageDefaults.CreateSchema);
+                s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageTimeoutManagerDataTableName, AzureTimeoutStorageDefaults.TimeoutManagerDataTableName);
+                s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageTimeoutDataTableName, AzureTimeoutStorageDefaults.TimeoutDataTableName);
+                s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageCatchUpInterval, AzureTimeoutStorageDefaults.CatchUpInterval);
+                s.SetDefault(WellKnownConfigurationKeys.TimeoutStoragePartitionKeyScope, AzureTimeoutStorageDefaults.PartitionKeyScope);
+                s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageTimeoutStateContainerName, AzureTimeoutStorageDefaults.TimeoutStateContainerName);
             });
         }
 
@@ -30,15 +31,15 @@ namespace NServiceBus
         /// </summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
-            var createIfNotExist = context.Settings.Get<bool>("AzureTimeoutStorage.CreateSchema");
-            var timeoutDataTableName = context.Settings.Get<string>("AzureTimeoutStorage.TimeoutDataTableName");
-            var timeoutManagerDataTableName = context.Settings.Get<string>("AzureTimeoutStorage.TimeoutManagerDataTableName");
-            var connectionString = context.Settings.Get<string>("AzureTimeoutStorage.ConnectionString");
-            var catchUpInterval = context.Settings.Get<int>("AzureTimeoutStorage.CatchUpInterval");
-            var partitionKeyScope = context.Settings.Get<string>("AzureTimeoutStorage.PartitionKeyScope");
+            var createIfNotExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.TimeoutStorageCreateSchema);
+            var timeoutDataTableName = context.Settings.Get<string>(WellKnownConfigurationKeys.TimeoutStorageTimeoutDataTableName);
+            var timeoutManagerDataTableName = context.Settings.Get<string>(WellKnownConfigurationKeys.TimeoutStorageTimeoutManagerDataTableName);
+            var connectionString = context.Settings.Get<string>(WellKnownConfigurationKeys.TimeoutStorageConnectionString);
+            var catchUpInterval = context.Settings.Get<int>(WellKnownConfigurationKeys.TimeoutStorageCatchUpInterval);
+            var partitionKeyScope = context.Settings.Get<string>(WellKnownConfigurationKeys.TimeoutStoragePartitionKeyScope);
             var endpointName = context.Settings.EndpointName();
             var hostDisplayName = context.Settings.GetOrDefault<string>("NServiceBus.HostInformation.DisplayName");
-            var timeoutStateContainerName = context.Settings.GetOrDefault<string>("AzureTimeoutStorage.TimeoutStateContainerName");
+            var timeoutStateContainerName = context.Settings.GetOrDefault<string>(WellKnownConfigurationKeys.TimeoutStorageTimeoutStateContainerName);
 
             if (createIfNotExist)
             {

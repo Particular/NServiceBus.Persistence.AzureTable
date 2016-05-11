@@ -1,24 +1,13 @@
-namespace NServiceBus.Config
+﻿namespace NServiceBus.Config
 {
     using System.Configuration;
-    using Subscriptions;
 
     public class AzureSubscriptionStorageConfig : ConfigurationSection
     {
-        public AzureSubscriptionStorageConfig()
-        {
-            var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
-
-            Properties.Add(new ConfigurationProperty("ConnectionString", typeof(string), defaultConnectionString,
-                null, new CallbackValidator(typeof(string), AzureSubscriptionStorageGuard.CheckConnectionString), ConfigurationPropertyOptions.None));
-
-            Properties.Add(new ConfigurationProperty("TableName", typeof(string), AzureSubscriptionStorageDefaults.TableName,
-                null, new CallbackValidator(typeof(string), AzureSubscriptionStorageGuard.CheckTableName), ConfigurationPropertyOptions.None));
-
-            Properties.Add(new ConfigurationProperty("CreateSchema", typeof(bool), AzureSubscriptionStorageDefaults.CreateSchema,
-                ConfigurationPropertyOptions.None));
-        }
-
+        [ObsoleteEx(
+            TreatAsErrorFromVersion = "1",
+            RemoveInVersion="2",
+            Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.ConnectionString` instead.")]
         public string ConnectionString
         {
             get
@@ -31,6 +20,10 @@ namespace NServiceBus.Config
             }
         }
 
+        [ObsoleteEx(
+            TreatAsErrorFromVersion = "1",
+            RemoveInVersion="2",
+            Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.CreateSchema` instead.")]
         public bool CreateSchema
         {
             get
@@ -44,6 +37,10 @@ namespace NServiceBus.Config
             }
         }
 
+        [ObsoleteEx(
+            TreatAsErrorFromVersion = "1",
+            RemoveInVersion="2",
+            Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.TableName` instead.")]
         public string TableName
         {
             get

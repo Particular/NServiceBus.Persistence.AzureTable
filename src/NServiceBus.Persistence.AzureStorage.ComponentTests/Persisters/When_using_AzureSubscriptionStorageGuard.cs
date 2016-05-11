@@ -1,7 +1,6 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Persisters
 {
     using System;
-    using Config;
     using NServiceBus.Subscriptions;
     using NUnit.Framework;
 
@@ -28,14 +27,6 @@
         public void Should_not_allow_invalid_table_name(string tableName)
         {
             AzureSubscriptionStorageGuard.CheckTableName(tableName);
-        }
-
-        [Test]
-        public void Should_validate_all_default_settings_for_a_new_config()
-        {
-            var config = new AzureSubscriptionStorageConfig();
-            Assert.AreEqual(AzureSubscriptionStorageDefaults.CreateSchema, config.CreateSchema);
-            Assert.AreEqual(AzureSubscriptionStorageDefaults.TableName, config.TableName);
         }
     }
 }
