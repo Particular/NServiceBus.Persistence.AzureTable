@@ -113,6 +113,7 @@
     <Compile Include="SagaPersisters\AzureStorageSagaGuard.cs" />
     <Compile Include="SagaPersisters\AzureStorageSagaDefaults.cs" />
     <Compile Include="SagaPersisters\AzureStorageSagaPersistence.cs" />
+    <Compile Include="SagaPersisters\DictionaryTableEntityExtensions.cs" />
     <Compile Include="SagaPersisters\DuplicatedSagaFoundException.cs" />
     <Compile Include="SagaPersisters\RetryNeededException.cs" />
     <Compile Include="SagaPersisters\SecondaryIndices\SecondaryIndexKeyBuilder.cs" />

@@ -11,24 +11,18 @@
     {
         public delegate Task<Guid[]> ScanForSagas(Type sagaType, string propertyName, object propertyValue);
 
-        const int LRUCapacity = 1000;
-        LRUCache<PartitionRowKeyTuple, Guid> cache = new LRUCache<PartitionRowKeyTuple, Guid>(LRUCapacity);
-        Func<Type, Task<CloudTable>> getTableForSaga;
-        Func<IContainSagaData, Task> persist;
-        ScanForSagas scanner;
-
-        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, Func<IContainSagaData, Task> persist)
+        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, Func<IContainSagaData, PartitionRowKeyTuple, Task> persist)
         {
             this.getTableForSaga = getTableForSaga;
             this.scanner = scanner;
             this.persist = persist;
         }
 
-        public async Task Insert(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty)
+        public async Task<PartitionRowKeyTuple> Insert(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty)
         {
             if (correlationProperty == SagaCorrelationProperty.None)
             {
-                return;
+                return null;
             }
 
             var sagaType = sagaData.GetType();
@@ -52,6 +46,7 @@
             try
             {
                 await table.ExecuteAsync(TableOperation.Insert(entity)).ConfigureAwait(false);
+                return key;
             }
             catch (StorageException ex)
             {
@@ -59,7 +54,7 @@
                 if (indexRowAlreadyExists)
                 {
                     var exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey)).ConfigureAwait(false);
-                    var indexRow = (SecondaryIndexTableEntity)exec.Result;
+                    var indexRow = (SecondaryIndexTableEntity) exec.Result;
                     var data = indexRow?.InitialSagaData;
                     if (data != null)
                     {
@@ -68,7 +63,8 @@
                         // saga hasn't been saved under primary key. Try to store it
                         try
                         {
-                            await persist(deserializeSagaData).ConfigureAwait(false);
+                            await persist(deserializeSagaData, key).ConfigureAwait(false);
+                            return key;
                         }
                         catch (StorageException e)
                         {
@@ -79,11 +75,26 @@
                                 throw new RetryNeededException(e);
                             }
                         }
+
+                        throw new RetryNeededException();
                     }
 
-                    throw new RetryNeededException();
+                    // ReSharper disable once RedundantIfElseBlock to make it visible for a reader
+                    else
+                    {
+                        // data is null, this means that either the entry has been created as the secondary index after scanning the table or after storing the primary and can be deleted
+                        try
+                        {
+                            await table.ExecuteAsync(TableOperation.Delete(indexRow)).ConfigureAwait(false);
+                            await table.ExecuteAsync(TableOperation.Insert(entity)).ConfigureAwait(false);
+                            return key;
+                        }
+                        catch (Exception exception)
+                        {
+                            throw new RetryNeededException(exception);
+                        }
+                    }
                 }
-
                 throw;
             }
         }
@@ -91,13 +102,13 @@
         public async Task<Guid?> FindPossiblyCreatingIndexEntry<TSagaData>(string propertyName, object propertyValue)
             where TSagaData : IContainSagaData
         {
-            if (string.IsNullOrEmpty(propertyName) || propertyValue == null)
+            var sagaType = typeof(TSagaData);
+            var key = TryBuildKey(propertyName, propertyValue, sagaType);
+
+            if (key == null)
             {
                 return null;
             }
-
-            var sagaType = typeof(TSagaData);
-            var key = SecondaryIndexKeyBuilder.BuildTableKey(sagaType, new SagaCorrelationProperty(propertyName, propertyValue));
 
             Guid guid;
             if (cache.TryGet(key, out guid))
@@ -129,9 +140,7 @@
 
             var id = ids[0];
 
-            var entity = new SecondaryIndexTableEntity();
-            key.Apply(entity);
-            entity.SagaId = id;
+            var entity = CreateIndexingOnlyEntity(key, id);
 
             try
             {
@@ -146,9 +155,81 @@
             return id;
         }
 
+        /// <summary>
+        /// Invalidates the secondary index cache if any exists for the specified property value.
+        /// </summary>
+        public void InvalidateCacheIfAny(string propertyName, object propertyValue, Type sagaType)
+        {
+            var key = TryBuildKey(propertyName, propertyValue, sagaType);
+            if (key != null)
+            {
+                cache.Remove(key);
+            }
+        }
+
+        static PartitionRowKeyTuple TryBuildKey(string propertyName, object propertyValue, Type sagaType)
+        {
+            if (string.IsNullOrEmpty(propertyName) || propertyValue == null)
+            {
+                return null;
+            }
+            return SecondaryIndexKeyBuilder.BuildTableKey(sagaType, new SagaCorrelationProperty(propertyName, propertyValue));
+        }
+
+        public async Task MarkAsHavingPrimaryPersisted(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty)
+        {
+            if (correlationProperty == SagaCorrelationProperty.None)
+            {
+                return;
+            }
+
+            var sagaType = sagaData.GetType();
+            var table = await getTableForSaga(sagaType).ConfigureAwait(false);
+            var key = SecondaryIndexKeyBuilder.BuildTableKey(sagaType, correlationProperty);
+
+            var secondaryIndexTableEntity = CreateIndexingOnlyEntity(key, sagaData.Id);
+            secondaryIndexTableEntity.ETag = "*";
+
+            await table.ExecuteAsync(TableOperation.Replace(secondaryIndexTableEntity)).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Creates an indexing only entity, without payload of the primary.
+        /// </summary>
+        static SecondaryIndexTableEntity CreateIndexingOnlyEntity(PartitionRowKeyTuple key, Guid id)
+        {
+            var entity = new SecondaryIndexTableEntity();
+            key.Apply(entity);
+            entity.SagaId = id;
+            return entity;
+        }
+
+        public async Task RemoveSecondary(Type sagaType, PartitionRowKeyTuple secondaryIndexKey)
+        {
+            var table = await getTableForSaga(sagaType).ConfigureAwait(false);
+            var e = new TableEntity
+            {
+                ETag = "*"
+            };
+
+            secondaryIndexKey.Apply(e);
+            cache.Remove(secondaryIndexKey);
+            await table.DeleteIgnoringNotFound(e).ConfigureAwait(false);
+        }
+
         static bool IsConflict(StorageException ex)
         {
             return ex.RequestInformation.HttpStatusCode == (int) HttpStatusCode.Conflict;
         }
+
+        LRUCache<PartitionRowKeyTuple, Guid> cache = new LRUCache<PartitionRowKeyTuple, Guid>(LRUCapacity);
+
+        Func<Type, Task<CloudTable>> getTableForSaga;
+
+        Func<IContainSagaData, PartitionRowKeyTuple, Task> persist;
+
+        ScanForSagas scanner;
+
+        const int LRUCapacity = 1000;
     }
 }
