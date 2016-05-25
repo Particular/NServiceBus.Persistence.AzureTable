@@ -10,9 +10,9 @@
     public class When_receiving_that_should_start_a_saga : NServiceBusAcceptanceTest
     {
         [Test]
-        public async Task Should_not_start_saga_if_a_interception_handler_has_been_invoked()
+        public Task Should_not_start_saga_if_a_interception_handler_has_been_invoked()
         {
-            await Scenario.Define<SagaEndpointContext>(c => { c.InterceptSaga = true; })
+            return Scenario.Define<SagaEndpointContext>(c => { c.InterceptSaga = true; })
                 .WithEndpoint<SagaEndpoint>(b => b.When(session => session.SendLocal(new StartSagaMessage { SomeId = Guid.NewGuid().ToString() })))
                 .Done(context => context.InterceptingHandlerCalled)
                 .Repeat(r => r.For(Transports.Default))
@@ -25,9 +25,9 @@
         }
 
         [Test]
-        public async Task Should_start_the_saga_and_call_messagehandlers()
+        public Task Should_start_the_saga_and_call_messagehandlers()
         {
-            await Scenario.Define<SagaEndpointContext>()
+            return Scenario.Define<SagaEndpointContext>()
                 .WithEndpoint<SagaEndpoint>(b => b.When(session => session.SendLocal(new StartSagaMessage { SomeId = Guid.NewGuid().ToString() })))
                 .Done(context => context.InterceptingHandlerCalled && context.SagaStarted)
                 .Repeat(r => r.For(Transports.Default))

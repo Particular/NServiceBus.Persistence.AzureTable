@@ -11,9 +11,9 @@
     public class When_publishing_using_root_type : NServiceBusAcceptanceTest
     {
         [Test]
-        public async Task Event_should_be_published_using_instance_type()
+        public Task Event_should_be_published_using_instance_type()
         {
-            await Scenario.Define<Context>()
+            return Scenario.Define<Context>()
                     .WithEndpoint<Publisher>(b =>
                         b.When(c => c.Subscriber1Subscribed, (session, context) =>
                         {
