@@ -125,7 +125,9 @@ public class ProgramTests
         var jo = LoadFile(f);
         Assert.AreEqual(correlatingId, (string) ((JValue) jo["OrderId"]).Value);
         Assert.AreEqual(false, (bool) ((JValue) jo[SagaJsonMapper.ChooseThisSaga]).Value);
-        Assert.IsNotNullOrEmpty((string) ((JValue) jo[SagaJsonMapper.ETag]).Value);
+        var etag = (string) ((JValue) jo[SagaJsonMapper.ETag]).Value;
+        Assert.IsNotEmpty(etag);
+        Assert.IsNotNull(etag);
     }
 
     static JObject LoadFile(FileInfo f)

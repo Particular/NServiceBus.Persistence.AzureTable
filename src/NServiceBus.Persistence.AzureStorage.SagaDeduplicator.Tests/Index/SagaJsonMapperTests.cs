@@ -35,12 +35,11 @@ public class SagaJsonMapperTests
             mapper.Download(id, sw);
 
             var jo = JObject.Parse(sw.ToString());
-
-            Assert.IsNotNullOrEmpty(jo.GetValue(SagaJsonMapper.ETag).ToString());
-
             Assert.AreEqual(name, (string)jo.GetValue("Name"));
             Assert.AreEqual(value, (int)jo.GetValue("Value"));
-            Assert.IsNotNullOrEmpty((string)jo.GetValue(SagaJsonMapper.ETag));
+            var etag = (string)jo.GetValue(SagaJsonMapper.ETag);
+            Assert.IsNotEmpty(etag);
+            Assert.IsNotNull(etag);
             Assert.IsFalse((bool)jo.GetValue(SagaJsonMapper.ChooseThisSaga));
         }
     }

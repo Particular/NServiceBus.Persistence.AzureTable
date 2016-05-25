@@ -7,10 +7,9 @@
     {
         [TestCase("")]
         [TestCase(null)]
-        [ExpectedException(typeof(ArgumentException))]
         public void Should_not_allow_invalid_connection_string(string connectionString)
         {
-            AzureStorageSagaGuard.CheckConnectionString(connectionString);
+            Assert.Throws<ArgumentException>(() => AzureStorageSagaGuard.CheckConnectionString(connectionString));
         }
     }
 }

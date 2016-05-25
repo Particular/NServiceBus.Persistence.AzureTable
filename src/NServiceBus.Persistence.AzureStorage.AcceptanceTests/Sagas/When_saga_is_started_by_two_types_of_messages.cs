@@ -41,7 +41,7 @@
 
             CollectionAssert.AreEquivalent(guids, context.CompletedIds.OrderBy(s => s).ToArray());
 
-            var retries = context.Exceptions.OfType<RetryNeededException>().Count();
+            var retries = context.LoggedExceptions.OfType<RetryNeededException>().Count();
             Console.WriteLine($"Sagas with retries/Total no of sagas {retries}/{expectedNumberOfCreatedSagas}");
         }
 
