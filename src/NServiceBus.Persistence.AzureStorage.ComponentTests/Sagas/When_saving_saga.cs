@@ -20,7 +20,7 @@
                 OriginalMessageId = "MooId"
             };
 
-            Assert.Throws<StorageException>(async () => await persister.Save(saga, null, null, null));
+            Assert.ThrowsAsync<StorageException>(async () => await persister.Save(saga, null, null, null));
         }
     }
 

@@ -10,10 +10,9 @@
     {
         [TestCase("")]
         [TestCase(null)]
-        [ExpectedException(typeof(ArgumentException))]
         public void Should_not_allow_invalid_connection_string(string connectionString)
         {
-            AzureSubscriptionStorageGuard.CheckConnectionString(connectionString);
+            Assert.Throws<ArgumentException>(() => AzureSubscriptionStorageGuard.CheckConnectionString(connectionString));
         }
 
         [TestCase("")]
@@ -21,12 +20,11 @@
         [TestCase("1table")]
         [TestCase("aa")]
 // ReSharper disable StringLiteralTypo
-        [TestCase("aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffffgggg")] // 
+        [TestCase("aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffffgggg")] //
 // ReSharper restore StringLiteralTypo
-        [ExpectedException(typeof(ArgumentException))]
         public void Should_not_allow_invalid_table_name(string tableName)
         {
-            AzureSubscriptionStorageGuard.CheckTableName(tableName);
+            Assert.Throws<ArgumentException>(() => AzureSubscriptionStorageGuard.CheckTableName(tableName));
         }
     }
 }

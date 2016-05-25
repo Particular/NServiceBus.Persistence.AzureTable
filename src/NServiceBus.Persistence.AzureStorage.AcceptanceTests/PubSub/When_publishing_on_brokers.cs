@@ -10,9 +10,9 @@
     public class When_publishing_on_brokers : NServiceBusAcceptanceTest
     {
         [Test]
-        public async Task Should_be_delivered_to_allsubscribers_without_the_need_for_config()
+        public Task Should_be_delivered_to_allsubscribers_without_the_need_for_config()
         {
-            await Scenario.Define<Context>()
+            return Scenario.Define<Context>()
                     .WithEndpoint<CentralizedPublisher>
                     (b => b.When(c => c.IsSubscriptionProcessedForSub1 && c.IsSubscriptionProcessedForSub2, bus => bus.Publish(new MyEvent())))
                     .WithEndpoint<CentralizedSubscriber1>(b => b.When((session, context) =>

@@ -52,13 +52,12 @@ namespace NServiceBus
                 this.connectionString = connectionString;
             }
 
-            protected override async Task OnStart(IMessageSession session)
+            protected override Task OnStart(IMessageSession session)
             {
                 log.Info("Creating Subscription Table");
                 var account = CloudStorageAccount.Parse(connectionString);
                 var table = account.CreateCloudTableClient().GetTableReference(subscriptionTableName);
-                await table.CreateIfNotExistsAsync()
-                    .ConfigureAwait(false);
+                return table.CreateIfNotExistsAsync();
             }
 
             protected override Task OnStop(IMessageSession session)

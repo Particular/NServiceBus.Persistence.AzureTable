@@ -165,7 +165,7 @@
             {
                 Destination = timeoutDataEntity.Destination, //TODO: check if the change here is causing issues
                 SagaId = timeoutDataEntity.SagaId,
-                State = Download(timeoutDataEntity.StateAddress).Result,
+                State = await Download(timeoutDataEntity.StateAddress).ConfigureAwait(false),
                 Time = timeoutDataEntity.Time,
                 Id = timeoutDataEntity.RowKey,
                 OwningTimeoutManager = timeoutDataEntity.OwningTimeoutManager,
@@ -353,9 +353,9 @@
                 using (var ms = new MemoryStream())
                 {
                     int read;
-                    while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+                    while ((read = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false)) > 0)
                     {
-                        ms.Write(buffer, 0, read);
+                        await ms.WriteAsync(buffer, 0, read).ConfigureAwait(false);
                     }
                     return ms.ToArray();
                 }
