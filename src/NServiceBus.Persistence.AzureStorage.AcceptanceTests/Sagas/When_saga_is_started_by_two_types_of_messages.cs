@@ -9,7 +9,6 @@
     using EndpointTemplates;
     using Config;
     using Features;
-    using Persistence.AzureStorage;
     using NUnit.Framework;
 
     public class When_saga_is_started_by_two_types_of_messages : NServiceBusAcceptanceTest
@@ -40,9 +39,6 @@
                 .Run().ConfigureAwait(false);
 
             CollectionAssert.AreEquivalent(guids, context.CompletedIds.OrderBy(s => s).ToArray());
-
-            var retries = context.LoggedExceptions.OfType<RetryNeededException>().Count();
-            Console.WriteLine($"Sagas with retries/Total no of sagas {retries}/{expectedNumberOfCreatedSagas}");
         }
 
         public class Context : ScenarioContext
