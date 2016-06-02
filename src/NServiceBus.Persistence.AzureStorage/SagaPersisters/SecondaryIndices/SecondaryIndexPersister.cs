@@ -82,7 +82,20 @@
                     // ReSharper disable once RedundantIfElseBlock to make it visible for a reader
                     else
                     {
-                        // data is null, this means that either the entry has been created as the secondary index after scanning the table or after storing the primary and can be deleted
+                        // data is null, this means that either the entry has been created as the secondary index after scanning the table or after storing the primary
+                        var sagaId = indexRow?.SagaId;
+                        if (sagaId != null)
+                        {
+                            var query = AzureSagaPersister.GenerateSagaTableQuery<TableEntity>(sagaId.Value);
+                            var primary = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).SafeFirstOrDefault();
+                            if (primary != null)
+                            {
+                                // if the primary exist though, it means that a retry is required as the previous saga with the specified correlation hasn't been completed yet
+                                // and the secondary index isn't a leftover from a completion
+                                throw new RetryNeededException();
+                            }
+                        }
+
                         try
                         {
                             await table.ExecuteAsync(TableOperation.Delete(indexRow)).ConfigureAwait(false);

@@ -85,7 +85,8 @@
             var tableName = sagaData.GetType().Name;
             var table = client.GetTableReference(tableName);
 
-            var query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, sagaData.Id.ToString()));
+            var sagaId = sagaData.Id;
+            var query = GenerateSagaTableQuery<DictionaryTableEntity>(sagaId);
 
             var entity = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).SafeFirstOrDefault();
             if (entity == null)
@@ -100,8 +101,13 @@
             }
             catch
             {
-                log.Warn($"Removal of the secondary index entry for the following saga failed: '{sagaData.Id}'");
+                log.Warn($"Removal of the secondary index entry for the following saga failed: '{sagaId}'");
             }
+        }
+
+        public static TableQuery<TEntity> GenerateSagaTableQuery<TEntity>(Guid sagaId)
+        {
+            return new TableQuery<TEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, sagaId.ToString()));
         }
 
         Task RemoveSecondaryIndex(IContainSagaData sagaData)
