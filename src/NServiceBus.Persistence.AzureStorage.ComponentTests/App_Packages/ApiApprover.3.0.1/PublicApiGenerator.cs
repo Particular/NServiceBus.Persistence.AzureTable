@@ -1,20 +1,21 @@
-﻿using System;
-using System.CodeDom;
-using System.CodeDom.Compiler;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using Microsoft.CSharp;
-using Mono.Cecil;
-using Mono.Cecil.Rocks;
-using TypeAttributes = System.Reflection.TypeAttributes;
-
-// ReSharper disable CheckNamespace
+﻿ // ReSharper disable CheckNamespace
 // ReSharper disable BitwiseOperatorOnEnumWithoutFlags
+
 namespace ApiApprover
 {
+    using System;
+    using System.CodeDom;
+    using System.CodeDom.Compiler;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Text;
+    using System.Text.RegularExpressions;
+    using Microsoft.CSharp;
+    using Mono.Cecil;
+    using Mono.Cecil.Rocks;
+    using TypeAttributes = System.Reflection.TypeAttributes;
+
     public static class CecilEx
     {
         public static IEnumerable<IMemberDefinition> GetMembers(this TypeDefinition type)
@@ -129,7 +130,7 @@ namespace ApiApprover
             }
             else if (memberInfo is EventDefinition)
             {
-                typeDeclaration.Members.Add(GenerateEvent((EventDefinition)memberInfo));
+                typeDeclaration.Members.Add(GenerateEvent((EventDefinition) memberInfo));
             }
             else if (memberInfo is FieldDefinition)
             {
@@ -165,7 +166,7 @@ namespace ApiApprover
             if (IsDelegate(publicType))
                 return CreateDelegateDeclaration(publicType);
 
-            bool @static = false;
+            var @static = false;
             TypeAttributes attributes = 0;
             if (publicType.IsPublic || publicType.IsNestedPublic)
                 attributes |= TypeAttributes.Public;
@@ -193,7 +194,7 @@ namespace ApiApprover
                 IsClass = publicType.IsClass,
                 IsEnum = publicType.IsEnum,
                 IsInterface = publicType.IsInterface,
-                IsStruct = publicType.IsValueType && !publicType.IsPrimitive && !publicType.IsEnum,
+                IsStruct = publicType.IsValueType && !publicType.IsPrimitive && !publicType.IsEnum
             };
 
             if (declaration.IsInterface && publicType.BaseType != null)
@@ -221,7 +222,7 @@ namespace ApiApprover
             // Fields should be in defined order for an enum
             var fields = !publicType.IsEnum
                 ? publicType.Fields.OrderBy(f => f.Name)
-                : (IEnumerable<FieldDefinition>)publicType.Fields;
+                : (IEnumerable<FieldDefinition>) publicType.Fields;
             foreach (var field in fields)
                 AddMemberToTypeDeclaration(declaration, field);
 
@@ -245,7 +246,7 @@ namespace ApiApprover
             {
                 Attributes = MemberAttributes.Public,
                 CustomAttributes = CreateCustomAttributes(publicType),
-                ReturnType = CreateCodeTypeReference(invokeMethod.ReturnType),
+                ReturnType = CreateCodeTypeReference(invokeMethod.ReturnType)
             };
 
             // CodeDOM. No support. Return type attributes.
@@ -356,7 +357,10 @@ namespace ApiApprover
                 var attribute = GenerateCodeAttributeDeclaration(codeTypeModifier, customAttribute);
                 var declaration = new CodeTypeDeclaration("DummyClass")
                 {
-                    CustomAttributes = new CodeAttributeDeclarationCollection(new[] { attribute }),
+                    CustomAttributes = new CodeAttributeDeclarationCollection(new[]
+                    {
+                        attribute
+                    })
                 };
                 using (var writer = new StringWriter())
                 {
@@ -365,30 +369,6 @@ namespace ApiApprover
                 }
             }
         }
-
-        private static readonly HashSet<string> SkipAttributeNames = new HashSet<string>
-        {
-            "System.CodeDom.Compiler.GeneratedCodeAttribute",
-            "System.ComponentModel.EditorBrowsableAttribute",
-            "System.Runtime.CompilerServices.AsyncStateMachineAttribute",
-            "System.Runtime.CompilerServices.CompilerGeneratedAttribute",
-            "System.Runtime.CompilerServices.CompilationRelaxationsAttribute",
-            "System.Runtime.CompilerServices.ExtensionAttribute",
-            "System.Runtime.CompilerServices.RuntimeCompatibilityAttribute",
-            "System.Reflection.DefaultMemberAttribute",
-            "System.Diagnostics.DebuggableAttribute",
-            "System.Diagnostics.DebuggerNonUserCodeAttribute",
-            "System.Diagnostics.DebuggerStepThroughAttribute",
-            "System.Reflection.AssemblyCompanyAttribute",
-            "System.Reflection.AssemblyConfigurationAttribute",
-            "System.Reflection.AssemblyCopyrightAttribute",
-            "System.Reflection.AssemblyDescriptionAttribute",
-            "System.Reflection.AssemblyFileVersionAttribute",
-            "System.Reflection.AssemblyInformationalVersionAttribute",
-            "System.Reflection.AssemblyProductAttribute",
-            "System.Reflection.AssemblyTitleAttribute",
-            "System.Reflection.AssemblyTrademarkAttribute"
-        };
 
         private static bool ShouldIncludeAttribute(CustomAttribute attribute)
         {
@@ -426,32 +406,32 @@ namespace ApiApprover
                     // I'd rather use the above, as it's just using the CodeDOM, but it puts
                     // brackets around each CodeBinaryOperatorExpression
                     var flags = from f in type.Fields
-                                where f.Constant != null
-                                let v = Convert.ToInt64(f.Constant)
-                                where v == 0 || (originalValue & v) != 0
-                                select type.FullName + "." + f.Name;
+                        where f.Constant != null
+                        let v = Convert.ToInt64(f.Constant)
+                        where v == 0 || (originalValue & v) != 0
+                        select type.FullName + "." + f.Name;
                     return new CodeSnippetExpression(flags.Aggregate((current, next) => current + " | " + next));
                 }
 
                 var allFlags = from f in type.Fields
-                               where f.Constant != null
-                               let v = Convert.ToInt64(f.Constant)
-                               where v == originalValue
-                               select new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(CreateCodeTypeReference(type)), f.Name);
+                    where f.Constant != null
+                    let v = Convert.ToInt64(f.Constant)
+                    where v == originalValue
+                    select new CodeFieldReferenceExpression(new CodeTypeReferenceExpression(CreateCodeTypeReference(type)), f.Name);
                 return allFlags.FirstOrDefault();
             }
 
             if (type.FullName == "System.Type" && value is TypeReference)
             {
-                return new CodeTypeOfExpression(CreateCodeTypeReference((TypeReference)value));
+                return new CodeTypeOfExpression(CreateCodeTypeReference((TypeReference) value));
             }
 
             if (value is string)
             {
                 // CodeDOM outputs a verbatim string. Any string with \n is treated as such, so normalise
                 // it to make it easier for comparisons
-                value = Regex.Replace((string)value, @"\n", "\\n");
-                value = Regex.Replace((string)value, @"\r\n|\r\\n", "\\r\\n");
+                value = Regex.Replace((string) value, @"\n", "\\n");
+                value = Regex.Replace((string) value, @"\r\n|\r\\n", "\\r\\n");
             }
 
             return new CodePrimitiveExpression(value);
@@ -487,7 +467,7 @@ namespace ApiApprover
                 Name = member.Name,
                 Attributes = GetMethodAttributes(member),
                 CustomAttributes = CreateCustomAttributes(member),
-                ReturnType = returnType,
+                ReturnType = returnType
             };
             PopulateCustomAttributes(member.MethodReturnType, method.ReturnTypeCustomAttributes);
             PopulateGenericParameters(member, method.TypeParameters);
@@ -585,8 +565,8 @@ namespace ApiApprover
             // in any of the interfaces that we implement
             if (typeDefinition.IsInterface)
             {
-                var interfaceMethods = from @interfaceReference in typeDefinition.Interfaces
-                    let interfaceDefinition = @interfaceReference.Resolve()
+                var interfaceMethods = from interfaceReference in typeDefinition.Interfaces
+                    let interfaceDefinition = interfaceReference.Resolve()
                     where interfaceDefinition != null
                     select interfaceDefinition.Methods;
 
@@ -788,7 +768,32 @@ namespace ApiApprover
             }
             return genericArguments.ToArray();
         }
+
+        private static readonly HashSet<string> SkipAttributeNames = new HashSet<string>
+        {
+            "System.CodeDom.Compiler.GeneratedCodeAttribute",
+            "System.ComponentModel.EditorBrowsableAttribute",
+            "System.Runtime.CompilerServices.AsyncStateMachineAttribute",
+            "System.Runtime.CompilerServices.CompilerGeneratedAttribute",
+            "System.Runtime.CompilerServices.CompilationRelaxationsAttribute",
+            "System.Runtime.CompilerServices.ExtensionAttribute",
+            "System.Runtime.CompilerServices.RuntimeCompatibilityAttribute",
+            "System.Reflection.DefaultMemberAttribute",
+            "System.Diagnostics.DebuggableAttribute",
+            "System.Diagnostics.DebuggerNonUserCodeAttribute",
+            "System.Diagnostics.DebuggerStepThroughAttribute",
+            "System.Reflection.AssemblyCompanyAttribute",
+            "System.Reflection.AssemblyConfigurationAttribute",
+            "System.Reflection.AssemblyCopyrightAttribute",
+            "System.Reflection.AssemblyDescriptionAttribute",
+            "System.Reflection.AssemblyFileVersionAttribute",
+            "System.Reflection.AssemblyInformationalVersionAttribute",
+            "System.Reflection.AssemblyProductAttribute",
+            "System.Reflection.AssemblyTitleAttribute",
+            "System.Reflection.AssemblyTrademarkAttribute"
+        };
     }
 }
+
 // ReSharper restore BitwiseOperatorOnEnumWihtoutFlags
 // ReSharper restore CheckNamespace

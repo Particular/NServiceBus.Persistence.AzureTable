@@ -1,9 +1,12 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.WindowsAzure.Storage;
     using NUnit.Framework;
 
     [TestFixture]
@@ -127,17 +130,52 @@
         [Test]
         public async Task TryRemove_should_work_with_concurrent_operations()
         {
-            var timeoutPersister = TestHelper.CreateTimeoutPersister();
-            var timeout = TestHelper.GenerateTimeoutWithHeaders();
+            var onRequest = BuildHandlerDelayingDeletesTillAnotherDeleteForSpecificUriIsRequested();
+            OperationContext.GlobalSendingRequest += onRequest;
 
-            await timeoutPersister.Add(timeout, null);
+            try
+            {
+                var timeoutPersister = TestHelper.CreateTimeoutPersister();
+                var timeout = TestHelper.GenerateTimeoutWithHeaders();
 
-            var task1 = timeoutPersister.TryRemove(timeout.Id, null);
-            var task2 = timeoutPersister.TryRemove(timeout.Id, null);
+                await timeoutPersister.Add(timeout, null);
 
-            await Task.WhenAll(task1, task2).ConfigureAwait(false);
+                var task1 = timeoutPersister.TryRemove(timeout.Id, null);
+                var task2 = timeoutPersister.TryRemove(timeout.Id, null);
 
-            Assert.IsTrue(task1.Result || task2.Result);
+                await Task.WhenAll(task1, task2).ConfigureAwait(false);
+
+                Assert.IsTrue(task1.Result || task2.Result);
+            }
+            finally
+            {
+                OperationContext.GlobalSendingRequest -= onRequest;
+            }
+        }
+
+        static EventHandler<RequestEventArgs> BuildHandlerDelayingDeletesTillAnotherDeleteForSpecificUriIsRequested()
+        {
+            var deleteWaits = new ConcurrentDictionary<string, ManualResetEventSlim>();
+            return (h, e) =>
+            {
+                var method1 = e.Request.Method;
+                if (method1 == "DELETE")
+                {
+                    var wait1 = new ManualResetEventSlim(false);
+                    var obtainedWait1 = deleteWaits.AddOrUpdate(e.Request.RequestUri.AbsoluteUri, _ => wait1, (_, w) => w);
+
+                    if (ReferenceEquals(wait1, obtainedWait1))
+                    {
+                        // this is the first call to delete this resource, wait for the second or delay b 10s
+                        obtainedWait1.Wait(TimeSpan.FromSeconds(10));
+                    }
+                    else
+                    {
+                        // this is the second call, set the handle releasing the other task on go on
+                        obtainedWait1.Set();
+                    }
+                }
+            };
         }
     }
 }
