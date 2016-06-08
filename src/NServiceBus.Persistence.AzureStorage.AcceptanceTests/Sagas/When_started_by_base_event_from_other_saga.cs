@@ -18,10 +18,7 @@
             await Scenario.Define<SagaContext>()
                 .WithEndpoint<Publisher>(b =>
                     b.When(c => c.IsEventSubscriptionReceived,
-                        session =>
-                        {
-                            return session.Publish<SomethingHappenedEvent>(m => { m.DataId = Guid.NewGuid(); });
-                        })
+                         session => { return session.Publish<SomethingHappenedEvent>(m => { m.DataId = Guid.NewGuid(); }); })
                 )
                 .WithEndpoint<SagaThatIsStartedByABaseEvent>(
                     b => b.When(async (session, context) =>
@@ -29,7 +26,9 @@
                         await session.Subscribe<BaseEvent>();
 
                         if (context.HasNativePubSubSupport)
+                        {
                             context.IsEventSubscriptionReceived = true;
+                        }
                     }))
                 .Done(c => c.DidSagaComplete)
                 .Repeat(r => r.For(Transports.Default))
@@ -86,7 +85,7 @@
 
                 protected override void ConfigureHowToFindSaga(SagaPropertyMapper<SagaStartedByBaseEventSagaData> mapper)
                 {
-                    mapper.ConfigureMapping<StartSaga>(m => m.DataId).ToSaga(s => s.DataId);
+                    mapper.ConfigureMapping<BaseEvent>(m => m.DataId).ToSaga(s => s.DataId);
                 }
             }
         }

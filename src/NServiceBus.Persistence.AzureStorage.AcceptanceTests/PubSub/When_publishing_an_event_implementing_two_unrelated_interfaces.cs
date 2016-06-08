@@ -5,7 +5,6 @@
     using AcceptanceTesting;
     using Features;
     using NUnit.Framework;
-    using ScenarioDescriptors;
     using System.Threading.Tasks;
 
     public class When_publishing_an_event_implementing_two_unrelated_interfaces : NServiceBusAcceptanceTest
@@ -13,7 +12,7 @@
         [Test]
         public async Task Event_should_be_published_using_instance_type()
         {
-            await Scenario.Define<Context>(c => { c.Id = Guid.NewGuid(); })
+            var testContext = await Scenario.Define<Context>(c => { c.Id = Guid.NewGuid(); })
                     .WithEndpoint<Publisher>(b =>
                         b.When(c => c.EventASubscribed && c.EventBSubscribed, (session, ctx) =>
                         {
@@ -35,13 +34,10 @@
                         }
                     }))
                     .Done(c => c.GotEventA && c.GotEventB)
-                    .Repeat(r => r.For(Serializers.Xml))
-                    .Should(c =>
-                    {
-                        Assert.True(c.GotEventA);
-                        Assert.True(c.GotEventB);
-                    })
-                    .Run(TimeSpan.FromSeconds(20));
+                    .Run();
+            Assert.True(testContext.GotEventA);
+            Assert.True(testContext.GotEventB);
+
         }
 
         public class Context : ScenarioContext
