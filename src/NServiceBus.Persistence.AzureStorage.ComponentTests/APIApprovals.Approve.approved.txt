@@ -62,13 +62,13 @@ namespace NServiceBus.Config
     public class AzureSubscriptionStorageConfig : System.Configuration.ConfigurationSection
     {
         public AzureSubscriptionStorageConfig() { }
-        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.C" +
+        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.C" +
             "onnectionString` instead. Will be removed in version 2.0.0.", true)]
         public string ConnectionString { get; set; }
-        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.C" +
+        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.C" +
             "reateSchema` instead. Will be removed in version 2.0.0.", true)]
         public bool CreateSchema { get; set; }
-        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.T" +
+        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.T" +
             "ableName` instead. Will be removed in version 2.0.0.", true)]
         public string TableName { get; set; }
     }
