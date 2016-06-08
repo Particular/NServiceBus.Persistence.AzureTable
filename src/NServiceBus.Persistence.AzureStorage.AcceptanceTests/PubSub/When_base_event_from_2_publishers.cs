@@ -20,8 +20,10 @@
                      )
                .WithEndpoint<Subscriber1>(b => b.When(c => c.EndpointsStarted, async (session, c) =>
                {
+                   c.AddTrace("Subscriber1 Subscribe starting....");
                    await session.Subscribe<DerivedEvent1>();
                    await session.Subscribe<DerivedEvent2>();
+                   c.AddTrace("Subscriber1 Subscribe finishing....");
 
                    if (c.HasNativePubSubSupport)
                    {
