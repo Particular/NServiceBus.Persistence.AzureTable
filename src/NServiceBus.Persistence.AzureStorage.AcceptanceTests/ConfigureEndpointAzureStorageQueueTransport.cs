@@ -13,7 +13,7 @@ public class ConfigureEndpointAzureStorageQueueTransport : IConfigureEndpointTes
     {
         var connectionString = settings.Get<string>("Transport.ConnectionString");
         //connectionString = "UseDevelopmentStorage=true;";
-        configuration.UseSerialization<XmlSerializer>();
+        configuration.UseSerialization<JsonSerializer>();
         configuration.UseTransport<AzureStorageQueueTransport>()
             .ConnectionString(connectionString)
             .MessageInvisibleTime(TimeSpan.FromSeconds(5));
