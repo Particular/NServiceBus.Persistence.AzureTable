@@ -12,7 +12,7 @@
         /// </summary>
         /// <param name="config">The configuration.</param>
         /// <param name="connectionString">The connection string.</param>
-        public static PersistenceExtentions<AzureStoragePersistence> ConnectionString(this PersistenceExtentions<AzureStoragePersistence> config, string connectionString)
+        public static PersistenceExtensions<AzureStoragePersistence> ConnectionString(this PersistenceExtensions<AzureStoragePersistence> config, string connectionString)
         {
             AzureStorageSagaGuard.CheckConnectionString(connectionString);
 

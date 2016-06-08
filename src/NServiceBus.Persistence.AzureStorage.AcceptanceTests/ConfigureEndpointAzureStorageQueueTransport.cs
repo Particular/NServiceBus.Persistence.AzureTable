@@ -7,7 +7,6 @@ using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
 using NServiceBus;
 using NServiceBus.AcceptanceTesting.Support;
-using NServiceBus.Azure.Transports.WindowsAzureStorageQueues;
 
 public class ConfigureEndpointAzureStorageQueueTransport : IConfigureEndpointTestExecution
 {
@@ -18,8 +17,7 @@ public class ConfigureEndpointAzureStorageQueueTransport : IConfigureEndpointTes
         configuration.UseSerialization<XmlSerializer>();
         configuration.UseTransport<AzureStorageQueueTransport>()
             .ConnectionString(connectionString)
-            .MessageInvisibleTime(TimeSpan.FromSeconds(5))
-            .SerializeMessageWrapperWith(definition => MessageWrapperSerializer.Xml.Value);
+            .MessageInvisibleTime(TimeSpan.FromSeconds(5));
 
         CleanQueuesUsedByTest(connectionString);
 

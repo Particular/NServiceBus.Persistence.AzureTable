@@ -19,7 +19,7 @@
 
             if (sagaPersisterConfig != null || subscriptionStorageConfig != null || timeoutPersisterConfig != null)
             {
-                throw new NotSupportedException($"Configuration sections are no longer supported for Azure Storage Persistence. Switch to the code API by using `{nameof(PersistenceExtentions)}` instead.");
+                throw new NotSupportedException($"Configuration sections are no longer supported for Azure Storage Persistence. Switch to the code API by using `{nameof(PersistenceExtensions)}` instead.");
             }
         }
     }
