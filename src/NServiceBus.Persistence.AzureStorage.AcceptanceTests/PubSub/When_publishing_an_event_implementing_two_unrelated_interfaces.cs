@@ -5,7 +5,6 @@
     using AcceptanceTesting;
     using Features;
     using NUnit.Framework;
-    using ScenarioDescriptors;
     using System.Threading.Tasks;
 
     public class When_publishing_an_event_implementing_two_unrelated_interfaces : NServiceBusAcceptanceTest
