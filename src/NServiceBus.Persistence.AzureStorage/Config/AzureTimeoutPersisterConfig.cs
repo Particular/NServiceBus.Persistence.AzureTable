@@ -8,7 +8,7 @@
         [ObsoleteEx(
             TreatAsErrorFromVersion = "1",
             RemoveInVersion="2",
-            Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.ConnectionString` instead.")]
+            Message = "Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.ConnectionString` instead.")]
         public string ConnectionString
         {
             get { return (string)this["ConnectionString"]; }
@@ -18,7 +18,7 @@
         [ObsoleteEx(
             TreatAsErrorFromVersion = "1",
             RemoveInVersion="2",
-            Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.TimeoutManagerDataTableName` instead.")]
+            Message = "Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.TimeoutManagerDataTableName` instead.")]
         public string TimeoutManagerDataTableName
         {
             get { return (string)this["TimeoutManagerDataTableName"]; }
@@ -28,7 +28,7 @@
         [ObsoleteEx(
             TreatAsErrorFromVersion = "1",
             RemoveInVersion="2",
-            Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.TimeoutDataTableName` instead.")]
+            Message = "Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.TimeoutDataTableName` instead.")]
         public string TimeoutDataTableName
         {
             get { return (string)this["TimeoutDataTableName"]; }
@@ -38,7 +38,7 @@
         [ObsoleteEx(
             TreatAsErrorFromVersion = "1",
             RemoveInVersion="2",
-            Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.CatchUpInterval` instead.")]
+            Message = "Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.CatchUpInterval` instead.")]
         public int CatchUpInterval
         {
             get { return (int)this["CatchUpInterval"]; }
@@ -48,7 +48,7 @@
         [ObsoleteEx(
             TreatAsErrorFromVersion = "1",
             RemoveInVersion="2",
-            Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.ConnectionString` instead.")]
+            Message = "Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.ConnectionString` instead.")]
         public string PartitionKeyScope
         {
             get { return (string)this["PartitionKeyScope"]; }
@@ -58,7 +58,7 @@
         [ObsoleteEx(
             TreatAsErrorFromVersion = "1",
             RemoveInVersion="2",
-            Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.CreateSchema` instead.")]
+            Message = "Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.CreateSchema` instead.")]
         public bool CreateSchema
         {
             get { return (bool)this["CreateSchema"]; }
@@ -68,7 +68,7 @@
         [ObsoleteEx(
             TreatAsErrorFromVersion = "1",
             RemoveInVersion="2",
-            Message = "Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.TimeoutStateContainerName` instead.")]
+            Message = "Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.TimeoutStateContainerName` instead.")]
         public string TimeoutStateContainerName
         {
             get { return (string)this["TimeoutStateContainerName"]; }

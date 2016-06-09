@@ -18,28 +18,28 @@ namespace NServiceBus
     }
     public class static ConfigureAzureSagaStorage
     {
-        public static NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> ConnectionString(this NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> config, string connectionString) { }
-        public static NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> CreateSchema(this NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> config, bool createSchema) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> config, string connectionString) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> CreateSchema(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> config, bool createSchema) { }
     }
     public class static ConfigureAzureStorage
     {
-        public static NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence> ConnectionString(this NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence> config, string connectionString) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> config, string connectionString) { }
     }
     public class static ConfigureAzureSubscriptionStorage
     {
-        public static NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> ConnectionString(this NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> config, string connectionString) { }
-        public static NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> CreateSchema(this NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> config, bool createSchema) { }
-        public static NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> TableName(this NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> config, string tableName) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> config, string connectionString) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> CreateSchema(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> config, bool createSchema) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> TableName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> config, string tableName) { }
     }
     public class static ConfigureAzureTimeoutStorage
     {
-        public static NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> CatchUpInterval(this NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> config, int catchUpInterval) { }
-        public static NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> ConnectionString(this NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> config, string connectionString) { }
-        public static NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> CreateSchema(this NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> config, bool createSchema) { }
-        public static NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> PartitionKeyScope(this NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> config, string partitionKeyScope) { }
-        public static NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> TimeoutDataTableName(this NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> config, string tableName) { }
-        public static NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> TimeoutManagerDataTableName(this NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> config, string tableName) { }
-        public static NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> TimeoutStateContainerName(this NServiceBus.PersistenceExtentions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> config, string blobName) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> CatchUpInterval(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> config, int catchUpInterval) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> config, string connectionString) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> CreateSchema(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> config, bool createSchema) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> PartitionKeyScope(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> config, string partitionKeyScope) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> TimeoutDataTableName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> config, string tableName) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> TimeoutManagerDataTableName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> config, string tableName) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> TimeoutStateContainerName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Timeouts> config, string blobName) { }
     }
     public class DetectObsoleteConfigurationSettings : NServiceBus.Features.Feature
     {
@@ -52,10 +52,10 @@ namespace NServiceBus.Config
     public class AzureSagaPersisterConfig : System.Configuration.ConfigurationSection
     {
         public AzureSagaPersisterConfig() { }
-        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.C" +
+        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.C" +
             "onnectionString` instead. Will be removed in version 2.0.0.", true)]
         public string ConnectionString { get; set; }
-        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.C" +
+        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.C" +
             "reateSchema` instead. Will be removed in version 2.0.0.", true)]
         public bool CreateSchema { get; set; }
     }
@@ -75,25 +75,25 @@ namespace NServiceBus.Config
     public class AzureTimeoutPersisterConfig : System.Configuration.ConfigurationSection
     {
         public AzureTimeoutPersisterConfig() { }
-        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.C" +
+        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.C" +
             "atchUpInterval` instead. Will be removed in version 2.0.0.", true)]
         public int CatchUpInterval { get; set; }
-        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.C" +
+        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.C" +
             "onnectionString` instead. Will be removed in version 2.0.0.", true)]
         public string ConnectionString { get; set; }
-        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.C" +
+        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.C" +
             "reateSchema` instead. Will be removed in version 2.0.0.", true)]
         public bool CreateSchema { get; set; }
-        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.C" +
+        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.C" +
             "onnectionString` instead. Will be removed in version 2.0.0.", true)]
         public string PartitionKeyScope { get; set; }
-        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.T" +
+        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.T" +
             "imeoutDataTableName` instead. Will be removed in version 2.0.0.", true)]
         public string TimeoutDataTableName { get; set; }
-        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.T" +
+        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.T" +
             "imeoutManagerDataTableName` instead. Will be removed in version 2.0.0.", true)]
         public string TimeoutManagerDataTableName { get; set; }
-        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.T" +
+        [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.T" +
             "imeoutStateContainerName` instead. Will be removed in version 2.0.0.", true)]
         public string TimeoutStateContainerName { get; set; }
     }

@@ -1,29 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
 using NServiceBus;
 using NServiceBus.AcceptanceTesting.Support;
-using NServiceBus.Azure.Transports.WindowsAzureStorageQueues;
 
 public class ConfigureEndpointAzureStorageQueueTransport : IConfigureEndpointTestExecution
 {
-    public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings)
+    public async Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings)
     {
         var connectionString = settings.Get<string>("Transport.ConnectionString");
         //connectionString = "UseDevelopmentStorage=true;";
         configuration.UseSerialization<XmlSerializer>();
         configuration.UseTransport<AzureStorageQueueTransport>()
             .ConnectionString(connectionString)
-            .MessageInvisibleTime(TimeSpan.FromSeconds(5))
-            .SerializeMessageWrapperWith(definition => MessageWrapperSerializer.Xml.Value);
+            .MessageInvisibleTime(TimeSpan.FromSeconds(5));
 
-        CleanQueuesUsedByTest(connectionString);
-
-        return Task.FromResult(0);
+        await CleanQueuesUsedByTest(connectionString);
     }
 
     public Task Cleanup()
@@ -31,23 +26,23 @@ public class ConfigureEndpointAzureStorageQueueTransport : IConfigureEndpointTes
         return Task.FromResult(0);
     }
 
-    static void CleanQueuesUsedByTest(string connectionString)
+    static async Task CleanQueuesUsedByTest(string connectionString)
     {
         var storage = CloudStorageAccount.Parse(connectionString);
         var client = storage.CreateCloudQueueClient();
         var queues = GetTestRelatedQueues(client).ToArray();
 
-        var countdown = new CountdownEvent(queues.Length);
+        var clearTask = Task.WhenAll(queues.Select(q => q.ClearAsync()));
+        var timeoutTask = Task.Delay(TimeSpan.FromMinutes(1));
+        var result = await Task.WhenAny(clearTask, timeoutTask);
 
-        foreach (var queue in queues)
+        if (result == timeoutTask)
         {
-            queue.ClearAsync().ContinueWith(t => countdown.Signal());
+            throw new TimeoutException("Waiting for cleaning queues took too long.");
         }
 
-        if (countdown.Wait(TimeSpan.FromMinutes(1)) == false)
-        {
-            throw new TimeoutException("Waiting for cleaning queues took too much.");
-        }
+        // await to get the exception in case something went wrong when clearing the queues.
+        await result;
     }
 
     static IEnumerable<CloudQueue> GetTestRelatedQueues(CloudQueueClient queues)

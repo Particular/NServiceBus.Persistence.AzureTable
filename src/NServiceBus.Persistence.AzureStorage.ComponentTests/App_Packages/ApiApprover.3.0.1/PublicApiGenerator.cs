@@ -26,7 +26,6 @@ namespace ApiApprover
         }
     }
 
-
     public static class PublicApiGenerator
     {
         // TODO: Assembly references?
