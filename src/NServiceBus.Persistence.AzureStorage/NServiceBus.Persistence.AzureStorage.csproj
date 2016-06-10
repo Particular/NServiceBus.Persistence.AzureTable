@@ -109,6 +109,7 @@
     <Compile Include="Config\AzureSubscriptionStorageConfig.cs" />
     <Compile Include="Config\AzureTimeoutPersisterConfig.cs" />
     <Compile Include="Config\WellKnownConfigurationKeys.cs" />
+    <Compile Include="CorrelationId.cs" />
     <Compile Include="DetectObsoleteConfigurationSettings.cs" />
     <Compile Include="SagaPersisters\AzureStorageSagaGuard.cs" />
     <Compile Include="SagaPersisters\AzureStorageSagaDefaults.cs" />
