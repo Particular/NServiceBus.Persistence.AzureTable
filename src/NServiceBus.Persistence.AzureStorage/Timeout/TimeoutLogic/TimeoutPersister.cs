@@ -1,34 +1,24 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage
 {
-    using System.Text.RegularExpressions;
     using System;
     using System.Collections.Generic;
     using System.Data.Services.Client;
     using System.IO;
     using System.Linq;
+    using System.Net;
+    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using System.Web.Script.Serialization;
+    using Extensibility;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Blob;
     using Microsoft.WindowsAzure.Storage.RetryPolicies;
     using Microsoft.WindowsAzure.Storage.Table;
-    using Extensibility;
     using Timeout.Core;
     using Timeout.TimeoutLogic;
-    using System.Net;
 
     class TimeoutPersister : IPersistTimeouts, IQueryTimeouts
     {
-        string timeoutDataTableName;
-        string timeoutManagerDataTableName;
-        string timeoutStateContainerName;
-        int catchUpInterval;
-        string partitionKeyScope;
-        string endpointName;
-        string sanitizedEndpointInstanceName;
-        CloudTableClient client;
-        CloudBlobClient cloudBlobclient;
-
         public TimeoutPersister(string timeoutConnectionString, string timeoutDataTableName, string timeoutManagerDataTableName, string timeoutStateContainerName, int catchUpInterval, string partitionKeyScope, string endpointName, string hostDisplayName)
         {
             this.timeoutDataTableName = timeoutDataTableName;
@@ -55,72 +45,6 @@
             };
 
             cloudBlobclient = account.CreateCloudBlobClient();
-        }
-
-        public async Task<TimeoutsChunk> GetNextChunk(DateTime startSlice)
-        {
-            var now = DateTime.UtcNow;
-
-            var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
-            var timeoutManagerDataTable = client.GetTableReference(timeoutManagerDataTableName);
-
-            var lastSuccessfulReadEntity = await GetLastSuccessfulRead(timeoutManagerDataTable).ConfigureAwait(false);
-            var lastSuccessfulRead = lastSuccessfulReadEntity?.LastSuccessfullRead;
-
-            TableQuery<TimeoutDataEntity> query;
-
-            if (lastSuccessfulRead.HasValue)
-            {
-                query = new TableQuery<TimeoutDataEntity>()
-                    .Where(
-                    TableQuery.CombineFilters(
-                        TableQuery.CombineFilters(
-                            TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.NotEqual, now.ToString(partitionKeyScope)),
-                            TableOperators.And,
-                            TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.NotEqual, lastSuccessfulRead.Value.ToString(partitionKeyScope))),
-                        TableOperators.And,
-                        TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName))
-                    );
-
-            }
-            else
-            {
-                query = new TableQuery<TimeoutDataEntity>()
-                    .Where(TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName));
-            }
-
-            var timeoutDataEntities = await timeoutDataTable.ExecuteQueryAsync(query, take: 1000).ConfigureAwait(false);
-            var result = timeoutDataEntities.OrderBy(c => c.Time);
-
-            var allTimeouts = result.ToList();
-            if (allTimeouts.Count == 0)
-            {
-                return new TimeoutsChunk(new List<TimeoutsChunk.Timeout>(), now.AddSeconds(1));
-            }
-
-            var pastTimeouts = allTimeouts.Where(c => c.Time > startSlice && c.Time <= now).ToList();
-            var futureTimeouts = allTimeouts.Where(c => c.Time > now).ToList();
-
-            if (lastSuccessfulReadEntity != null)
-            {
-                var catchingUp = lastSuccessfulRead.Value.AddSeconds(catchUpInterval);
-                lastSuccessfulRead = catchingUp > now ? now : catchingUp;
-                lastSuccessfulReadEntity.LastSuccessfullRead = lastSuccessfulRead.Value;
-            }
-
-            var future = futureTimeouts.SafeFirstOrDefault();
-            var nextTimeToRunQuery = lastSuccessfulRead ?? (future?.Time ?? now.AddSeconds(1));
-
-            var timeoutsChunk = new TimeoutsChunk(
-                pastTimeouts.Where(c => !string.IsNullOrEmpty(c.RowKey))
-                    .Select(c => new TimeoutsChunk.Timeout(c.RowKey, c.Time))
-                    .Distinct(new TimoutChunkComparer())
-                    .ToList(),
-                nextTimeToRunQuery);
-
-            await UpdateSuccessfulRead(timeoutManagerDataTable, lastSuccessfulReadEntity).ConfigureAwait(false);
-
-            return timeoutsChunk;
         }
 
         public async Task Add(TimeoutData timeout, ContextBag context)
@@ -184,21 +108,16 @@
                 return false;
             }
 
-            var deleteTasks = new List<Task>
-            {
-                DeleteSagaEntity(timeoutId, timeoutDataTable, timeoutDataEntity),
-                DeleteTimeEntity(timeoutDataTable, timeoutDataEntity.Time.ToString(partitionKeyScope), timeoutId),
-                DeleteState(timeoutDataEntity.StateAddress)
-            };
-
             try
             {
-                await Task.WhenAll(deleteTasks).ConfigureAwait(false);
+                await DeleteSagaEntity(timeoutId, timeoutDataTable, timeoutDataEntity).ConfigureAwait(false);
+                await DeleteTimeEntity(timeoutDataTable, timeoutDataEntity.Time.ToString(partitionKeyScope), timeoutId).ConfigureAwait(false);
+                await DeleteState(timeoutDataEntity.StateAddress).ConfigureAwait(false);
                 await DeleteMainEntity(timeoutDataEntity, timeoutDataTable).ConfigureAwait(false);
             }
             catch (StorageException e)
             {
-                if (e.RequestInformation.HttpStatusCode != (int)HttpStatusCode.NotFound)
+                if (e.RequestInformation.HttpStatusCode != (int) HttpStatusCode.NotFound)
                 {
                     throw;
                 }
@@ -225,6 +144,71 @@
                 await DeleteMainEntity(timeoutDataTable, timeoutDataEntityBySaga.RowKey, string.Empty).ConfigureAwait(false);
                 await DeleteSagaEntity(timeoutDataTable, timeoutDataEntityBySaga).ConfigureAwait(false);
             }
+        }
+
+        public async Task<TimeoutsChunk> GetNextChunk(DateTime startSlice)
+        {
+            var now = DateTime.UtcNow;
+
+            var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
+            var timeoutManagerDataTable = client.GetTableReference(timeoutManagerDataTableName);
+
+            var lastSuccessfulReadEntity = await GetLastSuccessfulRead(timeoutManagerDataTable).ConfigureAwait(false);
+            var lastSuccessfulRead = lastSuccessfulReadEntity?.LastSuccessfullRead;
+
+            TableQuery<TimeoutDataEntity> query;
+
+            if (lastSuccessfulRead.HasValue)
+            {
+                query = new TableQuery<TimeoutDataEntity>()
+                    .Where(
+                        TableQuery.CombineFilters(
+                            TableQuery.CombineFilters(
+                                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.NotEqual, now.ToString(partitionKeyScope)),
+                                TableOperators.And,
+                                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.NotEqual, lastSuccessfulRead.Value.ToString(partitionKeyScope))),
+                            TableOperators.And,
+                            TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName))
+                    );
+            }
+            else
+            {
+                query = new TableQuery<TimeoutDataEntity>()
+                    .Where(TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName));
+            }
+
+            var timeoutDataEntities = await timeoutDataTable.ExecuteQueryAsync(query, take: 1000).ConfigureAwait(false);
+            var result = timeoutDataEntities.OrderBy(c => c.Time);
+
+            var allTimeouts = result.ToList();
+            if (allTimeouts.Count == 0)
+            {
+                return new TimeoutsChunk(new List<TimeoutsChunk.Timeout>(), now.AddSeconds(1));
+            }
+
+            var pastTimeouts = allTimeouts.Where(c => c.Time > startSlice && c.Time <= now).ToList();
+            var futureTimeouts = allTimeouts.Where(c => c.Time > now).ToList();
+
+            if (lastSuccessfulReadEntity != null)
+            {
+                var catchingUp = lastSuccessfulRead.Value.AddSeconds(catchUpInterval);
+                lastSuccessfulRead = catchingUp > now ? now : catchingUp;
+                lastSuccessfulReadEntity.LastSuccessfullRead = lastSuccessfulRead.Value;
+            }
+
+            var future = futureTimeouts.SafeFirstOrDefault();
+            var nextTimeToRunQuery = lastSuccessfulRead ?? (future?.Time ?? now.AddSeconds(1));
+
+            var timeoutsChunk = new TimeoutsChunk(
+                pastTimeouts.Where(c => !string.IsNullOrEmpty(c.RowKey))
+                    .Select(c => new TimeoutsChunk.Timeout(c.RowKey, c.Time))
+                    .Distinct(new TimoutChunkComparer())
+                    .ToList(),
+                nextTimeToRunQuery);
+
+            await UpdateSuccessfulRead(timeoutManagerDataTable, lastSuccessfulReadEntity).ConfigureAwait(false);
+
+            return timeoutsChunk;
         }
 
         async Task DeleteMainEntity(CloudTable timeoutDataTable, string partitionKey, string rowKey)
@@ -349,7 +333,7 @@
                 await blob.DownloadToStreamAsync(stream).ConfigureAwait(false);
                 stream.Position = 0;
 
-                var buffer = new byte[16 * 1024];
+                var buffer = new byte[16*1024];
                 using (var ms = new MemoryStream())
                 {
                     int read;
@@ -416,11 +400,8 @@
                     var addOperation = TableOperation.Insert(read);
                     return table.ExecuteAsync(addOperation);
                 }
-                else
-                {
-                    var updateOperation = TableOperation.Replace(read);
-                    return table.ExecuteAsync(updateOperation);
-                }
+                var updateOperation = TableOperation.Replace(read);
+                return table.ExecuteAsync(updateOperation);
             }
             catch (DataServiceRequestException ex) // handle concurrency issues
             {
@@ -437,7 +418,16 @@
 
                 throw;
             }
-
         }
+
+        string timeoutDataTableName;
+        string timeoutManagerDataTableName;
+        string timeoutStateContainerName;
+        int catchUpInterval;
+        string partitionKeyScope;
+        string endpointName;
+        string sanitizedEndpointInstanceName;
+        CloudTableClient client;
+        CloudBlobClient cloudBlobclient;
     }
 }
