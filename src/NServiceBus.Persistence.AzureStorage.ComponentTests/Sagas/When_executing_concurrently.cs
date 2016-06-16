@@ -36,31 +36,48 @@
             }
         }
 
-        [Test(Description = "Failed removal of the secondary index")]
-        public async Task Should_enable_inserting_when_only_secondary_exists()
+        [Test(Description = "The test covering a scenario, when a secondary index wasn't deleted properly")]
+        public async Task Should_not_find_saga_when_primary_is_removed_but_secondary_exists()
         {
             const string v = "1";
             await Save(persister1, v, Id1).ConfigureAwait(false);
 
             // get by property just to load to cache
-            await GetByProperty(persister2).ConfigureAwait(false);
+            await GetByCorrelationProperty(persister2).ConfigureAwait(false);
 
-            var entities = await cloudTable.ExecuteQueryAsync(new TableQuery<TableEntity>()).ConfigureAwait(false);
-            Guid guid;
-            var primary = entities.Single(te => Guid.TryParse(te.PartitionKey, out guid));
-            await cloudTable.DeleteIgnoringNotFound(primary);
+            await DeletePrimary(Id1).ConfigureAwait(false);
 
             // only secondary exists now, ensure it's null
-            var byProperty = await GetByProperty(persister2).ConfigureAwait(false);
+            var byProperty = await GetByCorrelationProperty(persister2).ConfigureAwait(false);
             Assert.IsNull(byProperty);
+        }
+
+        [Test(Description = "The test covering a scenario, when a secondary index wasn't deleted properly")]
+        public async Task Should_enable_saving_another_saga_with_same_correlation_id_as_completed()
+        {
+            const string v = "1";
+            await Save(persister1, v, Id1).ConfigureAwait(false);
+
+            // get by property just to load to cache
+            await GetByCorrelationProperty(persister2).ConfigureAwait(false);
+
+            await DeletePrimary(Id1).ConfigureAwait(false);
 
             const string v2 = "2";
 
-            // save a new version
+            // save a new saga with the same correlation id
             await Save(persister1, v2, Id2).ConfigureAwait(false);
 
-            byProperty = await GetByProperty(persister2).ConfigureAwait(false);
-            AssertSaga(byProperty, v2, Id2);
+            var saga = await GetByCorrelationProperty(persister2).ConfigureAwait(false);
+            AssertSaga(saga, v2, Id2);
+        }
+
+        async Task DeletePrimary(Guid sagaId)
+        {
+            var entities = await cloudTable.ExecuteQueryAsync(new TableQuery<TableEntity>()).ConfigureAwait(false);
+            Guid guid;
+            var primary = entities.Single(te => Guid.TryParse(te.PartitionKey, out guid) && guid == sagaId);
+            await cloudTable.DeleteIgnoringNotFound(primary);
         }
 
         [Test]
@@ -83,8 +100,8 @@
 
             var saga1 = await Get(persister1, Id1).ConfigureAwait(false);
             var saga2 = await Get(persister2, Id1).ConfigureAwait(false);
-            var saga1ByProperty = await GetByProperty(persister1).ConfigureAwait(false);
-            var saga2ByProperty = await GetByProperty(persister2).ConfigureAwait(false);
+            var saga1ByProperty = await GetByCorrelationProperty(persister1).ConfigureAwait(false);
+            var saga2ByProperty = await GetByCorrelationProperty(persister2).ConfigureAwait(false);
 
             AssertSaga(saga1, v, Id1);
             AssertSaga(saga2, v, Id1);
@@ -95,8 +112,8 @@
 
             saga1 = await Get(persister1, Id1).ConfigureAwait(false);
             saga2 = await Get(persister2, Id1).ConfigureAwait(false);
-            saga1ByProperty = await GetByProperty(persister1).ConfigureAwait(false);
-            saga2ByProperty = await GetByProperty(persister2).ConfigureAwait(false);
+            saga1ByProperty = await GetByCorrelationProperty(persister1).ConfigureAwait(false);
+            saga2ByProperty = await GetByCorrelationProperty(persister2).ConfigureAwait(false);
 
             Assert.IsNull(saga1);
             Assert.IsNull(saga2);
@@ -108,8 +125,8 @@
 
             saga1 = await Get(persister1, Id2).ConfigureAwait(false);
             saga2 = await Get(persister2, Id2).ConfigureAwait(false);
-            saga1ByProperty = await GetByProperty(persister1).ConfigureAwait(false);
-            saga2ByProperty = await GetByProperty(persister2).ConfigureAwait(false);
+            saga1ByProperty = await GetByCorrelationProperty(persister1).ConfigureAwait(false);
+            saga2ByProperty = await GetByCorrelationProperty(persister2).ConfigureAwait(false);
 
             AssertSaga(saga1, v2, Id2);
             AssertSaga(saga2, v2, Id2);
@@ -135,7 +152,7 @@
             return persister.Get<ConcurrentSagaData>(id, null, null);
         }
 
-        static Task<ConcurrentSagaData> GetByProperty(ISagaPersister persister)
+        static Task<ConcurrentSagaData> GetByCorrelationProperty(ISagaPersister persister)
         {
             return persister.Get<ConcurrentSagaData>(SagaCorrelationPropertyValue.Name, SagaCorrelationPropertyValue.Value, null, null);
         }
@@ -158,7 +175,7 @@
         const string CorrelationIdValue = "DB0F4000-5B9C-4ADE-9AB0-04305A5CABBD";
 
         static readonly Guid Id1 = new Guid("7FCF55F6-4AEB-40C7-86B9-2AB535664381");
-        static readonly Guid Id2 = new Guid("7FCF55F6-4AEB-40C7-86B9-2AB535664381");
+        static readonly Guid Id2 = new Guid("2C739583-0077-4482-BA6E-E569DD129BD6");
         static readonly SagaCorrelationProperty SagaCorrelationPropertyValue = new SagaCorrelationProperty("CorrelationId", CorrelationIdValue);
 
         class ConcurrentSagaData : ContainSagaData

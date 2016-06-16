@@ -63,21 +63,9 @@
             return entity;
         }
 
-        public async Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context) where TSagaData : IContainSagaData
+        public Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context) where TSagaData : IContainSagaData
         {
-            var id = await secondaryIndices.FindPossiblyCreatingIndexEntry<TSagaData>(propertyName, propertyValue).ConfigureAwait(false);
-            if (id == null)
-            {
-                return default(TSagaData);
-            }
-
-            var sagaData = await Get<TSagaData>(id.Value, session, context).ConfigureAwait(false);
-            if (Equals(sagaData, default(TSagaData)))
-            {
-                secondaryIndices.InvalidateCacheIfAny(propertyName, propertyValue, typeof(TSagaData));
-            }
-
-            return sagaData;
+            return GetByCorrelationProperty<TSagaData>(propertyName, propertyValue, session, context, false);
         }
 
         public async Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
@@ -103,6 +91,29 @@
             {
                 log.Warn($"Removal of the secondary index entry for the following saga failed: '{sagaId}'");
             }
+        }
+
+        async Task<TSagaData> GetByCorrelationProperty<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce)
+            where TSagaData : IContainSagaData
+        {
+            var sagaId = await secondaryIndices.FindSagaIdAndCreateIndexEntryIfNotFound<TSagaData>(propertyName, propertyValue).ConfigureAwait(false);
+            if (sagaId == null)
+            {
+                return default(TSagaData);
+            }
+
+            var sagaData = await Get<TSagaData>(sagaId.Value, session, context).ConfigureAwait(false);
+            if (Equals(sagaData, default(TSagaData)))
+            {
+                // saga is not found, try invalidate cache and try getting value one more time
+                secondaryIndices.InvalidateCacheIfAny(propertyName, propertyValue, typeof(TSagaData));
+                if (triedAlreadyOnce == false)
+                {
+                    return await GetByCorrelationProperty<TSagaData>(propertyName, propertyValue, session, context, true).ConfigureAwait(false);
+                }
+            }
+
+            return sagaData;
         }
 
         public static TableQuery<TEntity> GenerateSagaTableQuery<TEntity>(Guid sagaId)

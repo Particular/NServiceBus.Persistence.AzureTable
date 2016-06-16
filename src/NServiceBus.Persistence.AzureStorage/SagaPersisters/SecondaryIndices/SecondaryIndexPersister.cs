@@ -30,7 +30,7 @@
 
             var key = SecondaryIndexKeyBuilder.BuildTableKey(sagaType, correlationProperty);
 
-            var entity = new SecondaryIndexTableEntity
+            var newSecondaryIndexEntity = new SecondaryIndexTableEntity
             {
                 SagaId = sagaData.Id,
                 InitialSagaData = SagaDataSerializer.SerializeSagaData(sagaData),
@@ -45,7 +45,7 @@
 
             try
             {
-                await table.ExecuteAsync(TableOperation.Insert(entity)).ConfigureAwait(false);
+                await table.ExecuteAsync(TableOperation.Insert(newSecondaryIndexEntity)).ConfigureAwait(false);
                 return key;
             }
             catch (StorageException ex)
@@ -54,8 +54,8 @@
                 if (indexRowAlreadyExists)
                 {
                     var exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey)).ConfigureAwait(false);
-                    var indexRow = (SecondaryIndexTableEntity) exec.Result;
-                    var data = indexRow?.InitialSagaData;
+                    var existingSecondaryIndexEntity = (SecondaryIndexTableEntity) exec.Result;
+                    var data = existingSecondaryIndexEntity?.InitialSagaData;
                     if (data != null)
                     {
                         var deserializeSagaData = SagaDataSerializer.DeserializeSagaData(sagaType, data);
@@ -83,7 +83,7 @@
                     else
                     {
                         // data is null, this means that either the entry has been created as the secondary index after scanning the table or after storing the primary
-                        var sagaId = indexRow?.SagaId;
+                        var sagaId = existingSecondaryIndexEntity?.SagaId;
                         if (sagaId != null)
                         {
                             var query = AzureSagaPersister.GenerateSagaTableQuery<TableEntity>(sagaId.Value);
@@ -98,8 +98,8 @@
 
                         try
                         {
-                            await table.ExecuteAsync(TableOperation.Delete(indexRow)).ConfigureAwait(false);
-                            await table.ExecuteAsync(TableOperation.Insert(entity)).ConfigureAwait(false);
+                            await table.ExecuteAsync(TableOperation.Delete(existingSecondaryIndexEntity)).ConfigureAwait(false);
+                            await table.ExecuteAsync(TableOperation.Insert(newSecondaryIndexEntity)).ConfigureAwait(false);
                             return key;
                         }
                         catch (Exception exception)
@@ -112,7 +112,7 @@
             }
         }
 
-        public async Task<Guid?> FindPossiblyCreatingIndexEntry<TSagaData>(string propertyName, object propertyValue)
+        public async Task<Guid?> FindSagaIdAndCreateIndexEntryIfNotFound<TSagaData>(string propertyName, object propertyValue)
             where TSagaData : IContainSagaData
         {
             var sagaType = typeof(TSagaData);
