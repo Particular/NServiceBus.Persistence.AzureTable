@@ -54,9 +54,9 @@
             {
                 etags.Add(entity, tableEntity.ETag);
                 EntityProperty value;
-                if (tableEntity.TryGetValue(SecondaryIndexEntry, out value))
+                if (tableEntity.TryGetValue(SecondaryIndexIndicatorProperty, out value))
                 {
-                    secondaryIndexKeys.Add(entity, PartitionRowKeyTuple.Parse(value.StringValue));
+                    secondaryIndexLocalCache.Add(entity, PartitionRowKeyTuple.Parse(value.StringValue));
                 }
             }
 
@@ -124,7 +124,7 @@
         Task RemoveSecondaryIndex(IContainSagaData sagaData)
         {
             PartitionRowKeyTuple secondaryIndexKey;
-            if (secondaryIndexKeys.TryGetValue(sagaData, out secondaryIndexKey))
+            if (secondaryIndexLocalCache.TryGetValue(sagaData, out secondaryIndexKey))
             {
                 return secondaryIndices.RemoveSecondary(sagaData.GetType(), secondaryIndexKey);
             }
@@ -211,7 +211,7 @@
 
             if (secondaryIndexKey == null && update)
             {
-                secondaryIndexKeys.TryGetValue(entity, out secondaryIndexKey);
+                secondaryIndexLocalCache.TryGetValue(entity, out secondaryIndexKey);
             }
 
             var properties = SelectPropertiesToPersist(type);
@@ -225,7 +225,7 @@
 
             if (secondaryIndexKey != null)
             {
-                toPersist.Add(SecondaryIndexEntry, secondaryIndexKey.ToString());
+                toPersist.Add(SecondaryIndexIndicatorProperty, secondaryIndexKey.ToString());
             }
 
             //no longer using InsertOrReplace as it ignores concurrency checks
@@ -242,9 +242,9 @@
         bool autoUpdateSchema;
         CloudTableClient client;
         SecondaryIndexPersister secondaryIndices;
-        const string SecondaryIndexEntry = "NServiceBus_2ndIndexKey";
+        const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
         static ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
         static ConditionalWeakTable<object, string> etags = new ConditionalWeakTable<object, string>();
-        static ConditionalWeakTable<object, PartitionRowKeyTuple> secondaryIndexKeys = new ConditionalWeakTable<object, PartitionRowKeyTuple>();
+        static ConditionalWeakTable<object, PartitionRowKeyTuple> secondaryIndexLocalCache = new ConditionalWeakTable<object, PartitionRowKeyTuple>();
     }
 }

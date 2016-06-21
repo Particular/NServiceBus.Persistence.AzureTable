@@ -198,9 +198,9 @@
 
             var sagaType = sagaData.GetType();
             var table = await getTableForSaga(sagaType).ConfigureAwait(false);
-            var key = SecondaryIndexKeyBuilder.BuildTableKey(sagaType, correlationProperty);
+            var secondaryIndexKey = SecondaryIndexKeyBuilder.BuildTableKey(sagaType, correlationProperty);
 
-            var secondaryIndexTableEntity = CreateIndexingOnlyEntity(key, sagaData.Id);
+            var secondaryIndexTableEntity = CreateIndexingOnlyEntity(secondaryIndexKey, sagaData.Id);
             secondaryIndexTableEntity.ETag = "*";
 
             await table.ExecuteAsync(TableOperation.Replace(secondaryIndexTableEntity)).ConfigureAwait(false);

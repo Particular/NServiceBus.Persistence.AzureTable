@@ -61,15 +61,10 @@
             {
                 return null;
             }
-            var strings = str.Split(Separators, StringSplitOptions.None);
+            var strings = str.Split(new [] { Separator }, StringSplitOptions.None);
             return new PartitionRowKeyTuple(strings[0], strings[1]);
         }
 
         const string Separator = "#";
-
-        static readonly string[] Separators =
-        {
-            Separator
-        };
     }
 }
