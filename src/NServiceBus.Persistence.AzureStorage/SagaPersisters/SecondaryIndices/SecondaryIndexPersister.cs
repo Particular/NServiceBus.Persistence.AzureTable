@@ -98,8 +98,8 @@
 
                         try
                         {
-                            await table.ExecuteAsync(TableOperation.Delete(existingSecondaryIndexEntity)).ConfigureAwait(false);
-                            await table.ExecuteAsync(TableOperation.Insert(newSecondaryIndexEntity)).ConfigureAwait(false);
+                            //this single call replaces a pair of calls that did a Delete followed by an Insert
+                            await table.ExecuteAsync(TableOperation.InsertOrReplace(newSecondaryIndexEntity)).ConfigureAwait(false);
                             return key;
                         }
                         catch (Exception exception)
