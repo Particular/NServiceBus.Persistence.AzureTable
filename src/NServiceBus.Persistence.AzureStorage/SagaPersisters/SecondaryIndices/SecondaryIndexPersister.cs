@@ -99,6 +99,7 @@
                         try
                         {
                             //this single call replaces a pair of calls that did a Delete followed by an Insert
+                            newSecondaryIndexEntity.ETag = existingSecondaryIndexEntity?.ETag ?? "*";
                             await table.ExecuteAsync(TableOperation.InsertOrReplace(newSecondaryIndexEntity)).ConfigureAwait(false);
                             return key;
                         }
