@@ -6,8 +6,8 @@
     using System.Linq;
     using System.Threading.Tasks;
     using AcceptanceTesting;
-    using EndpointTemplates;
     using Config;
+    using EndpointTemplates;
     using Features;
     using NUnit.Framework;
 
@@ -36,14 +36,13 @@
                     }
                 }))
                 .Done(c => c.CompletedIds.OrderBy(s => s).ToArray().Intersect(guids).Count() == expectedNumberOfCreatedSagas)
-                .Run().ConfigureAwait(false);
+                .Run(TimeSpan.FromMinutes(3)).ConfigureAwait(false);
 
             CollectionAssert.AreEquivalent(guids, context.CompletedIds.OrderBy(s => s).ToArray());
         }
 
         public class Context : ScenarioContext
         {
-            ConcurrentDictionary<string, string> completed = new ConcurrentDictionary<string, string>();
             public int CompletedIdsCount => completed.Count;
             public IEnumerable<string> CompletedIds => completed.Keys;
 
@@ -51,6 +50,8 @@
             {
                 completed.AddOrUpdate(orderId, orderId, (o1, o2) => o1);
             }
+
+            ConcurrentDictionary<string, string> completed = new ConcurrentDictionary<string, string>();
         }
 
         public class ReceiverWithSagas : EndpointConfigurationBuilder

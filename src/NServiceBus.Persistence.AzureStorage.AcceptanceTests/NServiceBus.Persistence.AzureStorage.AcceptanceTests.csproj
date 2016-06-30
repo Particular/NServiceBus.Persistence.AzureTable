@@ -92,6 +92,7 @@
   <ItemGroup>
     <Compile Include="ConfigureEndpointAzureStorageQueueTransport.cs" />
     <Compile Include="ConfigureScenariosForAzureStorageQueueTransport.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="Infrastructure\EndpointTemplates\ConfigureEndpointMsmqTransport.cs" />
     <Compile Include="Infrastructure\EndpointTemplates\ConfigureExtensions.cs" />
     <Compile Include="Infrastructure\EndpointTemplates\DefaultPublisher.cs" />
@@ -134,6 +135,7 @@
     <Compile Include="Sagas\When_saga_has_a_non_empty_constructor.cs" />
     <Compile Include="Sagas\When_saga_has_duplicate_instances.cs" />
     <Compile Include="Sagas\When_saga_id_changed.cs" />
+    <Compile Include="Sagas\When_saga_is_completed.cs" />
     <Compile Include="Sagas\When_saga_is_mapped_to_complex_expression.cs" />
     <Compile Include="Sagas\When_saga_is_started_by_two_types_of_messages.cs" />
     <Compile Include="Sagas\When_sending_from_a_saga_handle.cs" />

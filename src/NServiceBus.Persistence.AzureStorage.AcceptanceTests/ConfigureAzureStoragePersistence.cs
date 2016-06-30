@@ -8,7 +8,7 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
 {
     public Task Configure(string endpointName, EndpointConfiguration config, RunSettings settings)
     {
-        var connectionString = Environment.GetEnvironmentVariable("AzureStoragePersistence.ConnectionString");
+        var connectionString = GetConnectionString();
         config.UsePersistence<AzureStoragePersistence, StorageType.Subscriptions>().ConnectionString(connectionString);
         config.UsePersistence<AzureStoragePersistence, StorageType.Sagas>().ConnectionString(connectionString);
         config.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>().ConnectionString(connectionString);
@@ -19,5 +19,10 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
     Task IConfigureEndpointTestExecution.Cleanup()
     {
         return Task.FromResult(0);
+    }
+
+    public static string GetConnectionString()
+    {
+        return Environment.GetEnvironmentVariable("AzureStoragePersistence.ConnectionString");
     }
 }

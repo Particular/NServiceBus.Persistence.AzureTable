@@ -8,71 +8,14 @@
 
     class DictionaryTableEntity : TableEntity, IDictionary<string, EntityProperty>
     {
-        IDictionary<string, EntityProperty> properties;
-
         public DictionaryTableEntity()
         {
             properties = new Dictionary<string, EntityProperty>();
         }
 
-        public override void ReadEntity(IDictionary<string, EntityProperty> entityProperties, OperationContext operationContext)
-        {
-            properties = entityProperties;
-        }
-
-        public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
-        {
-            return properties;
-        }
-
         public void Add(string key, EntityProperty value)
         {
             properties.Add(key, value);
-        }
-
-        public void Add(string key, bool value)
-        {
-            properties.Add(key, new EntityProperty(value));
-        }
-
-        public void Add(string key, byte[] value)
-        {
-            properties.Add(key, new EntityProperty(value));
-        }
-
-        public void Add(string key, DateTime? value)
-        {
-            properties.Add(key, new EntityProperty(value));
-        }
-
-        public void Add(string key, DateTimeOffset? value)
-        {
-            properties.Add(key, new EntityProperty(value));
-        }
-
-        public void Add(string key, double value)
-        {
-            properties.Add(key, new EntityProperty(value));
-        }
-
-        public void Add(string key, Guid value)
-        {
-            properties.Add(key, new EntityProperty(value));
-        }
-
-        public void Add(string key, int value)
-        {
-            properties.Add(key, new EntityProperty(value));
-        }
-
-        public void Add(string key, long value)
-        {
-            properties.Add(key, new EntityProperty(value));
-        }
-
-        public void Add(string key, string value)
-        {
-            properties.Add(key, new EntityProperty(value));
         }
 
         public bool ContainsKey(string key)
@@ -138,5 +81,62 @@
         {
             return properties.GetEnumerator();
         }
+
+        public override void ReadEntity(IDictionary<string, EntityProperty> entityProperties, OperationContext operationContext)
+        {
+            properties = entityProperties;
+        }
+
+        public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
+        {
+            return properties;
+        }
+
+        public void Add(string key, bool value)
+        {
+            properties.Add(key, new EntityProperty(value));
+        }
+
+        public void Add(string key, byte[] value)
+        {
+            properties.Add(key, new EntityProperty(value));
+        }
+
+        public void Add(string key, DateTime? value)
+        {
+            properties.Add(key, new EntityProperty(value));
+        }
+
+        public void Add(string key, DateTimeOffset? value)
+        {
+            properties.Add(key, new EntityProperty(value));
+        }
+
+        public void Add(string key, double value)
+        {
+            properties.Add(key, new EntityProperty(value));
+        }
+
+        public void Add(string key, Guid value)
+        {
+            properties.Add(key, new EntityProperty(value));
+        }
+
+        public void Add(string key, int value)
+        {
+            properties.Add(key, new EntityProperty(value));
+        }
+
+        public void Add(string key, long value)
+        {
+            properties.Add(key, new EntityProperty(value));
+        }
+
+        public void Add(string key, string value)
+        {
+            properties.Add(key, new EntityProperty(value));
+        }
+
+        IDictionary<string, EntityProperty> properties;
     }
 }
