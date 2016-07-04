@@ -3,6 +3,7 @@
     using System;
     using System.Net;
     using System.Threading.Tasks;
+    using Extensibility;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
     using Sagas;
@@ -11,14 +12,14 @@
     {
         public delegate Task<Guid[]> ScanForSagas(Type sagaType, string propertyName, object propertyValue);
 
-        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, Func<IContainSagaData, PartitionRowKeyTuple, Task> persist)
+        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, Func<IContainSagaData, PartitionRowKeyTuple, ContextBag, Task> persist)
         {
             this.getTableForSaga = getTableForSaga;
             this.scanner = scanner;
             this.persist = persist;
         }
 
-        public async Task<PartitionRowKeyTuple> Insert(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty)
+        public async Task<PartitionRowKeyTuple> Insert(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, ContextBag context)
         {
             if (correlationProperty == SagaCorrelationProperty.None)
             {
@@ -63,7 +64,7 @@
                         // saga hasn't been saved under primary key. Try to store it
                         try
                         {
-                            await persist(deserializeSagaData, key).ConfigureAwait(false);
+                            await persist(deserializeSagaData, key, context).ConfigureAwait(false);
                             return key;
                         }
                         catch (StorageException e)
@@ -240,7 +241,7 @@
 
         Func<Type, Task<CloudTable>> getTableForSaga;
 
-        Func<IContainSagaData, PartitionRowKeyTuple, Task> persist;
+        Func<IContainSagaData, PartitionRowKeyTuple, ContextBag, Task> persist;
 
         ScanForSagas scanner;
 

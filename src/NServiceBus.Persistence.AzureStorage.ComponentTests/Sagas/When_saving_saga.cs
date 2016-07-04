@@ -1,8 +1,8 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Persisters
 {
     using System;
+    using Extensibility;
     using Microsoft.WindowsAzure.Storage;
-    using AzureStorage;
     using NUnit.Framework;
 
     public class When_saving_saga
@@ -20,7 +20,7 @@
                 OriginalMessageId = "MooId"
             };
 
-            Assert.ThrowsAsync<StorageException>(async () => await persister.Save(saga, null, null, null));
+            Assert.ThrowsAsync<StorageException>(async () => await persister.Save(saga, null, null, new ContextBag()));
         }
     }
 

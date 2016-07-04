@@ -6,7 +6,6 @@
     using System.Linq;
     using System.Net;
     using System.Reflection;
-    using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
     using Extensibility;
     using Logging;
@@ -33,14 +32,14 @@
             // 2) insert the primary saga data in its row, storing the identifier of the secondary index as well (for completions)
             // 3) remove the data of the primary from the 2nd index. It will be no longer needed
 
-            var secondaryIndexKey = await secondaryIndices.Insert(sagaData, correlationProperty).ConfigureAwait(false);
-            await Persist(sagaData, secondaryIndexKey).ConfigureAwait(false);
+            var secondaryIndexKey = await secondaryIndices.Insert(sagaData, correlationProperty, context).ConfigureAwait(false);
+            await Persist(sagaData, secondaryIndexKey, context).ConfigureAwait(false);
             await secondaryIndices.MarkAsHavingPrimaryPersisted(sagaData, correlationProperty).ConfigureAwait(false);
         }
 
         public Task Update(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
         {
-            return Persist(sagaData, null);
+            return Persist(sagaData, null, context);
         }
 
         public async Task<TSagaData> Get<TSagaData>(Guid sagaId, SynchronizedStorageSession session, ContextBag context) where TSagaData : IContainSagaData
@@ -52,11 +51,12 @@
 
             if (!Equals(entity, default(TSagaData)))
             {
-                etags.Add(entity, tableEntity.ETag);
+                var meta = context.GetOrCreate<SagaInstanceMetadata>();
+                meta.AddEtag(entity, tableEntity.ETag);
                 EntityProperty value;
                 if (tableEntity.TryGetValue(SecondaryIndexIndicatorProperty, out value))
                 {
-                    secondaryIndexLocalCache.Add(entity, PartitionRowKeyTuple.Parse(value.StringValue));
+                    meta.AddSecondaryIndexId(entity, PartitionRowKeyTuple.Parse(value.StringValue));
                 }
             }
 
@@ -85,7 +85,7 @@
             await table.DeleteIgnoringNotFound(entity).ConfigureAwait(false);
             try
             {
-                await RemoveSecondaryIndex(sagaData).ConfigureAwait(false);
+                await RemoveSecondaryIndex(sagaData, context).ConfigureAwait(false);
             }
             catch
             {
@@ -121,10 +121,12 @@
             return new TableQuery<TEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, sagaId.ToString()));
         }
 
-        Task RemoveSecondaryIndex(IContainSagaData sagaData)
+        Task RemoveSecondaryIndex(IContainSagaData sagaData, ContextBag context)
         {
+            var meta = context.GetOrCreate<SagaInstanceMetadata>();
+
             PartitionRowKeyTuple secondaryIndexKey;
-            if (secondaryIndexLocalCache.TryGetValue(sagaData, out secondaryIndexKey))
+            if (meta.TryGetSecondaryIndexKey(sagaData, out secondaryIndexKey))
             {
                 return secondaryIndices.RemoveSecondary(sagaData.GetType(), secondaryIndexKey);
             }
@@ -155,7 +157,7 @@
             }
         }
 
-        async Task Persist(IContainSagaData saga, PartitionRowKeyTuple secondaryIndexKey)
+        async Task Persist(IContainSagaData saga, PartitionRowKeyTuple secondaryIndexKey, ContextBag context)
         {
             var type = saga.GetType();
             var table = await GetTable(type).ConfigureAwait(false);
@@ -164,7 +166,7 @@
 
             var batch = new TableBatchOperation();
 
-            AddObjectToBatch(batch, saga, partitionKey, secondaryIndexKey);
+            AddObjectToBatch(batch, saga, partitionKey, secondaryIndexKey, context);
 
             await table.ExecuteBatchAsync(batch).ConfigureAwait(false);
         }
@@ -196,22 +198,19 @@
             return entities.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray();
         }
 
-        static void AddObjectToBatch(TableBatchOperation batch, object entity, string partitionKey, PartitionRowKeyTuple secondaryIndexKey, string rowkey = "")
+        static void AddObjectToBatch(TableBatchOperation batch, object entity, string partitionKey, PartitionRowKeyTuple secondaryIndexKey, ContextBag context)
         {
-            if (rowkey == "")
-            {
-                // just to be backward compat with original implementation
-                rowkey = partitionKey;
-            }
+            var rowkey = partitionKey;
 
             var type = entity.GetType();
             string etag;
 
-            var update = etags.TryGetValue(entity, out etag);
+            var meta = context.GetOrCreate<SagaInstanceMetadata>();
+            var update = meta.TryGetEtag(entity, out etag);
 
             if (secondaryIndexKey == null && update)
             {
-                secondaryIndexLocalCache.TryGetValue(entity, out secondaryIndexKey);
+                meta.TryGetSecondaryIndexKey(entity, out secondaryIndexKey);
             }
 
             var properties = SelectPropertiesToPersist(type);
@@ -244,7 +243,34 @@
         SecondaryIndexPersister secondaryIndices;
         const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
         static ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
-        static ConditionalWeakTable<object, string> etags = new ConditionalWeakTable<object, string>();
-        static ConditionalWeakTable<object, PartitionRowKeyTuple> secondaryIndexLocalCache = new ConditionalWeakTable<object, PartitionRowKeyTuple>();
+
+        /// <summary>
+        /// Holds saga instance related metadata in a scope of a <see cref="ContextBag" />.
+        /// </summary>
+        class SagaInstanceMetadata
+        {
+            public void AddEtag(IContainSagaData entity, string etag)
+            {
+                etags[entity] = etag;
+            }
+
+            public void AddSecondaryIndexId(IContainSagaData entity, PartitionRowKeyTuple secondaryIndexKey)
+            {
+                secondaryIndexKeys[entity] = secondaryIndexKey;
+            }
+
+            public bool TryGetEtag(object entity, out string etag)
+            {
+                return etags.TryGetValue(entity, out etag);
+            }
+
+            public bool TryGetSecondaryIndexKey(object entity, out PartitionRowKeyTuple secondaryIndexKey)
+            {
+                return secondaryIndexKeys.TryGetValue(entity, out secondaryIndexKey);
+            }
+
+            Dictionary<object, string> etags = new Dictionary<object, string>();
+            Dictionary<object, PartitionRowKeyTuple> secondaryIndexKeys = new Dictionary<object, PartitionRowKeyTuple>();
+        }
     }
 }

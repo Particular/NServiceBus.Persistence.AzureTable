@@ -3,6 +3,7 @@
     using System;
     using System.Linq;
     using System.Threading.Tasks;
+    using Extensibility;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
     using NServiceBus.Sagas;
@@ -149,12 +150,12 @@
 
         static Task<ConcurrentSagaData> Get(ISagaPersister persister, Guid id)
         {
-            return persister.Get<ConcurrentSagaData>(id, null, null);
+            return persister.Get<ConcurrentSagaData>(id, null, new ContextBag());
         }
 
         static Task<ConcurrentSagaData> GetByCorrelationProperty(ISagaPersister persister)
         {
-            return persister.Get<ConcurrentSagaData>(SagaCorrelationPropertyValue.Name, SagaCorrelationPropertyValue.Value, null, null);
+            return persister.Get<ConcurrentSagaData>(SagaCorrelationPropertyValue.Name, SagaCorrelationPropertyValue.Value, null, new ContextBag());
         }
 
         static Task Save(ISagaPersister persister, string value, Guid id)
@@ -164,7 +165,7 @@
                 Id = id,
                 CorrelationId = CorrelationIdValue,
                 Value = value
-            }, SagaCorrelationPropertyValue, null, null);
+            }, SagaCorrelationPropertyValue, null, new ContextBag());
         }
 
         readonly CloudTable cloudTable;
