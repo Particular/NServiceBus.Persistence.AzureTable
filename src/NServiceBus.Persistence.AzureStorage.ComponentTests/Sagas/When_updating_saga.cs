@@ -2,7 +2,7 @@
 {
     using System;
     using System.Threading.Tasks;
-    using AzureStorage;
+    using Extensibility;
     using NUnit.Framework;
 
     public class When_updating_saga
@@ -23,13 +23,15 @@
                 MyProps = originalProp
             };
 
-            await persister.Save(saga, null, null, null);
-            var sagaData = await persister.Get<UpdateSagaData>(saga.Id, null, null);
+            await persister.Save(saga, null, null, new ContextBag());
+
+            var bag = new ContextBag();
+            var sagaData = await persister.Get<UpdateSagaData>(saga.Id, null, bag);
             Assert.AreEqual(sagaData.MyProps, saga.MyProps);
             sagaData.MyProps = newProp;
-            await persister.Update(sagaData, null, null);
+            await persister.Update(sagaData, null, bag);
 
-            var updatedSaga = await persister.Get<UpdateSagaData>(saga.Id, null, null);
+            var updatedSaga = await persister.Get<UpdateSagaData>(saga.Id, null, new ContextBag());
 
             Assert.AreEqual(updatedSaga.MyProps, newProp);
         }

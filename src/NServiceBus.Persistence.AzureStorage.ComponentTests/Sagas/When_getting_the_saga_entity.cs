@@ -2,7 +2,7 @@
 {
     using System;
     using System.Threading.Tasks;
-    using AzureStorage;
+    using Extensibility;
     using NUnit.Framework;
 
     public class When_getting_the_saga_entity
@@ -32,8 +32,8 @@
                 OriginalMessageId = "MooId"
             };
 
-            await persister.Save(saga, null, null, null);
-            var sagaData = await persister.Get<GetSagaData>(saga.Id, null, null);
+            await persister.Save(saga, null, null, new ContextBag());
+            var sagaData = await persister.Get<GetSagaData>(saga.Id, null, new ContextBag());
 
             Assert.IsNotNull(sagaData);
             Assert.AreEqual(sagaData.OriginalMessageId, saga.OriginalMessageId);

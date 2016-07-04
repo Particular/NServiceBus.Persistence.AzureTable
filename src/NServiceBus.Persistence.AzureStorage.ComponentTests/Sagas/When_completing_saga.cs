@@ -2,7 +2,7 @@
 {
     using System;
     using System.Threading.Tasks;
-    using AzureStorage;
+    using Extensibility;
     using NUnit.Framework;
 
     public class When_completing_saga
@@ -20,12 +20,13 @@
                 OriginalMessageId = "MooId"
             };
 
-            await persister.Save(saga, null, null, null);
-            var sagaData = await persister.Get<CompleteSagaData>(saga.Id, null, null);
+            var bag = new ContextBag();
+            await persister.Save(saga, null, null, bag);
+            var sagaData = await persister.Get<CompleteSagaData>(saga.Id, null, bag);
             Assert.IsNotNull(sagaData);
 
-            await persister.Complete(saga, null, null);
-            sagaData = await persister.Get<CompleteSagaData>(saga.Id, null, null);
+            await persister.Complete(saga, null, bag);
+            sagaData = await persister.Get<CompleteSagaData>(saga.Id, null, new ContextBag());
             Assert.IsNull(sagaData);
         }
 
@@ -42,11 +43,12 @@
                 OriginalMessageId = "MooId"
             };
 
-            await persister.Save(sagaData, null, null, null);
+            var bag = new ContextBag();
+            await persister.Save(sagaData, null, null, bag);
             Assert.IsNotNull(sagaData);
 
-            await persister.Complete(sagaData, null, null);
-            await persister.Complete(sagaData, null, null);
+            await persister.Complete(sagaData, null, bag);
+            await persister.Complete(sagaData, null, bag);
 
             sagaData = await persister.Get<CompleteSagaData>(sagaData.Id, null, null);
             Assert.IsNull(sagaData);
