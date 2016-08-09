@@ -8,7 +8,6 @@
     using AcceptanceTesting;
     using Config;
     using EndpointTemplates;
-    using Features;
     using NUnit.Framework;
 
     public class When_saga_is_started_by_two_types_of_messages : NServiceBusAcceptanceTest

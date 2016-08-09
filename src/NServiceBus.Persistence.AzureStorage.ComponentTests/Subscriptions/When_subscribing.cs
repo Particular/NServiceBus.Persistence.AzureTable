@@ -2,7 +2,6 @@
 {
     using System.Linq;
     using System.Threading.Tasks;
-    using Routing;
     using Unicast.Subscriptions;
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
     using NUnit.Framework;
@@ -35,7 +34,7 @@
 
             var subscription = subscribers.ToArray()[0];
             Assert.That(subscription.TransportAddress, Is.EqualTo("address://test-queue"));
-            Assert.That(subscription.Endpoint.ToString(), Is.EqualTo("endpointName"));
+            Assert.That(subscription.Endpoint, Is.EqualTo("endpointName"));
         }
     }
 
