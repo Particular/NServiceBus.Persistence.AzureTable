@@ -183,7 +183,7 @@
             var allTimeouts = result.ToList();
             if (allTimeouts.Count == 0)
             {
-                return new TimeoutsChunk(new List<TimeoutsChunk.Timeout>(), now.AddSeconds(1));
+                return new TimeoutsChunk(new TimeoutsChunk.Timeout[0], now.AddSeconds(1));
             }
 
             var pastTimeouts = allTimeouts.Where(c => c.Time > startSlice && c.Time <= now).ToList();
@@ -203,7 +203,7 @@
                 pastTimeouts.Where(c => !string.IsNullOrEmpty(c.RowKey))
                     .Select(c => new TimeoutsChunk.Timeout(c.RowKey, c.Time))
                     .Distinct(new TimoutChunkComparer())
-                    .ToList(),
+                    .ToArray(),
                 nextTimeToRunQuery);
 
             await UpdateSuccessfulRead(timeoutManagerDataTable, lastSuccessfulReadEntity).ConfigureAwait(false);

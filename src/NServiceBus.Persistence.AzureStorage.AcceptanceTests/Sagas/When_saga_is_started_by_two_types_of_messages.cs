@@ -61,8 +61,8 @@
                 EndpointSetup<DefaultServer>(
                     config =>
                     {
-                        config.EnableFeature<FirstLevelRetries>();
-                        config.EnableFeature<SecondLevelRetries>();
+                        config.Recoverability().Delayed(retriesSettings => retriesSettings.NumberOfRetries(0));
+                        config.Recoverability().Immediate(retriesSettings => retriesSettings.NumberOfRetries(0));
                         config.LimitMessageProcessingConcurrencyTo(3);
                     }).WithConfig<SecondLevelRetriesConfig>(slr =>
                     {

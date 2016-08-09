@@ -40,7 +40,7 @@
                 EndpointSetup<DefaultServer>(b =>
                 {
                     b.EnableFeature<TimeoutManager>();
-                    b.EnableFeature<SecondLevelRetries>();
+                    b.Recoverability().Delayed(retriesSettings => retriesSettings.NumberOfRetries(0));
                 }).WithConfig<SecondLevelRetriesConfig>(slr =>
                 {
                     slr.NumberOfRetries = 1;

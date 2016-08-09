@@ -27,7 +27,7 @@
                 messageType
             };
 
-            var subscriber = new Subscriber("address://test-queue", new EndpointName("endpointName"));
+            var subscriber = new Subscriber("address://test-queue", "endpointName");
             await persister.Subscribe(subscriber, messageType, null);
 
             var subscribers = await persister.GetSubscriberAddressesForMessage(messageTypes, null);

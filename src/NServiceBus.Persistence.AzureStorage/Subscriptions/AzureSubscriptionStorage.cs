@@ -9,7 +9,6 @@
     using Microsoft.WindowsAzure.Storage.RetryPolicies;
     using Microsoft.WindowsAzure.Storage.Table;
     using Extensibility;
-    using NServiceBus.Routing;
     using MessageDrivenSubscriptions;
     using Persistence.AzureStorage;
 
@@ -56,7 +55,7 @@
                 {
                     RowKey = EncodeTo64(subscriber.TransportAddress),
                     PartitionKey = messageType.ToString(),
-                    EndpointName = subscriber.Endpoint?.ToString()
+                    EndpointName = subscriber.Endpoint
                 };
 
                 var operation = TableOperation.Insert(subscription);
@@ -109,7 +108,7 @@
                 var query = new TableQuery<Subscription>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, messageType.ToString()));
 
                 var subscriptions = await table.ExecuteQueryAsync(query).ConfigureAwait(false);
-                var results = subscriptions.Select(s => new Subscriber(DecodeFrom64(s.RowKey), new EndpointName(s.EndpointName)));
+                var results = subscriptions.Select(s => new Subscriber(DecodeFrom64(s.RowKey), s.EndpointName));
 
                 subscribers.AddRange(results);
             }

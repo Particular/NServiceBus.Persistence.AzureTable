@@ -2,18 +2,18 @@
 {
     using System;
     using Settings;
-    using Transports;
     using System.Threading.Tasks;
     using Extensibility;
     using System.Collections.Generic;
     using Routing;
     using DelayedDelivery;
+    using Transport;
 
     public class TransportWithFakeQueues : TransportDefinition
     {
-        protected override TransportInfrastructure Initialize(SettingsHolder settings, string connectionString)
+        public override TransportInfrastructure Initialize(SettingsHolder settings, string connectionString)
         {
-           return new FakeTransportInfrastructure();
+            return new FakeTransportInfrastructure();
         }
 
         public override string ExampleConnectionStringForErrorMessage { get; } = string.Empty;
@@ -61,7 +61,7 @@
         CriticalError criticalError;
         Exception throwCritical;
 
-        public Task Init(Func<PushContext, Task> pipe, CriticalError criticalError, PushSettings settings)
+        public Task Init(Func<MessageContext, Task> onMessage, Func<ErrorContext, Task<ErrorHandleResult>> onError, CriticalError criticalError, PushSettings settings)
         {
             this.criticalError = criticalError;
             return Task.FromResult(0);
@@ -96,7 +96,7 @@
 
     class FakeDispatcher : IDispatchMessages
     {
-        public Task Dispatch(TransportOperations outgoingMessages, ContextBag context)
+        public Task Dispatch(TransportOperations outgoingMessages, TransportTransaction transaction, ContextBag context)
         {
             return Task.FromResult(0);
         }
