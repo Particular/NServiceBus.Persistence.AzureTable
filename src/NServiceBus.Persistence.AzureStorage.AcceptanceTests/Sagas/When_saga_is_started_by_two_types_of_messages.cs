@@ -6,7 +6,6 @@
     using System.Linq;
     using System.Threading.Tasks;
     using AcceptanceTesting;
-    using Config;
     using EndpointTemplates;
     using NUnit.Framework;
 
@@ -63,10 +62,11 @@
                         config.Recoverability().Delayed(retriesSettings => retriesSettings.NumberOfRetries(0));
                         config.Recoverability().Immediate(retriesSettings => retriesSettings.NumberOfRetries(0));
                         config.LimitMessageProcessingConcurrencyTo(3);
-                    }).WithConfig<SecondLevelRetriesConfig>(slr =>
-                    {
-                        slr.NumberOfRetries = 20;
-                        slr.TimeIncrease = TimeSpan.FromMilliseconds(1);
+                        config.Recoverability().Delayed(retriesSettings =>
+                        {
+                            retriesSettings.NumberOfRetries(20);
+                            retriesSettings.TimeIncrease(TimeSpan.FromMilliseconds(1));
+                        });
                     });
             }
         }

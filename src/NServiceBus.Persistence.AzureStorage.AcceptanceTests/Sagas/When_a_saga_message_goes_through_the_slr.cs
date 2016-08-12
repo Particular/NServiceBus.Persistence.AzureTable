@@ -1,13 +1,12 @@
 ﻿namespace NServiceBus.AcceptanceTests.Sagas
 {
     using System;
-    using EndpointTemplates;
+    using System.Threading.Tasks;
     using AcceptanceTesting;
+    using EndpointTemplates;
+    using Features;
     using NUnit.Framework;
     using ScenarioDescriptors;
-    using Features;
-    using System.Threading.Tasks;
-    using Config;
 
     //repro for issue: https://github.com/NServiceBus/NServiceBus/issues/1020
     public class When_a_saga_message_goes_through_the_slr : NServiceBusAcceptanceTest
@@ -40,11 +39,11 @@
                 EndpointSetup<DefaultServer>(b =>
                 {
                     b.EnableFeature<TimeoutManager>();
-                    b.Recoverability().Delayed(retriesSettings => retriesSettings.NumberOfRetries(0));
-                }).WithConfig<SecondLevelRetriesConfig>(slr =>
-                {
-                    slr.NumberOfRetries = 1;
-                    slr.TimeIncrease = TimeSpan.FromMilliseconds(1);
+                    b.Recoverability().Delayed(retriesSettings =>
+                    {
+                        retriesSettings.NumberOfRetries(1);
+                        retriesSettings.TimeIncrease(TimeSpan.FromMilliseconds(1));
+                    });
                 });
             }
 
@@ -64,14 +63,6 @@
                     });
                 }
 
-                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<TestSagaData09> mapper)
-                {
-                    mapper.ConfigureMapping<StartSagaMessage>(m => m.SomeId)
-                        .ToSaga(s => s.SomeId);
-                    mapper.ConfigureMapping<SecondSagaMessage>(m => m.SomeId)
-                      .ToSaga(s => s.SomeId);
-                }
-
                 public Task Handle(SecondSagaMessage message, IMessageHandlerContext context)
                 {
                     TestContext.NumberOfTimesInvoked++;
@@ -83,14 +74,22 @@
 
                     return Task.FromResult(0);
                 }
+
+                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<TestSagaData09> mapper)
+                {
+                    mapper.ConfigureMapping<StartSagaMessage>(m => m.SomeId)
+                        .ToSaga(s => s.SomeId);
+                    mapper.ConfigureMapping<SecondSagaMessage>(m => m.SomeId)
+                        .ToSaga(s => s.SomeId);
+                }
             }
 
             public class TestSagaData09 : IContainSagaData
             {
+                public virtual Guid SomeId { get; set; }
                 public virtual Guid Id { get; set; }
                 public virtual string Originator { get; set; }
                 public virtual string OriginalMessageId { get; set; }
-                public virtual Guid SomeId { get; set; }
             }
         }
 
@@ -99,6 +98,7 @@
         {
             public Guid SomeId { get; set; }
         }
+
         public class SecondSagaMessage : ICommand
         {
             public Guid SomeId { get; set; }
