@@ -2,10 +2,9 @@
 {
     using System;
     using System.Threading.Tasks;
-    using EndpointTemplates;
     using AcceptanceTesting;
+    using EndpointTemplates;
     using Features;
-    using Config;
     using NUnit.Framework;
     using ScenarioDescriptors;
 
@@ -45,23 +44,22 @@
         {
             public ReplyEndpoint()
             {
-                EndpointSetup<DefaultServer>(b => b.DisableFeature<AutoSubscribe>())
-                    .AddMapping<DidSomething>(typeof(SagaEndpoint))
-                    .WithConfig<TransportConfig>(c =>
-                    {
-                        c.MaxRetries = 0;
-                    })
-                    .WithConfig<SecondLevelRetriesConfig>(c =>
-                    {
-                        c.Enabled = false;
-                    });
+                EndpointSetup<DefaultServer>(b =>
+                {
+                    b.DisableFeature<AutoSubscribe>();
+                    b.Recoverability().Immediate(retriesSettings => retriesSettings.NumberOfRetries(0));
+                })
+                    .AddMapping<DidSomething>(typeof(SagaEndpoint));
             }
 
             class DidSomethingHandler : IHandleMessages<DidSomething>
             {
                 public Task Handle(DidSomething message, IMessageHandlerContext context)
                 {
-                    return context.Reply(new DidSomethingResponse { ReceivedDataId = message.DataId });
+                    return context.Reply(new DidSomethingResponse
+                    {
+                        ReceivedDataId = message.DataId
+                    });
                 }
             }
         }
@@ -84,7 +82,10 @@
                 public Task Handle(StartSaga message, IMessageHandlerContext context)
                 {
                     Data.DataId = message.DataId;
-                    return context.Publish(new DidSomething { DataId = message.DataId });
+                    return context.Publish(new DidSomething
+                    {
+                        DataId = message.DataId
+                    });
                 }
 
                 public Task Handle(DidSomethingResponse message, IMessageHandlerContext context)

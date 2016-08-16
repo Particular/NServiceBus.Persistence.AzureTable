@@ -5,7 +5,7 @@
     using System.Threading.Tasks;
     using AcceptanceTesting;
     using Pipeline;
-    using Transports;
+    using Transport;
 
     static class SubscriptionBehaviorExtensions
     {

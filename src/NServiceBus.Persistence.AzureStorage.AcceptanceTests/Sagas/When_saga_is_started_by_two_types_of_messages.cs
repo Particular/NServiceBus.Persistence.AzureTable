@@ -6,9 +6,7 @@
     using System.Linq;
     using System.Threading.Tasks;
     using AcceptanceTesting;
-    using Config;
     using EndpointTemplates;
-    using Features;
     using NUnit.Framework;
 
     public class When_saga_is_started_by_two_types_of_messages : NServiceBusAcceptanceTest
@@ -36,7 +34,7 @@
                     }
                 }))
                 .Done(c => c.CompletedIds.OrderBy(s => s).ToArray().Intersect(guids).Count() == expectedNumberOfCreatedSagas)
-                .Run(TimeSpan.FromMinutes(3)).ConfigureAwait(false);
+                .Run(TimeSpan.FromSeconds(60)).ConfigureAwait(false);
 
             CollectionAssert.AreEquivalent(guids, context.CompletedIds.OrderBy(s => s).ToArray());
         }
@@ -61,13 +59,8 @@
                 EndpointSetup<DefaultServer>(
                     config =>
                     {
-                        config.EnableFeature<FirstLevelRetries>();
-                        config.EnableFeature<SecondLevelRetries>();
                         config.LimitMessageProcessingConcurrencyTo(3);
-                    }).WithConfig<SecondLevelRetriesConfig>(slr =>
-                    {
-                        slr.NumberOfRetries = 20;
-                        slr.TimeIncrease = TimeSpan.FromMilliseconds(1);
+                        config.Recoverability().CustomPolicy((rc, er) => RecoverabilityAction.ImmediateRetry());
                     });
             }
         }

@@ -34,8 +34,8 @@
             builder.EnableInstallers();
 
             builder.DisableFeature<TimeoutManager>();
-            builder.DisableFeature<SecondLevelRetries>();
-            builder.DisableFeature<FirstLevelRetries>();
+            builder.Recoverability().Delayed(retriesSettings => retriesSettings.NumberOfRetries(0));
+            builder.Recoverability().Immediate(retriesSettings => retriesSettings.NumberOfRetries(0));
 
             await builder.DefineTransport(settings, endpointConfiguration.EndpointName).ConfigureAwait(false);
 
