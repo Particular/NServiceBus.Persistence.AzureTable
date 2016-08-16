@@ -32,7 +32,7 @@
                             OrderId = guid
                         });
                     }
-                }).DoNotFailOnErrorMessages())
+                }))
                 .Done(c => c.CompletedIds.OrderBy(s => s).ToArray().Intersect(guids).Count() == expectedNumberOfCreatedSagas)
                 .Run(TimeSpan.FromSeconds(60)).ConfigureAwait(false);
 

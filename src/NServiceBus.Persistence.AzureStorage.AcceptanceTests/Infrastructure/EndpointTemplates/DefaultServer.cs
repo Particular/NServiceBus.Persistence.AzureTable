@@ -5,9 +5,9 @@
     using System.Threading.Tasks;
     using AcceptanceTesting.Customization;
     using AcceptanceTesting.Support;
+    using Config.ConfigurationSource;
     using Configuration.AdvanceExtensibility;
     using Features;
-    using Config.ConfigurationSource;
     using Serialization;
 
     public class DefaultServer : IEndpointSetupTemplate
@@ -37,8 +37,7 @@
             builder.EnableInstallers();
 
             builder.DisableFeature<TimeoutManager>();
-            builder.Recoverability().Delayed(retriesSettings => retriesSettings.NumberOfRetries(0));
-            builder.Recoverability().Immediate(retriesSettings => retriesSettings.NumberOfRetries(0));
+            builder.Recoverability().CustomPolicy((rc, er) => RecoverabilityAction.ImmediateRetry());
 
             await builder.DefineTransport(settings, endpointConfiguration.EndpointName).ConfigureAwait(false);
 
