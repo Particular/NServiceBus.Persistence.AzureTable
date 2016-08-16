@@ -32,9 +32,9 @@
                             OrderId = guid
                         });
                     }
-                }))
+                }).DoNotFailOnErrorMessages())
                 .Done(c => c.CompletedIds.OrderBy(s => s).ToArray().Intersect(guids).Count() == expectedNumberOfCreatedSagas)
-                .Run(TimeSpan.FromMinutes(3)).ConfigureAwait(false);
+                .Run(TimeSpan.FromSeconds(60)).ConfigureAwait(false);
 
             CollectionAssert.AreEquivalent(guids, context.CompletedIds.OrderBy(s => s).ToArray());
         }
@@ -59,14 +59,8 @@
                 EndpointSetup<DefaultServer>(
                     config =>
                     {
-                        config.Recoverability().Delayed(retriesSettings => retriesSettings.NumberOfRetries(0));
-                        config.Recoverability().Immediate(retriesSettings => retriesSettings.NumberOfRetries(0));
                         config.LimitMessageProcessingConcurrencyTo(3);
-                        config.Recoverability().Delayed(retriesSettings =>
-                        {
-                            retriesSettings.NumberOfRetries(20);
-                            retriesSettings.TimeIncrease(TimeSpan.FromMilliseconds(1));
-                        });
+                        config.Recoverability().CustomPolicy((rc, er) => RecoverabilityAction.ImmediateRetry());
                     });
             }
         }

@@ -13,7 +13,9 @@ public class ConfigureEndpointAzureStorageQueueTransport : IConfigureEndpointTes
     {
         var connectionString = settings.Get<string>("Transport.ConnectionString");
         //connectionString = "UseDevelopmentStorage=true;";
+
         configuration.UseTransport<AzureStorageQueueTransport>()
+            .Transactions(TransportTransactionMode.ReceiveOnly)
             .ConnectionString(connectionString)
             .MessageInvisibleTime(TimeSpan.FromSeconds(5));
 
