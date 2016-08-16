@@ -37,7 +37,14 @@
             builder.EnableInstallers();
 
             builder.DisableFeature<TimeoutManager>();
-            builder.Recoverability().CustomPolicy((rc, er) => RecoverabilityAction.ImmediateRetry());
+            builder.Recoverability().CustomPolicy((rc, er) =>
+            {
+                if (er.ImmediateProcessingFailures > 10)
+                {
+                    return RecoverabilityAction.MoveToError("error");
+                }
+                return RecoverabilityAction.ImmediateRetry();
+            });
 
             await builder.DefineTransport(settings, endpointConfiguration.EndpointName).ConfigureAwait(false);
 
