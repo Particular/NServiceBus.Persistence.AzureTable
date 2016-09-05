@@ -69,9 +69,7 @@
                     public virtual Guid SomeId { get; set; }
                 }
             }
-
         }
-
 
         public class StartSagaMessage : StartSagaMessageBase
         {

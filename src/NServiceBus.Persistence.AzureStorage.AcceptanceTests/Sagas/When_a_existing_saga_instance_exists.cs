@@ -40,8 +40,6 @@
 
                 public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
-                    Data.SomeId = message.SomeId;
-
                     if (message.SecondMessage)
                     {
                         TestContext.SecondSagaId = Data.Id;

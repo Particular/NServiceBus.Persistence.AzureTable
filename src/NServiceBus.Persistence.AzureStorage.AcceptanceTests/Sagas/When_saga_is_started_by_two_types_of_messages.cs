@@ -73,7 +73,6 @@
 
             public Task Handle(OrderBilled message, IMessageHandlerContext context)
             {
-                Data.OrderId = message.OrderId;
                 Data.Billed = true;
 
                 TryComplete();
@@ -83,7 +82,6 @@
 
             public Task Handle(OrderPlaced message, IMessageHandlerContext context)
             {
-                Data.OrderId = message.OrderId;
                 Data.Placed = true;
 
                 TryComplete();

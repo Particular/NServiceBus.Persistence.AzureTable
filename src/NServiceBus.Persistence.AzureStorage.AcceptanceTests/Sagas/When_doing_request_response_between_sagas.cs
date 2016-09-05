@@ -54,7 +54,7 @@
 
                 public class RequestResponseRequestingSagaData : ContainSagaData
                 {
-                    public virtual Guid CorrIdForResponse { get; set; } //wont be needed in the future
+                    public virtual Guid CorrIdForResponse { get; set; }
                 }
             }
 

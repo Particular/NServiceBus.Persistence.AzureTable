@@ -46,7 +46,6 @@
 
                 public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
-                    Data.SomeId = message.SomeId;
                     return context.SendLocal(new OtherMessage { SomeId = message.SomeId });
                 }
 

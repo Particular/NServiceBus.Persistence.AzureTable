@@ -41,8 +41,6 @@
 
                 public Task Handle(StartSaga message, IMessageHandlerContext context)
                 {
-                    Data.DataId = message.DataId;
-
                     return RequestTimeout(context, TimeSpan.FromMilliseconds(1), new TimeHasPassed());
                 }
 

@@ -55,8 +55,6 @@
 
                 public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
-                    Data.SomeId = message.SomeId;
-
                     return context.SendLocal(new SecondSagaMessage
                     {
                         SomeId = Data.SomeId
