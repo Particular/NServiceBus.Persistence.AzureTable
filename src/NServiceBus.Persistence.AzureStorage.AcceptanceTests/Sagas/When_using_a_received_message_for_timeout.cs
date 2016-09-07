@@ -40,7 +40,6 @@
 
                 public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
-                    Data.SomeId = message.SomeId;
                     return RequestTimeout(context, TimeSpan.FromMilliseconds(100), message);
                 }
 

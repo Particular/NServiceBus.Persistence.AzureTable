@@ -61,7 +61,6 @@ public class When_saga_is_completed : NServiceBusAcceptanceTest
 
         public Task Handle(Start message, IMessageHandlerContext context)
         {
-            Data.OrderId = message.OrderId;
             return Task.FromResult(0);
         }
 

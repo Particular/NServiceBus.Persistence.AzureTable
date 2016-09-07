@@ -62,7 +62,6 @@
                 public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
                     Context.SagaStarted = true;
-                    Data.SomeId = message.SomeId;
                     return Task.FromResult(0);
                 }
 
@@ -77,7 +76,6 @@
                     public virtual string SomeId { get; set; }
                 }
             }
-
 
             public class InterceptingHandler : IHandleMessages<StartSagaMessage>
             {

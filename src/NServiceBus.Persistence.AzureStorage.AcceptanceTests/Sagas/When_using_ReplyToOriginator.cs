@@ -39,8 +39,6 @@
             {
                 public Task Handle(InitiateRequestingSaga message, IMessageHandlerContext context)
                 {
-                    Data.CorrIdForResponse = message.SomeCorrelationId; //wont be needed in the future
-
                     return context.SendLocal(new AnotherRequest
                     {
                         SomeCorrelationId = Data.CorrIdForResponse //wont be needed in the future

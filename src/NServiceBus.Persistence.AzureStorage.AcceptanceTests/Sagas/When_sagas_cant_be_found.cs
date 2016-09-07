@@ -75,7 +75,6 @@
 
                 public Task Handle(StartSaga message, IMessageHandlerContext context)
                 {
-                    Data.MessageId = message.Id;
                     return Task.FromResult(0);
                 }
 
@@ -98,10 +97,8 @@
 
             public class CantBeFoundSaga2 : Saga<CantBeFoundSaga2.CantBeFoundSaga2Data>, IAmStartedByMessages<StartSaga>, IHandleMessages<MessageToSaga>
             {
-
                 public Task Handle(StartSaga message, IMessageHandlerContext context)
                 {
-                    Data.MessageId = message.Id;
                     return Task.FromResult(0);
                 }
 
@@ -175,7 +172,6 @@
             {
                 public Task Handle(StartSaga message, IMessageHandlerContext context)
                 {
-                    Data.MessageId = message.Id;
                     return Task.FromResult(0);
                 }
 
@@ -202,13 +198,11 @@
 
                 public Task Handle(StartSaga message, IMessageHandlerContext context)
                 {
-                    Data.MessageId = message.Id;
                     return Task.FromResult(0);
                 }
 
                 public Task Handle(MessageToSaga message, IMessageHandlerContext context)
                 {
-                    Data.MessageId = message.Id;
                     Context.Done = true;
                     return Task.FromResult(0);
                 }

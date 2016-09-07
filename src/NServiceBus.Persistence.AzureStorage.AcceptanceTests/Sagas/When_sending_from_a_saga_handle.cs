@@ -40,7 +40,6 @@
             {
                 public Task Handle(StartSaga1 message, IMessageHandlerContext context)
                 {
-                    Data.DataId = message.DataId;
                     return context.SendLocal(new MessageSaga1WillHandle
                     {
                         DataId = message.DataId
@@ -68,14 +67,12 @@
                 public virtual Guid DataId { get; set; }
             }
 
-
             public class TwoSaga1Saga2 : Saga<TwoSaga1Saga2.TwoSaga1Saga2Data>, IAmStartedByMessages<StartSaga2>
             {
                 public Context Context { get; set; }
 
                 public Task Handle(StartSaga2 message, IMessageHandlerContext context)
                 {
-                    Data.DataId = message.DataId;
                     Context.DidSaga2ReceiveMessage = true;
 
                     return Task.FromResult(0);
