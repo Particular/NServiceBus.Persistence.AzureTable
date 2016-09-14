@@ -55,10 +55,11 @@
                 {
                     RowKey = EncodeTo64(subscriber.TransportAddress),
                     PartitionKey = messageType.ToString(),
-                    EndpointName = subscriber.Endpoint
+                    EndpointName = subscriber.Endpoint,
+                    ETag = "*"
                 };
 
-                var operation = TableOperation.Insert(subscription);
+                var operation = TableOperation.InsertOrReplace(subscription);
                 await table.ExecuteAsync(operation).ConfigureAwait(false);
             }
             catch (StorageException ex)
