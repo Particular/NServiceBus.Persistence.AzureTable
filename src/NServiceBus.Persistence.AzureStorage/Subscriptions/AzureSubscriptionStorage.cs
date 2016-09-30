@@ -107,10 +107,8 @@
             foreach (var messageType in messageTypes)
             {
                 var name = messageType.TypeName;
-                var lastNameChar = name[name.Length - 1];
-                var nextChar = (char)(lastNameChar + 1);
                 var lowerBound = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.GreaterThanOrEqual, name);
-                var upperBound = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThan, name.Substring(0, name.Length - 1) + nextChar);
+                var upperBound = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThan, GetUpperBound(name));
                 var query = new TableQuery<Subscription>().Where(TableQuery.CombineFilters(lowerBound, "and", upperBound));
 
                 var subscriptions = await table.ExecuteQueryAsync(query).ConfigureAwait(false);
@@ -123,6 +121,11 @@
             }
 
             return subscribers;
+        }
+
+        static string GetUpperBound(string name)
+        {
+            return name + ", Version=z";
         }
 
         class SubscriberComparer : IEqualityComparer<Subscriber>

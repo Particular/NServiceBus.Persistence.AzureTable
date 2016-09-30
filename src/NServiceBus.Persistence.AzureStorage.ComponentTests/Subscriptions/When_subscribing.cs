@@ -3,6 +3,7 @@
     using System;
     using System.Linq;
     using System.Threading.Tasks;
+    using Extensibility;
     using Unicast.Subscriptions;
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
     using NUnit.Framework;
@@ -67,9 +68,33 @@
             Assert.That(subscription.TransportAddress, Is.EqualTo("address://test-queue"));
             Assert.That(subscription.Endpoint, Is.EqualTo("endpointName"));
         }
+
+        [Test]
+        public async Task ensure_that_the_subscription_selects_proper_message_types()
+        {
+            var persister = SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+
+            await persister.Subscribe(new Subscriber("address://test-queue", "endpointName"), new MessageType(typeof(TestMessage)), new ContextBag()).ConfigureAwait(false);
+            await persister.Subscribe(new Subscriber("address://test-queue2", "endpointName"), new MessageType(typeof(TestMessagea)), new ContextBag()).ConfigureAwait(false);
+
+            var subscribers = await persister.GetSubscriberAddressesForMessage(new[]
+            {
+                new MessageType(typeof(TestMessage))
+            }, new ContextBag()).ConfigureAwait(false);
+
+            Assert.That(subscribers.Count(), Is.EqualTo(1));
+
+            var subscription = subscribers.ToArray()[0];
+            Assert.That(subscription.TransportAddress, Is.EqualTo("address://test-queue"));
+            Assert.That(subscription.Endpoint, Is.EqualTo("endpointName"));
+        }
     }
 
     class TestMessage
+    {
+    }
+
+    class TestMessagea
     {
     }
 }
