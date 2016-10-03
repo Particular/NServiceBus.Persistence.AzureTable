@@ -101,20 +101,46 @@
         /// <returns>Subscription addresses that were found for the provided messageTypes</returns>
         public async Task<IEnumerable<Subscriber>> GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes, ContextBag context)
         {
-            var subscribers = new List<Subscriber>();
+            var subscribers = new HashSet<Subscriber>(SubscriberComparer.Instance);
             var table = client.GetTableReference(subscriptionTableName);
 
             foreach (var messageType in messageTypes)
             {
-                var query = new TableQuery<Subscription>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, messageType.ToString()));
+                var name = messageType.TypeName;
+                var lowerBound = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.GreaterThanOrEqual, name);
+                var upperBound = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThan, GetUpperBound(name));
+                var query = new TableQuery<Subscription>().Where(TableQuery.CombineFilters(lowerBound, "and", upperBound));
 
                 var subscriptions = await table.ExecuteQueryAsync(query).ConfigureAwait(false);
                 var results = subscriptions.Select(s => new Subscriber(DecodeFrom64(s.RowKey), s.EndpointName));
 
-                subscribers.AddRange(results);
+                foreach (var subscriber in results)
+                {
+                    subscribers.Add(subscriber);
+                }
             }
 
             return subscribers;
+        }
+
+        static string GetUpperBound(string name)
+        {
+            return name + ", Version=z";
+        }
+
+        class SubscriberComparer : IEqualityComparer<Subscriber>
+        {
+            public static readonly SubscriberComparer Instance = new SubscriberComparer();
+
+            public bool Equals(Subscriber x, Subscriber y)
+            {
+                return StringComparer.InvariantCulture.Compare(x.Endpoint, y.Endpoint) == 0 && StringComparer.InvariantCulture.Compare(x.TransportAddress, y.TransportAddress) == 0;
+            }
+
+            public int GetHashCode(Subscriber obj)
+            {
+                return (obj.Endpoint ?? string.Empty).Length;
+            }
         }
     }
 }
