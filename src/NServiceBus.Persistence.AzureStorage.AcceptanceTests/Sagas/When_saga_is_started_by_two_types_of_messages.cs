@@ -34,7 +34,7 @@
                     }
                 }))
                 .Done(c => c.CompletedIds.OrderBy(s => s).ToArray().Intersect(guids).Count() == expectedNumberOfCreatedSagas)
-                .Run(TimeSpan.FromSeconds(60)).ConfigureAwait(false);
+                .Run(TimeSpan.FromMinutes(2)).ConfigureAwait(false);
 
             CollectionAssert.AreEquivalent(guids, context.CompletedIds.OrderBy(s => s).ToArray());
         }
