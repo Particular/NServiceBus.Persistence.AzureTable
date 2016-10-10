@@ -6,6 +6,7 @@
     using System.Linq;
     using System.Threading.Tasks;
     using AcceptanceTesting;
+    using AcceptanceTesting.Support;
     using EndpointTemplates;
     using NUnit.Framework;
 
@@ -32,7 +33,7 @@
                             OrderId = guid
                         });
                     }
-                }))
+                }).CustomConfig(c=>c.DisableFeature(typeof(FailTestOnErrorMessageFeature))))
                 .Done(c => c.CompletedIds.OrderBy(s => s).ToArray().Intersect(guids).Count() == expectedNumberOfCreatedSagas)
                 .Run(TimeSpan.FromSeconds(60)).ConfigureAwait(false);
 
