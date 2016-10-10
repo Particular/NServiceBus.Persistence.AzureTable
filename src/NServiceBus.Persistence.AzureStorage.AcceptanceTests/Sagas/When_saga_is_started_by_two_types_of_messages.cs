@@ -34,7 +34,7 @@
                     }
                 }))
                 .Done(c => c.CompletedIds.OrderBy(s => s).ToArray().Intersect(guids).Count() == expectedNumberOfCreatedSagas)
-                .Run(TimeSpan.FromSeconds(60)).ConfigureAwait(false);
+                .Run(TimeSpan.FromMinutes(5)).ConfigureAwait(false);
 
             CollectionAssert.AreEquivalent(guids, context.CompletedIds.OrderBy(s => s).ToArray());
         }
@@ -75,7 +75,7 @@
             {
                 Data.Billed = true;
 
-                TryComplete();
+                TryComplete(context);
 
                 return Task.FromResult(0);
             }
@@ -84,16 +84,19 @@
             {
                 Data.Placed = true;
 
-                TryComplete();
+                TryComplete(context);
                 return Task.FromResult(0);
             }
 
-            void TryComplete()
+            void TryComplete(IMessageHandlerContext context)
             {
                 if (Data.Billed && Data.Placed)
                 {
                     MarkAsComplete();
-                    Context.MarkAsCompleted(Data.OrderId);
+                    context.SendLocal(new SagaCompleted
+                    {
+                        OrderId = Data.OrderId
+                    });
                 }
             }
 
@@ -125,6 +128,27 @@
         public class OrderPlaced : ICommand
         {
             public string OrderId { get; set; }
+        }
+
+        public class SagaCompleted : ICommand
+        {
+            public string OrderId { get; set; }
+        }
+
+        public class SagaCompletedHandler : IHandleMessages<SagaCompleted>
+        {
+            readonly Context scenarioContext;
+
+            public SagaCompletedHandler(Context scenarioContext)
+            {
+                this.scenarioContext = scenarioContext;
+            }
+
+            public Task Handle(SagaCompleted message, IMessageHandlerContext context)
+            {
+                scenarioContext.MarkAsCompleted(message.OrderId);
+                return Task.FromResult(0);
+            }
         }
     }
 }
