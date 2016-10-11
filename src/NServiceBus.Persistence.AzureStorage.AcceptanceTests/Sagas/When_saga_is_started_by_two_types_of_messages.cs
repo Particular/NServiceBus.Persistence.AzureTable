@@ -9,9 +9,6 @@
     using EndpointTemplates;
     using NUnit.Framework;
 
-    [Ignore("This test fails with an exception related to the FailTestOnErrorMessageFeature. " +
-            "This feature records failed messages in the ScenarioContext. " +
-            "Later, when an endpoint stops, it checks for unfinished messages. It looks that some messages are still marked as unprocessed even though all the sagas are finished.")]
     public class When_saga_is_started_by_two_types_of_messages : NServiceBusAcceptanceTest
     {
         [Test]
@@ -37,14 +34,14 @@
                     }
                 }))
                 .Done(c => c.CompletedIds.OrderBy(s => s).ToArray().Intersect(guids).Count() == expectedNumberOfCreatedSagas)
-                .Run(TimeSpan.FromMinutes(5)).ConfigureAwait(false);
-
+                .Run(TimeSpan.FromMinutes(2)).ConfigureAwait(false);
+        
             CollectionAssert.AreEquivalent(guids, context.CompletedIds.OrderBy(s => s).ToArray());
         }
 
         public class Context : ScenarioContext
         {
-            public int CompletedIdsCount => completed.Count;
+            public int CompletedIdsCount;
             public IEnumerable<string> CompletedIds => completed.Keys;
 
             public void MarkAsCompleted(string orderId)
@@ -77,26 +74,21 @@
             public Task Handle(OrderBilled message, IMessageHandlerContext context)
             {
                 Data.Billed = true;
-
-                TryComplete(context);
-
-                return Task.FromResult(0);
+                return TryComplete(context);
             }
 
             public Task Handle(OrderPlaced message, IMessageHandlerContext context)
             {
                 Data.Placed = true;
-
-                TryComplete(context);
-                return Task.FromResult(0);
+                return TryComplete(context);
             }
 
-            void TryComplete(IMessageHandlerContext context)
+            async Task TryComplete(IMessageHandlerContext context)
             {
                 if (Data.Billed && Data.Placed)
                 {
                     MarkAsComplete();
-                    context.SendLocal(new SagaCompleted
+                    await context.SendLocal(new SagaCompleted
                     {
                         OrderId = Data.OrderId
                     });
