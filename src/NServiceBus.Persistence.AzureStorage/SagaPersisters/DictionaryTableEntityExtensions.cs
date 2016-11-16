@@ -54,12 +54,12 @@ namespace NServiceBus.Persistence.AzureStorage
                             }
                             catch (Exception)
                             {
-                                throw new NotSupportedException($"The property type '{type.Name}' is not supported in windows azure table storage neither it can be deserialized with JSON.NET.");
+                                throw new NotSupportedException($"The property type '{type.Name}' is not supported in Windows Azure Table Storage neither it can be deserialized with JSON.NET.");
                             }
                         }
                         else
                         {
-                            throw new NotSupportedException($"The property type '{type.Name}' is not supported in windows azure table storage");
+                            throw new NotSupportedException($"The property type '{type.Name}' is not supported in Windows Azure Table Storage");
                         }
                     }
                 }
@@ -126,7 +126,7 @@ namespace NServiceBus.Persistence.AzureStorage
                         }
                         catch (Exception)
                         {
-                            throw new NotSupportedException($"The property type '{type.Name}' is not supported in windows azure table storage neither it can be serialized with JSON.NET.");
+                            throw new NotSupportedException($"The property type '{type.Name}' is not supported in Windows Azure Table Storage neither it can be serialized with JSON.NET.");
                         }
                         toPersist[name] = new EntityProperty(sw.ToString());
                     }
