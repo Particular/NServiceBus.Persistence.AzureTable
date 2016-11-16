@@ -54,7 +54,7 @@ namespace NServiceBus.Persistence.AzureStorage
                             }
                             catch (Exception)
                             {
-                                throw new NotSupportedException($"The property type '{type.Name}' is not supported in Windows Azure Table Storage neither it can be deserialized with JSON.NET.");
+                                throw new NotSupportedException($"The property type '{type.Name}' is not supported in Windows Azure Table Storage and it cannot be deserialized with JSON.NET.");
                             }
                         }
                         else
@@ -126,7 +126,7 @@ namespace NServiceBus.Persistence.AzureStorage
                         }
                         catch (Exception)
                         {
-                            throw new NotSupportedException($"The property type '{type.Name}' is not supported in Windows Azure Table Storage neither it can be serialized with JSON.NET.");
+                            throw new NotSupportedException($"The property type '{type.Name}' is not supported in Windows Azure Table Storage and it cannot be serialized with JSON.NET.");
                         }
                         toPersist[name] = new EntityProperty(sw.ToString());
                     }
@@ -156,12 +156,12 @@ namespace NServiceBus.Persistence.AzureStorage
 
         static bool TrySetNullable(EntityProperty value, object toCreate, PropertyInfo propertyInfo)
         {
-            return 
-                TrySetNullable<bool>(value, toCreate, propertyInfo) || 
-                TrySetNullable<DateTime>(value, toCreate, propertyInfo) || 
-                TrySetNullable<Guid>(value, toCreate, propertyInfo) || 
+            return
+                TrySetNullable<bool>(value, toCreate, propertyInfo) ||
+                TrySetNullable<DateTime>(value, toCreate, propertyInfo) ||
+                TrySetNullable<Guid>(value, toCreate, propertyInfo) ||
                 TrySetNullable<int>(value, toCreate, propertyInfo) ||
-                TrySetNullable<double>(value, toCreate, propertyInfo) || 
+                TrySetNullable<double>(value, toCreate, propertyInfo) ||
                 TrySetNullable<long>(value, toCreate, propertyInfo);
         }
 
