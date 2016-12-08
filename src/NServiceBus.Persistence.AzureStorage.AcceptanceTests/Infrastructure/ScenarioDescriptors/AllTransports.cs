@@ -115,7 +115,7 @@
 
                     if (configurerType == null)
                     {
-                        throw new InvalidOperationException($"Acceptance Test project must include a non-namespaced class named '{configurerTypeName}' implementing {typeof(IConfigureSupportedScenariosForTestExecution).Name}. See {typeof(ConfigureScenariosForMsmqTransport).FullName} for an example.");
+                        throw new InvalidOperationException($"Acceptance Test project must include a non-namespaced class named '{configurerTypeName}' implementing {typeof(IConfigureSupportedScenariosForTestExecution).Name}.");
                     }
 
                     var configurer = Activator.CreateInstance(configurerType) as IConfigureSupportedScenariosForTestExecution;

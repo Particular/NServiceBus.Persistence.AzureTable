@@ -9,17 +9,26 @@ using NServiceBus.AcceptanceTesting.Support;
 
 public class ConfigureEndpointAzureStorageQueueTransport : IConfigureEndpointTestExecution
 {
-    public async Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings)
+    public async Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
         var connectionString = settings.Get<string>("Transport.ConnectionString");
         //connectionString = "UseDevelopmentStorage=true;";
 
-        configuration.UseTransport<AzureStorageQueueTransport>()
+        var transportRouting = configuration.UseTransport<AzureStorageQueueTransport>()
             .Transactions(TransportTransactionMode.ReceiveOnly)
             .ConnectionString(connectionString)
-            .MessageInvisibleTime(TimeSpan.FromSeconds(5));
+            .MessageInvisibleTime(TimeSpan.FromSeconds(5))
+            .Routing();
 
         //configuration.UseSerialization<XmlSerializer>();
+
+        foreach (var publisher in publisherMetadata.Publishers)
+        {
+            foreach (var @event in publisher.Events)
+            {
+                transportRouting.RegisterPublisher(@event, publisher.PublisherName);
+            }
+        }
 
         await CleanQueuesUsedByTest(connectionString);
     }

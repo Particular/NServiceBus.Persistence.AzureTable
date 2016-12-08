@@ -19,11 +19,24 @@ public class ConfigureScenariosForMsmqTransport : IConfigureSupportedScenariosFo
 
 public class ConfigureEndpointMsmqTransport : IConfigureEndpointTestExecution
 {
-    public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings)
+    public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
         queueBindings = configuration.GetSettings().Get<QueueBindings>();
         var connectionString = settings.Get<string>("Transport.ConnectionString");
-        configuration.UseTransport<MsmqTransport>().ConnectionString(connectionString);
+        var transportConfig = configuration.UseTransport<MsmqTransport>();
+
+        transportConfig.ConnectionString(connectionString);
+
+        var routingConfig = transportConfig.Routing();
+
+        foreach (var publisher in publisherMetadata.Publishers)
+        {
+            foreach (var eventType in publisher.Events)
+            {
+                routingConfig.RegisterPublisher(eventType, publisher.PublisherName);
+            }
+        }
+
         return Task.FromResult(0);
     }
 
