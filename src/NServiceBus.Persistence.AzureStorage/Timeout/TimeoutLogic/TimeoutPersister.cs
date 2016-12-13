@@ -153,7 +153,7 @@
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
             var timeoutManagerDataTable = client.GetTableReference(timeoutManagerDataTableName);
 
-            await TryUpdateSuccessfulRead(timeoutManagerDataTable);
+            await TryUpdateSuccessfulRead(timeoutManagerDataTable).ConfigureAwait(false);
 
             var lastSuccessfulReadEntity = await GetLastSuccessfulRead(timeoutManagerDataTable).ConfigureAwait(false);
             var lastSuccessfulRead = lastSuccessfulReadEntity?.LastSuccessfullRead;
@@ -165,10 +165,9 @@
                 query = new TableQuery<TimeoutDataEntity>()
                     .Where(
                         TableQuery.CombineFilters(
-                            TableQuery.CombineFilters(
-                                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThanOrEqual, now.ToString(partitionKeyScope)),
+                            TableQuery.CombineFilters(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.GreaterThanOrEqual, lastSuccessfulRead.Value.ToString(partitionKeyScope)),
                                 TableOperators.And,
-                                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.GreaterThanOrEqual, lastSuccessfulRead.Value.ToString(partitionKeyScope))),
+                                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThanOrEqual, now.ToString(partitionKeyScope))),
                             TableOperators.And,
                             TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName))
                     );
