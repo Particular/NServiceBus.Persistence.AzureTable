@@ -164,9 +164,9 @@
                     .Where(
                         TableQuery.CombineFilters(
                             TableQuery.CombineFilters(
-                                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThan, now.ToString(partitionKeyScope)),
+                                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThanOrEqual, now.ToString(partitionKeyScope)),
                                 TableOperators.And,
-                                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.GreaterThan, lastSuccessfulRead.Value.ToString(partitionKeyScope))),
+                                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.GreaterThanOrEqual, lastSuccessfulRead.Value.ToString(partitionKeyScope))),
                             TableOperators.And,
                             TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName))
                     );
