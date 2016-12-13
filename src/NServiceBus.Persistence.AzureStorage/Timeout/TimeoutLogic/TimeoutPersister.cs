@@ -117,7 +117,7 @@
             }
             catch (StorageException e)
             {
-                if (e.RequestInformation.HttpStatusCode != (int) HttpStatusCode.NotFound)
+                if (e.RequestInformation.HttpStatusCode != (int)HttpStatusCode.NotFound)
                 {
                     throw;
                 }
@@ -152,6 +152,8 @@
 
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
             var timeoutManagerDataTable = client.GetTableReference(timeoutManagerDataTableName);
+
+            await TryUpdateSuccessfulRead(timeoutManagerDataTable);
 
             var lastSuccessfulReadEntity = await GetLastSuccessfulRead(timeoutManagerDataTable).ConfigureAwait(false);
             var lastSuccessfulRead = lastSuccessfulReadEntity?.LastSuccessfullRead;
@@ -206,9 +208,23 @@
                     .ToArray(),
                 nextTimeToRunQuery);
 
-            await UpdateSuccessfulRead(timeoutManagerDataTable, lastSuccessfulReadEntity).ConfigureAwait(false);
-
+            updateSuccessfulReadOperationForNextSpin = GetUpdateSuccessfulRead(lastSuccessfulReadEntity);
             return timeoutsChunk;
+        }
+
+        async Task TryUpdateSuccessfulRead(CloudTable timeoutManagerDataTable)
+        {
+            if (updateSuccessfulReadOperationForNextSpin != null)
+            {
+                try
+                {
+                    await UpdateSuccessfulRead(timeoutManagerDataTable, updateSuccessfulReadOperationForNextSpin).ConfigureAwait(false);
+                }
+                finally
+                {
+                    updateSuccessfulReadOperationForNextSpin = null;
+                }
+            }
         }
 
         async Task DeleteMainEntity(CloudTable timeoutDataTable, string partitionKey, string rowKey)
@@ -333,7 +349,7 @@
                 await blob.DownloadToStreamAsync(stream).ConfigureAwait(false);
                 stream.Position = 0;
 
-                var buffer = new byte[16*1024];
+                var buffer = new byte[16 * 1024];
                 using (var ms = new MemoryStream())
                 {
                     int read;
@@ -386,22 +402,11 @@
             return results.SafeFirstOrDefault();
         }
 
-        Task UpdateSuccessfulRead(CloudTable table, TimeoutManagerDataEntity read)
+        static Task UpdateSuccessfulRead(CloudTable table, TableOperation operation)
         {
             try
             {
-                if (read == null)
-                {
-                    read = new TimeoutManagerDataEntity(sanitizedEndpointInstanceName, string.Empty)
-                    {
-                        LastSuccessfullRead = DateTime.UtcNow
-                    };
-
-                    var addOperation = TableOperation.Insert(read);
-                    return table.ExecuteAsync(addOperation);
-                }
-                var updateOperation = TableOperation.Replace(read);
-                return table.ExecuteAsync(updateOperation);
+                return table.ExecuteAsync(operation);
             }
             catch (DataServiceRequestException ex) // handle concurrency issues
             {
@@ -420,6 +425,28 @@
             }
         }
 
+        TableOperation GetUpdateSuccessfulRead(TimeoutManagerDataEntity read)
+        {
+            if (read == null)
+            {
+                read = new TimeoutManagerDataEntity(sanitizedEndpointInstanceName, string.Empty)
+                {
+                    LastSuccessfullRead = DateTime.UtcNow
+                };
+
+                return TableOperation.Insert(read);
+            }
+
+            var updated = new TimeoutManagerDataEntity(sanitizedEndpointInstanceName, string.Empty)
+            {
+                ETag = read.ETag,
+                Timestamp = read.Timestamp,
+                LastSuccessfullRead = read.LastSuccessfullRead
+            };
+
+            return TableOperation.Replace(updated);
+        }
+
         string timeoutDataTableName;
         string timeoutManagerDataTableName;
         string timeoutStateContainerName;
@@ -429,5 +456,6 @@
         string sanitizedEndpointInstanceName;
         CloudTableClient client;
         CloudBlobClient cloudBlobclient;
+        TableOperation updateSuccessfulReadOperationForNextSpin;
     }
 }
