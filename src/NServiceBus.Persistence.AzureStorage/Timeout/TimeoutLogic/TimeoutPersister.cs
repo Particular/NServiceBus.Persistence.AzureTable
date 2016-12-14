@@ -17,19 +17,12 @@
 
     class TimeoutPersister : IPersistTimeouts, IQueryTimeouts
     {
-        public TimeoutPersister(string timeoutConnectionString, string timeoutDataTableName, string timeoutStateContainerName, string partitionKeyScope, string endpointName, string hostDisplayName)
+        public TimeoutPersister(string timeoutConnectionString, string timeoutDataTableName, string timeoutStateContainerName, string partitionKeyScope, string endpointName)
         {
             this.timeoutDataTableName = timeoutDataTableName;
             this.timeoutStateContainerName = timeoutStateContainerName;
             this.partitionKeyScope = partitionKeyScope;
             this.endpointName = endpointName;
-
-            // Unicast sets the default for this value to the machine name.
-            // NServiceBus.Host.AzureCloudService, when running in a cloud environment, sets this value to the current RoleInstanceId.
-            if (string.IsNullOrWhiteSpace(hostDisplayName))
-            {
-                throw new InvalidOperationException("The TimeoutPersister for Azure Storage Persistence requires a host-specific identifier to execute properly. Unable to find identifier in the `NServiceBus.HostInformation.DisplayName` settings key.");
-            }
 
             var account = CloudStorageAccount.Parse(timeoutConnectionString);
             client = account.CreateCloudTableClient();
@@ -149,14 +142,17 @@
             var query = new TableQuery<TimeoutDataEntity>()
                 .Where(
                     TableQuery.CombineFilters(
-                        TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThanOrEqual, now.ToString(partitionKeyScope)),
+                        TableQuery.CombineFilters(
+                            TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.GreaterThanOrEqual, now.AddYears(-1).ToString(partitionKeyScope)),
+                            TableOperators.And,
+                            TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThanOrEqual, now.ToString(partitionKeyScope))),
                         TableOperators.And,
                         TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName))
                 );
 
             var timeoutDataEntities = await timeoutDataTable.ExecuteQueryAsync(query, take: 1000).ConfigureAwait(false);
 
-            var timeouts = timeoutDataEntities.OrderBy(c => c.Time).ToList();
+            var timeouts = timeoutDataEntities.Where(c => c.Time <= now).OrderBy(c => c.Time).ToList();
 
             var dueTimeouts = timeouts.Where(c => !string.IsNullOrEmpty(c.RowKey))
                 .Select(c => new TimeoutsChunk.Timeout(c.RowKey, c.Time))

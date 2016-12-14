@@ -4,9 +4,7 @@
     {
         public const string TimeoutStorageConnectionString = "AzureTimeoutStorage.ConnectionString";
         public const string TimeoutStorageCreateSchema = "AzureTimeoutStorage.CreateSchema";
-        public const string TimeoutStorageTimeoutManagerDataTableName = "AzureTimeoutStorage.TimeoutManagerDataTableName";
         public const string TimeoutStorageTimeoutDataTableName = "AzureTimeoutStorage.TimeoutDataTableName";
-        public const string TimeoutStorageCatchUpInterval = "AzureTimeoutStorage.CatchUpInterval";
         public const string TimeoutStoragePartitionKeyScope = "AzureTimeoutStorage.PartitionKeyScope";
         public const string TimeoutStorageTimeoutStateContainerName = "AzureTimeoutStorage.TimeoutStateContainerName";
         public const string SagaStorageConnectionString = "AzureSagaStorage.ConnectionString";

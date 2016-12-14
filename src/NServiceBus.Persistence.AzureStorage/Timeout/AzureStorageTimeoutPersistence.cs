@@ -18,9 +18,7 @@ namespace NServiceBus
                 var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
                 s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageConnectionString, defaultConnectionString);
                 s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageCreateSchema, AzureTimeoutStorageDefaults.CreateSchema);
-                s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageTimeoutManagerDataTableName, AzureTimeoutStorageDefaults.TimeoutManagerDataTableName);
                 s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageTimeoutDataTableName, AzureTimeoutStorageDefaults.TimeoutDataTableName);
-                s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageCatchUpInterval, AzureTimeoutStorageDefaults.CatchUpInterval);
                 s.SetDefault(WellKnownConfigurationKeys.TimeoutStoragePartitionKeyScope, AzureTimeoutStorageDefaults.PartitionKeyScope);
                 s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageTimeoutStateContainerName, AzureTimeoutStorageDefaults.TimeoutStateContainerName);
             });
@@ -33,9 +31,7 @@ namespace NServiceBus
         {
             var createIfNotExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.TimeoutStorageCreateSchema);
             var timeoutDataTableName = context.Settings.Get<string>(WellKnownConfigurationKeys.TimeoutStorageTimeoutDataTableName);
-            var timeoutManagerDataTableName = context.Settings.Get<string>(WellKnownConfigurationKeys.TimeoutStorageTimeoutManagerDataTableName);
             var connectionString = context.Settings.Get<string>(WellKnownConfigurationKeys.TimeoutStorageConnectionString);
-            var catchUpInterval = context.Settings.Get<int>(WellKnownConfigurationKeys.TimeoutStorageCatchUpInterval);
             var partitionKeyScope = context.Settings.Get<string>(WellKnownConfigurationKeys.TimeoutStoragePartitionKeyScope);
             var endpointName = context.Settings.EndpointName();
             var hostDisplayName = context.Settings.GetOrDefault<string>("NServiceBus.HostInformation.DisplayName");
@@ -43,13 +39,12 @@ namespace NServiceBus
 
             if (createIfNotExist)
             {
-                var startupTask = new StartupTask(timeoutDataTableName, connectionString, timeoutManagerDataTableName, timeoutStateContainerName);
+                var startupTask = new StartupTask(timeoutDataTableName, connectionString, timeoutStateContainerName);
                 context.RegisterStartupTask(startupTask);
             }
 
             context.Container.ConfigureComponent(() =>
-                new TimeoutPersister(connectionString, timeoutDataTableName, timeoutManagerDataTableName, timeoutStateContainerName, catchUpInterval,
-                                     partitionKeyScope, endpointName, hostDisplayName),
+                new TimeoutPersister(connectionString, timeoutDataTableName,  timeoutStateContainerName, partitionKeyScope, endpointName),
                 DependencyLifecycle.InstancePerCall);
         }
 
@@ -58,14 +53,12 @@ namespace NServiceBus
             ILog log = LogManager.GetLogger<StartupTask>();
             string timeoutDataTableName;
             string connectionString;
-            string timeoutManagerDataTableName;
             string timeoutStateContainerName;
 
-            public StartupTask(string timeoutDataTableName, string connectionString, string timeoutManagerDataTableName, string timeoutStateContainerName)
+            public StartupTask(string timeoutDataTableName, string connectionString, string timeoutStateContainerName)
             {
                 this.timeoutDataTableName = timeoutDataTableName;
                 this.connectionString = connectionString;
-                this.timeoutManagerDataTableName = timeoutManagerDataTableName;
                 this.timeoutStateContainerName = timeoutStateContainerName;
             }
 
@@ -77,9 +70,6 @@ namespace NServiceBus
                 var cloudTableClient = account.CreateCloudTableClient();
                 var timeoutTable = cloudTableClient.GetTableReference(timeoutDataTableName);
                 await timeoutTable.CreateIfNotExistsAsync().ConfigureAwait(false);
-
-                var timeoutManagerTable = cloudTableClient.GetTableReference(timeoutManagerDataTableName);
-                await timeoutManagerTable.CreateIfNotExistsAsync().ConfigureAwait(false);
 
                 var container = account.CreateCloudBlobClient()
                     .GetContainerReference(timeoutStateContainerName);

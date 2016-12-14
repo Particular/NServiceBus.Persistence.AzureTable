@@ -9,13 +9,12 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
     using Microsoft.WindowsAzure.Storage.Blob;
     using Microsoft.WindowsAzure.Storage.RetryPolicies;
     using Microsoft.WindowsAzure.Storage.Table;
-    using Support;
     using Timeout.Core;
     using NUnit.Framework;
 
     static class TestHelper
     {
-        const string EndpointName = "Sales";
+        public const string EndpointName = "Sales";
 
         internal static TimeoutPersister CreateTimeoutPersister()
         {
@@ -23,9 +22,8 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
             try
             {
                 persister = new TimeoutPersister(AzurePersistenceTests.GetConnectionString(),
-                    AzureTimeoutStorageDefaults.TimeoutDataTableName, AzureTimeoutStorageDefaults.TimeoutManagerDataTableName,
-                    AzureTimeoutStorageDefaults.TimeoutStateContainerName, 3600,
-                    AzureTimeoutStorageDefaults.PartitionKeyScope, EndpointName, RuntimeEnvironment.MachineName);
+                    AzureTimeoutStorageDefaults.TimeoutDataTableName, AzureTimeoutStorageDefaults.TimeoutStateContainerName,
+                    AzureTimeoutStorageDefaults.PartitionKeyScope, EndpointName);
             }
             catch (WebException exception)
             {
@@ -99,7 +97,6 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
         internal static void PerformStorageCleanup()
         {
             RemoveAllRowsForTable(AzureTimeoutStorageDefaults.TimeoutDataTableName);
-            RemoveAllRowsForTable(AzureTimeoutStorageDefaults.TimeoutManagerDataTableName);
 
             RemoveAllBlobs();
         }
