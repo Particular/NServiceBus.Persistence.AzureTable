@@ -158,7 +158,7 @@
             var lastSuccessfulReadEntity = await GetLastSuccessfulRead(timeoutManagerDataTable).ConfigureAwait(false);
             var lastSuccessfulRead = lastSuccessfulReadEntity?.LastSuccessfullRead;
 
-            var floor = lastSuccessfulRead ?? DateTime.MinValue;
+            var floor = lastSuccessfulRead ?? DateTime.UtcNow.AddYears(-1);
 
             var query = new TableQuery<TimeoutDataEntity>()
                 .Where(
