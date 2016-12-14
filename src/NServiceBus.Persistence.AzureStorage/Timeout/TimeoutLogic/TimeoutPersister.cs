@@ -2,11 +2,9 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Data.Services.Client;
     using System.IO;
     using System.Linq;
     using System.Net;
-    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using System.Web.Script.Serialization;
     using Extensibility;
@@ -19,12 +17,10 @@
 
     class TimeoutPersister : IPersistTimeouts, IQueryTimeouts
     {
-        public TimeoutPersister(string timeoutConnectionString, string timeoutDataTableName, string timeoutManagerDataTableName, string timeoutStateContainerName, int catchUpInterval, string partitionKeyScope, string endpointName, string hostDisplayName)
+        public TimeoutPersister(string timeoutConnectionString, string timeoutDataTableName, string timeoutStateContainerName, string partitionKeyScope, string endpointName, string hostDisplayName)
         {
             this.timeoutDataTableName = timeoutDataTableName;
-            this.timeoutManagerDataTableName = timeoutManagerDataTableName;
             this.timeoutStateContainerName = timeoutStateContainerName;
-            this.catchUpInterval = catchUpInterval;
             this.partitionKeyScope = partitionKeyScope;
             this.endpointName = endpointName;
 
@@ -34,8 +30,6 @@
             {
                 throw new InvalidOperationException("The TimeoutPersister for Azure Storage Persistence requires a host-specific identifier to execute properly. Unable to find identifier in the `NServiceBus.HostInformation.DisplayName` settings key.");
             }
-
-            sanitizedEndpointInstanceName = Sanitize(endpointName + "_" + hostDisplayName);
 
             var account = CloudStorageAccount.Parse(timeoutConnectionString);
             client = account.CreateCloudTableClient();
@@ -151,79 +145,25 @@
             var now = DateTime.UtcNow;
 
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
-            var timeoutManagerDataTable = client.GetTableReference(timeoutManagerDataTableName);
 
-            await TryUpdateSuccessfulRead(timeoutManagerDataTable).ConfigureAwait(false);
-
-            var lastSuccessfulReadEntity = await GetLastSuccessfulRead(timeoutManagerDataTable).ConfigureAwait(false);
-            var lastSuccessfulRead = lastSuccessfulReadEntity?.LastSuccessfullRead;
-
-            TableQuery<TimeoutDataEntity> query;
-
-            if (lastSuccessfulRead.HasValue)
-            {
-                query = new TableQuery<TimeoutDataEntity>()
-                    .Where(
-                        TableQuery.CombineFilters(
-                            TableQuery.CombineFilters(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.GreaterThanOrEqual, lastSuccessfulRead.Value.ToString(partitionKeyScope)),
-                                TableOperators.And,
-                                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThanOrEqual, now.ToString(partitionKeyScope))),
-                            TableOperators.And,
-                            TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName))
-                    );
-            }
-            else
-            {
-                query = new TableQuery<TimeoutDataEntity>()
-                    .Where(TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName));
-            }
+            var query = new TableQuery<TimeoutDataEntity>()
+                .Where(
+                    TableQuery.CombineFilters(
+                        TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThanOrEqual, now.ToString(partitionKeyScope)),
+                        TableOperators.And,
+                        TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName))
+                );
 
             var timeoutDataEntities = await timeoutDataTable.ExecuteQueryAsync(query, take: 1000).ConfigureAwait(false);
-            var result = timeoutDataEntities.OrderBy(c => c.Time);
 
-            var allTimeouts = result.ToList();
-            if (allTimeouts.Count == 0)
-            {
-                return new TimeoutsChunk(new TimeoutsChunk.Timeout[0], now.AddSeconds(1));
-            }
+            var timeouts = timeoutDataEntities.OrderBy(c => c.Time).ToList();
 
-            var pastTimeouts = allTimeouts.Where(c => c.Time > startSlice && c.Time <= now).ToList();
-            var futureTimeouts = allTimeouts.Where(c => c.Time > now).ToList();
+            var dueTimeouts = timeouts.Where(c => !string.IsNullOrEmpty(c.RowKey))
+                .Select(c => new TimeoutsChunk.Timeout(c.RowKey, c.Time))
+                .Distinct(new TimoutChunkComparer())
+                .ToArray();
 
-            if (lastSuccessfulReadEntity != null)
-            {
-                var catchingUp = lastSuccessfulRead.Value.AddSeconds(catchUpInterval);
-                lastSuccessfulRead = catchingUp > now ? now : catchingUp;
-                lastSuccessfulReadEntity.LastSuccessfullRead = lastSuccessfulRead.Value;
-            }
-
-            var future = futureTimeouts.SafeFirstOrDefault();
-            var nextTimeToRunQuery = lastSuccessfulRead ?? (future?.Time ?? now.AddSeconds(1));
-
-            var timeoutsChunk = new TimeoutsChunk(
-                pastTimeouts.Where(c => !string.IsNullOrEmpty(c.RowKey))
-                    .Select(c => new TimeoutsChunk.Timeout(c.RowKey, c.Time))
-                    .Distinct(new TimoutChunkComparer())
-                    .ToArray(),
-                nextTimeToRunQuery);
-
-            updateSuccessfulReadOperationForNextSpin = GetUpdateSuccessfulRead(lastSuccessfulReadEntity);
-            return timeoutsChunk;
-        }
-
-        async Task TryUpdateSuccessfulRead(CloudTable timeoutManagerDataTable)
-        {
-            if (updateSuccessfulReadOperationForNextSpin != null)
-            {
-                try
-                {
-                    await UpdateSuccessfulRead(timeoutManagerDataTable, updateSuccessfulReadOperationForNextSpin).ConfigureAwait(false);
-                }
-                finally
-                {
-                    updateSuccessfulReadOperationForNextSpin = null;
-                }
-            }
+            return new TimeoutsChunk(dueTimeouts, now.AddSeconds(1));
         }
 
         async Task DeleteMainEntity(CloudTable timeoutDataTable, string partitionKey, string rowKey)
@@ -385,76 +325,11 @@
             return blob.DeleteIfExistsAsync();
         }
 
-        string Sanitize(string s)
-        {
-            var rgx = new Regex(@"[^a-zA-Z0-9\-_]");
-            return rgx.Replace(s, "");
-        }
-
-        async Task<TimeoutManagerDataEntity> GetLastSuccessfulRead(CloudTable timeoutManagerDataTable)
-        {
-            var query = new TableQuery<TimeoutManagerDataEntity>()
-                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, sanitizedEndpointInstanceName));
-
-            var results = await timeoutManagerDataTable.ExecuteQueryAsync(query, take: 1).ConfigureAwait(false);
-
-            return results.SafeFirstOrDefault();
-        }
-
-        static Task UpdateSuccessfulRead(CloudTable table, TableOperation operation)
-        {
-            try
-            {
-                return table.ExecuteAsync(operation);
-            }
-            catch (DataServiceRequestException ex) // handle concurrency issues
-            {
-                var response = ex.Response.FirstOrDefault();
-                //Concurrency Exception - PreCondition Failed or Entity Already Exists
-                if (response != null && (response.StatusCode == 412 || response.StatusCode == 409))
-                {
-                    return TaskEx.CompletedTask;
-                    // I assume we can ignore this condition?
-                    // Time between read and update is very small, meaning that another instance has sent
-                    // the timeout messages that this node intended to send and if not we will resend
-                    // anything after the other node's last read value anyway on next request.
-                }
-
-                throw;
-            }
-        }
-
-        TableOperation GetUpdateSuccessfulRead(TimeoutManagerDataEntity read)
-        {
-            if (read == null)
-            {
-                read = new TimeoutManagerDataEntity(sanitizedEndpointInstanceName, string.Empty)
-                {
-                    LastSuccessfullRead = DateTime.UtcNow
-                };
-
-                return TableOperation.Insert(read);
-            }
-
-            var updated = new TimeoutManagerDataEntity(sanitizedEndpointInstanceName, string.Empty)
-            {
-                ETag = read.ETag,
-                Timestamp = read.Timestamp,
-                LastSuccessfullRead = read.LastSuccessfullRead
-            };
-
-            return TableOperation.Replace(updated);
-        }
-
         string timeoutDataTableName;
-        string timeoutManagerDataTableName;
         string timeoutStateContainerName;
-        int catchUpInterval;
         string partitionKeyScope;
         string endpointName;
-        string sanitizedEndpointInstanceName;
         CloudTableClient client;
         CloudBlobClient cloudBlobclient;
-        TableOperation updateSuccessfulReadOperationForNextSpin;
     }
 }
