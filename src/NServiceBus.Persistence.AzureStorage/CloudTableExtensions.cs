@@ -7,6 +7,7 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.WindowsAzure.Storage;
+    using Microsoft.WindowsAzure.Storage.Blob;
     using Microsoft.WindowsAzure.Storage.Table;
 
     static class CloudTableExtensions
@@ -29,6 +30,31 @@
                 else
                 {
                     items.AddRange(seg);
+                }
+            } while (token != null && !ct.IsCancellationRequested && items.Count < take);
+
+            return items;
+        }
+
+        public static async Task<IList<IListBlobItem>> ListBlobAsync(this CloudBlobContainer blob, int take = Int32.MaxValue, CancellationToken ct = default(CancellationToken))
+        {
+            var items = new List<IListBlobItem>();
+            BlobContinuationToken token = null;
+
+            do
+            {
+                var seg = await blob.ListBlobsSegmentedAsync(token, ct).ConfigureAwait(false);
+                token = seg.ContinuationToken;
+
+                var segCount = seg.Results.Count();
+                if (items.Count + segCount > take)
+                {
+                    var numberToTake = items.Count + segCount - take;
+                    items.AddRange(seg.Results.Take(segCount - numberToTake));
+                }
+                else
+                {
+                    items.AddRange(seg.Results);
                 }
             } while (token != null && !ct.IsCancellationRequested && items.Count < take);
 

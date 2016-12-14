@@ -14,9 +14,9 @@
         static readonly DateTime WhateverDate = DateTime.Now;
 
         [SetUp]
-        public void Perform_storage_cleanup()
+        public Task Perform_storage_cleanup()
         {
-            TestHelper.PerformStorageCleanup();
+            return TestHelper.PerformStorageCleanup();
         }
 
         [Test]
@@ -26,7 +26,7 @@
             
             var future = DateTime.UtcNow.AddDays(1);
 
-            const int count = 1;
+            const int count = 100;
             var tasks = new Task[count];
 
             for (var i = 0; i < count; i++)
@@ -47,7 +47,7 @@
             Assert.AreEqual(1, peekedTimeout.DueTimeouts.Length);
             Assert.AreEqual(outlier, peekedTimeout.DueTimeouts[0].DueTime);
 
-            TestHelper.PerformStorageCleanup();
+            await TestHelper.PerformStorageCleanup();
         }
 
         static TimeoutData GenerateTimeout(DateTime time)

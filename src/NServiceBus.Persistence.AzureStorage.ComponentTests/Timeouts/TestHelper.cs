@@ -94,50 +94,41 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
             Assert.IsFalse(timeouts.DueTimeouts.Any());
         }
 
-        internal static void PerformStorageCleanup()
+        internal static Task PerformStorageCleanup()
         {
-            RemoveAllRowsForTable(AzureTimeoutStorageDefaults.TimeoutDataTableName);
-
-            RemoveAllBlobs();
+            return Task.WhenAll(
+                RemoveAllRowsForTable(AzureTimeoutStorageDefaults.TimeoutDataTableName),
+                RemoveAllBlobs());
         }
 
-        static void RemoveAllRowsForTable(string tableName)
+        static async Task RemoveAllRowsForTable(string tableName)
         {
             var cloudStorageAccount = CloudStorageAccount.Parse(AzurePersistenceTests.GetConnectionString());
             var table = cloudStorageAccount.CreateCloudTableClient().GetTableReference(tableName);
 
-            table.CreateIfNotExists();
+            await table.CreateIfNotExistsAsync();
 
-            var projectionQuery = new TableQuery<DynamicTableEntity>().Select(new[]
-            {
-                "Destination"
-            });
+            var entities = await table.ExecuteQueryAsync(new TableQuery<DynamicTableEntity>());
 
-            // Define an entity resolver to work with the entity after retrieval.
-            EntityResolver<Tuple<string, string>> resolver = (pk, rk, ts, props, etag) => props.ContainsKey("Destination") ? new Tuple<string, string>(pk, rk) : null;
-
-            foreach (var tuple in table.ExecuteQuery(projectionQuery, resolver))
-            {
-                var tableEntity = new DynamicTableEntity(tuple.Item1, tuple.Item2)
-                {
-                    ETag = "*"
-                };
-                table.Execute(TableOperation.Delete(tableEntity));
-            }
+            await Task.WhenAll(entities.Select(e => table.ExecuteAsync(TableOperation.Delete(e))));
         }
 
-        static void RemoveAllBlobs()
+        static async Task RemoveAllBlobs()
         {
             var cloudStorageAccount = CloudStorageAccount.Parse(AzurePersistenceTests.GetConnectionString());
             var container = cloudStorageAccount.CreateCloudBlobClient().GetContainerReference("timeoutstate");
-            container.CreateIfNotExists();
-            foreach (var blob in container.ListBlobs())
+            await container.CreateIfNotExistsAsync();
+            var blobs = await container.ListBlobAsync();
+            await Task.WhenAll(blobs.Select(GetDelete));
+        }
+
+        static Task GetDelete(object blob)
+        {
+            var options = new BlobRequestOptions
             {
-                ((ICloudBlob) blob).Delete(DeleteSnapshotsOption.None, AccessCondition.GenerateEmptyCondition(), new BlobRequestOptions
-                {
-                    RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(15), 5)
-                });
-            }
+                RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(15), 5)
+            };
+            return ((ICloudBlob)blob).DeleteAsync(DeleteSnapshotsOption.None, AccessCondition.GenerateEmptyCondition(), options, new OperationContext());
         }
     }
 }

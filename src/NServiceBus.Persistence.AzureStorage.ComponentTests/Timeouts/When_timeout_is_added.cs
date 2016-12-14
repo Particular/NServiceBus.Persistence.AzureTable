@@ -8,9 +8,9 @@
     public class When_timeout_is_added
     {
         [SetUp]
-        public void Perform_storage_cleanup()
+        public Task Perform_storage_cleanup()
         {
-            TestHelper.PerformStorageCleanup();
+            return TestHelper.PerformStorageCleanup();
         }
 
         [Test]
@@ -24,7 +24,7 @@
 
             Assert.AreEqual(timeout.State, peekedTimeout.State);
 
-            TestHelper.PerformStorageCleanup();
+            await TestHelper.PerformStorageCleanup();
         }
     }
 }
