@@ -162,7 +162,7 @@
             var timeouts = new List<TimeoutDataEntity>();
             TableContinuationToken token = null;
             var nextRequestTime = DateTime.MaxValue;
-
+            
             do
             {
                 var seg = await executeQuerySegmentedAsync(query, token).ConfigureAwait(false);
@@ -189,7 +189,7 @@
                 .Distinct(new TimoutChunkComparer())
                 .ToArray();
 
-            nextRequestTime = timeouts.Count < TimeoutChunkBatchSize ? nextRequestTime : DateTime.Now.Add(TimeSpan.FromSeconds(1));
+            nextRequestTime = timeouts.Count < TimeoutChunkBatchSize && nextRequestTime != DateTime.MaxValue ? nextRequestTime : now.Add(DefaultNextQueryDelay);
 
             return new TimeoutsChunk(dueTimeouts, nextRequestTime);
         }
@@ -359,5 +359,6 @@
         string endpointName;
         CloudTableClient client;
         CloudBlobClient cloudBlobclient;
+        internal static readonly TimeSpan DefaultNextQueryDelay = TimeSpan.FromSeconds(1);
     }
 }
