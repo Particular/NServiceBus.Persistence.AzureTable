@@ -34,7 +34,6 @@ namespace NServiceBus
             var connectionString = context.Settings.Get<string>(WellKnownConfigurationKeys.TimeoutStorageConnectionString);
             var partitionKeyScope = context.Settings.Get<string>(WellKnownConfigurationKeys.TimeoutStoragePartitionKeyScope);
             var endpointName = context.Settings.EndpointName();
-            var hostDisplayName = context.Settings.GetOrDefault<string>("NServiceBus.HostInformation.DisplayName");
             var timeoutStateContainerName = context.Settings.GetOrDefault<string>(WellKnownConfigurationKeys.TimeoutStorageTimeoutStateContainerName);
 
             if (createIfNotExist)
