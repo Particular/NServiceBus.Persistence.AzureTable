@@ -5,6 +5,7 @@
     using System.IO;
     using System.Linq;
     using System.Net;
+    using System.Threading;
     using System.Threading.Tasks;
     using System.Web.Script.Serialization;
     using Extensibility;
@@ -17,6 +18,8 @@
 
     class TimeoutPersister : IPersistTimeouts, IQueryTimeouts
     {
+        const int TimeoutChunkBatchSize = 1000;
+
         public TimeoutPersister(string timeoutConnectionString, string timeoutDataTableName, string timeoutStateContainerName, string partitionKeyScope, string endpointName)
         {
             this.timeoutDataTableName = timeoutDataTableName;
@@ -133,7 +136,7 @@
             }
         }
 
-        public async Task<TimeoutsChunk> GetNextChunk(DateTime startSlice)
+        public Task<TimeoutsChunk> GetNextChunk(DateTime startSlice)
         {
             var now = DateTime.UtcNow;
 
@@ -142,24 +145,53 @@
             var query = new TableQuery<TimeoutDataEntity>()
                 .Where(
                     TableQuery.CombineFilters(
-                        TableQuery.CombineFilters(
-                            TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.GreaterThanOrEqual, now.AddYears(-1).ToString(partitionKeyScope)),
-                            TableOperators.And,
-                            TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThanOrEqual, now.ToString(partitionKeyScope))),
+                        TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, now.ToString(partitionKeyScope)),
                         TableOperators.And,
                         TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName))
                 );
 
-            var timeoutDataEntities = await timeoutDataTable.ExecuteQueryAsync(query, take: 1000).ConfigureAwait(false);
 
-            var timeouts = timeoutDataEntities.Where(c => c.Time <= now).OrderBy(c => c.Time).ToList();
+            Func<TableQuery<TimeoutDataEntity>, TableContinuationToken, Task<TableQuerySegment<TimeoutDataEntity>>> executeQuery =
+                    (q, t) => timeoutDataTable.ExecuteQuerySegmentedAsync(q, t, new CancellationToken());
+
+            return CalculateNextTimeoutChunk(executeQuery, query, now);
+        }
+
+        internal static async Task<TimeoutsChunk> CalculateNextTimeoutChunk(Func<TableQuery<TimeoutDataEntity>, TableContinuationToken, Task<TableQuerySegment<TimeoutDataEntity>>> executeQuerySegmentedAsync, TableQuery<TimeoutDataEntity> query, DateTime now)
+        {
+            var timeouts = new List<TimeoutDataEntity>();
+            TableContinuationToken token = null;
+            var nextRequestTime = DateTime.MaxValue;
+
+            do
+            {
+                var seg = await executeQuerySegmentedAsync(query, token).ConfigureAwait(false);
+
+                token = seg.ContinuationToken;
+
+                var futureTimeouts = seg.Results.Where(c => c.Time > now).ToArray();
+
+                if (futureTimeouts.Any())
+                {
+                    var futureMinimalTime = futureTimeouts.Min(c => c.Time);
+
+                    if (futureMinimalTime < nextRequestTime)
+                    {
+                        nextRequestTime = futureMinimalTime;
+                    }
+                }
+
+                timeouts.AddRange(seg.Results.Where(c => c.Time <= now));
+            } while (token != null && timeouts.Count < TimeoutChunkBatchSize);
 
             var dueTimeouts = timeouts.Where(c => !string.IsNullOrEmpty(c.RowKey))
                 .Select(c => new TimeoutsChunk.Timeout(c.RowKey, c.Time))
                 .Distinct(new TimoutChunkComparer())
                 .ToArray();
 
-            return new TimeoutsChunk(dueTimeouts, now.AddSeconds(1));
+            nextRequestTime = timeouts.Count < TimeoutChunkBatchSize ? nextRequestTime : DateTime.Now.Add(TimeSpan.FromSeconds(1));
+
+            return new TimeoutsChunk(dueTimeouts, nextRequestTime);
         }
 
         async Task DeleteMainEntity(CloudTable timeoutDataTable, string partitionKey, string rowKey)
