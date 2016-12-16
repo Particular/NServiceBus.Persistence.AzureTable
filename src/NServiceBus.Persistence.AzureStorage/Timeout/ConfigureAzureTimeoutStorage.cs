@@ -2,6 +2,7 @@
 {
     using Configuration.AdvanceExtensibility;
     using Persistence;
+    using Persistence.AzureStorage.Config;
     using Timeout;
 
     /// <summary>
@@ -16,13 +17,13 @@
         {
             AzureTimeoutStorageGuard.CheckConnectionString(connectionString);
 
-            config.GetSettings().Set("AzureTimeoutStorage.ConnectionString", connectionString);
+            config.GetSettings().Set(WellKnownConfigurationKeys.TimeoutStorageConnectionString, connectionString);
             return config;
         }
 
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> TimeoutStateContainerName(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, string blobName)
         {
-            config.GetSettings().Set("AzureTimeoutStorage.TimeoutStateContainerName", blobName);
+            config.GetSettings().Set(WellKnownConfigurationKeys.TimeoutStorageTimeoutStateContainerName, blobName);
             return config;
         }
 
@@ -32,13 +33,14 @@
         /// </summary>
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> CreateSchema(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, bool createSchema)
         {
-            config.GetSettings().Set("AzureTimeoutStorage.CreateSchema", createSchema);
+            config.GetSettings().Set(WellKnownConfigurationKeys.TimeoutStorageCreateSchema, createSchema);
             return config;
         }
 
         /// <summary>
         /// Set the name of the table where the timeout manager stores it's internal state.
         /// </summary>
+        // TODO: needs to be obsoleted
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> TimeoutManagerDataTableName(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, string tableName)
         {
             AzureTimeoutStorageGuard.CheckTableName(tableName);
@@ -54,7 +56,7 @@
         {
             AzureTimeoutStorageGuard.CheckTableName(tableName);
 
-            config.GetSettings().Set("AzureTimeoutStorage.TimeoutDataTableName", tableName);
+            config.GetSettings().Set(WellKnownConfigurationKeys.TimeoutStorageTimeoutDataTableName, tableName);
             return config;
         }
 
@@ -63,6 +65,7 @@
         /// </summary>
         /// <param name="catchUpInterval">Catch up interval in seconds</param>
         /// <param name="config"></param>
+        // TODO: needs to be obsoleted
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> CatchUpInterval(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, int catchUpInterval)
         {
             AzureTimeoutStorageGuard.CheckCatchUpInterval(catchUpInterval);
@@ -81,7 +84,7 @@
         {
             AzureTimeoutStorageGuard.CheckPartitionKeyScope(partitionKeyScope);
 
-            config.GetSettings().Set("AzureTimeoutStorage.PartitionKeyScope", partitionKeyScope);
+            config.GetSettings().Set(WellKnownConfigurationKeys.TimeoutStoragePartitionKeyScope, partitionKeyScope);
             return config;
         }
     }

@@ -1,6 +1,7 @@
 ﻿namespace NServiceBus
 {
     using Configuration.AdvanceExtensibility;
+    using Persistence.AzureStorage.Config;
 
     /// <summary>
     /// Configuration extensions for all Azure storage settings
@@ -17,9 +18,9 @@
             AzureStorageSagaGuard.CheckConnectionString(connectionString);
 
             var settings = config.GetSettings();
-            settings.Set("AzureSagaStorage.ConnectionString", connectionString);
-            settings.Set("AzureSubscriptionStorage.ConnectionString", connectionString);
-            settings.Set("AzureTimeoutStorage.ConnectionString", connectionString);
+            settings.Set(WellKnownConfigurationKeys.SagaStorageConnectionString, connectionString);
+            settings.Set(WellKnownConfigurationKeys.SubscriptionStorageConnectionString, connectionString);
+            settings.Set(WellKnownConfigurationKeys.TimeoutStorageConnectionString, connectionString);
 
             return config;
         }

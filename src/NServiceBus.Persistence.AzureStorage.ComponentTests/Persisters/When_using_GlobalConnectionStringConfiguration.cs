@@ -1,5 +1,6 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Persisters
 {
+    using Config;
     using Configuration.AdvanceExtensibility;
     using NUnit.Framework;
     using NServiceBus;
@@ -18,9 +19,9 @@
 
             var settings = persistence.GetSettings();
 
-            Assert.AreEqual(connectionString, settings.Get<string>("AzureSagaStorage.ConnectionString"));
-            Assert.AreEqual(connectionString, settings.Get<string>("AzureSubscriptionStorage.ConnectionString"));
-            Assert.AreEqual(connectionString, settings.Get<string>("AzureTimeoutStorage.ConnectionString"));
+            Assert.AreEqual(connectionString, settings.Get<string>(WellKnownConfigurationKeys.SagaStorageConnectionString));
+            Assert.AreEqual(connectionString, settings.Get<string>(WellKnownConfigurationKeys.SubscriptionStorageConnectionString));
+            Assert.AreEqual(connectionString, settings.Get<string>(WellKnownConfigurationKeys.TimeoutStorageConnectionString));
         }
     }
 }
