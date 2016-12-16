@@ -18,8 +18,6 @@
 
     class TimeoutPersister : IPersistTimeouts, IQueryTimeouts
     {
-        const int TimeoutChunkBatchSize = 1000;
-
         public TimeoutPersister(string timeoutConnectionString, string timeoutDataTableName, string timeoutStateContainerName, string partitionKeyScope, string endpointName)
         {
             this.timeoutDataTableName = timeoutDataTableName;
@@ -353,6 +351,7 @@
             return blob.DeleteIfExistsAsync();
         }
 
+
         string timeoutDataTableName;
         string timeoutStateContainerName;
         string partitionKeyScope;
@@ -360,5 +359,6 @@
         CloudTableClient client;
         CloudBlobClient cloudBlobclient;
         internal static readonly TimeSpan DefaultNextQueryDelay = TimeSpan.FromSeconds(1);
+        internal const int TimeoutChunkBatchSize = 1000;
     }
 }

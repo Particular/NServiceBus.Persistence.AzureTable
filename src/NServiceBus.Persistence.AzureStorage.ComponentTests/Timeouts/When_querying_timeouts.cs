@@ -49,7 +49,7 @@
 
             var results = await GetNextChunk();
 
-            AssertEqual(segment1.Union(segment2), results);
+            AssertEqual(segment1.Concat(segment2).ToArray(), results);
             Assert.AreEqual(now.Add(TimeoutPersister.DefaultNextQueryDelay), results.NextTimeToQuery);
         }
 
@@ -62,6 +62,29 @@
 
             AssertEqual(segment1.Take(1), results);
             Assert.AreEqual(segment1[1].Time, results.NextTimeToQuery);
+        }
+
+        [Test]
+        public async Task Returns_up_to_batch_size_when_more_than_batch_size()
+        {
+            var entities = Enumerable.Range(1, TimeoutPersister.TimeoutChunkBatchSize + 1).Select(i => NextSegmentIs(DispatchNow())).SelectMany(l => l).ToArray();
+            
+            var results = await GetNextChunk();
+
+            AssertEqual(entities.Take(TimeoutPersister.TimeoutChunkBatchSize), results);
+            Assert.AreEqual(now.Add(TimeoutPersister.DefaultNextQueryDelay), results.NextTimeToQuery);
+        }
+
+        [Test]
+        public async Task Can_return_more_than_batch_size_when_one_segment_adds_to_many()
+        {
+            var segment1 = NextSegmentIs(DispatchNow());
+            var segment2 = NextSegmentIs(Enumerable.Range(1, TimeoutPersister.TimeoutChunkBatchSize + 1).Select(i => DispatchNow()).ToArray());
+
+            var results = await GetNextChunk();
+
+            AssertEqual(segment1.Concat(segment2), results);
+            Assert.AreEqual(now.Add(TimeoutPersister.DefaultNextQueryDelay), results.NextTimeToQuery);
         }
 
         Task<TimeoutsChunk> GetNextChunk()
