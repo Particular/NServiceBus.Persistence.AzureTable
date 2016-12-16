@@ -13,12 +13,18 @@
     [Category("AzureStoragePersistence")]
     public class When_querying_timeouts
     {
+        [SetUp]
+        public void SetUp()
+        {
+            now = DateTime.Now;
+        }
+
         [Test]
         public async Task Returns_no_timeouts_when_none_exist()
         {
-            var now = DateTime.Now;
-            var executor = CreateQueryExecutor(new List<TimeoutDataEntity>());
-            var results = await TimeoutPersister.CalculateNextTimeoutChunk(executor, null, now);
+            NextSegmentIs();
+
+            var results = await GetNextChunk();
 
             CollectionAssert.IsEmpty(results.DueTimeouts);
             Assert.AreEqual(now.Add(TimeoutPersister.DefaultNextQueryDelay), results.NextTimeToQuery);
@@ -27,11 +33,9 @@
         [Test]
         public async Task Returns_all_if_due_timeouts_are_current_and_within_batch_size()
         {
-            var now = DateTime.Now;
-            var segment1 = new List<TimeoutDataEntity> { CreateCurrentTimeout(now) };
-            var executor = CreateQueryExecutor(segment1);
+            var segment1 = NextSegmentIs(DispatchNow());
 
-            var results = await TimeoutPersister.CalculateNextTimeoutChunk(executor, null, now);
+            var results = await GetNextChunk();
 
             AssertEqual(segment1, results);
             Assert.AreEqual(now.Add(TimeoutPersister.DefaultNextQueryDelay), results.NextTimeToQuery);
@@ -40,12 +44,10 @@
         [Test]
         public async Task Returns_all_if_due_timeouts_are_returned_in_two_segments()
         {
-            var now = DateTime.Now;
-            var segment1 = new List<TimeoutDataEntity> { CreateCurrentTimeout(now) };
-            var segment2 = new List<TimeoutDataEntity> { CreateCurrentTimeout(now) };
-            var executor = CreateQueryExecutor(segment1, segment2);
+            var segment1 = NextSegmentIs(DispatchNow());
+            var segment2 = NextSegmentIs(DispatchNow());
 
-            var results = await TimeoutPersister.CalculateNextTimeoutChunk(executor, null, now);
+            var results = await GetNextChunk();
 
             AssertEqual(segment1.Union(segment2), results);
             Assert.AreEqual(now.Add(TimeoutPersister.DefaultNextQueryDelay), results.NextTimeToQuery);
@@ -54,14 +56,26 @@
         [Test]
         public async Task Returns_only_due_timeouts_from_single_segment()
         {
-            var now = DateTime.Now;
-            var segment1 = new List<TimeoutDataEntity> { CreateCurrentTimeout(now), CreateFutrueTimeout(now) };
-            var executor = CreateQueryExecutor(segment1);
+            var segment1 = NextSegmentIs(DispatchNow(), DispatchInFuture());
 
-            var results = await TimeoutPersister.CalculateNextTimeoutChunk(executor, null, now);
+            var results = await GetNextChunk();
 
             AssertEqual(segment1.Take(1), results);
             Assert.AreEqual(segment1[1].Time, results.NextTimeToQuery);
+        }
+
+        Task<TimeoutsChunk> GetNextChunk()
+        {
+            var executor = CreateQueryExecutor(segments.ToArray());
+            segments.Clear();
+            return TimeoutPersister.CalculateNextTimeoutChunk(executor, null, now);
+        }
+
+        List<TimeoutDataEntity> NextSegmentIs(params TimeoutDataEntity[] timeoutDataEntities)
+        {
+            var segment = timeoutDataEntities.ToList();
+            segments.Add(segment);
+            return segment;
         }
 
         static void AssertEqual(IEnumerable<TimeoutDataEntity> segment1, TimeoutsChunk results)
@@ -69,19 +83,17 @@
             CollectionAssert.AreEquivalent(segment1.Select(s => s.RowKey), results.DueTimeouts.Select(t => t.Id));
         }
 
-        static TimeoutDataEntity CreateCurrentTimeout(DateTime now)
+        TimeoutDataEntity DispatchNow()
         {
-            return new TimeoutDataEntity { Time = now.AddSeconds(-1), RowKey = Guid.NewGuid().ToString()};
+            return new TimeoutDataEntity { Time = now.AddSeconds(-1), RowKey = Guid.NewGuid().ToString() };
         }
 
-        static TimeoutDataEntity CreateFutrueTimeout(DateTime now)
+        TimeoutDataEntity DispatchInFuture()
         {
-            return new TimeoutDataEntity { Time = now.AddMinutes(10), RowKey = Guid.NewGuid().ToString()};
+            return new TimeoutDataEntity { Time = now.AddMinutes(10), RowKey = Guid.NewGuid().ToString() };
         }
 
-
-
-        static Func<TableQuery<TimeoutDataEntity>, TableContinuationToken, Task<TableQuerySegment<TimeoutDataEntity>>> CreateQueryExecutor(params List<TimeoutDataEntity>[] values)
+        static Func<TableQuery<TimeoutDataEntity>, TableContinuationToken, Task<TableQuerySegment<TimeoutDataEntity>>> CreateQueryExecutor(List<TimeoutDataEntity>[] values)
         {
             var counter = 0;
             return (query, token) =>
@@ -108,5 +120,8 @@
             });
             return segment;
         }
+
+        DateTime now;
+        List<List<TimeoutDataEntity>> segments = new List<List<TimeoutDataEntity>>();
     }
 }
