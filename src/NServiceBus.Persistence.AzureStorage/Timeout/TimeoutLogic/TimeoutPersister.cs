@@ -189,6 +189,11 @@
 
             nextRequestTime = timeouts.Count < TimeoutChunkBatchSize && nextRequestTime != DateTime.MaxValue ? nextRequestTime : now.Add(DefaultNextQueryDelay);
 
+            if (nextRequestTime > now + MaximumDelay)
+            {
+                nextRequestTime = now + MaximumDelay;
+            }
+            
             return new TimeoutsChunk(dueTimeouts, nextRequestTime);
         }
 
@@ -359,6 +364,7 @@
         CloudTableClient client;
         CloudBlobClient cloudBlobclient;
         internal static readonly TimeSpan DefaultNextQueryDelay = TimeSpan.FromSeconds(1);
+        internal static readonly TimeSpan MaximumDelay = TimeSpan.FromMinutes(10);
         internal const int TimeoutChunkBatchSize = 1000;
     }
 }

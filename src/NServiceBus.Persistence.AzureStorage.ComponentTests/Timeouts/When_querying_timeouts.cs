@@ -17,6 +17,7 @@
         public void SetUp()
         {
             now = DateTime.Now;
+            segments.Clear();
         }
 
         [Test]
@@ -31,7 +32,7 @@
         }
 
         [Test]
-        public async Task Returns_all_if_due_timeouts_are_current_and_within_batch_size()
+        public async Task Returns_all_if_due_timeouts_are_within_batch_size()
         {
             var segment1 = NextSegmentIs(DispatchNow());
 
@@ -54,7 +55,7 @@
         }
 
         [Test]
-        public async Task Returns_only_due_timeouts_from_single_segment()
+        public async Task Returns_only_due_timeouts_from_single_segment_scheduling_for_future()
         {
             var segment1 = NextSegmentIs(DispatchNow(), DispatchInFuture());
 
@@ -65,10 +66,43 @@
         }
 
         [Test]
+        public async Task Schedules_next_within_max_delay_boundary()
+        {
+            NextSegmentIs(DispatchInFuture(TimeSpan.FromDays(10000)));
+
+            var results = await GetNextChunk();
+
+            Assert.AreEqual(now.Add(TimeoutPersister.MaximumDelay), results.NextTimeToQuery);
+        }
+
+        [Test]
+        public async Task Scheduling_next_does_not_depend_on_order_of_futures()
+        {
+            var smallDelay = TimeSpan.FromMinutes(1);
+            var bigDelay = TimeSpan.FromMinutes(2);
+
+            // first schedule
+            NextSegmentIs(DispatchInFuture(smallDelay));
+            NextSegmentIs(DispatchInFuture(bigDelay));
+            var results1 = await GetNextChunk();
+
+            // secondschedule
+            NextSegmentIs(DispatchInFuture(smallDelay));
+            NextSegmentIs(DispatchInFuture(bigDelay));
+            var results2 = await GetNextChunk();
+
+            Assert.AreEqual(results1.NextTimeToQuery, results2.NextTimeToQuery);
+        }
+
+        [Test]
         public async Task Returns_up_to_batch_size_when_more_than_batch_size()
         {
-            var entities = Enumerable.Range(1, TimeoutPersister.TimeoutChunkBatchSize + 1).Select(i => NextSegmentIs(DispatchNow())).SelectMany(l => l).ToArray();
-            
+            var entities = new List<TimeoutDataEntity>();
+            for (var i = 0; i < TimeoutPersister.TimeoutChunkBatchSize + 1; i++)
+            {
+                entities.AddRange(NextSegmentIs(DispatchNow()));
+            }
+
             var results = await GetNextChunk();
 
             AssertEqual(entities.Take(TimeoutPersister.TimeoutChunkBatchSize), results);
@@ -111,9 +145,9 @@
             return new TimeoutDataEntity { Time = now.AddSeconds(-1), RowKey = Guid.NewGuid().ToString() };
         }
 
-        TimeoutDataEntity DispatchInFuture()
+        TimeoutDataEntity DispatchInFuture(TimeSpan? delay = null)
         {
-            return new TimeoutDataEntity { Time = now.AddMinutes(10), RowKey = Guid.NewGuid().ToString() };
+            return new TimeoutDataEntity { Time = now.Add(delay ?? DefaultFutureDelay), RowKey = Guid.NewGuid().ToString() };
         }
 
         static Func<TableQuery<TimeoutDataEntity>, TableContinuationToken, Task<TableQuerySegment<TimeoutDataEntity>>> CreateQueryExecutor(List<TimeoutDataEntity>[] values)
@@ -146,5 +180,6 @@
 
         DateTime now;
         List<List<TimeoutDataEntity>> segments = new List<List<TimeoutDataEntity>>();
+        static readonly TimeSpan DefaultFutureDelay = TimeSpan.FromMinutes(10);
     }
 }
