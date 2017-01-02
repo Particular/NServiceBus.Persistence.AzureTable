@@ -40,12 +40,12 @@
         /// <summary>
         /// Set the name of the table where the timeout manager stores it's internal state.
         /// </summary>
-        // TODO: needs to be obsoleted
+        [ObsoleteEx(
+         TreatAsErrorFromVersion = "2",
+         RemoveInVersion = "3",
+         Message = "The timeout manager table is no longer used.")]
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> TimeoutManagerDataTableName(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, string tableName)
         {
-            AzureTimeoutStorageGuard.CheckTableName(tableName);
-
-            config.GetSettings().Set("AzureTimeoutStorage.TimeoutManagerDataTableName", tableName);
             return config;
         }
 
@@ -65,12 +65,12 @@
         /// </summary>
         /// <param name="catchUpInterval">Catch up interval in seconds</param>
         /// <param name="config"></param>
-        // TODO: needs to be obsoleted
+        [ObsoleteEx(
+         TreatAsErrorFromVersion = "2",
+         RemoveInVersion = "3",
+         Message = "The catchUpInterval is no longer used.")]
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> CatchUpInterval(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, int catchUpInterval)
         {
-            AzureTimeoutStorageGuard.CheckCatchUpInterval(catchUpInterval);
-
-            config.GetSettings().Set("AzureTimeoutStorage.CatchUpInterval", catchUpInterval);
             return config;
         }
 
