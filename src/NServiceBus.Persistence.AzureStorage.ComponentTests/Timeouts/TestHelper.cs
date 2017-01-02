@@ -97,8 +97,8 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
 
         public static async Task AssertAllTimeoutsThatHaveBeenRemoved(TimeoutPersister timeoutPersister)
         {
-            var timeouts = await timeoutPersister.GetNextChunk(DateTime.Now.AddYears(-3));
-            Assert.IsFalse(timeouts.DueTimeouts.Any());
+            var timeouts = await GetAllTimeoutsRaw();
+            CollectionAssert.IsEmpty(timeouts);
         }
 
         internal static Task PerformStorageCleanup()
