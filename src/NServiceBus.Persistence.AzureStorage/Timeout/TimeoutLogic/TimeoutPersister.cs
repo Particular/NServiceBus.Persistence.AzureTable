@@ -136,7 +136,7 @@
 
         public Task<TimeoutsChunk> GetNextChunk(DateTime startSlice)
         {
-            var now = DateTime.UtcNow;
+            var now = NowGetter();
 
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
 
@@ -155,12 +155,14 @@
             return CalculateNextTimeoutChunk(executeQuery, query, now);
         }
 
+        internal Func<DateTime> NowGetter { get; set; } = () => DateTime.UtcNow;
+
         internal static async Task<TimeoutsChunk> CalculateNextTimeoutChunk(Func<TableQuery<TimeoutDataEntity>, TableContinuationToken, Task<TableQuerySegment<TimeoutDataEntity>>> executeQuerySegmentedAsync, TableQuery<TimeoutDataEntity> query, DateTime now)
         {
             var timeouts = new List<TimeoutDataEntity>();
             TableContinuationToken token = null;
             var nextRequestTime = DateTime.MaxValue;
-            
+
             do
             {
                 var seg = await executeQuerySegmentedAsync(query, token).ConfigureAwait(false);
@@ -193,7 +195,7 @@
             {
                 nextRequestTime = now + MaximumDelay;
             }
-            
+
             return new TimeoutsChunk(dueTimeouts, nextRequestTime);
         }
 
