@@ -24,7 +24,7 @@
             var timeout = TestHelper.GenerateTimeoutWithHeaders();
             await timeoutPersister.Add(timeout, null);
 
-            var timeouts = await TestHelper.GetAllTimeoutsUsingGetNextChunk(timeoutPersister);
+            var timeouts = await TestHelper.GetAllTimeoutsRaw();
 
             Assert.True(timeouts.Count == 1);
 
@@ -40,7 +40,7 @@
             var timeout = TestHelper.GenerateTimeoutWithHeaders();
             await timeoutPersister.Add(timeout, null);
 
-            var timeouts = await TestHelper.GetAllTimeoutsUsingGetNextChunk(timeoutPersister);
+            var timeouts = await TestHelper.GetAllTimeoutsRaw();
 
             Assert.AreEqual(timeouts.Count, 1);
 
@@ -73,7 +73,7 @@
             await timeoutPersister.Add(timeout1, null);
             await timeoutPersister.Add(timeout2, null);
 
-            var timeouts = await TestHelper.GetAllTimeoutsUsingGetNextChunk(timeoutPersister);
+            var timeouts = await TestHelper.GetAllTimeoutsRaw();
             Assert.IsTrue(timeouts.Count == 2);
 
             var itemRemoved = true;
@@ -95,7 +95,7 @@
             var timeout = TestHelper.GenerateTimeoutWithHeaders();
             await timeoutPersister.Add(timeout, null);
 
-            var timeouts = await TestHelper.GetAllTimeoutsUsingGetNextChunk(timeoutPersister);
+            var timeouts = await TestHelper.GetAllTimeoutsRaw();
             Assert.IsTrue(timeouts.Count == 1);
 
             var timeoutId = timeouts.First().Item1;
@@ -115,7 +115,7 @@
             await timeoutPersister.Add(timeout1, null);
             await timeoutPersister.Add(timeout2, null);
 
-            var timeouts = await TestHelper.GetAllTimeoutsUsingGetNextChunk(timeoutPersister);
+            var timeouts = await TestHelper.GetAllTimeoutsRaw();
             Assert.IsTrue(timeouts.Count == 2);
 
             await timeoutPersister.RemoveTimeoutBy(sagaId1, null);

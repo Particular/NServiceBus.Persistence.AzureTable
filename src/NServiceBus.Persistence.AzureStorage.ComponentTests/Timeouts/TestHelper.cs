@@ -11,6 +11,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
     using Microsoft.WindowsAzure.Storage.Table;
     using Timeout.Core;
     using NUnit.Framework;
+    using Timeout.TimeoutLogic;
 
     static class TestHelper
     {
@@ -81,11 +82,17 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
             return timeoutWithHeaders1;
         }
 
-        internal static async Task<List<Tuple<string, DateTime>>> GetAllTimeoutsUsingGetNextChunk(TimeoutPersister persister)
+        internal static async Task<List<Tuple<string, DateTime>>> GetAllTimeoutsRaw()
         {
-            var timeouts = await persister.GetNextChunk(DateTime.Now.AddYears(-3));
-
-            return timeouts.DueTimeouts.Select(timeout => new Tuple<string, DateTime>(timeout.Id, timeout.DueTime)).ToList();
+            var account = CloudStorageAccount.Parse(AzurePersistenceTests.GetConnectionString());
+            var client = account.CreateCloudTableClient();
+            var table = client.GetTableReference(AzureTimeoutStorageDefaults.TimeoutDataTableName);
+            var entities = await table.ExecuteQueryAsync(new TableQuery<TimeoutDataEntity>());
+            return entities.Where(c => !string.IsNullOrEmpty(c.RowKey))
+                .Select(c => new TimeoutsChunk.Timeout(c.RowKey, c.Time))
+                .Distinct(new TimoutChunkComparer())
+                .Select(c => new Tuple<string, DateTime>(c.Id, c.DueTime))
+                .ToList();
         }
 
         public static async Task AssertAllTimeoutsThatHaveBeenRemoved(TimeoutPersister timeoutPersister)
