@@ -1,6 +1,7 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
     using Extensibility;
@@ -31,6 +32,53 @@
             var timeouts = await persister.GetNextChunk(DateTime.MinValue).ConfigureAwait(false);
 
             Assert.AreEqual(timeout.Id, timeouts.DueTimeouts.Single().Id);
+        }
+
+        [Test]
+        public async Task Returns_tail_timeouts_when_GetNextChunk_till_they_exist()
+        {
+            var now = new DateTime(2017, 1, 1, 1, 1, 1, DateTimeKind.Utc);
+
+            var persister = TestHelper.CreateTimeoutPersister();
+            persister.NowGetter = () => now;
+
+            var tailTimeout = TestHelper.GenerateTimeoutWithHeaders();
+            tailTimeout.Time = now.AddDays(-1);
+
+            var timeout = TestHelper.GenerateTimeoutWithHeaders();
+            timeout.Time = now;
+
+            await persister.Add(tailTimeout, new ContextBag()).ConfigureAwait(false);
+            await persister.Add(timeout, new ContextBag()).ConfigureAwait(false);
+
+            var ids = await ReadSpecificNumberOfDistinctTimeouts(persister, 2);
+
+            CollectionAssert.AreEquivalent(new[] { tailTimeout.Id, timeout.Id }, ids);
+        }
+
+        static async Task<IEnumerable<string>> ReadSpecificNumberOfDistinctTimeouts(TimeoutPersister persister, int expectedTimeoutCount)
+        {
+            var ids = new HashSet<string>();
+            const int maxLoops = 10;
+            for (var i = 0; i < maxLoops; i++)
+            {
+                var timeoutsChunk = await persister.GetNextChunk(DateTime.MinValue).ConfigureAwait(false);
+                if (timeoutsChunk.DueTimeouts.Length > 0)
+                {
+                    foreach (var t in timeoutsChunk.DueTimeouts)
+                    {
+                        await persister.TryRemove(t.Id, new ContextBag()).ConfigureAwait(false);
+                        ids.Add(t.Id);
+                    }
+                }
+
+                if (ids.Count == expectedTimeoutCount)
+                {
+                    return ids;
+                }
+            }
+
+            return ids;
         }
     }
 }

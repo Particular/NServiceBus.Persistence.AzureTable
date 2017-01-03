@@ -134,25 +134,63 @@
             }
         }
 
-        public Task<TimeoutsChunk> GetNextChunk(DateTime startSlice)
+        public async Task<TimeoutsChunk> GetNextChunk(DateTime startSlice)
+        {
+            if (longTailQuery == null)
+            {
+                longTailQuery = GetNextChunkImpl(QueryComparisons.LessThan);
+            }
+
+            if (longTailQuery.IsFaulted)
+            {
+                try
+                {
+                    await longTailQuery.ConfigureAwait(false);
+                }
+                finally
+                {
+                    // reissue the query on exception, the previous instance is already faulted
+                    longTailQuery = GetLongTailTimeoutsDelayed();
+                }
+            }
+
+            if (longTailQuery.IsCompleted)
+            {
+                var result = await longTailQuery.ConfigureAwait(false);
+                if (result.DueTimeouts.Length > 0)
+                {
+                    // It is highly probable that this task will return before removing timeouts. This increases probability of duplicated.
+                    // On the other hand timeouts are removed by the satellite which already introduces a lot of latency in dispatching regular timeouts.
+                    longTailQuery = GetNextChunkImpl(QueryComparisons.LessThan);
+                    return new TimeoutsChunk(result.DueTimeouts, NowGetter());
+                }
+
+                longTailQuery = GetLongTailTimeoutsDelayed();
+            }
+           
+            return await GetNextChunkImpl(QueryComparisons.Equal).ConfigureAwait(false);
+        }
+
+        async Task<TimeoutsChunk> GetLongTailTimeoutsDelayed()
+        {
+            await Task.Delay(TimeSpan.FromMinutes(10)).ConfigureAwait(false);
+            return await GetNextChunkImpl(QueryComparisons.LessThan).ConfigureAwait(false);
+        }
+
+        Task<TimeoutsChunk> GetNextChunkImpl(string partitionKeyComparison)
         {
             var now = NowGetter();
-
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
 
             var query = new TableQuery<TimeoutDataEntity>()
                 .Where(
                     TableQuery.CombineFilters(
-                        TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, now.ToString(partitionKeyScope)),
+                        TableQuery.GenerateFilterCondition("PartitionKey", partitionKeyComparison, now.ToString(partitionKeyScope)),
                         TableOperators.And,
                         TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName))
                 );
 
-
-            Func<TableQuery<TimeoutDataEntity>, TableContinuationToken, Task<TableQuerySegment<TimeoutDataEntity>>> executeQuery =
-                    (q, t) => timeoutDataTable.ExecuteQuerySegmentedAsync(q, t, new CancellationToken());
-
-            return CalculateNextTimeoutChunk(executeQuery, query, now);
+            return CalculateNextTimeoutChunk((q, t) => timeoutDataTable.ExecuteQuerySegmentedAsync(q, t, new CancellationToken()), query, now);
         }
 
         internal Func<DateTime> NowGetter { get; set; } = () => DateTime.UtcNow;
@@ -363,6 +401,7 @@
         string timeoutStateContainerName;
         string partitionKeyScope;
         string endpointName;
+        Task<TimeoutsChunk> longTailQuery = null;
         CloudTableClient client;
         CloudBlobClient cloudBlobclient;
         internal static readonly TimeSpan DefaultNextQueryDelay = TimeSpan.FromSeconds(1);
