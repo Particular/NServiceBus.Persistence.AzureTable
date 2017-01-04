@@ -23,7 +23,7 @@
             var now = new DateTime(2017, 1, 1, 1, 1, 1, DateTimeKind.Utc);
 
             var persister = TestHelper.CreateTimeoutPersister();
-            persister.NowGetter = () => now;
+            persister.CurrentDateTimeProvider = () => now;
 
             var timeout = TestHelper.GenerateTimeoutWithHeaders();
             timeout.Time = now;
@@ -35,12 +35,12 @@
         }
 
         [Test]
-        public async Task Returns_tail_timeouts_when_GetNextChunk_till_they_exist()
+        public async Task Returns_all_timeouts_via_GetNextChunk_when_called_sufficient_number_of_times()
         {
             var now = new DateTime(2017, 1, 1, 1, 1, 1, DateTimeKind.Utc);
 
             var persister = TestHelper.CreateTimeoutPersister();
-            persister.NowGetter = () => now;
+            persister.CurrentDateTimeProvider = () => now;
 
             var tailTimeout = TestHelper.GenerateTimeoutWithHeaders();
             tailTimeout.Time = now.AddDays(-1);

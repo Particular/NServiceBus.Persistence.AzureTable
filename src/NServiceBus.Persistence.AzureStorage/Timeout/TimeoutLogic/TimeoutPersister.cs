@@ -162,7 +162,7 @@
                     // It is highly probable that this task will return before removing timeouts. This increases probability of duplicated.
                     // On the other hand timeouts are removed by the satellite which already introduces a lot of latency in dispatching regular timeouts.
                     longTailQuery = GetNextChunkImpl(QueryComparisons.LessThan);
-                    return new TimeoutsChunk(result.DueTimeouts, NowGetter());
+                    return new TimeoutsChunk(result.DueTimeouts, CurrentDateTimeProvider());
                 }
 
                 longTailQuery = GetLongTailTimeoutsDelayed();
@@ -179,7 +179,7 @@
 
         Task<TimeoutsChunk> GetNextChunkImpl(string partitionKeyComparison)
         {
-            var now = NowGetter();
+            var now = CurrentDateTimeProvider();
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
 
             var query = new TableQuery<TimeoutDataEntity>()
@@ -193,7 +193,7 @@
             return CalculateNextTimeoutChunk((q, t) => timeoutDataTable.ExecuteQuerySegmentedAsync(q, t, new CancellationToken()), query, now);
         }
 
-        internal Func<DateTime> NowGetter { get; set; } = () => DateTime.UtcNow;
+        internal Func<DateTime> CurrentDateTimeProvider { get; set; } = () => DateTime.UtcNow;
 
         internal static async Task<TimeoutsChunk> CalculateNextTimeoutChunk(Func<TableQuery<TimeoutDataEntity>, TableContinuationToken, Task<TableQuerySegment<TimeoutDataEntity>>> executeQuerySegmentedAsync, TableQuery<TimeoutDataEntity> query, DateTime now)
         {
