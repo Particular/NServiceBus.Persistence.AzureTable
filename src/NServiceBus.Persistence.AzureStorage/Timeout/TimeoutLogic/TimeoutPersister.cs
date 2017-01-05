@@ -105,7 +105,7 @@
             }
             catch (StorageException e)
             {
-                if (e.RequestInformation.HttpStatusCode != (int)HttpStatusCode.NotFound)
+                if (e.RequestInformation.HttpStatusCode != (int) HttpStatusCode.NotFound)
                 {
                     throw;
                 }
@@ -136,48 +136,62 @@
 
         public async Task<TimeoutsChunk> GetNextChunk(DateTime startSlice)
         {
-            if (longTailQuery == null)
+            var tailTimeouts = await GetTailQueryResults().ConfigureAwait(false);
+
+            if (tailTimeouts != null)
             {
-                longTailQuery = GetNextChunkImpl(QueryComparisons.LessThan);
+                return tailTimeouts;
             }
 
-            if (longTailQuery.IsFaulted)
-            {
-                try
-                {
-                    await longTailQuery.ConfigureAwait(false);
-                }
-                finally
-                {
-                    // reissue the query on exception, the previous instance is already faulted
-                    longTailQuery = GetLongTailTimeoutsDelayed();
-                }
-            }
-
-            if (longTailQuery.IsCompleted)
-            {
-                var result = await longTailQuery.ConfigureAwait(false);
-                if (result.DueTimeouts.Length > 0)
-                {
-                    // It is highly probable that this task will return before removing timeouts. This increases probability of duplicated.
-                    // On the other hand timeouts are removed by the satellite which already introduces a lot of latency in dispatching regular timeouts.
-                    longTailQuery = GetNextChunkImpl(QueryComparisons.LessThan);
-                    return new TimeoutsChunk(result.DueTimeouts, CurrentDateTimeProvider());
-                }
-
-                longTailQuery = GetLongTailTimeoutsDelayed();
-            }
-           
-            return await GetNextChunkImpl(QueryComparisons.Equal).ConfigureAwait(false);
+            return await QueryCurrentTimeouts().ConfigureAwait(false);
         }
 
-        async Task<TimeoutsChunk> GetLongTailTimeoutsDelayed()
+        async Task<TimeoutsChunk> GetTailQueryResults()
         {
-            await Task.Delay(TimeSpan.FromMinutes(10)).ConfigureAwait(false);
-            return await GetNextChunkImpl(QueryComparisons.LessThan).ConfigureAwait(false);
+            if (tailQuery == null)
+            {
+                tailQuery = QueryTimeouts(QueryComparisons.LessThan);
+            }
+
+            try
+            {
+                TimeoutsChunk tailTimeouts = null;
+
+                if (tailQuery.IsCompleted || tailQuery.IsFaulted)
+                {
+                    tailTimeouts = await tailQuery.ConfigureAwait(false);
+
+                    var queryDelay = tailTimeouts.DueTimeouts.Length > 0
+                        ? TimeSpan.Zero
+                        : TimeSpan.FromMinutes(10);
+
+                    tailQuery = QueryTailTimeouts(queryDelay);
+                }
+
+                return tailTimeouts;
+            }
+            catch
+            {
+                // reissue the query on exception, the previous instance is already faulted
+                tailQuery = QueryTailTimeouts(TimeSpan.FromMinutes(10));
+
+                throw;
+            }
         }
 
-        Task<TimeoutsChunk> GetNextChunkImpl(string partitionKeyComparison)
+        async Task<TimeoutsChunk> QueryTailTimeouts(TimeSpan timeout)
+        {
+            await Task.Delay(timeout).ConfigureAwait(false);
+
+            return await QueryTimeouts(QueryComparisons.LessThan).ConfigureAwait(false);
+        }
+
+        Task<TimeoutsChunk> QueryCurrentTimeouts()
+        {
+            return QueryTimeouts(QueryComparisons.Equal);
+        }
+
+        Task<TimeoutsChunk> QueryTimeouts(string partitionKeyComparison)
         {
             var now = CurrentDateTimeProvider();
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
@@ -401,7 +415,7 @@
         string timeoutStateContainerName;
         string partitionKeyScope;
         string endpointName;
-        Task<TimeoutsChunk> longTailQuery = null;
+        Task<TimeoutsChunk> tailQuery = null;
         CloudTableClient client;
         CloudBlobClient cloudBlobclient;
         internal static readonly TimeSpan DefaultNextQueryDelay = TimeSpan.FromSeconds(1);
