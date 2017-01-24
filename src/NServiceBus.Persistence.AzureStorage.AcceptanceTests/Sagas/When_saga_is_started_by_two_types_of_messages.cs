@@ -14,7 +14,7 @@
         [Test]
         public async Task Every_saga_should_be_started_once_and_updated_by_second_message()
         {
-            const int expectedNumberOfCreatedSagas = 20;
+            const int expectedNumberOfCreatedSagas = 10;
 
             var guids = new HashSet<string>(Enumerable.Repeat(1, expectedNumberOfCreatedSagas).Select(i => Guid.NewGuid().ToString())).OrderBy(s => s);
 
