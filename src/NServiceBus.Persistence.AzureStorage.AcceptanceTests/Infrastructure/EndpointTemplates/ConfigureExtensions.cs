@@ -80,7 +80,7 @@
 
             if (configurerType == null)
             {
-                throw new InvalidOperationException($"Acceptance Test project must include a non-namespaced class named '{typeName}' implementing {typeof(IConfigureEndpointTestExecution).Name}. See {typeof(ConfigureEndpointMsmqTransport).FullName} for an example.");
+                throw new InvalidOperationException($"Acceptance Test project must include a non-namespaced class named '{typeName}' implementing {typeof(IConfigureEndpointTestExecution).Name}.");
             }
 
             var configurer = Activator.CreateInstance(configurerType) as IConfigureEndpointTestExecution;
@@ -90,7 +90,7 @@
                 throw new InvalidOperationException($"{typeName} does not implement {typeof(IConfigureEndpointTestExecution).Name}.");
             }
 
-            await configurer.Configure(endpointName, config, settings).ConfigureAwait(false);
+            await configurer.Configure(endpointName, config, settings, new PublisherMetadata()).ConfigureAwait(false);
 
             ActiveTestExecutionConfigurer cleaners;
             var cleanerKey = "ConfigureTestExecution." + endpointName;

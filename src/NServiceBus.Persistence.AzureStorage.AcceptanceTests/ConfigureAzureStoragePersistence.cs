@@ -6,12 +6,12 @@ using NServiceBus.Persistence;
 
 public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestExecution
 {
-    public Task Configure(string endpointName, EndpointConfiguration config, RunSettings settings)
+    public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
         var connectionString = GetConnectionString();
-        config.UsePersistence<AzureStoragePersistence, StorageType.Subscriptions>().ConnectionString(connectionString);
-        config.UsePersistence<AzureStoragePersistence, StorageType.Sagas>().ConnectionString(connectionString);
-        config.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>().ConnectionString(connectionString);
+        configuration.UsePersistence<AzureStoragePersistence, StorageType.Subscriptions>().ConnectionString(connectionString);
+        configuration.UsePersistence<AzureStoragePersistence, StorageType.Sagas>().ConnectionString(connectionString);
+        configuration.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>().ConnectionString(connectionString);
 
         return Task.FromResult(0);
     }
