@@ -12,11 +12,6 @@ namespace NServiceBus.Persistence.AzureStorage.SecondaryIndices
     {
         public static byte[] SerializeSagaData<TSagaData>(TSagaData sagaData) where TSagaData : IContainSagaData
         {
-            var serializer = new JsonSerializer
-            {
-                ContractResolver = new SagaOnlyPropertiesDataContractResolver()
-            };
-
             using (var memoryStream = new MemoryStream())
             {
                 using (var zipped = new GZipStream(memoryStream, CompressionMode.Compress))
@@ -32,11 +27,6 @@ namespace NServiceBus.Persistence.AzureStorage.SecondaryIndices
 
         public static IContainSagaData DeserializeSagaData(Type sagaType, byte[] value)
         {
-            var serializer = new JsonSerializer
-            {
-                ContractResolver = new SagaOnlyPropertiesDataContractResolver()
-            };
-
             using (var memoryStream = new MemoryStream(value))
             using (var zipped = new GZipStream(memoryStream, CompressionMode.Decompress))
             using (var reader = new StreamReader(zipped))
@@ -44,6 +34,11 @@ namespace NServiceBus.Persistence.AzureStorage.SecondaryIndices
                 return (IContainSagaData) serializer.Deserialize(reader, sagaType);
             }
         }
+
+        static JsonSerializer serializer = new JsonSerializer
+        {
+            ContractResolver = new SagaOnlyPropertiesDataContractResolver()
+        };
 
         class SagaOnlyPropertiesDataContractResolver : DefaultContractResolver
         {

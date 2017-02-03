@@ -49,8 +49,11 @@ namespace NServiceBus.Persistence.AzureStorage
                             // possibly serialized JSON.NET value
                             try
                             {
-                                var deserialized = JsonSerializer.Create().Deserialize(new StringReader(value.StringValue), type);
-                                propertyInfo.SetValue(toCreate, deserialized, null);
+                                using (var stringReader = new StringReader(value.StringValue))
+                                {
+                                    var deserialized = jsonSerializer.Deserialize(stringReader, type);
+                                    propertyInfo.SetValue(toCreate, deserialized, null);
+                                }
                             }
                             catch (Exception)
                             {
@@ -120,9 +123,7 @@ namespace NServiceBus.Persistence.AzureStorage
                     {
                         try
                         {
-                            var serializer = JsonSerializer.Create();
-                            serializer.ContractResolver = new NonAbstractDefaultContractResolver();
-                            serializer.Serialize(sw, value, type);
+                            jsonSerializerWithNonAbstractDefaultContractResolver.Serialize(sw, value, type);
                         }
                         catch (Exception)
                         {
@@ -236,7 +237,13 @@ namespace NServiceBus.Persistence.AzureStorage
             return query;
         }
 
-        private class NonAbstractDefaultContractResolver : DefaultContractResolver
+        static JsonSerializer jsonSerializer = JsonSerializer.Create();
+        static JsonSerializer jsonSerializerWithNonAbstractDefaultContractResolver = new JsonSerializer
+        {
+            ContractResolver = new NonAbstractDefaultContractResolver(),
+        };
+
+        class NonAbstractDefaultContractResolver : DefaultContractResolver
         {
             public NonAbstractDefaultContractResolver() : base(true)
             { }
