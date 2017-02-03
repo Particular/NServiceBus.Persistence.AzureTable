@@ -3,6 +3,7 @@
     using Configuration.AdvanceExtensibility;
     using Persistence;
     using Subscriptions;
+    using static Persistence.AzureStorage.Config.WellKnownConfigurationKeys;
 
     /// <summary>
     /// Configuration extensions for the subscription storage
@@ -16,7 +17,7 @@
         {
             AzureSubscriptionStorageGuard.CheckConnectionString(connectionString);
 
-            config.GetSettings().Set("AzureSubscriptionStorage.ConnectionString", connectionString);
+            config.GetSettings().Set(SubscriptionStorageConnectionString, connectionString);
             return config;
         }
 
@@ -27,7 +28,7 @@
         {
             AzureSubscriptionStorageGuard.CheckTableName(tableName);
 
-            config.GetSettings().Set("AzureSubscriptionStorage.TableName", tableName);
+            config.GetSettings().Set(SubscriptionStorageTableName, tableName);
             return config;
         }
 
@@ -37,7 +38,7 @@
         /// </summary>
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> CreateSchema(this PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> config, bool createSchema)
         {
-            config.GetSettings().Set("AzureSubscriptionStorage.CreateSchema", createSchema);
+            config.GetSettings().Set(SubscriptionStorageTableName, createSchema);
             return config;
         }
     }
