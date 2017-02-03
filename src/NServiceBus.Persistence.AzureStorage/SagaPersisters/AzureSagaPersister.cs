@@ -56,7 +56,11 @@
                 EntityProperty value;
                 if (tableEntity.TryGetValue(SecondaryIndexIndicatorProperty, out value))
                 {
-                    meta.AddSecondaryIndexId(entity, PartitionRowKeyTuple.Parse(value.StringValue));
+                    var partitionRowKeyTuple = PartitionRowKeyTuple.Parse(value.StringValue);
+                    if (partitionRowKeyTuple.HasValue)
+                    {
+                        meta.AddSecondaryIndexId(entity, partitionRowKeyTuple.Value);
+                    }
                 }
             }
 
@@ -125,10 +129,10 @@
         {
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
 
-            PartitionRowKeyTuple secondaryIndexKey;
+            PartitionRowKeyTuple? secondaryIndexKey;
             if (meta.TryGetSecondaryIndexKey(sagaData, out secondaryIndexKey))
             {
-                return secondaryIndices.RemoveSecondary(sagaData.GetType(), secondaryIndexKey);
+                return secondaryIndices.RemoveSecondary(sagaData.GetType(), secondaryIndexKey.Value);
             }
 
             return TaskEx.CompletedTask;
@@ -157,7 +161,7 @@
             }
         }
 
-        async Task Persist(IContainSagaData saga, PartitionRowKeyTuple secondaryIndexKey, ContextBag context)
+        async Task Persist(IContainSagaData saga, PartitionRowKeyTuple? secondaryIndexKey, ContextBag context)
         {
             var type = saga.GetType();
             var table = await GetTable(type).ConfigureAwait(false);
@@ -198,7 +202,7 @@
             return entities.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray();
         }
 
-        static void AddObjectToBatch(TableBatchOperation batch, object entity, string partitionKey, PartitionRowKeyTuple secondaryIndexKey, ContextBag context)
+        static void AddObjectToBatch(TableBatchOperation batch, object entity, string partitionKey, PartitionRowKeyTuple? secondaryIndexKey, ContextBag context)
         {
             var rowkey = partitionKey;
 
@@ -264,13 +268,13 @@
                 return etags.TryGetValue(entity, out etag);
             }
 
-            public bool TryGetSecondaryIndexKey(object entity, out PartitionRowKeyTuple secondaryIndexKey)
+            public bool TryGetSecondaryIndexKey(object entity, out PartitionRowKeyTuple? secondaryIndexKey)
             {
                 return secondaryIndexKeys.TryGetValue(entity, out secondaryIndexKey);
             }
 
             Dictionary<object, string> etags = new Dictionary<object, string>();
-            Dictionary<object, PartitionRowKeyTuple> secondaryIndexKeys = new Dictionary<object, PartitionRowKeyTuple>();
+            Dictionary<object, PartitionRowKeyTuple?> secondaryIndexKeys = new Dictionary<object, PartitionRowKeyTuple?>();
         }
     }
 }
