@@ -12,14 +12,14 @@
     {
         public delegate Task<Guid[]> ScanForSagas(Type sagaType, string propertyName, object propertyValue);
 
-        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, Func<IContainSagaData, PartitionRowKeyTuple, ContextBag, Task> persist)
+        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, Func<IContainSagaData, PartitionRowKeyTuple?, ContextBag, Task> persist)
         {
             this.getTableForSaga = getTableForSaga;
             this.scanner = scanner;
             this.persist = persist;
         }
 
-        public async Task<PartitionRowKeyTuple> Insert(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, ContextBag context)
+        public async Task<PartitionRowKeyTuple?> Insert(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, ContextBag context)
         {
             if (correlationProperty == SagaCorrelationProperty.None)
             {
@@ -126,18 +126,18 @@
             }
 
             Guid guid;
-            if (cache.TryGet(key, out guid))
+            if (cache.TryGet(key.Value, out guid))
             {
                 return guid;
             }
 
             var table = await getTableForSaga(sagaType).ConfigureAwait(false);
-            var exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey))
+            var exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.Value.PartitionKey, key.Value.RowKey))
                 .ConfigureAwait(false);
             var secondaryIndexEntry = exec.Result as SecondaryIndexTableEntity;
             if (secondaryIndexEntry != null)
             {
-                cache.Put(key, secondaryIndexEntry.SagaId);
+                cache.Put(key.Value, secondaryIndexEntry.SagaId);
                 return secondaryIndexEntry.SagaId;
             }
 
@@ -155,7 +155,7 @@
 
             var id = ids[0];
 
-            var entity = CreateIndexingOnlyEntity(key, id);
+            var entity = CreateIndexingOnlyEntity(key.Value, id);
 
             try
             {
@@ -166,7 +166,7 @@
                 throw new RetryNeededException();
             }
 
-            cache.Put(key, id);
+            cache.Put(key.Value, id);
             return id;
         }
 
@@ -178,11 +178,11 @@
             var key = TryBuildKey(propertyName, propertyValue, sagaType);
             if (key != null)
             {
-                cache.Remove(key);
+                cache.Remove(key.Value);
             }
         }
 
-        static PartitionRowKeyTuple TryBuildKey(string propertyName, object propertyValue, Type sagaType)
+        static PartitionRowKeyTuple? TryBuildKey(string propertyName, object propertyValue, Type sagaType)
         {
             if (string.IsNullOrEmpty(propertyName) || propertyValue == null)
             {
@@ -241,7 +241,7 @@
 
         Func<Type, Task<CloudTable>> getTableForSaga;
 
-        Func<IContainSagaData, PartitionRowKeyTuple, ContextBag, Task> persist;
+        Func<IContainSagaData, PartitionRowKeyTuple?, ContextBag, Task> persist;
 
         ScanForSagas scanner;
 
