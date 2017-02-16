@@ -23,6 +23,13 @@
 
             using (var recorder = new AzureRequestRecorder())
             {
+                // try to correlate first
+                {
+                    var persister = new AzureSagaPersister(connectionString, true);
+
+                    await persister.Get<SagaData>(nameof(SagaData.Correlation), CorrelationValue, null, new ContextBag()).ConfigureAwait(false);
+                }
+
                 // save saga
                 {
                     var saga = new SagaData
@@ -60,7 +67,9 @@
                 recorder.Print(Console.Out);
 
                 var gets = recorder.Requests.Where(r => r.ToLower().Contains("get"));
-                var getsWithNoPartitionKey = gets.Where(get => get.Contains("PartitionKey") == false).ToArray();
+                var getsWithNoPartitionKey = gets.Where(get => 
+                    get.Contains("PartitionKey%20eq") == false && 
+                    get.Contains("PartitionKey=") == false).ToArray();
 
                 // only asking for a table
                 CollectionAssert.IsEmpty(getsWithNoPartitionKey);
