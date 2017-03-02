@@ -14,4 +14,4 @@ After creating the Azure Storage account, locate the connection string for the a
 Copy the connection string into an environment variable called `AzureStoragePersistence.ConnectionString` and into an environment variable called `AzureStorageQueueTransport.ConnectionString`.
 
 ## Maintainers
-The following team is responsible for this repository: @Particular/azure-storage-persistence-maintainers
+The following team is responsible for this repository: @Particular/azure-maintainers

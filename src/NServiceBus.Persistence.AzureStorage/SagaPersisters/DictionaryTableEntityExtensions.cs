@@ -2,14 +2,18 @@ namespace NServiceBus.Persistence.AzureStorage
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Reflection;
     using Microsoft.WindowsAzure.Storage.Table;
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Serialization;
+    using EdmType = Microsoft.WindowsAzure.Storage.Table.EdmType;
 
     static class DictionaryTableEntityExtensions
     {
         public static TEntity ToEntity<TEntity>(DictionaryTableEntity entity)
         {
-            return (TEntity) ToEntity(typeof(TEntity), entity);
+            return (TEntity)ToEntity(typeof(TEntity), entity);
         }
 
         public static object ToEntity(Type entityType, DictionaryTableEntity entity)
@@ -24,47 +28,42 @@ namespace NServiceBus.Persistence.AzureStorage
             {
                 if (entity.ContainsKey(propertyInfo.Name))
                 {
-                    if (propertyInfo.PropertyType == typeof(byte[]))
+                    var value = entity[propertyInfo.Name];
+                    var type = propertyInfo.PropertyType;
+
+                    if (type == typeof(byte[]))
                     {
-                        propertyInfo.SetValue(toCreate, entity[propertyInfo.Name].BinaryValue, null);
+                        propertyInfo.SetValue(toCreate, value.BinaryValue, null);
                     }
-                    else if (propertyInfo.PropertyType == typeof(bool))
+                    else if (TrySetNullable(value, toCreate, propertyInfo))
                     {
-                        var boolean = entity[propertyInfo.Name].BooleanValue;
-                        propertyInfo.SetValue(toCreate, boolean.HasValue && boolean.Value, null);
                     }
-                    else if (propertyInfo.PropertyType == typeof(DateTime))
+                    else if (type == typeof(string))
                     {
-                        var dateTimeOffset = entity[propertyInfo.Name].DateTimeOffsetValue;
-                        propertyInfo.SetValue(toCreate, dateTimeOffset?.DateTime ?? default(DateTime), null);
-                    }
-                    else if (propertyInfo.PropertyType == typeof(Guid))
-                    {
-                        var guid = entity[propertyInfo.Name].GuidValue;
-                        propertyInfo.SetValue(toCreate, guid ?? default(Guid), null);
-                    }
-                    else if (propertyInfo.PropertyType == typeof(int))
-                    {
-                        var int32 = entity[propertyInfo.Name].Int32Value;
-                        propertyInfo.SetValue(toCreate, int32 ?? default(int), null);
-                    }
-                    else if (propertyInfo.PropertyType == typeof(double))
-                    {
-                        var d = entity[propertyInfo.Name].DoubleValue;
-                        propertyInfo.SetValue(toCreate, d ?? default(long), null);
-                    }
-                    else if (propertyInfo.PropertyType == typeof(long))
-                    {
-                        var int64 = entity[propertyInfo.Name].Int64Value;
-                        propertyInfo.SetValue(toCreate, int64 ?? default(long), null);
-                    }
-                    else if (propertyInfo.PropertyType == typeof(string))
-                    {
-                        propertyInfo.SetValue(toCreate, entity[propertyInfo.Name].StringValue, null);
+                        propertyInfo.SetValue(toCreate, value.StringValue, null);
                     }
                     else
                     {
-                        throw new NotSupportedException($"The property type '{propertyInfo.PropertyType.Name}' is not supported in windows azure table storage");
+                        if (value.PropertyType == EdmType.String)
+                        {
+                            // possibly serialized JSON.NET value
+                            try
+                            {
+                                using (var stringReader = new StringReader(value.StringValue))
+                                {
+                                    var deserialized = jsonSerializer.Deserialize(stringReader, type);
+                                    propertyInfo.SetValue(toCreate, deserialized, null);
+                                }
+                            }
+                            catch (Exception)
+                            {
+                                throw new NotSupportedException($"The property type '{type.Name}' is not supported in Windows Azure Table Storage and it cannot be deserialized with JSON.NET.");
+                            }
+                        }
+                        else
+                        {
+                            throw new NotSupportedException($"The property type '{type.Name}' is not supported in Windows Azure Table Storage");
+                        }
                     }
                 }
             }
@@ -75,44 +74,117 @@ namespace NServiceBus.Persistence.AzureStorage
         {
             foreach (var propertyInfo in properties)
             {
-                if (propertyInfo.PropertyType == typeof(byte[]))
+                var name = propertyInfo.Name;
+                var type = propertyInfo.PropertyType;
+                var value = propertyInfo.GetValue(entity, null);
+
+                bool? @bool;
+                DateTime? dateTime;
+                Guid? guid;
+                int? @int;
+                long? @long;
+                double? @double;
+
+                if (type == typeof(byte[]))
                 {
-                    toPersist[propertyInfo.Name] = new EntityProperty((byte[]) propertyInfo.GetValue(entity, null));
+                    toPersist[name] = new EntityProperty((byte[])value);
                 }
-                else if (propertyInfo.PropertyType == typeof(bool))
+                else if (TryGetNullable(type, value, out @bool))
                 {
-                    toPersist[propertyInfo.Name] = new EntityProperty((bool) propertyInfo.GetValue(entity, null));
+                    toPersist[name] = new EntityProperty(@bool);
                 }
-                else if (propertyInfo.PropertyType == typeof(DateTime))
+                else if (TryGetNullable(type, value, out dateTime))
                 {
-                    toPersist[propertyInfo.Name] = new EntityProperty((DateTime) propertyInfo.GetValue(entity, null));
+                    toPersist[name] = new EntityProperty(dateTime);
                 }
-                else if (propertyInfo.PropertyType == typeof(Guid))
+                else if (TryGetNullable(type, value, out guid))
                 {
-                    toPersist[propertyInfo.Name] = new EntityProperty((Guid) propertyInfo.GetValue(entity, null));
+                    toPersist[name] = new EntityProperty(guid);
                 }
-                else if (propertyInfo.PropertyType == typeof(int))
+                else if (TryGetNullable(type, value, out @int))
                 {
-                    toPersist[propertyInfo.Name] = new EntityProperty((int) propertyInfo.GetValue(entity, null));
+                    toPersist[name] = new EntityProperty(@int);
                 }
-                else if (propertyInfo.PropertyType == typeof(long))
+                else if (TryGetNullable(type, value, out @long))
                 {
-                    toPersist[propertyInfo.Name] = new EntityProperty((long) propertyInfo.GetValue(entity, null));
+                    toPersist[name] = new EntityProperty(@long);
                 }
-                else if (propertyInfo.PropertyType == typeof(double))
+                else if (TryGetNullable(type, value, out @double))
                 {
-                    toPersist[propertyInfo.Name] = new EntityProperty((double) propertyInfo.GetValue(entity, null));
+                    toPersist[name] = new EntityProperty(@double);
                 }
-                else if (propertyInfo.PropertyType == typeof(string))
+                else if (type == typeof(string))
                 {
-                    toPersist[propertyInfo.Name] = new EntityProperty((string) propertyInfo.GetValue(entity, null));
+                    toPersist[name] = new EntityProperty((string)value);
                 }
                 else
                 {
-                    throw new NotSupportedException($"The property type '{propertyInfo.PropertyType.Name}' is not supported in windows azure table storage");
+                    using (var sw = new StringWriter())
+                    {
+                        try
+                        {
+                            jsonSerializerWithNonAbstractDefaultContractResolver.Serialize(sw, value, type);
+                        }
+                        catch (Exception)
+                        {
+                            throw new NotSupportedException($"The property type '{type.Name}' is not supported in Windows Azure Table Storage and it cannot be serialized with JSON.NET.");
+                        }
+                        toPersist[name] = new EntityProperty(sw.ToString());
+                    }
                 }
             }
             return toPersist;
+        }
+
+        static bool TryGetNullable<TPrimitive>(Type type, object value, out TPrimitive? nullable)
+            where TPrimitive : struct
+        {
+            if (type == typeof(TPrimitive))
+            {
+                nullable = (TPrimitive)value;
+                return true;
+            }
+
+            if (type == typeof(TPrimitive?))
+            {
+                nullable = (TPrimitive?)value;
+                return true;
+            }
+
+            nullable = null;
+            return false;
+        }
+
+        static bool TrySetNullable(EntityProperty value, object toCreate, PropertyInfo propertyInfo)
+        {
+            return
+                TrySetNullable<bool>(value, toCreate, propertyInfo) ||
+                TrySetNullable<DateTime>(value, toCreate, propertyInfo) ||
+                TrySetNullable<Guid>(value, toCreate, propertyInfo) ||
+                TrySetNullable<int>(value, toCreate, propertyInfo) ||
+                TrySetNullable<double>(value, toCreate, propertyInfo) ||
+                TrySetNullable<long>(value, toCreate, propertyInfo);
+        }
+
+        static bool TrySetNullable<TPrimitive>(EntityProperty property, object entity, PropertyInfo propertyInfo)
+            where TPrimitive : struct
+        {
+            if (propertyInfo.PropertyType == typeof(TPrimitive))
+            {
+                var value = (TPrimitive?)property.PropertyAsObject;
+                var nonNullableValue = value ?? default(TPrimitive);
+                propertyInfo.SetValue(entity, nonNullableValue);
+                return true;
+            }
+
+            if (propertyInfo.PropertyType == typeof(TPrimitive?))
+            {
+                var value = (TPrimitive?)property.PropertyAsObject;
+                propertyInfo.SetValue(entity, value);
+                return true;
+            }
+
+            return false;
         }
 
         public static TableQuery<DictionaryTableEntity> BuildWherePropertyQuery(Type type, string property, object value)
@@ -127,35 +199,35 @@ namespace NServiceBus.Persistence.AzureStorage
 
             if (propertyInfo.PropertyType == typeof(byte[]))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForBinary(property, QueryComparisons.Equal, (byte[]) value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForBinary(property, QueryComparisons.Equal, (byte[])value));
             }
             else if (propertyInfo.PropertyType == typeof(bool))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForBool(property, QueryComparisons.Equal, (bool) value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForBool(property, QueryComparisons.Equal, (bool)value));
             }
             else if (propertyInfo.PropertyType == typeof(DateTime))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForDate(property, QueryComparisons.Equal, (DateTime) value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForDate(property, QueryComparisons.Equal, (DateTime)value));
             }
             else if (propertyInfo.PropertyType == typeof(Guid))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForGuid(property, QueryComparisons.Equal, (Guid) value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForGuid(property, QueryComparisons.Equal, (Guid)value));
             }
             else if (propertyInfo.PropertyType == typeof(int))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForInt(property, QueryComparisons.Equal, (int) value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForInt(property, QueryComparisons.Equal, (int)value));
             }
             else if (propertyInfo.PropertyType == typeof(long))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForLong(property, QueryComparisons.Equal, (long) value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForLong(property, QueryComparisons.Equal, (long)value));
             }
             else if (propertyInfo.PropertyType == typeof(double))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForDouble(property, QueryComparisons.Equal, (double) value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForDouble(property, QueryComparisons.Equal, (double)value));
             }
             else if (propertyInfo.PropertyType == typeof(string))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterCondition(property, QueryComparisons.Equal, (string) value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterCondition(property, QueryComparisons.Equal, (string)value));
             }
             else
             {
@@ -163,6 +235,27 @@ namespace NServiceBus.Persistence.AzureStorage
             }
 
             return query;
+        }
+
+        static JsonSerializer jsonSerializer = JsonSerializer.Create();
+        static JsonSerializer jsonSerializerWithNonAbstractDefaultContractResolver = new JsonSerializer
+        {
+            ContractResolver = new NonAbstractDefaultContractResolver(),
+        };
+
+        class NonAbstractDefaultContractResolver : DefaultContractResolver
+        {
+            public NonAbstractDefaultContractResolver() : base(true)
+            { }
+
+            protected override JsonObjectContract CreateObjectContract(Type objectType)
+            {
+                if (objectType.IsAbstract || objectType.IsInterface)
+                {
+                    throw new ArgumentException("Cannot serialize an abstract class/interface", nameof(objectType));
+                }
+                return base.CreateObjectContract(objectType);
+            }
         }
     }
 }

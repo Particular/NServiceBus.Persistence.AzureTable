@@ -1,11 +1,8 @@
-﻿using System;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using ApiApprover;
-using ApprovalTests;
-using Mono.Cecil;
-using NServiceBus;
+using ApprovalTests.Reporters;
 using NUnit.Framework;
 
 [TestFixture]
@@ -13,24 +10,12 @@ public class APIApprovals
 {
     [Test]
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void Approve()
+    [UseReporter(typeof(DiffReporter), typeof(AllFailingTestsClipboardReporter))]
+    public void ApproveAzureStorageQueueTransport()
     {
-        Directory.SetCurrentDirectory(TestContext.CurrentContext.TestDirectory);
-        var assemblyPath = Path.GetFullPath(typeof(AzureStoragePersistence).Assembly.Location);
-        var asm = AssemblyDefinition.ReadAssembly(assemblyPath);
-        var publicApi = Filter(PublicApiGenerator.CreatePublicApiForAssembly(asm));
-        Approvals.Verify(publicApi);
-    }
-
-    string Filter(string text)
-    {
-        return string.Join(Environment.NewLine, text.Split(new[]
-        {
-            Environment.NewLine
-        }, StringSplitOptions.RemoveEmptyEntries)
-            .Where(l => !l.StartsWith("[assembly: ReleaseDateAttribute("))
-            .Where(l => !string.IsNullOrWhiteSpace(l))
-            );
+        var combine = Path.Combine(TestContext.CurrentContext.TestDirectory, "NServiceBus.Persistence.AzureStorage.dll");
+        var assembly = Assembly.LoadFile(combine);
+        PublicApiApprover.ApprovePublicApi(assembly);
     }
 
 }

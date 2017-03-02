@@ -2,8 +2,7 @@
 {
     using Configuration.AdvanceExtensibility;
     using Persistence;
-
-    //TODO
+    using static Persistence.AzureStorage.Config.WellKnownConfigurationKeys;
 
     /// <summary>
     /// Configuration extensions for the sagas storage
@@ -17,7 +16,7 @@
         {
             AzureStorageSagaGuard.CheckConnectionString(connectionString);
 
-            config.GetSettings().Set("AzureSagaStorage.ConnectionString", connectionString);
+            config.GetSettings().Set(SagaStorageConnectionString, connectionString);
             return config;
         }
 
@@ -27,7 +26,7 @@
         /// </summary>
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> CreateSchema(this PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> config, bool createSchema)
         {
-            config.GetSettings().Set("AzureSagaStorage.CreateSchema", createSchema);
+            config.GetSettings().Set(SagaStorageCreateSchema, createSchema);
             return config;
         }
     }

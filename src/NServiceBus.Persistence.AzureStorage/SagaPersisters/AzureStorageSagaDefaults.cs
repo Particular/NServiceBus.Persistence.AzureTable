@@ -1,6 +1,6 @@
 ﻿namespace NServiceBus
 {
-    class AzureStorageSagaDefaults
+    static class AzureStorageSagaDefaults
     {
         public const bool CreateSchema = true;
     }
