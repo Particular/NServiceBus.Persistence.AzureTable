@@ -13,6 +13,14 @@
             }
         }
 
+        public static void AgainstNegativeAndZero(string argumentName, TimeSpan value)
+        {
+            if (value <= TimeSpan.Zero)
+            {
+                throw new ArgumentOutOfRangeException(argumentName);
+            }
+        }
+
         public static void CheckTableName(string tableName)
         {
             if (string.IsNullOrWhiteSpace(tableName))

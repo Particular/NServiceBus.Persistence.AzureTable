@@ -1,5 +1,6 @@
 namespace NServiceBus
 {
+    using System;
     using System.Configuration;
     using System.Threading.Tasks;
     using Features;
@@ -30,6 +31,7 @@ namespace NServiceBus
             var subscriptionTableName = context.Settings.Get<string>(WellKnownConfigurationKeys.SubscriptionStorageTableName);
             var connectionString = context.Settings.Get<string>(WellKnownConfigurationKeys.SubscriptionStorageConnectionString);
             var createIfNotExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SubscriptionStorageCreateSchema);
+            var cacheFor = context.Settings.Get<TimeSpan>(WellKnownConfigurationKeys.SubscriptionStorageCacheFor);
 
             if (createIfNotExist)
             {
@@ -37,7 +39,7 @@ namespace NServiceBus
                 context.RegisterStartupTask(startupTask);
             }
 
-            context.Container.ConfigureComponent(() => new AzureSubscriptionStorage(subscriptionTableName, connectionString), DependencyLifecycle.InstancePerCall);
+            context.Container.RegisterSingleton(new AzureSubscriptionStorage(subscriptionTableName, connectionString, cacheFor));
         }
 
         class StartupTask : FeatureStartupTask

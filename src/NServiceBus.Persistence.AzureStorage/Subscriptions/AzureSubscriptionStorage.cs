@@ -1,6 +1,7 @@
 ﻿namespace NServiceBus.Unicast.Subscriptions
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
@@ -15,11 +16,14 @@
     class AzureSubscriptionStorage : ISubscriptionStorage
     {
         string subscriptionTableName;
+        TimeSpan? cacheFor;
         CloudTableClient client;
+        public ConcurrentDictionary<string, CacheItem> Cache;
 
-        public AzureSubscriptionStorage(string subscriptionTableName, string subscriptionConnectionString)
+        public AzureSubscriptionStorage(string subscriptionTableName, string subscriptionConnectionString, TimeSpan? cacheFor)
         {
             this.subscriptionTableName = subscriptionTableName;
+            this.cacheFor = cacheFor;
             var account = CloudStorageAccount.Parse(subscriptionConnectionString);
 
             client = account.CreateCloudTableClient();
@@ -27,6 +31,11 @@
             {
                 RetryPolicy = new ExponentialRetry()
             };
+
+            if (cacheFor != null)
+            {
+                Cache = new ConcurrentDictionary<string, CacheItem>();
+            }
         }
 
         static string EncodeTo64(string toEncode)
@@ -39,26 +48,20 @@
             return Encoding.ASCII.GetString(Convert.FromBase64String(encodedData));
         }
 
-        /// <summary>
-        /// Subscribes the given client to messages of a given type.
-        /// </summary>
-        /// <param name="subscriber">The subscriber to subscribe</param>
-        /// <param name="messageType">The types of messages that are being subscribed to</param>
-        /// <param name="context">The current context</param>
         public async Task Subscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
         {
             var table = client.GetTableReference(subscriptionTableName);
 
+            var subscription = new Subscription
+            {
+                RowKey = EncodeTo64(subscriber.TransportAddress),
+                PartitionKey = messageType.ToString(),
+                EndpointName = subscriber.Endpoint,
+                ETag = "*"
+            };
+
             try
             {
-                var subscription = new Subscription
-                {
-                    RowKey = EncodeTo64(subscriber.TransportAddress),
-                    PartitionKey = messageType.ToString(),
-                    EndpointName = subscriber.Endpoint,
-                    ETag = "*"
-                };
-
                 var operation = TableOperation.InsertOrReplace(subscription);
                 await table.ExecuteAsync(operation).ConfigureAwait(false);
             }
@@ -69,14 +72,9 @@
                     throw;
                 }
             }
+            ClearForMessageType(messageType);
         }
 
-        /// <summary>
-        /// Removes a subscription
-        /// </summary>
-        /// <param name="subscriber">The subscriber to unsubscribe</param>
-        /// <param name="messageType">The message type to unsubscribed</param>
-        /// <param name="context">The current pipeline context</param>
         public async Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
         {
             var table = client.GetTableReference(subscriptionTableName);
@@ -91,15 +89,65 @@
                 var operation = TableOperation.Delete(subscription);
                 await table.ExecuteAsync(operation).ConfigureAwait(false);
             }
+            ClearForMessageType(messageType);
         }
 
-        /// <summary>
-        /// Returns the subscription address based on message type
-        /// </summary>
-        /// <param name="messageTypes">Types of messages that subscription addresses should be found for</param>
-        /// <param name="context">The current pipeline context</param>
-        /// <returns>Subscription addresses that were found for the provided messageTypes</returns>
-        public async Task<IEnumerable<Subscriber>> GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes, ContextBag context)
+        static string GetKey(List<MessageType> types)
+        {
+            var typeNames = types.Select(_ => _.TypeName);
+            return string.Join(",", typeNames) + ",";
+        }
+
+        static string GetKeyPart(MessageType type)
+        {
+            return $"{type.TypeName},";
+        }
+
+        void ClearForMessageType(MessageType messageType)
+        {
+            if (cacheFor == null)
+            {
+                return;
+            }
+            var keyPart = GetKeyPart(messageType);
+            foreach (var cacheKey in Cache.Keys)
+            {
+                if (cacheKey.Contains(keyPart))
+                {
+                    CacheItem cacheItem;
+                    Cache.TryRemove(cacheKey, out cacheItem);
+                }
+            }
+        }
+
+        public Task<IEnumerable<Subscriber>> GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes, ContextBag context)
+        {
+            var types = messageTypes.ToList();
+
+            if (cacheFor == null)
+            {
+                return GetSubscriptions(types);
+            }
+
+            var key = GetKey(types);
+
+            var cacheItem = Cache.GetOrAdd(key,
+                valueFactory: _ => new CacheItem
+                {
+                    Stored = DateTime.UtcNow,
+                    Subscribers = GetSubscriptions(types)
+                });
+
+            var age = DateTime.UtcNow - cacheItem.Stored;
+            if (age >= cacheFor)
+            {
+                cacheItem.Subscribers = GetSubscriptions(types);
+                cacheItem.Stored = DateTime.UtcNow;
+            }
+            return cacheItem.Subscribers;
+        }
+
+        async Task<IEnumerable<Subscriber>> GetSubscriptions(IEnumerable<MessageType> messageTypes)
         {
             var subscribers = new HashSet<Subscriber>(SubscriberComparer.Instance);
             var table = client.GetTableReference(subscriptionTableName);
@@ -141,6 +189,12 @@
             {
                 return (obj.Endpoint ?? string.Empty).Length;
             }
+        }
+
+        internal class CacheItem
+        {
+            public DateTime Stored;
+            public Task<IEnumerable<Subscriber>> Subscribers;
         }
     }
 }
