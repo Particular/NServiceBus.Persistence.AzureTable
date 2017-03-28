@@ -29,6 +29,7 @@ namespace NServiceBus
     }
     public class static ConfigureAzureSubscriptionStorage
     {
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> CacheFor(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> config, System.TimeSpan timeSpan) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> config, string connectionString) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> CreateSchema(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> config, bool createSchema) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> TableName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Subscriptions> config, string tableName) { }
