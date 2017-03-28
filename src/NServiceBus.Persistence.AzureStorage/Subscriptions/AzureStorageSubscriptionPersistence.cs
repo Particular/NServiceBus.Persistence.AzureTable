@@ -31,7 +31,7 @@ namespace NServiceBus
             var subscriptionTableName = context.Settings.Get<string>(WellKnownConfigurationKeys.SubscriptionStorageTableName);
             var connectionString = context.Settings.Get<string>(WellKnownConfigurationKeys.SubscriptionStorageConnectionString);
             var createIfNotExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SubscriptionStorageCreateSchema);
-            var cacheFor = context.Settings.Get<TimeSpan>(WellKnownConfigurationKeys.SubscriptionStorageCacheFor);
+            var cacheFor = context.Settings.GetOrDefault<TimeSpan>(WellKnownConfigurationKeys.SubscriptionStorageCacheFor);
 
             if (createIfNotExist)
             {
