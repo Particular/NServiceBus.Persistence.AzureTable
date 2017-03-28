@@ -8,6 +8,7 @@ namespace NServiceBus
     using Logging;
     using Persistence.AzureStorage.Config;
     using Unicast.Subscriptions;
+    using Unicast.Subscriptions.MessageDrivenSubscriptions;
 
     public class AzureStorageSubscriptionPersistence : Feature
     {
@@ -23,9 +24,6 @@ namespace NServiceBus
             });
         }
 
-        /// <summary>
-        /// See <see cref="Feature.Setup"/>
-        /// </summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
             var subscriptionTableName = context.Settings.Get<string>(WellKnownConfigurationKeys.SubscriptionStorageTableName);
@@ -39,7 +37,8 @@ namespace NServiceBus
                 context.RegisterStartupTask(startupTask);
             }
 
-            context.Container.RegisterSingleton(new AzureSubscriptionStorage(subscriptionTableName, connectionString, cacheFor));
+            var subscriptionStorage = new AzureSubscriptionStorage(subscriptionTableName, connectionString, cacheFor);
+            context.Container.RegisterSingleton(typeof(ISubscriptionStorage), subscriptionStorage);
         }
 
         class StartupTask : FeatureStartupTask
