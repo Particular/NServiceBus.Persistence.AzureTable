@@ -139,6 +139,9 @@
     <Compile Include="Persisters\When_using_AzureSubscriptionStorageGuard.cs" />
     <Compile Include="Subscriptions\SubscriptionPersisterExtensions.cs" />
     <Compile Include="Subscriptions\SuscriptionTestHelper.cs" />
+    <Compile Include="Subscriptions\TestMessage.cs" />
+    <Compile Include="Subscriptions\When_caching.cs" />
+    <Compile Include="Subscriptions\TestMessagea.cs" />
     <Compile Include="Subscriptions\When_subscribing_with_null_endpoint.cs" />
     <Compile Include="Subscriptions\When_subscribing.cs" />
     <Compile Include="Subscriptions\When_unsubscribing.cs" />

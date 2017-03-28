@@ -18,7 +18,7 @@
             return new AzureSubscriptionStorage(
                 AzureSubscriptionStorageDefaults.TableName,
                 connectionString,
-                null);
+                TimeSpan.FromSeconds(10));
         }
 
         internal static void PerformStorageCleanup()
