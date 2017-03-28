@@ -42,10 +42,6 @@ namespace NServiceBus.Persistence.AzureStorage.SecondaryIndices
 
         class SagaOnlyPropertiesDataContractResolver : DefaultContractResolver
         {
-            public SagaOnlyPropertiesDataContractResolver() : base(true) // for performance
-            {
-            }
-
             protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
             {
                 var properties = new HashSet<string>(AzureSagaPersister.SelectPropertiesToPersist(type).Select(pi => pi.Name));
