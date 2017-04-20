@@ -131,20 +131,32 @@
 
             var key = GetKey(types);
 
-            var cacheItem = Cache.GetOrAdd(key,
-                valueFactory: _ => new CacheItem
+            CacheItem cacheItem;
+            if (Cache.TryGetValue(key, out cacheItem))
+            {
+                var age = DateTime.UtcNow - cacheItem.Stored;
+                if (age >= cacheFor)
+                {
+                    var subscriptions = GetSubscriptions(types);
+                    Cache[key] = new CacheItem
+                    {
+                        Stored = DateTime.UtcNow,
+                        Subscribers = subscriptions
+                    };
+                    return subscriptions;
+                }
+                return cacheItem.Subscribers;
+            }
+            else
+            {
+                var subscriptions = GetSubscriptions(types);
+                Cache[key] = new CacheItem
                 {
                     Stored = DateTime.UtcNow,
-                    Subscribers = GetSubscriptions(types)
-                });
-
-            var age = DateTime.UtcNow - cacheItem.Stored;
-            if (age >= cacheFor)
-            {
-                cacheItem.Subscribers = GetSubscriptions(types);
-                cacheItem.Stored = DateTime.UtcNow;
+                    Subscribers = subscriptions
+                };
+                return subscriptions;
             }
-            return cacheItem.Subscribers;
         }
 
         async Task<IEnumerable<Subscriber>> GetSubscriptions(IEnumerable<MessageType> messageTypes)
