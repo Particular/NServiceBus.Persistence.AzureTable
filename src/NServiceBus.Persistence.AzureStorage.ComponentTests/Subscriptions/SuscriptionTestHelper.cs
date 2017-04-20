@@ -4,11 +4,10 @@
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
     using Unicast.Subscriptions;
-    using Unicast.Subscriptions.MessageDrivenSubscriptions;
 
     public class SubscriptionTestHelper
     {
-        internal static ISubscriptionStorage CreateAzureSubscriptionStorage()
+        internal static AzureSubscriptionStorage CreateAzureSubscriptionStorage()
         {
             var connectionString = AzurePersistenceTests.GetConnectionString();
             var account = CloudStorageAccount.Parse(connectionString);
@@ -18,7 +17,8 @@
 
             return new AzureSubscriptionStorage(
                 AzureSubscriptionStorageDefaults.TableName,
-                connectionString);
+                connectionString,
+                TimeSpan.FromSeconds(10));
         }
 
         internal static void PerformStorageCleanup()

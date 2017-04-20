@@ -1,5 +1,6 @@
 ﻿namespace NServiceBus
 {
+    using System;
     using Configuration.AdvanceExtensibility;
     using Persistence;
     using Subscriptions;
@@ -29,6 +30,16 @@
             AzureSubscriptionStorageGuard.CheckTableName(tableName);
 
             config.GetSettings().Set(SubscriptionStorageTableName, tableName);
+            return config;
+        }
+
+        /// <summary>
+        /// Cache subscriptions for a given <see cref="TimeSpan"/>.
+        /// </summary>
+        public static PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> CacheFor(this PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> config, TimeSpan timeSpan)
+        {
+            AzureSubscriptionStorageGuard.AgainstNegativeAndZero(nameof(timeSpan), timeSpan);
+            config.GetSettings().Set(SubscriptionStorageCacheFor, timeSpan);
             return config;
         }
 

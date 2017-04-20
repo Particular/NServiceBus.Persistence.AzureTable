@@ -245,9 +245,6 @@ namespace NServiceBus.Persistence.AzureStorage
 
         class NonAbstractDefaultContractResolver : DefaultContractResolver
         {
-            public NonAbstractDefaultContractResolver() : base(true)
-            { }
-
             protected override JsonObjectContract CreateObjectContract(Type objectType)
             {
                 if (objectType.IsAbstract || objectType.IsInterface)
