@@ -1,31 +1,32 @@
-﻿namespace NServiceBus.AcceptanceTests.PubSub
+﻿namespace NServiceBus.AcceptanceTests.Routing.MessageDrivenSubscriptions
 {
-    using System;
     using System.Collections.Generic;
-    using EndpointTemplates;
+    using System.Linq;
+    using System.Threading.Tasks;
     using AcceptanceTesting;
+    using EndpointTemplates;
+    using Extensibility;
     using Features;
-    using ScenarioDescriptors;
+    using NServiceBus;
+    using NUnit.Framework;
     using Persistence;
     using Unicast.Subscriptions;
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
-    using NUnit.Framework;
-    using System.Threading.Tasks;
-    using Extensibility;
-    using System.Linq;
 
     public class When_publishing_from_sendonly : NServiceBusAcceptanceTest
     {
         [Test]
-        public Task Should_be_delivered_to_all_subscribers()
+        public async Task Should_be_delivered_to_all_subscribers()
         {
-            return Scenario.Define<Context>()
+            Requires.MessageDrivenPubSub();
+
+            var context = await Scenario.Define<Context>()
                 .WithEndpoint<SendOnlyPublisher>(b => b.When((session, c) => session.Publish(new MyEvent())))
                 .WithEndpoint<Subscriber>()
                 .Done(c => c.SubscriberGotTheEvent)
-                .Repeat(r => r.For<AllTransportsWithMessageDrivenPubSub>())
-                .Should(ctx => Assert.True(ctx.SubscriberGotTheEvent))
                 .Run();
+
+            Assert.True(context.SubscriberGotTheEvent);
         }
 
         public class Context : ScenarioContext
@@ -39,9 +40,10 @@
             {
                 EndpointSetup<DefaultPublisher>(b =>
                 {
+                    b.SendOnly();
                     b.UsePersistence(typeof(HardCodedPersistence));
                     b.DisableFeature<AutoSubscribe>();
-                }).SendOnly();
+                });
             }
         }
 
@@ -49,8 +51,7 @@
         {
             public Subscriber()
             {
-                EndpointSetup<DefaultServer>(c => c.DisableFeature<AutoSubscribe>())
-                    .AddMapping<MyEvent>(typeof(SendOnlyPublisher));
+                EndpointSetup<DefaultServer>(c => c.DisableFeature<AutoSubscribe>());
             }
 
             public class MyEventHandler : IHandleMessages<MyEvent>
@@ -66,7 +67,7 @@
             }
         }
 
-        [Serializable]
+
         public class MyEvent : IEvent
         {
         }

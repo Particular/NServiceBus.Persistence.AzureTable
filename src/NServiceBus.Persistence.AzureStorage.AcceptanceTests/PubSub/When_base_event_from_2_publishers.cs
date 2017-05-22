@@ -1,6 +1,5 @@
-﻿namespace NServiceBus.AcceptanceTests.PubSub
+﻿namespace NServiceBus.AcceptanceTests.Routing
 {
-    using System;
     using System.Threading.Tasks;
     using AcceptanceTesting;
     using EndpointTemplates;
@@ -80,9 +79,12 @@
         {
             public Subscriber1()
             {
-                EndpointSetup<DefaultServer>(c => c.DisableFeature<AutoSubscribe>())
-                    .AddMapping<DerivedEvent1>(typeof(Publisher1))
-                    .AddMapping<DerivedEvent2>(typeof(Publisher2));
+                EndpointSetup<DefaultServer>(c => c.DisableFeature<AutoSubscribe>(),
+                    metadata =>
+                    {
+                        metadata.RegisterPublisherFor<DerivedEvent1>(typeof(Publisher1));
+                        metadata.RegisterPublisherFor<DerivedEvent2>(typeof(Publisher2));
+                    });
             }
 
             public class BaseEventHandler : IHandleMessages<BaseEvent>
@@ -105,17 +107,17 @@
             }
         }
 
-        [Serializable]
+
         public class BaseEvent : IEvent
         {
         }
 
-        [Serializable]
+
         public class DerivedEvent1 : BaseEvent
         {
         }
 
-        [Serializable]
+
         public class DerivedEvent2 : BaseEvent
         {
         }

@@ -1,18 +1,19 @@
-﻿namespace NServiceBus.AcceptanceTests.PubSub
+﻿namespace NServiceBus.AcceptanceTests.Routing.MessageDrivenSubscriptions
 {
     using System.Threading.Tasks;
     using AcceptanceTesting;
     using EndpointTemplates;
     using Features;
     using NUnit.Framework;
-    using ScenarioDescriptors;
 
-    public class When_multi_subscribing_to_a_polymorphic_event_on_unicast_transports : NServiceBusAcceptanceTest
+    public class When_multi_subscribing_to_a_polymorphic_event : NServiceBusAcceptanceTest
     {
         [Test]
         public async Task Both_events_should_be_delivered()
         {
-            await Scenario.Define<Context>()
+            Requires.MessageDrivenPubSub();
+
+            var context = await Scenario.Define<Context>()
                 .WithEndpoint<Publisher1>(b => b.When(c => c.Publisher1HasASubscriberForIMyEvent, (session, c) =>
                 {
                     c.AddTrace("Publishing MyEvent1");
@@ -30,13 +31,10 @@
                     await session.Subscribe<MyEvent2>();
                 }))
                 .Done(c => c.SubscriberGotIMyEvent && c.SubscriberGotMyEvent2)
-                .Repeat(r => r.For<AllTransportsWithMessageDrivenPubSub>())
-                .Should(c =>
-                {
-                    Assert.True(c.SubscriberGotIMyEvent);
-                    Assert.True(c.SubscriberGotMyEvent2);
-                })
                 .Run();
+
+            Assert.True(context.SubscriberGotIMyEvent);
+            Assert.True(context.SubscriberGotMyEvent2);
         }
 
         public class Context : ScenarioContext
@@ -53,6 +51,8 @@
             {
                 EndpointSetup<DefaultPublisher>(b =>
                 {
+                    //Immediate Retries on since subscription storages can throw on concurrency violation and need to retry
+                    b.Recoverability().Immediate(immediate => immediate.NumberOfRetries(5));
                     b.OnEndpointSubscribed<Context>((args, context) =>
                     {
                         context.AddTrace("Publisher1 OnEndpointSubscribed " + args.MessageType);
@@ -61,8 +61,6 @@
                             context.Publisher1HasASubscriberForIMyEvent = true;
                         }
                     });
-                    //Because subscription storages can throw on concurrency violation and need to retry
-                    b.Recoverability().Immediate(retriesSettings => retriesSettings.NumberOfRetries(5));
                 });
             }
         }
@@ -73,6 +71,9 @@
             {
                 EndpointSetup<DefaultPublisher>(b =>
                 {
+                    // Immediate Retries on since subscription storages can throw on concurrency violation and need to retry
+                    b.Recoverability().Immediate(immediate => immediate.NumberOfRetries(5));
+
                     b.OnEndpointSubscribed<Context>((args, context) =>
                     {
                         context.AddTrace("Publisher2 OnEndpointSubscribed " + args.MessageType);
@@ -82,8 +83,6 @@
                             context.Publisher2HasDetectedASubscriberForEvent2 = true;
                         }
                     });
-                    //Because subscription storages can throw on concurrency violation and need to retry
-                    b.Recoverability().Immediate(retriesSettings => retriesSettings.NumberOfRetries(5));
                 });
             }
         }
@@ -92,9 +91,12 @@
         {
             public Subscriber1()
             {
-                EndpointSetup<DefaultServer>(c => c.DisableFeature<AutoSubscribe>())
-                    .AddMapping<IMyEvent>(typeof(Publisher1))
-                    .AddMapping<MyEvent2>(typeof(Publisher2));
+                EndpointSetup<DefaultServer>(c => c.DisableFeature<AutoSubscribe>(),
+                        metadata =>
+                        {
+                            metadata.RegisterPublisherFor<IMyEvent>(typeof(Publisher1));
+                            metadata.RegisterPublisherFor<MyEvent2>(typeof(Publisher2));
+                        });
             }
 
             public class MyEventHandler : IHandleMessages<IMyEvent>

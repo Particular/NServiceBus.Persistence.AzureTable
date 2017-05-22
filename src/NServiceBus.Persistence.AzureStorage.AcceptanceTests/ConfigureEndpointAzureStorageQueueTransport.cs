@@ -11,7 +11,7 @@ public class ConfigureEndpointAzureStorageQueueTransport : IConfigureEndpointTes
 {
     public async Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
-        var connectionString = settings.Get<string>("Transport.ConnectionString");
+        var connectionString = ConfigureEndpointAzureStoragePersistence.GetConnectionString();
         //connectionString = "UseDevelopmentStorage=true;";
 
         var transportRouting = configuration.UseTransport<AzureStorageQueueTransport>()

@@ -3,32 +3,34 @@
     using System;
     using System.Threading.Tasks;
     using AcceptanceTesting;
+    using Configuration.AdvanceExtensibility;
     using EndpointTemplates;
-    using ScenarioDescriptors;
     using Features;
     using NUnit.Framework;
 
     class When_timeout_storage_is_unavailable_temporarily : NServiceBusAcceptanceTest
     {
         [Test]
-        public Task Endpoint_should_start()
+        public async Task Endpoint_should_start()
         {
-            return Scenario.Define<TimeoutTestContext>()
-                .WithEndpoint<EndpointWithFlakyTimeoutPersister>()
+            Requires.TimeoutStorage();
+
+            var context = await Scenario.Define<TimeoutTestContext>()
+                .WithEndpoint<Endpoint>()
                 .Done(c => c.EndpointsStarted)
-                .Repeat(r => r.For<AllTransportsWithoutNativeDeferral>())
-                .Should(c => Assert.IsTrue(c.EndpointsStarted))
                 .Run();
+
+            Assert.IsTrue(context.EndpointsStarted);
         }
 
         [Test]
         public async Task Endpoint_should_not_shutdown()
         {
-            var stopTime = DateTime.Now.AddSeconds(45);
+            var stopTime = DateTime.UtcNow.AddSeconds(6);
 
             var testContext =
-                await Scenario.Define<TimeoutTestContext>(c => { c.SecondsToWait = 10; })
-                    .WithEndpoint<EndpointWithFlakyTimeoutPersister>(b =>
+                await Scenario.Define<TimeoutTestContext>(c => { c.SecondsToWait = 3; })
+                    .WithEndpoint<Endpoint>(b =>
                     {
                         b.CustomConfig((busConfig, context) =>
                         {
@@ -39,7 +41,7 @@
                             });
                         });
                     })
-                    .Done(c => c.FatalErrorOccurred || stopTime <= DateTime.Now)
+                    .Done(c => c.FatalErrorOccurred || stopTime <= DateTime.UtcNow)
                     .Run();
 
             Assert.IsFalse(testContext.FatalErrorOccurred, "Circuit breaker was triggered too soon.");
@@ -51,16 +53,19 @@
             public bool FatalErrorOccurred { get; set; }
         }
 
-        [Serializable]
         public class MyMessage : IMessage
         {
         }
 
-        public class EndpointWithFlakyTimeoutPersister : EndpointConfigurationBuilder
+        public class Endpoint : EndpointConfigurationBuilder
         {
-            public EndpointWithFlakyTimeoutPersister()
+            public Endpoint()
             {
-                EndpointSetup<DefaultServer>(config => { config.EnableFeature<TimeoutManager>(); });
+                EndpointSetup<DefaultServer>(config =>
+                {
+                    config.GetSettings().Set("TimeToWaitBeforeTriggeringCriticalErrorForTimeoutPersisterReceiver", TimeSpan.FromSeconds(7));
+                    config.EnableFeature<TimeoutManager>();
+                });
             }
 
             public TestContext TestContext { get; set; }
@@ -75,11 +80,7 @@
                 protected override void Setup(FeatureConfigurationContext context)
                 {
                     var testContext = context.Settings.Get<TimeoutTestContext>();
-                    context.Container
-                        .ConfigureComponent(() => new CyclingOutageTimeoutPersister
-                        {
-                            SecondsToWait = testContext.SecondsToWait
-                        }, DependencyLifecycle.SingleInstance);
+                    context.Container.ConfigureComponent(b => new CyclingOutageTimeoutPersister { SecondsToWait = testContext.SecondsToWait }, DependencyLifecycle.SingleInstance);
                 }
             }
         }

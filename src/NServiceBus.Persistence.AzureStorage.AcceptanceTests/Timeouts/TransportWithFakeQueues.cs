@@ -5,8 +5,8 @@
     using System.Threading.Tasks;
     using Extensibility;
     using System.Collections.Generic;
-    using Routing;
     using DelayedDelivery;
+    using NServiceBus.Routing;
     using Transport;
 
     public class TransportWithFakeQueues : TransportDefinition

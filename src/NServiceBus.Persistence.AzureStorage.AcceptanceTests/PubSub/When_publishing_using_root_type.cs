@@ -1,41 +1,38 @@
-﻿namespace NServiceBus.AcceptanceTests.PubSub
+﻿namespace NServiceBus.AcceptanceTests.Routing
 {
     using System;
-    using EndpointTemplates;
+    using System.Threading.Tasks;
     using AcceptanceTesting;
+    using EndpointTemplates;
     using Features;
     using NUnit.Framework;
-    using ScenarioDescriptors;
-    using System.Threading.Tasks;
 
     public class When_publishing_using_root_type : NServiceBusAcceptanceTest
     {
         [Test]
-        public Task Event_should_be_published_using_instance_type()
+        public async Task Event_should_be_published_using_instance_type()
         {
-            return Scenario.Define<Context>()
-                    .WithEndpoint<Publisher>(b =>
-                        b.When(c => c.Subscriber1Subscribed, (session, context) =>
-                        {
-                            IMyEvent message = new EventMessage();
-
-                            return session.Publish(message);
-                        }))
-                    .WithEndpoint<Subscriber1>(b => b.When((session, context) =>
+            var context = await Scenario.Define<Context>()
+                .WithEndpoint<Publisher>(b =>
+                    b.When(c => c.Subscriber1Subscribed, session =>
                     {
-                        session.Subscribe<EventMessage>();
+                        IMyEvent message = new EventMessage();
 
-                        if (context.HasNativePubSubSupport)
-                        {
-                            context.Subscriber1Subscribed = true;
-                        }
-
-                        return Task.FromResult(0);
+                        return session.Publish(message);
                     }))
-                    .Done(c => c.Subscriber1GotTheEvent)
-                    .Repeat(r => r.For(Transports.Default))
-                    .Should(c => Assert.True(c.Subscriber1GotTheEvent))
-                    .Run(TimeSpan.FromSeconds(20));
+                .WithEndpoint<Subscriber1>(b => b.When(async (session, ctx) =>
+                {
+                    await session.Subscribe<EventMessage>();
+
+                    if (ctx.HasNativePubSubSupport)
+                    {
+                        ctx.Subscriber1Subscribed = true;
+                    }
+                }))
+                .Done(c => c.Subscriber1GotTheEvent)
+                .Run(TimeSpan.FromSeconds(20));
+
+            Assert.True(context.Subscriber1GotTheEvent);
         }
 
         public class Context : ScenarioContext
@@ -57,13 +54,12 @@
                 }));
             }
         }
-        
+
         public class Subscriber1 : EndpointConfigurationBuilder
         {
             public Subscriber1()
             {
-                EndpointSetup<DefaultServer>(c => c.DisableFeature<AutoSubscribe>())
-                    .AddMapping<EventMessage>(typeof(Publisher));
+                EndpointSetup<DefaultServer>(c => c.DisableFeature<AutoSubscribe>(), p => p.RegisterPublisherFor<EventMessage>(typeof(Publisher)));
             }
 
             public class MyEventHandler : IHandleMessages<EventMessage>
@@ -73,13 +69,12 @@
                 public Task Handle(EventMessage messageThatIsEnlisted, IMessageHandlerContext context)
                 {
                     Context.Subscriber1GotTheEvent = true;
-
                     return Task.FromResult(0);
                 }
             }
         }
 
-        [Serializable]
+
         public class EventMessage : IMyEvent
         {
             public Guid EventId { get; set; }
