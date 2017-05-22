@@ -9,6 +9,7 @@
     public class When_publishing_on_brokers : NServiceBusAcceptanceTest
     {
         [Test]
+        [Ignore("Currently used transport ASQ is not broker")]
         public async Task Should_be_delivered_to_allsubscribers_without_the_need_for_config()
         {
             var context = await Scenario.Define<Context>()
