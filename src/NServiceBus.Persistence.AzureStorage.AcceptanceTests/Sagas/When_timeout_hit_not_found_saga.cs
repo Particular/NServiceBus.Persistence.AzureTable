@@ -47,8 +47,6 @@
 
                 public async Task Handle(StartSaga message, IMessageHandlerContext context)
                 {
-                    Data.DataId = message.DataId;
-
                     //this will cause the message to be delivered right away
                     await RequestTimeout<MyTimeout>(context, TimeSpan.Zero);
                     await context.SendLocal(new SomeOtherMessage

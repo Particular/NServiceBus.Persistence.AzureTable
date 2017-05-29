@@ -70,7 +70,6 @@
 
                 public Task Handle(BaseEvent message, IMessageHandlerContext context)
                 {
-                    Data.DataId = message.DataId;
                     MarkAsComplete();
                     Context.DidSagaComplete = true;
                     return Task.FromResult(0);

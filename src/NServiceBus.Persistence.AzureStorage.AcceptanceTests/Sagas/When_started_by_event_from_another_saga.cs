@@ -63,8 +63,6 @@
 
                 public async Task Handle(StartSaga message, IMessageHandlerContext context)
                 {
-                    Data.DataId = message.DataId;
-
                     //Publish the event, which will start the second saga
                     await context.Publish<SomethingHappenedEvent>(m => { m.DataId = message.DataId; });
 
@@ -115,7 +113,6 @@
 
                 public Task Handle(SomethingHappenedEvent message, IMessageHandlerContext context)
                 {
-                    Data.DataId = message.DataId;
                     //Request a timeout
                     return RequestTimeout<Saga2Timeout>(context, TimeSpan.FromMilliseconds(1));
                 }

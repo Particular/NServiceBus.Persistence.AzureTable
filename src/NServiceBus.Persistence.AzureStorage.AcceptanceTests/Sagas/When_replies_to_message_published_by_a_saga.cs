@@ -75,7 +75,6 @@
 
                 public Task Handle(StartSaga message, IMessageHandlerContext context)
                 {
-                    Data.DataId = message.DataId;
                     return context.Publish(new DidSomething
                     {
                         DataId = message.DataId

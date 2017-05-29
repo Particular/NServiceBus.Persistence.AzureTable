@@ -39,7 +39,6 @@
             {
                 public Task Handle(StartSaga1 message, IMessageHandlerContext context)
                 {
-                    Data.DataId = message.DataId;
                     return context.SendLocal(new MessageSaga1WillHandle
                     {
                         DataId = message.DataId
@@ -73,7 +72,6 @@
 
                 public Task Handle(StartSaga2 message, IMessageHandlerContext context)
                 {
-                    Data.DataId = message.DataId;
                     Context.DidSaga2ReceiveMessage = true;
 
                     return Task.FromResult(0);
