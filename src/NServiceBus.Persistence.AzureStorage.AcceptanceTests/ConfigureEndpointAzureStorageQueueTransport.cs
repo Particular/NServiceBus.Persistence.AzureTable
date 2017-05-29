@@ -38,23 +38,20 @@ public class ConfigureEndpointAzureStorageQueueTransport : IConfigureEndpointTes
         return Task.FromResult(0);
     }
 
-    static async Task CleanQueuesUsedByTest(string connectionString)
+    static Task CleanQueuesUsedByTest(string connectionString)
     {
         var storage = CloudStorageAccount.Parse(connectionString);
         var client = storage.CreateCloudQueueClient();
         var queues = GetTestRelatedQueues(client).ToArray();
 
-        var clearTask = Task.WhenAll(queues.Select(q => q.ClearAsync()));
-        var timeoutTask = Task.Delay(TimeSpan.FromMinutes(1));
-        var result = await Task.WhenAny(clearTask, timeoutTask);
-
-        if (result == timeoutTask)
+        var tasks = new Task[queues.Length];
+        for (var i = 0; i < queues.Length; i++)
         {
-            throw new TimeoutException("Waiting for cleaning queues took too long.");
+            tasks[i] = queues[i].ClearAsync();
+
         }
 
-        // await to get the exception in case something went wrong when clearing the queues.
-        await result;
+        return Task.WhenAll(tasks);
     }
 
     static IEnumerable<CloudQueue> GetTestRelatedQueues(CloudQueueClient queues)

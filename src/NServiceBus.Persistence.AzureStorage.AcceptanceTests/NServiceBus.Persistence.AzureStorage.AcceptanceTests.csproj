@@ -90,6 +90,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AzureRequestRecorder.cs" />
     <Compile Include="ConfigureEndpointAzureStorageQueueTransport.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Infrastructure\EndpointTemplates\ConfigureExtensions.cs" />
@@ -106,6 +107,7 @@
     <Compile Include="ConfigureAzureStoragePersistence.cs" />
     <Compile Include="Infrastructure\ScenarioDescriptors\TypeScanner.cs" />
     <Compile Include="Infrastructure\SubscriptionBehaviorExtensions.cs" />
+    <Compile Include="NServiceBusAcceptanceTest.cs" />
     <Compile Include="PubSub\SubscriptionBehavior.cs" />
     <Compile Include="PubSub\SubscriptionEventArgs.cs" />
     <Compile Include="PubSub\When_base_event_from_2_publishers.cs" />
