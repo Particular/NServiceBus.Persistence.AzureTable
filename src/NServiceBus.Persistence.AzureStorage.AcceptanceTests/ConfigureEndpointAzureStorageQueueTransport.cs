@@ -6,13 +6,15 @@ using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
 using NServiceBus;
 using NServiceBus.AcceptanceTesting.Support;
+using NServiceBus.AcceptanceTests.ScenarioDescriptors;
 
 public class ConfigureEndpointAzureStorageQueueTransport : IConfigureEndpointTestExecution
 {
+    static string ConnectionString => EnvironmentHelper.GetEnvironmentVariable($"{nameof(AzureStorageQueueTransport)}.ConnectionString") ?? "UseDevelopmentStorage=true";
+
     public async Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
-        var connectionString = settings.Get<string>("Transport.ConnectionString");
-        //connectionString = "UseDevelopmentStorage=true;";
+        var connectionString = ConnectionString;
 
         var transportRouting = configuration.UseTransport<AzureStorageQueueTransport>()
             .Transactions(TransportTransactionMode.ReceiveOnly)
