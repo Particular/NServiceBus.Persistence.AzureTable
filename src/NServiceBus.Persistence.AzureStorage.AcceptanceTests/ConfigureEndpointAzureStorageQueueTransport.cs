@@ -19,10 +19,8 @@ public class ConfigureEndpointAzureStorageQueueTransport : IConfigureEndpointTes
         var transportRouting = configuration.UseTransport<AzureStorageQueueTransport>()
             .Transactions(TransportTransactionMode.ReceiveOnly)
             .ConnectionString(connectionString)
-            .MessageInvisibleTime(TimeSpan.FromSeconds(5))
             .Routing();
 
-        //configuration.UseSerialization<XmlSerializer>();
 
         foreach (var publisher in publisherMetadata.Publishers)
         {
