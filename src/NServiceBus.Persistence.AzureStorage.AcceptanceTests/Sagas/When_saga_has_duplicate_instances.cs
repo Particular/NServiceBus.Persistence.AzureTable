@@ -9,7 +9,6 @@ namespace NServiceBus.AcceptanceTests.Sagas
     using Microsoft.WindowsAzure.Storage.Table;
     using NUnit.Framework;
     using Persistence.AzureStorage;
-    using ScenarioDescriptors;
 
     public class When_saga_has_duplicate_instances : NServiceBusAcceptanceTest
     {
@@ -23,7 +22,7 @@ namespace NServiceBus.AcceptanceTests.Sagas
             await table.CreateIfNotExistsAsync().ConfigureAwait(false);
             await ClearTable(table).ConfigureAwait(false);
 
-            await Scenario.Define<Context>(c => c.OrderId = Guid.NewGuid().ToString())
+            var context = await Scenario.Define<Context>(c => c.OrderId = Guid.NewGuid().ToString())
                 .WithEndpoint<ReceiverWithSagas>(b =>
                 {
                     b.DoNotFailOnErrorMessages();
@@ -52,23 +51,20 @@ namespace NServiceBus.AcceptanceTests.Sagas
                     });
                 })
                 .Done(c => c.FailedMessages.IsEmpty == false)
-                .Repeat(r => r.For(Transports.Default))
-                .Should(c =>
-                {
-                    CollectionAssert.IsNotEmpty(c.FailedMessages, "Should include at least one failed message.");
-
-                    var failedMessages = c.FailedMessages.SelectMany(kvp => kvp.Value).ToArray();
-                    foreach (var failedMessage in failedMessages)
-                    {
-                        Assert.IsInstanceOf<DuplicatedSagaFoundException>(failedMessage.Exception);
-
-                        foreach (var sagasId in c.SagasIds)
-                        {
-                            Assert.True(failedMessage.Exception.Message.Contains(sagasId.ToString()));
-                        }
-                    }
-                })
                 .Run();
+
+            CollectionAssert.IsNotEmpty(context.FailedMessages, "Should include at least one failed message.");
+
+            var failedMessages = context.FailedMessages.SelectMany(kvp => kvp.Value).ToArray();
+            foreach (var failedMessage in failedMessages)
+            {
+                Assert.IsInstanceOf<DuplicatedSagaFoundException>(failedMessage.Exception);
+
+                foreach (var sagasId in context.SagasIds)
+                {
+                    Assert.True(failedMessage.Exception.Message.Contains(sagasId.ToString()));
+                }
+            }
         }
 
         static TwoInstanceSaga.TwoInstanceSagaEntity CreateSagaEntityWithOrderId(Guid id, string orderId)

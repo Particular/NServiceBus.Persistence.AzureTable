@@ -6,32 +6,31 @@
     using EndpointTemplates;
     using Features;
     using NUnit.Framework;
-    using ScenarioDescriptors;
 
     public class When_replies_to_message_published_by_a_saga : NServiceBusAcceptanceTest
     {
         [Test]
         public async Task Should_reply_to_a_message_published_by_a_saga()
         {
-            await Scenario.Define<Context>()
+            var context = await Scenario.Define<Context>()
                 .WithEndpoint<SagaEndpoint>
                 (b => b.When(c => c.Subscribed, session => session.SendLocal(new StartSaga
                 {
                     DataId = Guid.NewGuid()
                 }))
                 )
-                .WithEndpoint<ReplyEndpoint>(b => b.When(async (session, context) =>
+                .WithEndpoint<ReplyEndpoint>(b => b.When(async (session, c) =>
                 {
                     await session.Subscribe<DidSomething>();
-                    if (context.HasNativePubSubSupport)
+                    if (c.HasNativePubSubSupport)
                     {
-                        context.Subscribed = true;
+                        c.Subscribed = true;
                     }
                 }))
                 .Done(c => c.DidSagaReplyMessageGetCorrelated)
-                .Repeat(r => r.For(Transports.Default))
-                .Should(c => Assert.True(c.DidSagaReplyMessageGetCorrelated))
                 .Run();
+
+            Assert.True(context.DidSagaReplyMessageGetCorrelated);
         }
 
         public class Context : ScenarioContext
@@ -44,12 +43,7 @@
         {
             public ReplyEndpoint()
             {
-                EndpointSetup<DefaultServer>(b =>
-                {
-                    b.DisableFeature<AutoSubscribe>();
-                    b.Recoverability().Immediate(retriesSettings => retriesSettings.NumberOfRetries(0));
-                })
-                    .AddMapping<DidSomething>(typeof(SagaEndpoint));
+                EndpointSetup<DefaultServer>(b => b.DisableFeature<AutoSubscribe>(), metadata => metadata.RegisterPublisherFor<DidSomething>(typeof(SagaEndpoint)));
             }
 
             class DidSomethingHandler : IHandleMessages<DidSomething>
@@ -106,19 +100,16 @@
             }
         }
 
-        [Serializable]
         public class StartSaga : ICommand
         {
             public Guid DataId { get; set; }
         }
 
-        [Serializable]
         public class DidSomething : IEvent
         {
             public Guid DataId { get; set; }
         }
 
-        [Serializable]
         public class DidSomethingResponse : IMessage
         {
             public Guid ReceivedDataId { get; set; }

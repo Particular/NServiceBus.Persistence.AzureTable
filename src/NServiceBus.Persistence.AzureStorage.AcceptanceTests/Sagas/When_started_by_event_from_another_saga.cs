@@ -2,11 +2,10 @@
 {
     using System;
     using System.Threading.Tasks;
-    using EndpointTemplates;
     using AcceptanceTesting;
+    using EndpointTemplates;
     using Features;
     using NUnit.Framework;
-    using ScenarioDescriptors;
 
     //Repro for #1323
     public class When_started_by_event_from_another_saga : NServiceBusAcceptanceTest
@@ -14,26 +13,28 @@
         [Test]
         public async Task Should_start_the_saga_and_request_a_timeout()
         {
-            await Scenario.Define<Context>()
+            var context = await Scenario.Define<Context>()
                 .WithEndpoint<SagaThatPublishesAnEvent>(b =>
                     b.When(c => c.IsEventSubscriptionReceived,
-                            session => session.SendLocal(new StartSaga
-                            {
-                                DataId = Guid.NewGuid()
-                            }))
+                        session => session.SendLocal(new StartSaga
+                        {
+                            DataId = Guid.NewGuid()
+                        }))
                 )
                 .WithEndpoint<SagaThatIsStartedByTheEvent>(
-                    b => b.When(async (session, context) =>
+                    b => b.When(async (session, c) =>
                     {
                         await session.Subscribe<SomethingHappenedEvent>();
 
-                        if (context.HasNativePubSubSupport)
-                            context.IsEventSubscriptionReceived = true;
+                        if (c.HasNativePubSubSupport)
+                        {
+                            c.IsEventSubscriptionReceived = true;
+                        }
                     }))
                 .Done(c => c.DidSaga1Complete && c.DidSaga2Complete)
-                .Repeat(r => r.For(Transports.Default))
-                .Should(c => Assert.True(c.DidSaga1Complete && c.DidSaga2Complete))
                 .Run();
+
+            Assert.True(context.DidSaga1Complete && context.DidSaga2Complete);
         }
 
         public class Context : ScenarioContext
@@ -50,10 +51,7 @@
                 EndpointSetup<DefaultPublisher>(b =>
                 {
                     b.EnableFeature<TimeoutManager>();
-                    b.OnEndpointSubscribed<Context>((s, context) =>
-                    {
-                        context.IsEventSubscriptionReceived = true;
-                    });
+                    b.OnEndpointSubscribed<Context>((s, context) => { context.IsEventSubscriptionReceived = true; });
                 });
             }
 
@@ -79,6 +77,11 @@
                     return Task.FromResult(0);
                 }
 
+                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<EventFromOtherSaga1Data> mapper)
+                {
+                    mapper.ConfigureMapping<StartSaga>(m => m.DataId).ToSaga(s => s.DataId);
+                }
+
                 public class EventFromOtherSaga1Data : ContainSagaData
                 {
                     public virtual Guid DataId { get; set; }
@@ -86,11 +89,6 @@
 
                 public class Timeout1
                 {
-                }
-
-                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<EventFromOtherSaga1Data> mapper)
-                {
-                    mapper.ConfigureMapping<StartSaga>(m => m.DataId).ToSaga(s => s.DataId);
                 }
             }
         }
@@ -103,9 +101,8 @@
                 {
                     c.EnableFeature<TimeoutManager>();
                     c.DisableFeature<AutoSubscribe>();
-                })
-                    .AddMapping<SomethingHappenedEvent>(typeof(SagaThatPublishesAnEvent));
-
+                },
+                metadata => metadata.RegisterPublisherFor<SomethingHappenedEvent>(typeof(SagaThatPublishesAnEvent)));
             }
 
             public class EventFromOtherSaga2 : Saga<EventFromOtherSaga2.EventFromOtherSaga2Data>,
@@ -127,6 +124,11 @@
                     return Task.FromResult(0);
                 }
 
+                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<EventFromOtherSaga2Data> mapper)
+                {
+                    mapper.ConfigureMapping<SomethingHappenedEvent>(m => m.DataId).ToSaga(s => s.DataId);
+                }
+
                 public class EventFromOtherSaga2Data : ContainSagaData
                 {
                     public virtual Guid DataId { get; set; }
@@ -135,15 +137,10 @@
                 public class Saga2Timeout
                 {
                 }
-
-                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<EventFromOtherSaga2Data> mapper)
-                {
-                    mapper.ConfigureMapping<SomethingHappenedEvent>(m => m.DataId).ToSaga(s => s.DataId);
-                }
             }
         }
 
-        [Serializable]
+
         public class StartSaga : ICommand
         {
             public Guid DataId { get; set; }

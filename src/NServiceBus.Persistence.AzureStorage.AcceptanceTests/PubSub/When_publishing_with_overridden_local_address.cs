@@ -1,31 +1,33 @@
-﻿namespace NServiceBus.AcceptanceTests.PubSub
+﻿namespace NServiceBus.AcceptanceTests.Routing
 {
-    using System;
-    using EndpointTemplates;
+    using System.Threading.Tasks;
     using AcceptanceTesting;
+    using EndpointTemplates;
     using Features;
     using NUnit.Framework;
-    using ScenarioDescriptors;
-    using System.Threading.Tasks;
 
     public class When_publishing_with_overridden_local_address : NServiceBusAcceptanceTest
     {
-        [Test, Ignore("Override local address doesn't exist anymore")] 
+        [Test, Explicit("This test fails against RabbitMQ")]
         public async Task Should_be_delivered_to_all_subscribers()
         {
-            await Scenario.Define<Context>()
-                .WithEndpoint<Publisher>(b => b.When(c => c.Subscriber1Subscribed, session => session.Publish(new MyEvent())))
-                .WithEndpoint<Subscriber1>(b => b.When(async (session, context) =>
+            var context = await Scenario.Define<Context>()
+                .WithEndpoint<Publisher>(b =>
+                    b.When(c => c.Subscriber1Subscribed, session => session.Publish(new MyEvent()))
+                )
+                .WithEndpoint<Subscriber1>(b => b.When(async (session, ctx) =>
                 {
                     await session.Subscribe<MyEvent>();
 
-                    if (context.HasNativePubSubSupport)
-                        context.Subscriber1Subscribed = true;
+                    if (ctx.HasNativePubSubSupport)
+                    {
+                        ctx.Subscriber1Subscribed = true;
+                    }
                 }))
                 .Done(c => c.Subscriber1GotTheEvent)
-                .Repeat(r => r.For(Transports.Default))
-                .Should(c => Assert.True(c.Subscriber1GotTheEvent))
                 .Run();
+
+            Assert.True(context.Subscriber1GotTheEvent);
         }
 
         public class Context : ScenarioContext
@@ -55,8 +57,8 @@
                 EndpointSetup<DefaultServer>(builder =>
                 {
                     builder.DisableFeature<AutoSubscribe>();
-                })
-                .AddMapping<MyEvent>(typeof(Publisher));
+                },
+                metadata => metadata.RegisterPublisherFor<MyEvent>(typeof(Publisher)));
             }
 
             public class MyEventHandler : IHandleMessages<MyEvent>
@@ -66,13 +68,12 @@
                 public Task Handle(MyEvent messageThatIsEnlisted, IMessageHandlerContext context)
                 {
                     Context.Subscriber1GotTheEvent = true;
-
                     return Task.FromResult(0);
                 }
             }
         }
 
-        [Serializable]
+
         public class MyEvent : IEvent
         {
         }

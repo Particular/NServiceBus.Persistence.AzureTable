@@ -1,164 +1,109 @@
-﻿namespace NServiceBus.AcceptanceTests.Sagas2
+﻿namespace NServiceBus.AcceptanceTests.Sagas
 {
     using System;
     using System.Threading.Tasks;
-    using EndpointTemplates;
     using AcceptanceTesting;
-    using AcceptanceTests;
+    using EndpointTemplates;
     using Features;
+    using NServiceBus.Sagas;
     using NUnit.Framework;
-    using ScenarioDescriptors;
 
-    // Repro for issue  https://github.com/NServiceBus/NServiceBus/issues/1277
-    public class When_two_sagas_subscribe_to_the_same_event : NServiceBusAcceptanceTest
+    public class When_timeout_hit_not_found_saga : NServiceBusAcceptanceTest
     {
         [Test]
-        public Task Should_invoke_all_handlers_on_all_sagas()
+        public async Task Should_not_fire_notfound_for_tm()
         {
-            return Scenario.Define<Context>()
-                    .WithEndpoint<Publisher>(b => b.When((session, context) =>
-                    {
-                        if (context.HasNativePubSubSupport)
-                        {
-                            context.Subscribed = true;
-                            context.AddTrace("EndpointThatHandlesAMessageAndPublishesEvent is now subscribed (at least we have asked the broker to be subscribed)");
-                        }
-                        return Task.FromResult(0);
-                    }))
-                    .WithEndpoint<SagaEndpoint>(b =>
-                        b.When(c => c.Subscribed, session => session.SendLocal(new StartSaga2
-                        {
-                            DataId = Guid.NewGuid()
-                        }))
-                     )
-                    .Done(c => c.DidSaga1EventHandlerGetInvoked && c.DidSaga2EventHandlerGetInvoked)
-                    .Repeat(r => r.For<AllTransportsWithMessageDrivenPubSub>()) // exclude the brokers since c.Subscribed won't get set for them
-                    .Should(c => Assert.True(c.DidSaga1EventHandlerGetInvoked && c.DidSaga2EventHandlerGetInvoked))
-                    .Run();
+            var context = await Scenario.Define<Context>()
+                .WithEndpoint<Endpoint>(b => b.When(session => session.SendLocal(new StartSaga
+                {
+                    DataId = Guid.NewGuid()
+                })))
+                .Done(c => c.NotFoundHandlerCalledForRegularMessage)
+                .Run();
+
+            Assert.False(context.NotFoundHandlerCalledForTimeout);
         }
 
         public class Context : ScenarioContext
         {
-            public bool Subscribed { get; set; }
-            public bool DidSaga1EventHandlerGetInvoked { get; set; }
-            public bool DidSaga2EventHandlerGetInvoked { get; set; }
+            public bool NotFoundHandlerCalledForRegularMessage { get; set; }
+            public bool NotFoundHandlerCalledForTimeout { get; set; }
         }
 
-        public class Publisher : EndpointConfigurationBuilder
+        public class Endpoint : EndpointConfigurationBuilder
         {
-            public Publisher()
+            public Endpoint()
             {
-                EndpointSetup<DefaultPublisher>(b =>
-                {
-                    b.EnableFeature<TimeoutManager>();
-                    b.OnEndpointSubscribed<Context>((s, context) => { context.Subscribed = true; });
-                });
+                EndpointSetup<DefaultServer>(config => config.EnableFeature<TimeoutManager>());
             }
 
-            class OpenGroupCommandHandler : IHandleMessages<OpenGroupCommand>
-            {
-                public Task Handle(OpenGroupCommand message, IMessageHandlerContext context)
-                {
-                    Console.WriteLine("Received OpenGroupCommand for RunId:{0} ... and publishing GroupPendingEvent", message.DataId);
-                    return context.Publish(new GroupPendingEvent { DataId = message.DataId });
-                }
-            }
-        }
-
-        public class SagaEndpoint : EndpointConfigurationBuilder
-        {
-            public SagaEndpoint()
-            {
-                EndpointSetup<DefaultServer>(c => c.EnableFeature<TimeoutManager>())
-                    .AddMapping<OpenGroupCommand>(typeof(Publisher))
-                    .AddMapping<GroupPendingEvent>(typeof(Publisher));
-            }
-
-            public class Saga1 : Saga<Saga1.MySaga1Data>,
-                IAmStartedByMessages<GroupPendingEvent>,
-                IHandleMessages<CompleteSaga1Now>
+            public class TimeoutHitsNotFoundSaga : Saga<TimeoutHitsNotFoundSaga.TimeoutHitsNotFoundSagaData>,
+                IAmStartedByMessages<StartSaga>,
+                IHandleSagaNotFound,
+                IHandleTimeouts<TimeoutHitsNotFoundSaga.MyTimeout>,
+                IHandleMessages<SomeOtherMessage>
             {
                 public Context TestContext { get; set; }
 
-                public Task Handle(GroupPendingEvent message, IMessageHandlerContext context)
+                public async Task Handle(StartSaga message, IMessageHandlerContext context)
                 {
-                    Console.Out.WriteLine("Saga1 received GroupPendingEvent for RunId: {0}", message.DataId);
-                    return context.SendLocal(new CompleteSaga1Now { DataId = message.DataId });
-                }
-
-                public Task Handle(CompleteSaga1Now message, IMessageHandlerContext context)
-                {
-                    Console.Out.WriteLine("Saga1 received CompleteSaga1Now for RunId:{0} and MarkAsComplete", message.DataId);
-                    TestContext.DidSaga1EventHandlerGetInvoked = true;
+                    //this will cause the message to be delivered right away
+                    await RequestTimeout<MyTimeout>(context, TimeSpan.Zero);
+                    await context.SendLocal(new SomeOtherMessage
+                    {
+                        DataId = Guid.NewGuid()
+                    });
 
                     MarkAsComplete();
+                }
 
+                public Task Handle(SomeOtherMessage message, IMessageHandlerContext context)
+                {
                     return Task.FromResult(0);
                 }
 
-                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<MySaga1Data> mapper)
+                public Task Handle(object message, IMessageProcessingContext context)
                 {
-                    mapper.ConfigureMapping<GroupPendingEvent>(m => m.DataId).ToSaga(s => s.DataId);
-                    mapper.ConfigureMapping<CompleteSaga1Now>(m => m.DataId).ToSaga(s => s.DataId);
-                }
+                    if (message is SomeOtherMessage)
+                    {
+                        TestContext.NotFoundHandlerCalledForRegularMessage = true;
+                    }
 
-                public class MySaga1Data : ContainSagaData
-                {
-                    public virtual Guid DataId { get; set; }
-                }
-            }
-
-            public class Saga2 : Saga<Saga2.MySaga2Data>,
-                IAmStartedByMessages<StartSaga2>,
-                IHandleMessages<GroupPendingEvent>
-            {
-                public Context TestContext { get; set; }
-
-                public Task Handle(StartSaga2 message, IMessageHandlerContext context)
-                {
-                    Console.Out.WriteLine("Saga2 sending OpenGroupCommand for RunId: {0}", Data.DataId);
-                    return context.Send(new OpenGroupCommand { DataId = Data.DataId });
-                }
-
-                public Task Handle(GroupPendingEvent message, IMessageHandlerContext context)
-                {
-                    TestContext.DidSaga2EventHandlerGetInvoked = true;
-                    Console.Out.WriteLine("Saga2 received GroupPendingEvent for RunId: {0} and MarkAsComplete", message.DataId);
-                    MarkAsComplete();
+                    if (message is MyTimeout)
+                    {
+                        TestContext.NotFoundHandlerCalledForTimeout = true;
+                    }
                     return Task.FromResult(0);
                 }
 
-                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<MySaga2Data> mapper)
+                public Task Timeout(MyTimeout state, IMessageHandlerContext context)
                 {
-                    mapper.ConfigureMapping<StartSaga2>(m => m.DataId).ToSaga(s => s.DataId);
-                    mapper.ConfigureMapping<GroupPendingEvent>(m => m.DataId).ToSaga(s => s.DataId);
+                    return Task.FromResult(0);
                 }
 
-                public class MySaga2Data : ContainSagaData
+                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<TimeoutHitsNotFoundSagaData> mapper)
+                {
+                    mapper.ConfigureMapping<StartSaga>(m => m.DataId).ToSaga(s => s.DataId);
+                    mapper.ConfigureMapping<SomeOtherMessage>(m => m.DataId).ToSaga(s => s.DataId);
+                }
+
+                public class TimeoutHitsNotFoundSagaData : ContainSagaData
                 {
                     public virtual Guid DataId { get; set; }
+                }
+
+                public class MyTimeout
+                {
                 }
             }
         }
 
-        [Serializable]
-        public class GroupPendingEvent : IEvent
+        public class StartSaga : IMessage
         {
             public Guid DataId { get; set; }
         }
 
-        public class OpenGroupCommand : ICommand
-        {
-            public Guid DataId { get; set; }
-        }
-
-        [Serializable]
-        public class StartSaga2 : ICommand
-        {
-            public Guid DataId { get; set; }
-        }
-
-        public class CompleteSaga1Now : ICommand
+        public class SomeOtherMessage : IMessage
         {
             public Guid DataId { get; set; }
         }

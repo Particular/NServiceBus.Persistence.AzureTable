@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.AcceptanceTests.PubSub
+﻿namespace NServiceBus.AcceptanceTests.Routing
 {
     using System;
     using System.Threading.Tasks;
@@ -6,36 +6,35 @@
     using EndpointTemplates;
     using Features;
     using NUnit.Framework;
-    using ScenarioDescriptors;
 
     public class When_publishing : NServiceBusAcceptanceTest
     {
         [Test]
         public async Task Issue_1851()
         {
-            await Scenario.Define<Context>()
+            var context = await Scenario.Define<Context>()
                 .WithEndpoint<Publisher3>(b =>
                     b.When(c => c.Subscriber3Subscribed, session => session.Publish<IFoo>())
                 )
-                .WithEndpoint<Subscriber3>(b => b.When(async (session, context) =>
+                .WithEndpoint<Subscriber3>(b => b.When(async (session, ctx) =>
                 {
                     await session.Subscribe<IFoo>();
 
-                    if (context.HasNativePubSubSupport)
+                    if (ctx.HasNativePubSubSupport)
                     {
-                        context.Subscriber3Subscribed = true;
+                        ctx.Subscriber3Subscribed = true;
                     }
                 }))
                 .Done(c => c.Subscriber3GotTheEvent)
-                .Repeat(r => r.For(Transports.Default))
-                .Should(c => Assert.True(c.Subscriber3GotTheEvent))
                 .Run();
+
+            Assert.True(context.Subscriber3GotTheEvent);
         }
 
         [Test]
         public async Task Should_be_delivered_to_all_subscribers()
         {
-            await Scenario.Define<Context>()
+            var context = await Scenario.Define<Context>()
                 .WithEndpoint<Publisher>(b =>
                     b.When(c => c.Subscriber1Subscribed && c.Subscriber2Subscribed, (session, c) =>
                     {
@@ -47,41 +46,38 @@
                         return session.Publish(new MyEvent(), options);
                     })
                 )
-                .WithEndpoint<Subscriber1>(b => b.When(async (session, context) =>
+                .WithEndpoint<Subscriber1>(b => b.When(async (session, ctx) =>
                 {
                     await session.Subscribe<MyEvent>();
-                    if (context.HasNativePubSubSupport)
+                    if (ctx.HasNativePubSubSupport)
                     {
-                        context.Subscriber1Subscribed = true;
-                        context.AddTrace("Subscriber1 is now subscribed (at least we have asked the broker to be subscribed)");
+                        ctx.Subscriber1Subscribed = true;
+                        ctx.AddTrace("Subscriber1 is now subscribed (at least we have asked the broker to be subscribed)");
                     }
                     else
                     {
-                        context.AddTrace("Subscriber1 has now asked to be subscribed to MyEvent");
+                        ctx.AddTrace("Subscriber1 has now asked to be subscribed to MyEvent");
                     }
                 }))
-                .WithEndpoint<Subscriber2>(b => b.When(async (session, context) =>
+                .WithEndpoint<Subscriber2>(b => b.When(async (session, ctx) =>
                 {
                     await session.Subscribe<MyEvent>();
 
-                    if (context.HasNativePubSubSupport)
+                    if (ctx.HasNativePubSubSupport)
                     {
-                        context.Subscriber2Subscribed = true;
-                        context.AddTrace("Subscriber2 is now subscribed (at least we have asked the broker to be subscribed)");
+                        ctx.Subscriber2Subscribed = true;
+                        ctx.AddTrace("Subscriber2 is now subscribed (at least we have asked the broker to be subscribed)");
                     }
                     else
                     {
-                        context.AddTrace("Subscriber2 has now asked to be subscribed to MyEvent");
+                        ctx.AddTrace("Subscriber2 has now asked to be subscribed to MyEvent");
                     }
                 }))
                 .Done(c => c.Subscriber1GotTheEvent && c.Subscriber2GotTheEvent)
-                .Repeat(r => r.For(Transports.Default))
-                .Should(c =>
-                {
-                    Assert.True(c.Subscriber1GotTheEvent);
-                    Assert.True(c.Subscriber2GotTheEvent);
-                })
                 .Run(TimeSpan.FromSeconds(10));
+
+            Assert.True(context.Subscriber1GotTheEvent);
+            Assert.True(context.Subscriber2GotTheEvent);
         }
 
         public class Context : ScenarioContext
@@ -137,8 +133,8 @@
         {
             public Subscriber3()
             {
-                EndpointSetup<DefaultServer>(c => c.DisableFeature<AutoSubscribe>())
-                    .AddMapping<IFoo>(typeof(Publisher3));
+                EndpointSetup<DefaultServer>(c => c.DisableFeature<AutoSubscribe>(),
+                    metadata => metadata.RegisterPublisherFor<IFoo>(typeof(Publisher3)));
             }
 
             public class MyEventHandler : IHandleMessages<IFoo>
@@ -157,8 +153,8 @@
         {
             public Subscriber1()
             {
-                EndpointSetup<DefaultServer>(c => c.DisableFeature<AutoSubscribe>())
-                    .AddMapping<MyEvent>(typeof(Publisher));
+                EndpointSetup<DefaultServer>(c => c.DisableFeature<AutoSubscribe>(),
+                     metadata => metadata.RegisterPublisherFor<MyEvent>(typeof(Publisher)));
             }
 
             public class MyEventHandler : IHandleMessages<MyEvent>
@@ -178,8 +174,8 @@
         {
             public Subscriber2()
             {
-                EndpointSetup<DefaultServer>(c => c.DisableFeature<AutoSubscribe>())
-                    .AddMapping<MyEvent>(typeof(Publisher));
+                EndpointSetup<DefaultServer>(c => c.DisableFeature<AutoSubscribe>(),
+                    metadata => metadata.RegisterPublisherFor<MyEvent>(typeof(Publisher)));
             }
 
             public class MyEventHandler : IHandleMessages<MyEvent>
@@ -198,7 +194,7 @@
         {
         }
 
-        [Serializable]
+
         public class MyEvent : IEvent
         {
         }

@@ -4,37 +4,34 @@
     using EndpointTemplates;
     using AcceptanceTesting;
     using NUnit.Framework;
-    using ScenarioDescriptors;
     using System.Threading.Tasks;
 
     public class When_publishing_on_brokers : NServiceBusAcceptanceTest
     {
         [Test]
-        public Task Should_be_delivered_to_allsubscribers_without_the_need_for_config()
+        [Ignore("Currently used transport ASQ is not broker")]
+        public async Task Should_be_delivered_to_allsubscribers_without_the_need_for_config()
         {
-            return Scenario.Define<Context>()
+            var context = await Scenario.Define<Context>()
                     .WithEndpoint<CentralizedPublisher>
                     (b => b.When(c => c.IsSubscriptionProcessedForSub1 && c.IsSubscriptionProcessedForSub2, bus => bus.Publish(new MyEvent())))
-                    .WithEndpoint<CentralizedSubscriber1>(b => b.When((session, context) =>
+                    .WithEndpoint<CentralizedSubscriber1>(b => b.When((session, c) =>
                     {
-                        context.IsSubscriptionProcessedForSub1 = true;
+                        c.IsSubscriptionProcessedForSub1 = true;
 
                         return Task.FromResult(0);
                     }))
-                    .WithEndpoint<CentralizedSubscriber2>(b => b.When((bus, context) =>
+                    .WithEndpoint<CentralizedSubscriber2>(b => b.When((bus, c) =>
                     {
-                        context.IsSubscriptionProcessedForSub2 = true;
+                        c.IsSubscriptionProcessedForSub2 = true;
 
                         return Task.FromResult(0);
                     }))
                     .Done(c => c.Subscriber1GotTheEvent && c.Subscriber2GotTheEvent)
-                    .Repeat(r => r.For<AllTransportsWithCentralizedPubSubSupport>())
-                    .Should(c =>
-                    {
-                        Assert.True(c.Subscriber1GotTheEvent);
-                        Assert.True(c.Subscriber2GotTheEvent);
-                    })
                     .Run();
+
+            Assert.True(context.Subscriber1GotTheEvent);
+            Assert.True(context.Subscriber2GotTheEvent);
         }
 
         public class Context : ScenarioContext
