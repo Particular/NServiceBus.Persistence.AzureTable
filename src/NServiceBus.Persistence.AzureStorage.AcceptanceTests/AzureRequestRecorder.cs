@@ -1,12 +1,12 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Net.Http;
 using Microsoft.WindowsAzure.Storage;
 
 public class AzureRequestRecorder : IDisposable
 {
-    List<string> Requests = new List<string>();
+    ConcurrentQueue<string> Requests = new ConcurrentQueue<string>();
         
     public AzureRequestRecorder()
     {
@@ -16,7 +16,7 @@ public class AzureRequestRecorder : IDisposable
     {
         if (ShouldLog(e))
         {
-            Requests.Add($"{e.Request.Method,-7} {e.Request.RequestUri.PathAndQuery}");
+            Requests.Enqueue($"{e.Request.Method,-7} {e.Request.RequestUri.PathAndQuery}");
         }
     }
 
@@ -42,7 +42,7 @@ public class AzureRequestRecorder : IDisposable
     {
         @out.WriteLine("Recorded calls to Azure Storage Services:");
 
-        foreach (var request in Requests)
+        foreach (var request in Requests.ToArray())
         {
             @out.WriteLine($"- {request}");
         }
