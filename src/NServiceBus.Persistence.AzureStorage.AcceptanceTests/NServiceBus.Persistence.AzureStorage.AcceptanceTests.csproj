@@ -107,6 +107,8 @@
     <Compile Include="ConfigureAzureStoragePersistence.cs" />
     <Compile Include="Infrastructure\ScenarioDescriptors\TypeScanner.cs" />
     <Compile Include="Infrastructure\SubscriptionBehaviorExtensions.cs" />
+    <Compile Include="Infrastructure\TestIndependenceBehavior.cs" />
+    <Compile Include="Infrastructure\TestIndependenceMutator.cs" />
     <Compile Include="NServiceBusAcceptanceTest.cs" />
     <Compile Include="PubSub\SubscriptionBehavior.cs" />
     <Compile Include="PubSub\SubscriptionEventArgs.cs" />

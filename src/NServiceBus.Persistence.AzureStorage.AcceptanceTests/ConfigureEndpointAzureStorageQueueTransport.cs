@@ -1,15 +1,11 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Queue;
 using NServiceBus;
 using NServiceBus.AcceptanceTesting.Support;
 
 public class ConfigureEndpointAzureStorageQueueTransport : IConfigureEndpointTestExecution
 {
-    public async Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
+    public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
         var connectionString = ConfigureEndpointAzureStoragePersistence.GetConnectionString();
         //connectionString = "UseDevelopmentStorage=true;";
@@ -30,33 +26,15 @@ public class ConfigureEndpointAzureStorageQueueTransport : IConfigureEndpointTes
             }
         }
 
-        await CleanQueuesUsedByTest(connectionString);
+
+        configuration.RegisterComponents(c => { c.ConfigureComponent<TestIndependenceMutator>(DependencyLifecycle.SingleInstance); });
+        configuration.Pipeline.Register("TestIndependenceBehavior", typeof(TestIndependenceSkipBehavior), "Skips messages not created during the current test.");
+
+        return Task.FromResult(0);
     }
 
     public Task Cleanup()
     {
         return Task.FromResult(0);
-    }
-
-    static Task CleanQueuesUsedByTest(string connectionString)
-    {
-        var storage = CloudStorageAccount.Parse(connectionString);
-        var client = storage.CreateCloudQueueClient();
-        var queues = GetTestRelatedQueues(client).ToArray();
-
-        var tasks = new Task[queues.Length];
-        for (var i = 0; i < queues.Length; i++)
-        {
-            tasks[i] = queues[i].ClearAsync();
-
-        }
-
-        return Task.WhenAll(tasks);
-    }
-
-    static IEnumerable<CloudQueue> GetTestRelatedQueues(CloudQueueClient queues)
-    {
-        // for now, return all
-        return queues.ListQueues();
     }
 }
