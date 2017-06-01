@@ -16,15 +16,13 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
         configuration.UsePersistence<AzureStoragePersistence, StorageType.Sagas>().ConnectionString(ConnectionString);
         configuration.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>().ConnectionString(ConnectionString);
 
+        var recoverabilitySettings = configuration.Recoverability();
+        recoverabilitySettings.DisableLegacyRetriesSatellite();
+
         if (endpointName == Conventions.EndpointNamingConvention(typeof(When_a_base_class_message_starts_a_saga.SagaEndpoint))
             || endpointName == Conventions.EndpointNamingConvention(typeof(When_finder_returns_existing_saga.SagaEndpoint)))
         {
-            configuration.Recoverability().Immediate(c => c.NumberOfRetries(1));
-        }
-
-        if (endpointName == Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))
-        {
-            configuration.Recoverability().Immediate(c => c.NumberOfRetries(4));
+            recoverabilitySettings.Immediate(c => c.NumberOfRetries(1));
         }
 
         return Task.FromResult(0);
