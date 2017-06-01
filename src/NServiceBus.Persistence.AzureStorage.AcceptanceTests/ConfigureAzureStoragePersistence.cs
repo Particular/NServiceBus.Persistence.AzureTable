@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using NServiceBus;
 using NServiceBus.AcceptanceTesting.Support;
+using NServiceBus.AcceptanceTests.Routing.MessageDrivenSubscriptions;
 using NServiceBus.AcceptanceTests.Sagas;
 using NServiceBus.AcceptanceTests.ScenarioDescriptors;
 using NServiceBus.Persistence;
@@ -19,8 +20,10 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
         var recoverabilitySettings = configuration.Recoverability();
         recoverabilitySettings.DisableLegacyRetriesSatellite();
 
-        if (endpointName == Conventions.EndpointNamingConvention(typeof(When_a_base_class_message_starts_a_saga.SagaEndpoint))
-            || endpointName == Conventions.EndpointNamingConvention(typeof(When_finder_returns_existing_saga.SagaEndpoint)))
+        if (endpointName != Conventions.EndpointNamingConvention(typeof(When_multi_subscribing_to_a_polymorphic_event.Publisher1))
+            || endpointName != Conventions.EndpointNamingConvention(typeof(When_multi_subscribing_to_a_polymorphic_event.Publisher2))
+            || endpointName != Conventions.EndpointNamingConvention(typeof(When_multi_subscribing_to_a_polymorphic_event.Publisher2))
+            || endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))
         {
             recoverabilitySettings.Immediate(c => c.NumberOfRetries(1));
         }
