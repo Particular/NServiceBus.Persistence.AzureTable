@@ -206,6 +206,7 @@
     <Compile Include="ConfigureEndpointAzureStorageQueueTransport.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="ConfigureAzureStoragePersistence.cs" />
+    <Compile Include="TestIndependence.cs" />
     <Compile Include="TestSuiteConstraints.cs" />
   </ItemGroup>
   <ItemGroup>
