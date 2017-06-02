@@ -122,11 +122,13 @@
     <Compile Include="App_Packages\ApiApprover.6.0.0\PublicApiApprover.cs" />
     <Compile Include="App_Packages\PublicApiGenerator.6.0.0\ApiGenerator.cs" />
     <Compile Include="AzurePersistenceTests.cs" />
+    <Compile Include="AzureRequestRecorder.cs" />
     <Compile Include="Persisters\When_using_GlobalConnectionStringConfiguration.cs" />
     <Compile Include="Sagas\SecondaryIndexKeyBuilderTests.cs" />
     <Compile Include="Sagas\When_completing_saga.cs" />
     <Compile Include="Sagas\When_executing_concurrently.cs" />
     <Compile Include="Sagas\When_storying_saga_with_non_primitive_values.cs" />
+    <Compile Include="Sagas\When_working_with_saga_with_correlation_property.cs" />
     <Compile Include="Sagas\When_updating_saga.cs" />
     <Compile Include="Sagas\When_saving_saga.cs" />
     <Compile Include="Sagas\When_getting_the_saga_entity.cs" />
