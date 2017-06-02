@@ -23,14 +23,9 @@
         {
             var persister = SubscriptionTestHelper.CreateAzureSubscriptionStorage();
             var messageType = new MessageType(typeof(TestMessage));
-            var messageTypes = new[]
-            {
-                messageType
-            };
+            await persister.Subscribe(new Subscriber("address://test-queue", "endpointName"), messageType, null).ConfigureAwait(false);
 
-            await persister.Subscribe(new Subscriber("address://test-queue", "endpointName"), messageType, null);
-
-            var subscribers = await persister.GetSubscriberAddressesForMessage(messageTypes, null);
+            var subscribers = await persister.GetSubscribers(messageType).ConfigureAwait(false);
 
             Assert.That(subscribers.Count(), Is.EqualTo(1));
 
@@ -54,13 +49,10 @@
 
             foreach (var messageType in messageTypes)
             {
-                await persister.Subscribe(new Subscriber("address://test-queue", "endpointName"), messageType, null);
+                await persister.Subscribe(new Subscriber("address://test-queue", "endpointName"), messageType, null).ConfigureAwait(false);
             }
 
-            var subscribers = await persister.GetSubscriberAddressesForMessage(new[]
-            {
-                new MessageType(typeof(TestMessage))
-            }, null);
+            var subscribers = await persister.GetSubscribers(new MessageType(typeof(TestMessage))).ConfigureAwait(false);
 
             Assert.That(subscribers.Count(), Is.EqualTo(1));
 
@@ -77,10 +69,7 @@
             await persister.Subscribe(new Subscriber("address://test-queue", "endpointName"), new MessageType(typeof(TestMessage)), new ContextBag()).ConfigureAwait(false);
             await persister.Subscribe(new Subscriber("address://test-queue2", "endpointName"), new MessageType(typeof(TestMessagea)), new ContextBag()).ConfigureAwait(false);
 
-            var subscribers = await persister.GetSubscriberAddressesForMessage(new[]
-            {
-                new MessageType(typeof(TestMessage))
-            }, new ContextBag()).ConfigureAwait(false);
+            var subscribers = await persister.GetSubscribers(new MessageType(typeof(TestMessage))).ConfigureAwait(false);
 
             Assert.That(subscribers.Count(), Is.EqualTo(1));
 
@@ -90,11 +79,4 @@
         }
     }
 
-    class TestMessage
-    {
-    }
-
-    class TestMessagea
-    {
-    }
 }
