@@ -158,25 +158,23 @@
             var lastSuccessfulReadEntity = await GetLastSuccessfulRead(timeoutManagerDataTable).ConfigureAwait(false);
             var lastSuccessfulRead = lastSuccessfulReadEntity?.LastSuccessfullRead;
 
-            TableQuery<TimeoutDataEntity> query;
+            var floor = lastSuccessfulRead ?? DateTime.UtcNow.AddYears(-1);
 
-            if (lastSuccessfulRead.HasValue)
-            {
-                query = new TableQuery<TimeoutDataEntity>()
-                    .Where(
+            var query = new TableQuery<TimeoutDataEntity>()
+                .Where(
+                    TableQuery.CombineFilters(
                         TableQuery.CombineFilters(
-                            TableQuery.CombineFilters(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.GreaterThanOrEqual, lastSuccessfulRead.Value.ToString(partitionKeyScope)),
-                                TableOperators.And,
-                                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThanOrEqual, now.ToString(partitionKeyScope))),
+                            TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.GreaterThanOrEqual, floor.ToString(partitionKeyScope)),
                             TableOperators.And,
-                            TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName))
-                    );
-            }
-            else
-            {
-                query = new TableQuery<TimeoutDataEntity>()
-                    .Where(TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName));
-            }
+                            TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThanOrEqual, now.ToString(partitionKeyScope))),
+                        TableOperators.And,
+                        TableQuery.CombineFilters(
+                            TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName),
+                            TableOperators.And,
+                            TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.NotEqual, string.Empty) //Remove the non-date primary key records
+                        )
+                    )
+                );
 
             var timeoutDataEntities = await timeoutDataTable.ExecuteQueryAsync(query, take: 1000).ConfigureAwait(false);
             var result = timeoutDataEntities.OrderBy(c => c.Time);
