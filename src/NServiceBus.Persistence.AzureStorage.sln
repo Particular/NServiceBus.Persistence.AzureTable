@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26430.13
-MinimumVisualStudioVersion = 10.0.40219.1
+MinimumVisualStudioVersion = 15.0.26430.13
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBus.Persistence.AzureStorage", "NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj", "{12F1D9F1-0A2C-4442-8D18-67DD096C6300}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBus.Persistence.AzureStorage.ComponentTests", "NServiceBus.Persistence.AzureStorage.ComponentTests\NServiceBus.Persistence.AzureStorage.ComponentTests.csproj", "{E25B5433-7166-4C10-A76E-C0546F9E2497}"
