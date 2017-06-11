@@ -47,6 +47,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="..\..\packaging\nuget\nservicebus.persistence.azurestorage.nuspec">
+      <Link>nservicebus.persistence.azurestorage.nuspec</Link>
+    </None>
     <None Include="app.config" />
     <None Include="packages.config">
       <SubType>Designer</SubType>

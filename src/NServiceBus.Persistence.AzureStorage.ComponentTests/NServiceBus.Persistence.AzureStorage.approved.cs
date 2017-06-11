@@ -57,48 +57,60 @@ namespace NServiceBus.Config
     {
         public AzureSagaPersisterConfig() { }
         [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.C" +
-            "onnectionString` instead. Will be removed in version 2.0.0.", true)]
+            "onnectionString` instead. Will be treated as an error from version 1.0.0. Will b" +
+            "e removed in version 2.0.0.", false)]
         public string ConnectionString { get; set; }
         [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.C" +
-            "reateSchema` instead. Will be removed in version 2.0.0.", true)]
+            "reateSchema` instead. Will be treated as an error from version 1.0.0. Will be re" +
+            "moved in version 2.0.0.", false)]
         public bool CreateSchema { get; set; }
     }
     public class AzureSubscriptionStorageConfig : System.Configuration.ConfigurationSection
     {
         public AzureSubscriptionStorageConfig() { }
         [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.C" +
-            "onnectionString` instead. Will be removed in version 2.0.0.", true)]
+            "onnectionString` instead. Will be treated as an error from version 1.0.0. Will b" +
+            "e removed in version 2.0.0.", false)]
         public string ConnectionString { get; set; }
         [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.C" +
-            "reateSchema` instead. Will be removed in version 2.0.0.", true)]
+            "reateSchema` instead. Will be treated as an error from version 1.0.0. Will be re" +
+            "moved in version 2.0.0.", false)]
         public bool CreateSchema { get; set; }
         [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtentions<AzureStoragePersistence>.T" +
-            "ableName` instead. Will be removed in version 2.0.0.", true)]
+            "ableName` instead. Will be treated as an error from version 1.0.0. Will be remov" +
+            "ed in version 2.0.0.", false)]
         public string TableName { get; set; }
     }
     public class AzureTimeoutPersisterConfig : System.Configuration.ConfigurationSection
     {
         public AzureTimeoutPersisterConfig() { }
         [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.C" +
-            "atchUpInterval` instead. Will be removed in version 2.0.0.", true)]
+            "atchUpInterval` instead. Will be treated as an error from version 1.0.0. Will be" +
+            " removed in version 2.0.0.", false)]
         public int CatchUpInterval { get; set; }
         [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.C" +
-            "onnectionString` instead. Will be removed in version 2.0.0.", true)]
+            "onnectionString` instead. Will be treated as an error from version 1.0.0. Will b" +
+            "e removed in version 2.0.0.", false)]
         public string ConnectionString { get; set; }
         [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.C" +
-            "reateSchema` instead. Will be removed in version 2.0.0.", true)]
+            "reateSchema` instead. Will be treated as an error from version 1.0.0. Will be re" +
+            "moved in version 2.0.0.", false)]
         public bool CreateSchema { get; set; }
         [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.C" +
-            "onnectionString` instead. Will be removed in version 2.0.0.", true)]
+            "onnectionString` instead. Will be treated as an error from version 1.0.0. Will b" +
+            "e removed in version 2.0.0.", false)]
         public string PartitionKeyScope { get; set; }
         [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.T" +
-            "imeoutDataTableName` instead. Will be removed in version 2.0.0.", true)]
+            "imeoutDataTableName` instead. Will be treated as an error from version 1.0.0. Wi" +
+            "ll be removed in version 2.0.0.", false)]
         public string TimeoutDataTableName { get; set; }
         [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.T" +
-            "imeoutManagerDataTableName` instead. Will be removed in version 2.0.0.", true)]
+            "imeoutManagerDataTableName` instead. Will be treated as an error from version 1." +
+            "0.0. Will be removed in version 2.0.0.", false)]
         public string TimeoutManagerDataTableName { get; set; }
         [System.ObsoleteAttribute("Switch to the code API by Using `PersistenceExtensions<AzureStoragePersistence>.T" +
-            "imeoutStateContainerName` instead. Will be removed in version 2.0.0.", true)]
+            "imeoutStateContainerName` instead. Will be treated as an error from version 1.0." +
+            "0. Will be removed in version 2.0.0.", false)]
         public string TimeoutStateContainerName { get; set; }
     }
 }
