@@ -1,226 +1,27 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{EB7993F8-1F30-4688-B30B-E11370116EB0}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFramework>net452</TargetFramework>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <DebugSymbols>True</DebugSymbols>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>PCR0001</NoWarn>
     <RootNamespace>NServiceBus.Persistence.AzureStorage.AcceptanceTests</RootNamespace>
-    <AssemblyName>NServiceBus.Persistence.AzureStorage.AcceptanceTests</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Azure.KeyVault.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Azure.KeyVault.Core.2.0.4\lib\net45\Microsoft.Azure.KeyVault.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.Data.Edm, Version=5.8.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Data.Edm.5.8.2\lib\net40\Microsoft.Data.Edm.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.Data.OData, Version=5.8.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Data.OData.5.8.2\lib\net40\Microsoft.Data.OData.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.Data.Services.Client, Version=5.8.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Data.Services.Client.5.8.2\lib\net40\Microsoft.Data.Services.Client.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.WindowsAzure.Storage, Version=8.1.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\WindowsAzure.Storage.8.1.3\lib\net45\Microsoft.WindowsAzure.Storage.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="NServiceBus.AcceptanceTesting, Version=6.0.0.0, Culture=neutral, PublicKeyToken=9fc386479f8a226c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NServiceBus.AcceptanceTesting.6.3.2\lib\net452\NServiceBus.AcceptanceTesting.dll</HintPath>
-    </Reference>
-    <Reference Include="NServiceBus.Azure.Transports.WindowsAzureStorageQueues, Version=7.0.0.0, Culture=neutral, PublicKeyToken=9fc386479f8a226c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NServiceBus.Azure.Transports.WindowsAzureStorageQueues.7.3.0\lib\net452\NServiceBus.Azure.Transports.WindowsAzureStorageQueues.dll</HintPath>
-    </Reference>
-    <Reference Include="NServiceBus.Core, Version=6.0.0.0, Culture=neutral, PublicKeyToken=9fc386479f8a226c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NServiceBus.6.3.2\lib\net452\NServiceBus.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="nunit.framework, Version=3.7.1.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
-      <HintPath>..\packages\NUnit.3.7.1\lib\net45\nunit.framework.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.configuration" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Messaging" />
-    <Reference Include="System.Spatial, Version=5.8.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Spatial.5.8.2\lib\net40\System.Spatial.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Transactions" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <PackageReference Include="Microsoft.Azure.KeyVault.Core" Version="2.0.4" />
+    <PackageReference Include="Microsoft.Data.Edm" Version="5.8.2" />
+    <PackageReference Include="Microsoft.Data.OData" Version="5.8.2" />
+    <PackageReference Include="Microsoft.Data.Services.Client" Version="5.8.2" />
+    <PackageReference Include="WindowsAzure.Storage" Version="8.1.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+    <PackageReference Include="NServiceBus.AcceptanceTesting" Version="6.3.3" />
+    <PackageReference Include="NServiceBus.AcceptanceTests.Sources" Version="6.3.3" />
+    <PackageReference Include="NServiceBus.Azure.Transports.WindowsAzureStorageQueues" Version="7.3.0" />
+    <PackageReference Include="NServiceBus" Version="6.3.3" />
+    <PackageReference Include="NUnit" Version="3.7.1" />
+    <PackageReference Include="System.Spatial" Version="5.8.2" />
+    <ProjectReference Include="..\NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\ConfigureEndpointInMemoryPersistence.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\ConfigureEndpointLearningPersistence.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\ConfigureEndpointLearningTransport.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\ConfigureEndpointMsmqTransport.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\ConventionEnforcementTests.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\DelayedDelivery\When_Deferring_a_message.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\DelayedDelivery\When_deferring_a_message_to_the_past.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\DelayedDelivery\When_deferring_to_non_local.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\DeterministicGuid.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\EndpointTemplates\ConfigureExtensions.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\EndpointTemplates\DefaultPublisher.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\EndpointTemplates\DefaultServer.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\EndpointTemplates\EndpointConfigurationExtensions.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\EndpointTemplates\EndpointCustomizationConfigurationExtensions.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\EndpointTemplates\IConfigureEndpointTestExecution.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\EndpointTemplates\Requires.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\EndpointTemplates\ServerWithNoDefaultPersistenceDefinitions.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\EndpointTemplates\TestSuiteConstraints.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\NServiceBusAcceptanceTest.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\MessageDrivenSubscriptions\When_extending_event_routing.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\MessageDrivenSubscriptions\When_multi_subscribing_to_a_polymorphic_event.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\MessageDrivenSubscriptions\When_publishing_from_sendonly.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\MessageDrivenSubscriptions\When_publishing_to_scaled_out_subscribers.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\MessageDrivenSubscriptions\When_subscribing_to_a_base_event.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\MessageDrivenSubscriptions\When_subscribing_to_a_base_event_with_a_route_for_a_derived_event.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\MessageDrivenSubscriptions\When_subscribing_to_a_derived_event.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\MessageDrivenSubscriptions\When_subscribing_to_event_with_routes_to_base_and_specific_events.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\MessageDrivenSubscriptions\When_subscribing_to_multiple_publishers.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\MessageDrivenSubscriptions\When_subscribing_to_scaled_out_publisher.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\MessageDrivenSubscriptions\When_unsubscribing_from_event.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\MessageDrivenSubscriptions\When_unsubscribing_to_scaled_out_publisher.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\MessageDrivenSubscriptions\When_using_assembly_level_message_mapping_for_pub_sub.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\MessageDrivenSubscriptions\When_using_autosubscribe_with_missing_routing_information.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\MessageDrivenSubscriptions\When_using_legacy_routing_configuration.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\NativePublishSubscribe\When_multi_subscribing_to_a_polymorphic_event.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\NativePublishSubscribe\When_publishing_from_sendonly.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\NativePublishSubscribe\When_publishing_to_scaled_out_subscribers.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\NativePublishSubscribe\When_subscribing_to_a_base_event.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\NativePublishSubscribe\When_subscribing_to_a_derived_event.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\NativePublishSubscribe\When_unsubscribing_from_event.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\SubscriptionBehavior.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\SubscriptionBehaviorExtensions.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\SubscriptionEventArgs.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_base_event_from_2_publishers.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_configure_routes_for_unobtrusive_messages.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_extending_command_routing.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_multiple_mappings_exists.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_overriding_local_address.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_publishing.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_publishing_an_event_implementing_two_unrelated_interfaces.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_publishing_an_interface.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_publishing_an_interface_with_unobtrusive.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_publishing_using_root_type.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_publishing_with_only_local_messagehandlers.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_publishing_with_overridden_local_address.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_registering_publishers_unobtrusive_messages_code.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_registering_publishers_unobtrusive_messages_config.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\when_replying_to_a_message_sent_to_specific_instance.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_replying_to_message.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_replying_to_message_with_interface_and_unobtrusive.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_routing_reply_to_any_instance.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_routing_reply_to_specific_address.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_routing_reply_to_specific_instance.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_sending_a_base_command.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_sending_non_message_with_routing_configured_by_assembly.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_sending_non_message_with_routing_configured_by_type.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_sending_non_message_with_routing_configured_via_mappings.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_using_custom_routing_strategy.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Routing\When_using_instance_ids.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_an_endpoint_replies_to_a_saga.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_auto_correlated_property_is_changed.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_a_base_class_mapped_is_handled_by_a_saga.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_a_base_class_message_starts_a_saga.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_correlating_on_special_characters.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_doing_request_response_between_sagas_first_handler_responding.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_doing_request_response_between_sagas_response_from_noninitiating.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_doing_request_response_between_sagas_with_timeout.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_finder_returns_existing_saga.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_forgetting_to_set_a_corr_property.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_handling_message_with_handler_and_timeout_handler.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_message_has_a_saga_id.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\when_receiving_multiple_timeouts.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_receiving_that_completes_the_saga.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_receiving_that_should_start_a_saga.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_receiving_that_should_start_a_saga_without_interception.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_receiving_that_should_start_a_saga_with_interception.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_replies_to_message_published_by_a_saga.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\when_reply_from_saga_not_found_handler.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_sagas_cant_be_found.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_sagas_share_timeout_messages.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_saga_exists_for_start_message.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_saga_handles_unmapped_message.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_saga_has_a_non_empty_constructor.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_saga_id_changed.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_saga_is_mapped_to_complex_expression.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_saga_message_goes_through_delayed_retries.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_saga_started_concurrently.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_sending_from_a_saga_handle.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_sending_from_a_saga_timeout.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_started_by_base_event_from_other_saga.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_started_by_event_from_another_saga.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_timeout_hit_not_found_saga.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_two_sagas_subscribe_to_the_same_event.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_updating_existing_correlation_property.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_using_a_received_message_for_timeout.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_using_contain_saga_data.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Sagas\When_using_ReplyToOriginator.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\ScenarioDescriptors\EnvironmentHelper.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\ScenarioDescriptors\TypeScanner.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\SelfVerification\When_running_saga_tests.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\SelfVerification\When_using_custom_components.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Timeout\CyclingOutageTimeoutPersister.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\Timeout\When_timeout_storage_is_unavailable_temporarily.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\TimeToBeReceived\When_TimeToBeReceived_has_expired.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\TimeToBeReceived\When_TimeToBeReceived_has_expired_convention.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\TimeToBeReceived\When_TimeToBeReceived_has_not_expired.cs" />
-    <Compile Include="App_Packages\NSB.AcceptanceTests.6.3.2\TimeToBeReceived\When_TimeToBeReceived_used_with_unobtrusive_mode.cs" />
-    <Compile Include="ConfigureEndpointAzureStorageQueueTransport.cs" />
-    <Compile Include="Extensions.cs" />
-    <Compile Include="ConfigureAzureStoragePersistence.cs" />
-    <Compile Include="TestIndependence.cs" />
-    <Compile Include="TestSuiteConstraints.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj">
-      <Project>{12f1d9f1-0a2c-4442-8d18-67dd096c6300}</Project>
-      <Name>NServiceBus.Persistence.AzureStorage</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
