@@ -22,12 +22,12 @@
 
             Assert.ThrowsAsync<StorageException>(async () => await persister.Save(saga, null, null, new ContextBag()));
         }
-    }
 
-    public class SaveSagaData : IContainSagaData
-    {
-        public Guid Id { get; set; }
-        public string Originator { get; set; }
-        public string OriginalMessageId { get; set; }
+        class SaveSagaData : IContainSagaData
+        {
+            public Guid Id { get; set; }
+            public string Originator { get; set; }
+            public string OriginalMessageId { get; set; }
+        }
     }
 }
