@@ -29,5 +29,16 @@
             config.GetSettings().Set(SagaStorageCreateSchema, createSchema);
             return config;
         }
+
+        /// <summary>
+        /// Opt-out from full table scanning upon new saga creation by confirming that all sagas have secondary indices.
+        /// <remarks>Sagas created with NServiceBus.Persistence.AzureStorage NuGet package have secondary indices by default.
+        /// Sagas created with NServiceBus.Azure NuGet package need to be migrated using upgrade guides provided on our documentation site.</remarks>
+        /// </summary>
+        public static PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> AssumeSecondaryIndicesExist(this PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> config)
+        {
+            config.GetSettings().Set(SagaStorageAssumeSecondaryIndicesExist, true);
+            return config;
+        }
     }
 }
