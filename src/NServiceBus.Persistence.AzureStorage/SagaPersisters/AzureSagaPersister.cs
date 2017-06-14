@@ -73,8 +73,7 @@
 
         public async Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
         {
-            var tableName = sagaData.GetType().Name;
-            var table = client.GetTableReference(tableName);
+            var table = await GetTable(sagaData.GetType()).ConfigureAwait(false);
 
             var sagaId = sagaData.Id;
             var query = GenerateSagaTableQuery<DictionaryTableEntity>(sagaId);
@@ -138,8 +137,7 @@
 
         async Task<DictionaryTableEntity> GetDictionaryTableEntity(string sagaId, Type entityType)
         {
-            var tableName = entityType.Name;
-            var table = client.GetTableReference(tableName);
+            var table = await GetTable(entityType).ConfigureAwait(false);
 
             var query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, sagaId));
 
@@ -194,8 +192,7 @@
                 "RowKey"
             };
 
-            var tableName = sagaType.Name;
-            var table = client.GetTableReference(tableName);
+            var table = await GetTable(sagaType).ConfigureAwait(false);
             var entities = await table.ExecuteQueryAsync(query).ConfigureAwait(false);
             return entities.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray();
         }
