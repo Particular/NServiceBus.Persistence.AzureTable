@@ -15,6 +15,7 @@
                 var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageConnectionString, defaultConnectionString);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageCreateSchema, AzureStorageSagaDefaults.CreateSchema);
+                s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, AzureStorageSagaDefaults.AssumeSecondaryIndicesExist);
             });
         }
 
@@ -25,8 +26,9 @@
         {
             var connectionstring = context.Settings.Get<string>(WellKnownConfigurationKeys.SagaStorageConnectionString);
             var updateSchema = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCreateSchema);
+            var performFullScan = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist);
 
-            context.Container.ConfigureComponent(builder => new AzureSagaPersister(connectionstring, updateSchema), DependencyLifecycle.InstancePerCall);
+            context.Container.ConfigureComponent(builder => new AzureSagaPersister(connectionstring, updateSchema, performFullScan), DependencyLifecycle.InstancePerCall);
         }
     }
 }

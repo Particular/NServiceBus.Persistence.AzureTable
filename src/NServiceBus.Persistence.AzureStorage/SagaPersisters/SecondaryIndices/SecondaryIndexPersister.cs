@@ -12,11 +12,12 @@
     {
         public delegate Task<Guid[]> ScanForSagas(Type sagaType, string propertyName, object propertyValue);
 
-        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, Func<IContainSagaData, PartitionRowKeyTuple?, ContextBag, Task> persist)
+        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, Func<IContainSagaData, PartitionRowKeyTuple?, ContextBag, Task> persist, bool assumeSecondaryIndcisExist)
         {
             this.getTableForSaga = getTableForSaga;
             this.scanner = scanner;
             this.persist = persist;
+            this.assumeSecondaryIndcisExist = assumeSecondaryIndcisExist;
         }
 
         public async Task<PartitionRowKeyTuple?> Insert(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, ContextBag context)
@@ -140,6 +141,11 @@
                 return secondaryIndexEntry.SagaId;
             }
 
+            if (assumeSecondaryIndcisExist)
+            {
+                return null;
+            }
+
             var ids = await scanner(sagaType, propertyName, propertyValue)
                 .ConfigureAwait(false);
             if (ids == null || ids.Length == 0)
@@ -237,11 +243,9 @@
         }
 
         LRUCache<PartitionRowKeyTuple, Guid> cache = new LRUCache<PartitionRowKeyTuple, Guid>(LRUCapacity);
-
         Func<Type, Task<CloudTable>> getTableForSaga;
-
         Func<IContainSagaData, PartitionRowKeyTuple?, ContextBag, Task> persist;
-
+        bool assumeSecondaryIndcisExist;
         ScanForSagas scanner;
 
         const int LRUCapacity = 1000;
