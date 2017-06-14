@@ -16,13 +16,13 @@
 
     class AzureSagaPersister : ISagaPersister
     {
-        public AzureSagaPersister(string connectionString, bool autoUpdateSchema)
+        public AzureSagaPersister(string connectionString, bool autoUpdateSchema, bool assumeSecondaryIndicesExist = false)
         {
             this.autoUpdateSchema = autoUpdateSchema;
             var account = CloudStorageAccount.Parse(connectionString);
             client = account.CreateCloudTableClient();
 
-            secondaryIndices = new SecondaryIndexPersister(GetTable, ScanForSaga, Persist);
+            secondaryIndices = new SecondaryIndexPersister(GetTable, ScanForSaga, Persist, assumeSecondaryIndicesExist);
         }
 
         public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context)

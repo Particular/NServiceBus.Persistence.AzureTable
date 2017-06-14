@@ -11,11 +11,13 @@
     {
         const string CorrelationValue = "correlation-value";
         const string UpdatedValue = "updated-value";
+        const bool AssumeSecondaryIndicesExist = true;
 
         [Test]
         public async Task Should_not_issue_table_scan()
         {
             var connectionString = AzurePersistenceTests.GetConnectionString();
+            AzureSagaPersister createSagaPersister() => new AzureSagaPersister(connectionString, true, AssumeSecondaryIndicesExist);
 
             // warm up table cache
             var warmUp = new AzureSagaPersister(connectionString, true);
@@ -25,7 +27,7 @@
             {
                 // try to correlate first
                 {
-                    var persister = new AzureSagaPersister(connectionString, true);
+                    var persister = createSagaPersister();
 
                     await persister.Get<SagaData>(nameof(SagaData.Correlation), CorrelationValue, null, new ContextBag()).ConfigureAwait(false);
                 }
@@ -40,13 +42,13 @@
                         Correlation = CorrelationValue
                     };
 
-                    var persister = new AzureSagaPersister(connectionString, true);
+                    var persister = createSagaPersister();
                     await persister.Save(saga, new SagaCorrelationProperty(nameof(SagaData.Correlation), CorrelationValue), null, new ContextBag()).ConfigureAwait(false);
                 }
 
                 // get by correlation and update
                 {
-                    var persister = new AzureSagaPersister(connectionString, true);
+                    var persister = createSagaPersister();
                     var ctx = new ContextBag();
 
                     var saga = await persister.Get<SagaData>(nameof(SagaData.Correlation), CorrelationValue, null, ctx).ConfigureAwait(false);
@@ -57,7 +59,7 @@
 
                 // get by correlation and complete
                 {
-                    var persister = new AzureSagaPersister(connectionString, true);
+                    var persister = createSagaPersister();
                     var ctx = new ContextBag();
 
                     var saga = await persister.Get<SagaData>(nameof(SagaData.Correlation), CorrelationValue, null, ctx).ConfigureAwait(false);
