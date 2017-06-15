@@ -2,6 +2,7 @@
 {
     using System.Configuration;
     using Features;
+    using Logging;
     using Persistence.AzureStorage;
     using Persistence.AzureStorage.Config;
 
@@ -26,9 +27,16 @@
         {
             var connectionstring = context.Settings.Get<string>(WellKnownConfigurationKeys.SagaStorageConnectionString);
             var updateSchema = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCreateSchema);
-            var performFullScan = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist);
+            var assumeSecondaryIndicesExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist);
 
-            context.Container.ConfigureComponent(builder => new AzureSagaPersister(connectionstring, updateSchema, performFullScan), DependencyLifecycle.InstancePerCall);
+            if (assumeSecondaryIndicesExist == false)
+            {
+                log.Warn($"The version of {nameof(AzureStoragePersistence)} used is not configured to optimize sagas creation. To enable optimization, use '.{nameof(ConfigureAzureSagaStorage.AssumeSecondaryIndicesExist)}()' configuration API.");
+            }
+
+            context.Container.ConfigureComponent(builder => new AzureSagaPersister(connectionstring, updateSchema, assumeSecondaryIndicesExist), DependencyLifecycle.InstancePerCall);
         }
+
+        static ILog log = LogManager.GetLogger<AzureStorageSagaPersistence>();
     }
 }
