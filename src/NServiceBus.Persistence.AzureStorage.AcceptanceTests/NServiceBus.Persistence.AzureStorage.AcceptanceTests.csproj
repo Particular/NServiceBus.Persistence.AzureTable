@@ -2,26 +2,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net452</TargetFramework>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <DebugSymbols>True</DebugSymbols>
-    <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <NoWarn>PCR0001</NoWarn>
-    <RootNamespace>NServiceBus.Persistence.AzureStorage.AcceptanceTests</RootNamespace>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.KeyVault.Core" Version="2.0.4" />
-    <PackageReference Include="Microsoft.Data.Edm" Version="5.8.2" />
-    <PackageReference Include="Microsoft.Data.OData" Version="5.8.2" />
-    <PackageReference Include="Microsoft.Data.Services.Client" Version="5.8.2" />
-    <PackageReference Include="WindowsAzure.Storage" Version="8.1.4" />
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
-    <PackageReference Include="NServiceBus.AcceptanceTesting" Version="6.3.3" />
-    <PackageReference Include="NServiceBus.AcceptanceTests.Sources" Version="6.3.3" />
-    <PackageReference Include="NServiceBus.Azure.Transports.WindowsAzureStorageQueues" Version="7.3.0" />
-    <PackageReference Include="NServiceBus" Version="6.3.3" />
+    <PackageReference Include="WindowsAzure.Storage" Version="8.*" />
+    <PackageReference Include="NServiceBus.AcceptanceTesting" Version="6.*" />
+    <PackageReference Include="NServiceBus.AcceptanceTests.Sources" Version="6.*" />
+    <PackageReference Include="NServiceBus.Azure.Transports.WindowsAzureStorageQueues" Version="7.*" />
+    <PackageReference Include="NServiceBus" Version="6.*" />
     <PackageReference Include="NUnit" Version="3.7.1" />
-    <PackageReference Include="System.Spatial" Version="5.8.2" />
     <ProjectReference Include="..\NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj" />
   </ItemGroup>
 </Project>

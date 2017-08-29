@@ -64,8 +64,7 @@ public class TestIndependence
 
         public Task Invoke(ITransportReceiveContext context, Func<ITransportReceiveContext, Task> next)
         {
-            string runId;
-            if (!context.Message.Headers.TryGetValue(HeaderName, out runId) || runId != testRunId)
+            if (!context.Message.Headers.TryGetValue(HeaderName, out var runId) || runId != testRunId)
             {
                 Console.WriteLine($"Skipping message {context.Message.MessageId} from previous test run");
                 return Task.FromResult(0);

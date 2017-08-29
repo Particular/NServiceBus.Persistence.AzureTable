@@ -24,8 +24,7 @@ namespace NServiceBus.Persistence.AzureStorage.SecondaryIndices
         {
             lock (@lock)
             {
-                LinkedListNode<Item> node;
-                if (items.TryGetValue(key, out node))
+                if (items.TryGetValue(key, out var node))
                 {
                     lru.Remove(node);
                     lru.AddLast(node);
@@ -42,8 +41,7 @@ namespace NServiceBus.Persistence.AzureStorage.SecondaryIndices
         {
             lock (@lock)
             {
-                LinkedListNode<Item> node;
-                if (items.TryGetValue(key, out node) == false)
+                if (items.TryGetValue(key, out var node) == false)
                 {
                     node = new LinkedListNode<Item>(
                         new Item
@@ -70,8 +68,7 @@ namespace NServiceBus.Persistence.AzureStorage.SecondaryIndices
         {
             lock (@lock)
             {
-                LinkedListNode<Item> node;
-                if (items.TryGetValue(key, out node))
+                if (items.TryGetValue(key, out var node))
                 {
                     lru.Remove(node);
                     items.Remove(key);

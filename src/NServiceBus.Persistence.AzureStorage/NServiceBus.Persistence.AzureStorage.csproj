@@ -2,36 +2,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net452</TargetFramework>
-    <AssemblyName>NServiceBus.Persistence.AzureStorage</AssemblyName>
-    <NuSpecFileName>nservicebus.persistence.azurestorage</NuSpecFileName>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(SolutionDir)NServiceBus.snk</AssemblyOriginatorKeyFile>
-    <DebugType>full</DebugType>
-    <DebugSymbols>True</DebugSymbols>
-    <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <OutputPath>..\..\binaries\</OutputPath>
-    <NoWarn>CS0419</NoWarn>
-    <UpdateAssemblyInfo>true</UpdateAssemblyInfo>
     <NoWarn>1591, 0618</NoWarn>
   </PropertyGroup>
+  <PropertyGroup>
+    <Description>NServiceBus Azure Storage Persistence</Description>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
   <ItemGroup>
-    <None Include="..\..\packaging\nuget\nservicebus.persistence.azurestorage.nuspec" Link="nservicebus.persistence.azurestorage.nuspec" />
-    <PackageReference Include="Microsoft.Azure.KeyVault.Core" Version="2.0.4" />
-    <PackageReference Include="Microsoft.Data.Edm" Version="5.8.2" />
-    <PackageReference Include="Microsoft.Data.OData" Version="5.8.2" />
-    <PackageReference Include="Microsoft.Data.Services.Client" Version="5.8.2" />
-    <PackageReference Include="WindowsAzure.Storage" Version="8.0.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
-    <PackageReference Include="NServiceBus" Version="6.0.0" />
-    <PackageReference Include="Obsolete.Fody" Version="4.2.2" />
-    <PackageReference Include="System.Spatial" Version="5.8.2" />
-    <PackageReference Include="Fody" Version="2.1.0" />
-    <PackageReference Include="Particular.CodeRules" Version="0.2.0" />
-    <PackageReference Include="NuGetPackager" Version="0.6.3" />
-    <PackageReference Include="GitVersionTask" Version="4.0.0-beta0012" />
+    <PackageReference Include="WindowsAzure.Storage" Version="[8.0.0, 9.0.0)" />
+    <PackageReference Include="Newtonsoft.Json" Version="[10.0.1, 11.0.0)" />
+    <PackageReference Include="NServiceBus" Version="[6.0.0, 7.0.0)" />
+    <PackageReference Include="Obsolete.Fody" Version="4.*" PrivateAssets="All" />
+    <PackageReference Include="Fody" Version="2.*" PrivateAssets="All" />
+    <PackageReference Include="Particular.CodeRules" Version="*" PrivateAssets="All" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
