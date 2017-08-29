@@ -10,7 +10,6 @@
     public class When_working_with_saga_with_correlation_property
     {
         const string CorrelationValue = "correlation-value";
-        const string UpdatedValue = "updated-value";
         const bool AssumeSecondaryIndicesExist = true;
 
         [Test]
@@ -52,7 +51,6 @@
                     var ctx = new ContextBag();
 
                     var saga = await persister.Get<SagaData>(nameof(SagaData.Correlation), CorrelationValue, null, ctx).ConfigureAwait(false);
-                    saga.Value = UpdatedValue;
 
                     await persister.Update(saga, null, ctx).ConfigureAwait(false);
                 }
@@ -81,7 +79,7 @@
 
     class SagaData : ContainSagaData
     {
-        public string Value { get; set; }
+        // ReSharper disable once UnusedAutoPropertyAccessor.Global
         public string Correlation { get; set; }
     }
 }
