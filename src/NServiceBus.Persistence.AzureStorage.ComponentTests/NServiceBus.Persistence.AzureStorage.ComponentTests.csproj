@@ -10,7 +10,8 @@
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <NoWarn>PCR0001</NoWarn>
-    <RootNamespace>NServiceBus.Persistence.AzureStorage.ComponentTests</RootNamespace>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="NServiceBus.Azure.Transports.WindowsAzureStorageQueues.approved.cs" />
