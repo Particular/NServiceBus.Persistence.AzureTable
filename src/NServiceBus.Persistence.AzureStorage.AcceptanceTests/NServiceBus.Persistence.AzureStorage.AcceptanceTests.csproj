@@ -7,10 +7,6 @@
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.KeyVault.Core" Version="2.0.4" />
-    <PackageReference Include="Microsoft.Data.Edm" Version="5.8.2" />
-    <PackageReference Include="Microsoft.Data.OData" Version="5.8.2" />
-    <PackageReference Include="Microsoft.Data.Services.Client" Version="5.8.2" />
     <PackageReference Include="WindowsAzure.Storage" Version="8.1.4" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
     <PackageReference Include="NServiceBus.AcceptanceTesting" Version="6.3.3" />
