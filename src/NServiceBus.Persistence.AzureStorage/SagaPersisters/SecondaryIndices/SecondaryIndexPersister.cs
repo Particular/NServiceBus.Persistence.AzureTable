@@ -125,8 +125,7 @@
                 return null;
             }
 
-            Guid guid;
-            if (cache.TryGet(key.Value, out guid))
+            if (cache.TryGet(key.Value, out var guid))
             {
                 return guid;
             }

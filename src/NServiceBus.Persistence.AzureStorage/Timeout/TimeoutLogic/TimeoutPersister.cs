@@ -51,8 +51,7 @@
         {
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
 
-            string identifier;
-            timeout.Headers.TryGetValue(Headers.MessageId, out identifier);
+            timeout.Headers.TryGetValue(Headers.MessageId, out var identifier);
             if (string.IsNullOrEmpty(identifier))
             {
                 identifier = Guid.NewGuid().ToString();

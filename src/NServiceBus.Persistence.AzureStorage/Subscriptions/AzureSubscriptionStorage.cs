@@ -114,8 +114,7 @@
             {
                 if (cacheKey.Contains(keyPart))
                 {
-                    CacheItem cacheItem;
-                    Cache.TryRemove(cacheKey, out cacheItem);
+                    Cache.TryRemove(cacheKey, out _);
                 }
             }
         }
@@ -131,8 +130,7 @@
 
             var key = GetKey(types);
 
-            CacheItem cacheItem;
-            if (Cache.TryGetValue(key, out cacheItem))
+            if (Cache.TryGetValue(key, out var cacheItem))
             {
                 var age = DateTime.UtcNow - cacheItem.Stored;
                 if (age >= cacheFor)

@@ -78,38 +78,31 @@ namespace NServiceBus.Persistence.AzureStorage
                 var type = propertyInfo.PropertyType;
                 var value = propertyInfo.GetValue(entity, null);
 
-                bool? @bool;
-                DateTime? dateTime;
-                Guid? guid;
-                int? @int;
-                long? @long;
-                double? @double;
-
                 if (type == typeof(byte[]))
                 {
                     toPersist[name] = new EntityProperty((byte[])value);
                 }
-                else if (TryGetNullable(type, value, out @bool))
+                else if (TryGetNullable(type, value, out bool? @bool))
                 {
                     toPersist[name] = new EntityProperty(@bool);
                 }
-                else if (TryGetNullable(type, value, out dateTime))
+                else if (TryGetNullable(type, value, out DateTime? dateTime))
                 {
                     toPersist[name] = new EntityProperty(dateTime);
                 }
-                else if (TryGetNullable(type, value, out guid))
+                else if (TryGetNullable(type, value, out Guid? guid))
                 {
                     toPersist[name] = new EntityProperty(guid);
                 }
-                else if (TryGetNullable(type, value, out @int))
+                else if (TryGetNullable(type, value, out int? @int))
                 {
                     toPersist[name] = new EntityProperty(@int);
                 }
-                else if (TryGetNullable(type, value, out @long))
+                else if (TryGetNullable(type, value, out long? @long))
                 {
                     toPersist[name] = new EntityProperty(@long);
                 }
-                else if (TryGetNullable(type, value, out @double))
+                else if (TryGetNullable(type, value, out double? @double))
                 {
                     toPersist[name] = new EntityProperty(@double);
                 }
