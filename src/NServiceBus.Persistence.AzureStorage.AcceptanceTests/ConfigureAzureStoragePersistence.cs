@@ -18,7 +18,6 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
         configuration.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>().ConnectionString(ConnectionString);
 
         var recoverabilitySettings = configuration.Recoverability();
-        recoverabilitySettings.DisableLegacyRetriesSatellite();
 
         if (endpointName != Conventions.EndpointNamingConvention(typeof(When_multi_subscribing_to_a_polymorphic_event.Publisher1))
             || endpointName != Conventions.EndpointNamingConvention(typeof(When_multi_subscribing_to_a_polymorphic_event.Publisher2))

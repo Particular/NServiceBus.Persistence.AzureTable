@@ -28,7 +28,7 @@ public class ConfigureEndpointAzureStorageQueueTransport : IConfigureEndpointTes
         }
 
         configuration.Pipeline.Register("test-independence-skip", typeof(TestIndependence.SkipBehavior), "Skips messages from other runs");
-        transportConfig.SerializeMessageWrapperWith<TestIndependence.TestIdAppendingSerializationDefinition<JsonSerializer>>();
+        transportConfig.SerializeMessageWrapperWith<TestIndependence.TestIdAppendingSerializationDefinition<NewtonsoftSerializer>>();
 
         return Task.FromResult(0);
     }
