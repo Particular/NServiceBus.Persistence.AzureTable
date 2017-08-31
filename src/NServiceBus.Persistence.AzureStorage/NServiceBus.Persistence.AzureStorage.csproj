@@ -19,9 +19,5 @@
     <PackageReference Include="Fody" Version="2.*" PrivateAssets="All" />
     <PackageReference Include="Particular.CodeRules" Version="*" PrivateAssets="All" />
     <Reference Include="System.Configuration" Condition="$(TargetFrameworks) == 'net452'" />
-
-    <!--<Reference Include="System.Web" />
-    <Reference Include="System.Web.Extensions" />-->
-
   </ItemGroup>
 </Project>

@@ -12,11 +12,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="NServiceBus.Persistence.AzureStorage.approved.cs" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.*" />
     <PackageReference Include="System.Linq.Queryable" Version="4.*" />
     <PackageReference Include="NServiceBus" Version="7.0.0-*" />
     <PackageReference Include="WindowsAzure.Storage" Version="8.*" />
     <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.0.0-*" />
-    <PackageReference Include="NUnit" Version="3.7.1" />
+    <PackageReference Include="NUnit" Version="3.*" />
     <PackageReference Include="Particular.CodeRules" Version="*" />
     <ProjectReference Include="..\NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj" />
   </ItemGroup>
