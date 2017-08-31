@@ -1,6 +1,6 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Persisters
 {
-    using Configuration.AdvanceExtensibility;
+    using Configuration.AdvancedExtensibility;
     using NUnit.Framework;
     using NServiceBus;
 

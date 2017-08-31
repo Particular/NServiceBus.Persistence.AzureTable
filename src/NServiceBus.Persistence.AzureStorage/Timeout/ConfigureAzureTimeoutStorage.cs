@@ -1,6 +1,6 @@
 ﻿namespace NServiceBus
 {
-    using Configuration.AdvanceExtensibility;
+    using Configuration.AdvancedExtensibility;
     using Persistence;
     using Timeout;
     using static Persistence.AzureStorage.Config.WellKnownConfigurationKeys;
