@@ -12,12 +12,12 @@
     {
         public delegate Task<Guid[]> ScanForSagas(Type sagaType, string propertyName, object propertyValue);
 
-        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, Func<IContainSagaData, PartitionRowKeyTuple?, ContextBag, Task> persist, bool assumeSecondaryIndcisExist)
+        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, Func<IContainSagaData, PartitionRowKeyTuple?, ContextBag, Task> persist, bool assumeSecondaryIndicesExist)
         {
             this.getTableForSaga = getTableForSaga;
             this.scanner = scanner;
             this.persist = persist;
-            this.assumeSecondaryIndcisExist = assumeSecondaryIndcisExist;
+            this.assumeSecondaryIndicesExist = assumeSecondaryIndicesExist;
         }
 
         public async Task<PartitionRowKeyTuple?> Insert(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, ContextBag context)
@@ -134,14 +134,13 @@
             var table = await getTableForSaga(sagaType).ConfigureAwait(false);
             var exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.Value.PartitionKey, key.Value.RowKey))
                 .ConfigureAwait(false);
-            var secondaryIndexEntry = exec.Result as SecondaryIndexTableEntity;
-            if (secondaryIndexEntry != null)
+            if (exec.Result is SecondaryIndexTableEntity secondaryIndexEntry)
             {
                 cache.Put(key.Value, secondaryIndexEntry.SagaId);
                 return secondaryIndexEntry.SagaId;
             }
 
-            if (assumeSecondaryIndcisExist)
+            if (assumeSecondaryIndicesExist)
             {
                 return null;
             }
@@ -245,7 +244,7 @@
         LRUCache<PartitionRowKeyTuple, Guid> cache = new LRUCache<PartitionRowKeyTuple, Guid>(LRUCapacity);
         Func<Type, Task<CloudTable>> getTableForSaga;
         Func<IContainSagaData, PartitionRowKeyTuple?, ContextBag, Task> persist;
-        bool assumeSecondaryIndcisExist;
+        bool assumeSecondaryIndicesExist;
         ScanForSagas scanner;
 
         const int LRUCapacity = 1000;
