@@ -1,6 +1,8 @@
 namespace NServiceBus
 {
+#if NET452
     using System.Configuration;
+#endif
     using System.Threading.Tasks;
     using Persistence.AzureStorage;
     using Features;

@@ -1,7 +1,9 @@
 namespace NServiceBus
 {
     using System;
+#if NET452
     using System.Configuration;
+#endif
     using System.Threading.Tasks;
     using Features;
     using Microsoft.WindowsAzure.Storage;
