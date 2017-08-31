@@ -17,21 +17,23 @@
     <PackageReference Include="NServiceBus" Version="7.0.0-*" />
     <PackageReference Include="WindowsAzure.Storage" Version="8.*" />
     <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.0.0-*" />
-    <PackageReference Include="NUnit" Version="3.7.*" />
+    <PackageReference Include="NUnit" Version="3.*" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.8.0-alpha1" />
     <PackageReference Include="Particular.CodeRules" Version="*" />
     <ProjectReference Include="..\NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj" />
   </ItemGroup>
+  
   <ItemGroup Condition="$(TargetFramework) == 'netcoreapp2.0'">
     <Compile Remove="Subscriptions\When_caching.cs" />
     <Compile Remove="APIApprovals.cs" />
     <Compile Remove="ApprovalTestConfig.cs" />
   </ItemGroup>
+  
   <ItemGroup Condition="$(TargetFramework) == 'net452'">
     <PackageReference Include="ObjectApproval" Version="1.*" />
     <PackageReference Include="ApprovalTests" Version="3.*" />
     <PackageReference Include="ApprovalUtilities" Version="3.*" />
-    <PackageReference Include="ApiApprover" Version="6.1.0-beta2" />
-    <PackageReference Include="PublicApiGenerator" Version="6.1.0-beta2" />
+    <PackageReference Include="ApiApprover" Version="6.1.0-*" />
+    <PackageReference Include="PublicApiGenerator" Version="6.1.0-*" />
   </ItemGroup>
 </Project>
