@@ -17,8 +17,10 @@ namespace NServiceBus
             DependsOn<MessageDrivenSubscriptions>();
             Defaults(s =>
             {
+#if NET452
                 var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
                 s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageConnectionString, defaultConnectionString);
+#endif
                 s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageTableName, AzureSubscriptionStorageDefaults.TableName);
                 s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageCreateSchema , AzureSubscriptionStorageDefaults.CreateSchema);
             });

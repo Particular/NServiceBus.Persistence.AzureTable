@@ -15,15 +15,15 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
     public class When_caching
     {
         [SetUp]
-        public void Setup()
+        public Task Setup()
         {
-            SubscriptionTestHelper.PerformStorageCleanup();
+            return SubscriptionTestHelper.PerformStorageCleanup();
         }
 
         [Test]
         public async Task Cached_get_should_be_faster()
         {
-            var persister = SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
             var type = new MessageType("type1", new Version(0, 0, 0, 0));
             persister.Subscribe(new Subscriber("address://test-queue", "endpoint"), type, null).Await();
             var first = Stopwatch.StartNew();
@@ -39,9 +39,9 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
         }
 
         [Test]
-        public void Should_be_cached()
+        public async Task Should_be_cached()
         {
-            var persister = SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
             var type = new MessageType("type1", new Version(0, 0, 0, 0));
             persister.Subscribe(new Subscriber("address://test-queue", "endpoint"), type, null).Await();
             persister.GetSubscribers(type).Await();
@@ -49,9 +49,9 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
         }
 
         [Test]
-        public void Subscribe_with_same_type_should_clear_cache()
+        public async Task Subscribe_with_same_type_should_clear_cache()
         {
-            var persister = SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
             var matchingType = new MessageType("matchingType", new Version(0, 0, 0, 0));
             persister.Subscribe(new Subscriber("address://test-queue", "endpoint"), matchingType, null).Await();
             persister.GetSubscribers(matchingType).Await();
@@ -60,9 +60,9 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
         }
 
         [Test]
-        public void Unsubscribe_with_same_type_should_clear_cache()
+        public async Task Unsubscribe_with_same_type_should_clear_cache()
         {
-            var persister = SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
             var matchingType = new MessageType("matchingType", new Version(0, 0, 0, 0));
             persister.Subscribe(new Subscriber("address://test-queue", "endpoint"), matchingType, null).Await();
             persister.GetSubscribers(matchingType).Await();
@@ -71,9 +71,9 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
         }
 
         [Test]
-        public void Unsubscribe_with_part_type_should_partially_clear_cache()
+        public async Task Unsubscribe_with_part_type_should_partially_clear_cache()
         {
-            var persister = SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
             var version = new Version(0, 0, 0, 0);
             var type1 = new MessageType("type1", version);
             var type2 = new MessageType("type2", version);

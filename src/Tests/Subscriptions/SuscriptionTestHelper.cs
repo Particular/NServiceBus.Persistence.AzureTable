@@ -1,19 +1,20 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
 {
     using System;
+    using System.Threading.Tasks;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
     using Unicast.Subscriptions;
 
     public class SubscriptionTestHelper
     {
-        internal static AzureSubscriptionStorage CreateAzureSubscriptionStorage()
+        internal static async Task<AzureSubscriptionStorage> CreateAzureSubscriptionStorage()
         {
             var connectionString = AzurePersistenceTests.GetConnectionString();
             var account = CloudStorageAccount.Parse(connectionString);
 
             var table = account.CreateCloudTableClient().GetTableReference(AzureSubscriptionStorageDefaults.TableName);
-            table.CreateIfNotExists();
+            await table.CreateIfNotExistsAsync();
 
             return new AzureSubscriptionStorage(
                 AzureSubscriptionStorageDefaults.TableName,
@@ -21,17 +22,17 @@
                 TimeSpan.FromSeconds(10));
         }
 
-        internal static void PerformStorageCleanup()
+        internal static async Task PerformStorageCleanup()
         {
-            RemoveAllRowsForTable(AzureSubscriptionStorageDefaults.TableName);
+            await RemoveAllRowsForTable(AzureSubscriptionStorageDefaults.TableName);
         }
 
-        static void RemoveAllRowsForTable(string tableName)
+        static async Task RemoveAllRowsForTable(string tableName)
         {
             var cloudStorageAccount = CloudStorageAccount.Parse(AzurePersistenceTests.GetConnectionString());
             var table = cloudStorageAccount.CreateCloudTableClient().GetTableReference(tableName);
 
-            table.CreateIfNotExists();
+            await table.CreateIfNotExistsAsync();
 
             var projectionQuery = new TableQuery<DynamicTableEntity>().Select(new[]
             {
@@ -41,7 +42,10 @@
             // Define an entity resolver to work with the entity after retrieval.
             EntityResolver<Tuple<string, string>> resolver = (pk, rk, ts, props, etag) => props.ContainsKey("Destination") ? new Tuple<string, string>(pk, rk) : null;
 
-            foreach (var tuple in table.ExecuteQuery(projectionQuery, resolver))
+            foreach (var tuple in await table.ExecuteQuerySegmentedAsync(
+                query: projectionQuery,
+                resolver: resolver,
+                token: null))
             {
                 var tableEntity = new DynamicTableEntity(tuple.Item1, tuple.Item2)
                 {
@@ -50,7 +54,7 @@
 
                 try
                 {
-                    table.Execute(TableOperation.Delete(tableEntity));
+                    await table.ExecuteAsync(TableOperation.Delete(tableEntity));
                 }
                 catch (StorageException)
                 {

@@ -38,21 +38,6 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
             return persister;
         }
 
-        public static CloudBlockBlob CreateTimeoutCloudBlockBlob(string timeoutBlobId)
-        {
-            var account = CloudStorageAccount.Parse(AzurePersistenceTests.GetConnectionString());
-            var client = account.CreateCloudTableClient();
-            client.DefaultRequestOptions = new TableRequestOptions
-            {
-                RetryPolicy = new ExponentialRetry()
-            };
-
-            var cloudBlobclient = account.CreateCloudBlobClient();
-            var container = cloudBlobclient.GetContainerReference(AzureTimeoutStorageDefaults.TimeoutStateContainerName);
-
-            return container.GetBlockBlobReference(timeoutBlobId);
-        }
-
         internal static TimeoutData GenerateTimeoutWithHeaders()
         {
             return new TimeoutData
@@ -96,20 +81,20 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
             Assert.IsFalse(timeouts.DueTimeouts.Any());
         }
 
-        internal static void PerformStorageCleanup()
+        internal static async Task PerformStorageCleanup()
         {
-            RemoveAllRowsForTable(AzureTimeoutStorageDefaults.TimeoutDataTableName);
-            RemoveAllRowsForTable(AzureTimeoutStorageDefaults.TimeoutManagerDataTableName);
+            await RemoveAllRowsForTable(AzureTimeoutStorageDefaults.TimeoutDataTableName);
+            await RemoveAllRowsForTable(AzureTimeoutStorageDefaults.TimeoutManagerDataTableName);
 
-            RemoveAllBlobs();
+            await RemoveAllBlobs();
         }
 
-        static void RemoveAllRowsForTable(string tableName)
+        static async Task RemoveAllRowsForTable(string tableName)
         {
             var cloudStorageAccount = CloudStorageAccount.Parse(AzurePersistenceTests.GetConnectionString());
             var table = cloudStorageAccount.CreateCloudTableClient().GetTableReference(tableName);
 
-            table.CreateIfNotExists();
+            await table.CreateIfNotExistsAsync();
 
             var projectionQuery = new TableQuery<DynamicTableEntity>().Select(new[]
             {
@@ -119,27 +104,36 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
             // Define an entity resolver to work with the entity after retrieval.
             EntityResolver<Tuple<string, string>> resolver = (pk, rk, ts, props, etag) => props.ContainsKey("Destination") ? new Tuple<string, string>(pk, rk) : null;
 
-            foreach (var tuple in table.ExecuteQuery(projectionQuery, resolver))
+            foreach (var tuple in await table.ExecuteQuerySegmentedAsync(
+                query: projectionQuery,
+                resolver: resolver,
+                token: null))
             {
                 var tableEntity = new DynamicTableEntity(tuple.Item1, tuple.Item2)
                 {
                     ETag = "*"
                 };
-                table.Execute(TableOperation.Delete(tableEntity));
+                await table.ExecuteAsync(TableOperation.Delete(tableEntity));
             }
         }
 
-        static void RemoveAllBlobs()
+        static async Task RemoveAllBlobs()
         {
             var cloudStorageAccount = CloudStorageAccount.Parse(AzurePersistenceTests.GetConnectionString());
             var container = cloudStorageAccount.CreateCloudBlobClient().GetContainerReference("timeoutstate");
-            container.CreateIfNotExists();
-            foreach (var blob in container.ListBlobs())
+            await container.CreateIfNotExistsAsync();
+            foreach (var blob in (await container.ListBlobsSegmentedAsync(null)).Results)
             {
-                ((ICloudBlob) blob).Delete(DeleteSnapshotsOption.None, AccessCondition.GenerateEmptyCondition(), new BlobRequestOptions
+                var cloudBlob = (ICloudBlob)blob;
+                var requestOptions = new BlobRequestOptions
                 {
                     RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(15), 5)
-                });
+                };
+                await cloudBlob.DeleteAsync(
+                    deleteSnapshotsOption: DeleteSnapshotsOption.None,
+                    accessCondition: AccessCondition.GenerateEmptyCondition(),
+                    options: requestOptions,
+                    operationContext: null);
             }
         }
     }

@@ -17,7 +17,13 @@
 
             do
             {
-                var seg = await table.ExecuteQuerySegmentedAsync(query, token, ct).ConfigureAwait(false);
+                var seg = await table.ExecuteQuerySegmentedAsync(
+                        query: query,
+                        token: token,
+                        requestOptions: null,
+                        operationContext: null,
+                        cancellationToken: ct)
+                    .ConfigureAwait(false);
                 token = seg.ContinuationToken;
 
                 if (items.Count + seg.Results.Count > take)
@@ -37,9 +43,6 @@
         /// <summary>
         /// Safely deletes an entitym ignoring not found exception.
         /// </summary>
-        /// <param name="table"></param>
-        /// <param name="entity"></param>
-        /// <returns></returns>
         public static async Task DeleteIgnoringNotFound(this CloudTable table, ITableEntity entity)
         {
             try

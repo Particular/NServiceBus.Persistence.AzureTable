@@ -11,15 +11,15 @@
     public class When_updating_subscription
     {
         [SetUp]
-        public void Setup()
+        public Task Setup()
         {
-            SubscriptionTestHelper.PerformStorageCleanup();
+           return SubscriptionTestHelper.PerformStorageCleanup();
         }
 
         [Test]
-        public async Task new_subscription_should_overwrite_existing()
+        public async Task New_subscription_should_overwrite_existing()
         {
-            var persister = SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
             var messageType = new MessageType(typeof(TestMessage));
 
             await persister.Subscribe(new Subscriber("address://test-queue", null), messageType, null);

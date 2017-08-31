@@ -11,15 +11,15 @@
     public class When_subscribing_with_null_endpoint
     {
         [SetUp]
-        public void Setup()
+        public Task Setup()
         {
-            SubscriptionTestHelper.PerformStorageCleanup();
+           return SubscriptionTestHelper.PerformStorageCleanup();
         }
 
         [Test]
         public async Task ensure_that_the_subscription_is_persisted()
         {
-            var persister = SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
             var messageType = new MessageType(typeof(TestMessage));
             var messageTypes = new[]
             {

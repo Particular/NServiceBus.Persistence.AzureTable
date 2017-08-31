@@ -1,6 +1,5 @@
 ﻿namespace NServiceBus
 {
-    using System.Configuration;
     using Features;
     using Logging;
     using Persistence.AzureStorage;
@@ -13,8 +12,10 @@
             DependsOn<Features.Sagas>();
             Defaults(s =>
             {
-                var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
+#if NET452
+                var defaultConnectionString = System.Configuration.ConfigurationManager.AppSettings["NServiceBus/Persistence"];
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageConnectionString, defaultConnectionString);
+#endif
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageCreateSchema, AzureStorageSagaDefaults.CreateSchema);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, AzureStorageSagaDefaults.AssumeSecondaryIndicesExist);
             });
