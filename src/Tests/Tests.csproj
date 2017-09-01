@@ -28,6 +28,8 @@
     <Compile Remove="Subscriptions\When_caching.cs" />
     <Compile Remove="APIApprovals.cs" />
     <Compile Remove="ApprovalTestConfig.cs" />
+    <Compile Remove="AzureRequestRecorder.cs" />
+    <Compile Remove="Sagas\When_working_with_saga_with_correlation_property.cs" />
   </ItemGroup>
   
   <ItemGroup Condition="$(TargetFramework) == 'net452'">
