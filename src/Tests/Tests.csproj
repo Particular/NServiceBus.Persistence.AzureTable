@@ -3,13 +3,16 @@
   <PropertyGroup>
     <TargetFrameworks>net452;netcoreapp2.0</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
+    <Optimize>false</Optimize>
     <AssemblyOriginatorKeyFile>$(SolutionDir)NServiceBus.snk</AssemblyOriginatorKeyFile>
-    <DebugType>full</DebugType>
-    <DebugSymbols>True</DebugSymbols>
-    <NoWarn>PCR0001</NoWarn>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj" />
+  </ItemGroup>
+  
   <ItemGroup>
     <Compile Remove="NServiceBus.Persistence.AzureStorage.approved.cs" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.*" />
@@ -19,8 +22,6 @@
     <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.0.0-*" />
     <PackageReference Include="NUnit" Version="3.*" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.8.0-alpha1" />
-    <PackageReference Include="Particular.CodeRules" Version="*" />
-    <ProjectReference Include="..\NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj" />
   </ItemGroup>
   
   <ItemGroup Condition="$(TargetFramework) == 'netcoreapp2.0'">
@@ -32,8 +33,8 @@
   <ItemGroup Condition="$(TargetFramework) == 'net452'">
     <PackageReference Include="ObjectApproval" Version="1.*" />
     <PackageReference Include="ApprovalTests" Version="3.*" />
-    <PackageReference Include="ApprovalUtilities" Version="3.*" />
-    <PackageReference Include="ApiApprover" Version="6.1.0-*" />
+    <PackageReference Include="Mono.Cecil" Version="0.10.0-*" />
     <PackageReference Include="PublicApiGenerator" Version="6.1.0-*" />
   </ItemGroup>
+  
 </Project>
