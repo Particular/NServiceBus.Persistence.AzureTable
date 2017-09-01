@@ -1,7 +1,7 @@
 namespace NServiceBus
 {
-    using System;
 #if NET452
+    using System;
     using System.Configuration;
 #endif
     using System.Threading.Tasks;
