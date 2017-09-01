@@ -12,7 +12,7 @@ public class APIApprovals
     [Test]
     [MethodImpl(MethodImplOptions.NoInlining)]
     [UseReporter(typeof(DiffReporter), typeof(AllFailingTestsClipboardReporter))]
-    public void ApproveAzureStorageQueueTransport()
+    public void ApproveAzureStoragePersistence()
     {
         var combine = Path.Combine(TestContext.CurrentContext.TestDirectory, "NServiceBus.Persistence.AzureStorage.dll");
         var assembly = Assembly.LoadFile(combine);
