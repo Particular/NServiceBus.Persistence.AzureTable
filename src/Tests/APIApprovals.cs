@@ -1,9 +1,10 @@
 ﻿using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using ApiApprover;
+using ApprovalTests;
 using ApprovalTests.Reporters;
 using NUnit.Framework;
+using PublicApiGenerator;
 
 [TestFixture]
 public class APIApprovals
@@ -15,7 +16,8 @@ public class APIApprovals
     {
         var combine = Path.Combine(TestContext.CurrentContext.TestDirectory, "NServiceBus.Persistence.AzureStorage.dll");
         var assembly = Assembly.LoadFile(combine);
-        PublicApiApprover.ApprovePublicApi(assembly);
+        var publicApi = ApiGenerator.GeneratePublicApi(assembly);
+        Approvals.Verify(publicApi);
     }
 
 }
