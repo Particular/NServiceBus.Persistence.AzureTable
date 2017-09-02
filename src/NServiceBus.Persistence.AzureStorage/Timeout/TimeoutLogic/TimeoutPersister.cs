@@ -403,7 +403,7 @@
 
             //Concurrency Exception - PreCondition Failed or Entity Already Exists
             var statusCode = result.HttpStatusCode;
-            if (statusCode == 412 || statusCode == 409)
+            if (statusCode == (int)HttpStatusCode.PreconditionFailed || statusCode == (int)HttpStatusCode.Conflict || statusCode == (int)HttpStatusCode.NoContent)
             {
                 // I assume we can ignore this condition?
                 // Time between read and update is very small, meaning that another instance has sent
