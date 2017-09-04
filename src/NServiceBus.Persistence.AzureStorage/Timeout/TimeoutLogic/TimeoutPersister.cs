@@ -2,18 +2,17 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Data.Services.Client;
     using System.IO;
     using System.Linq;
     using System.Net;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
-    using System.Web.Script.Serialization;
     using Extensibility;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Blob;
     using Microsoft.WindowsAzure.Storage.RetryPolicies;
     using Microsoft.WindowsAzure.Storage.Table;
+    using Newtonsoft.Json;
     using Timeout.Core;
     using Timeout.TimeoutLogic;
 
@@ -362,8 +361,7 @@
 
         string Serialize(Dictionary<string, string> headers)
         {
-            var serializer = new JavaScriptSerializer();
-            return serializer.Serialize(headers);
+            return JsonConvert.SerializeObject(headers);
         }
 
         Dictionary<string, string> Deserialize(string state)
@@ -372,9 +370,7 @@
             {
                 return new Dictionary<string, string>();
             }
-
-            var serializer = new JavaScriptSerializer();
-            return serializer.Deserialize<Dictionary<string, string>>(state);
+            return JsonConvert.DeserializeObject<Dictionary<string, string>>(state);
         }
 
         Task DeleteState(string stateAddress)
@@ -400,27 +396,23 @@
             return results.SafeFirstOrDefault();
         }
 
-        static Task UpdateSuccessfulRead(CloudTable table, TableOperation operation)
+        static async Task UpdateSuccessfulRead(CloudTable table, TableOperation operation)
         {
-            try
-            {
-                return table.ExecuteAsync(operation);
-            }
-            catch (DataServiceRequestException ex) // handle concurrency issues
-            {
-                var response = ex.Response.FirstOrDefault();
-                //Concurrency Exception - PreCondition Failed or Entity Already Exists
-                if (response != null && (response.StatusCode == 412 || response.StatusCode == 409))
-                {
-                    return TaskEx.CompletedTask;
-                    // I assume we can ignore this condition?
-                    // Time between read and update is very small, meaning that another instance has sent
-                    // the timeout messages that this node intended to send and if not we will resend
-                    // anything after the other node's last read value anyway on next request.
-                }
+            var result = await table.ExecuteAsync(operation)
+                .ConfigureAwait(false);
 
-                throw;
+            //Concurrency Exception - PreCondition Failed or Entity Already Exists
+            var statusCode = result.HttpStatusCode;
+            if (statusCode == (int)HttpStatusCode.PreconditionFailed || statusCode == (int)HttpStatusCode.Conflict || statusCode == (int)HttpStatusCode.NoContent)
+            {
+                // I assume we can ignore this condition?
+                // Time between read and update is very small, meaning that another instance has sent
+                // the timeout messages that this node intended to send and if not we will resend
+                // anything after the other node's last read value anyway on next request.
+                return;
             }
+
+            throw new Exception($"Failed to UpdateSuccessfulRead. HttpStatusCode: {statusCode}");
         }
 
         TableOperation GetUpdateSuccessfulRead(TimeoutManagerDataEntity read)

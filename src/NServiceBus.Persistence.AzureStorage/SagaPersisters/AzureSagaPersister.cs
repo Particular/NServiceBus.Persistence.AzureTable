@@ -118,9 +118,10 @@
             return sagaData;
         }
 
-        public static TableQuery<TEntity> GenerateSagaTableQuery<TEntity>(Guid sagaId)
+        public static TableQuery<TEntity> GenerateSagaTableQuery<TEntity>(Guid sagaId) where TEntity : ITableEntity, new()
         {
-            return new TableQuery<TEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, sagaId.ToString()));
+            var query = new TableQuery<TEntity>();
+            return query.Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, sagaId.ToString()));
         }
 
         Task RemoveSecondaryIndex(IContainSagaData sagaData, ContextBag context)

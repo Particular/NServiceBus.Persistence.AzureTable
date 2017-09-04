@@ -13,15 +13,15 @@
     public class When_subscribing
     {
         [SetUp]
-        public void Setup()
+        public Task Setup()
         {
-            SubscriptionTestHelper.PerformStorageCleanup();
+            return SubscriptionTestHelper.PerformStorageCleanup();
         }
 
         [Test]
         public async Task ensure_that_the_subscription_is_persisted()
         {
-            var persister = SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
             var messageType = new MessageType(typeof(TestMessage));
             await persister.Subscribe(new Subscriber("address://test-queue", "endpointName"), messageType, null).ConfigureAwait(false);
 
@@ -37,7 +37,7 @@
         [Test]
         public async Task ensure_that_the_subscription_is_version_ignorant()
         {
-            var persister = SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
 
             var name = typeof(TestMessage).FullName;
 
@@ -64,7 +64,7 @@
         [Test]
         public async Task ensure_that_the_subscription_selects_proper_message_types()
         {
-            var persister = SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
 
             await persister.Subscribe(new Subscriber("address://test-queue", "endpointName"), new MessageType(typeof(TestMessage)), new ContextBag()).ConfigureAwait(false);
             await persister.Subscribe(new Subscriber("address://test-queue2", "endpointName"), new MessageType(typeof(TestMessagea)), new ContextBag()).ConfigureAwait(false);

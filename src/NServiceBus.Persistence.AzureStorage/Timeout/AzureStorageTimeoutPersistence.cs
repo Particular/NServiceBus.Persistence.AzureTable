@@ -1,6 +1,9 @@
 namespace NServiceBus
 {
+#if NET452
+    using System;
     using System.Configuration;
+#endif
     using System.Threading.Tasks;
     using Persistence.AzureStorage;
     using Features;
@@ -15,8 +18,13 @@ namespace NServiceBus
             DependsOn<TimeoutManager>();
             Defaults(s =>
             {
+#if NET452
                 var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
-                s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageConnectionString, defaultConnectionString);
+                if (string.IsNullOrEmpty(defaultConnectionString) != true)
+                {
+                    throw new Exception(@"Connection string should be assigned using code API: var persistence = endpointConfiguration.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>();\npersistence.ConnectionString(""connectionString"");");
+                }
+#endif
                 s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageCreateSchema, AzureTimeoutStorageDefaults.CreateSchema);
                 s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageTimeoutManagerDataTableName, AzureTimeoutStorageDefaults.TimeoutManagerDataTableName);
                 s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageTimeoutDataTableName, AzureTimeoutStorageDefaults.TimeoutDataTableName);

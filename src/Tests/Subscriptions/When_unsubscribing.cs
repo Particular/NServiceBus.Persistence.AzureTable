@@ -11,15 +11,15 @@
     public class When_unsubscribing
     {
         [SetUp]
-        public void Setup()
+        public Task Setup()
         {
-            SubscriptionTestHelper.PerformStorageCleanup();
+            return SubscriptionTestHelper.PerformStorageCleanup();
         }
 
         [Test]
-        public async Task the_subscription_should_be_removed()
+        public async Task The_subscription_should_be_removed()
         {
-            var persister = SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
             var messageType = new MessageType(typeof(TestMessage));
             var messageTypes = new[]
             {
@@ -29,7 +29,7 @@
             var subscriber = new Subscriber("address://test-queue", "endpointName");
             await persister.Subscribe(subscriber, messageType, null);
 
-            var subscribers = await persister.GetSubscriberAddressesForMessage(messageTypes, null);
+            var subscribers = (await persister.GetSubscriberAddressesForMessage(messageTypes, null)).ToList();
 
             Assert.That(subscribers.Count(), Is.EqualTo(1));
 

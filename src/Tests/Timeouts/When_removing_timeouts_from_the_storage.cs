@@ -11,9 +11,9 @@
     public class When_removing_timeouts_from_the_storage
     {
         [SetUp]
-        public void Perform_storage_cleanup()
+        public Task Perform_storage_cleanup()
         {
-            TestHelper.PerformStorageCleanup();
+            return TestHelper.PerformStorageCleanup();
         }
 
         [Test]

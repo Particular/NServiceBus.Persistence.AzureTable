@@ -1,7 +1,9 @@
 namespace NServiceBus
 {
     using System;
+#if NET452
     using System.Configuration;
+#endif
     using System.Threading.Tasks;
     using Features;
     using Microsoft.WindowsAzure.Storage;
@@ -17,8 +19,13 @@ namespace NServiceBus
             DependsOn<MessageDrivenSubscriptions>();
             Defaults(s =>
             {
+#if NET452
                 var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
-                s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageConnectionString, defaultConnectionString);
+                if (string.IsNullOrEmpty(defaultConnectionString) != true)
+                {
+                    throw new Exception(@"Connection string should be assigned using code API: var persistence = endpointConfiguration.UsePersistence<AzureStoragePersistence, StorageType.Subscriptions>();\npersistence.ConnectionString(""connectionString"");");
+                }
+#endif
                 s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageTableName, AzureSubscriptionStorageDefaults.TableName);
                 s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageCreateSchema , AzureSubscriptionStorageDefaults.CreateSchema);
             });
