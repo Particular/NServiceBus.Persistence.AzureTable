@@ -18,6 +18,7 @@ public class ConfigureEndpointAzureStorageQueueTransport : IConfigureEndpointTes
             .ConnectionString(connectionString)
             .Routing();
 
+        transportConfig.SanitizeQueueNamesWith(BackwardsCompatibleQueueNameSanitizerForTests.Sanitize);
 
         foreach (var publisher in publisherMetadata.Publishers)
         {
