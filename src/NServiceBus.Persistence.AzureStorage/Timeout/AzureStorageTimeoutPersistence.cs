@@ -22,7 +22,7 @@ namespace NServiceBus
                 var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
                 if (string.IsNullOrEmpty(defaultConnectionString) != true)
                 {
-                    throw new Exception(@"Connection string should be assigned using code API: var persistence = endpointConfiguration.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>();\npersistence.ConnectionString(""connectionString"");");
+                    logger.Warn(@"Connection string should be assigned using code API: var persistence = endpointConfiguration.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>();\npersistence.ConnectionString(""connectionString"");");
                 }
 #endif
                 s.SetDefault(WellKnownConfigurationKeys.TimeoutStorageCreateSchema, AzureTimeoutStorageDefaults.CreateSchema);
@@ -99,5 +99,7 @@ namespace NServiceBus
                 return Task.FromResult(0);
             }
         }
+
+        static ILog logger => LogManager.GetLogger<AzureStorageTimeoutPersistence>();
     }
 }
