@@ -1,9 +1,6 @@
 namespace NServiceBus
 {
     using System;
-#if NET452
-    using System.Configuration;
-#endif
     using System.Threading.Tasks;
     using Features;
     using Microsoft.WindowsAzure.Storage;
@@ -20,7 +17,7 @@ namespace NServiceBus
             Defaults(s =>
             {
 #if NET452
-                var defaultConnectionString = ConfigurationManager.AppSettings["NServiceBus/Persistence"];
+                var defaultConnectionString = System.Configuration.ConfigurationManager.AppSettings["NServiceBus/Persistence"];
                 if (string.IsNullOrEmpty(defaultConnectionString) != true)
                 {
                     logger.Warn(@"Connection string should be assigned using code API: var persistence = endpointConfiguration.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>();\npersistence.ConnectionString(""connectionString"");");
