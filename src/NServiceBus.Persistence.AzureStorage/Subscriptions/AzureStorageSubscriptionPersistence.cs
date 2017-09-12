@@ -9,6 +9,7 @@ namespace NServiceBus
     using Unicast.Subscriptions;
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
 
+    /// <summary></summary>
     public class AzureStorageSubscriptionPersistence : Feature
     {
         internal AzureStorageSubscriptionPersistence()
@@ -28,6 +29,7 @@ namespace NServiceBus
             });
         }
 
+        /// <summary></summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
             var subscriptionTableName = context.Settings.Get<string>(WellKnownConfigurationKeys.SubscriptionStorageTableName);

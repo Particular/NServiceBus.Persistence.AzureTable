@@ -7,6 +7,7 @@ namespace NServiceBus
     using Microsoft.WindowsAzure.Storage;
     using Persistence.AzureStorage.Config;
 
+    /// <summary></summary>
     public class AzureStorageTimeoutPersistence : Feature
     {
         internal AzureStorageTimeoutPersistence()
