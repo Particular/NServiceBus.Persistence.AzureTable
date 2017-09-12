@@ -5,6 +5,7 @@
     using Persistence.AzureStorage;
     using Persistence.AzureStorage.Config;
 
+    /// <summary></summary>
     public class AzureStorageSagaPersistence : Feature
     {
         internal AzureStorageSagaPersistence()
