@@ -1,7 +1,9 @@
 ﻿namespace NServiceBus
 {
+    using System;
     using Features;
     using Logging;
+    using Persistence;
     using Persistence.AzureStorage;
     using Persistence.AzureStorage.Config;
 
@@ -21,7 +23,6 @@
                 }
 #endif
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageCreateSchema, AzureStorageSagaDefaults.CreateSchema);
-                s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, AzureStorageSagaDefaults.AssumeSecondaryIndicesExist);
             });
         }
 
@@ -32,11 +33,10 @@
         {
             var connectionstring = context.Settings.Get<string>(WellKnownConfigurationKeys.SagaStorageConnectionString);
             var updateSchema = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCreateSchema);
-            var assumeSecondaryIndicesExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist);
 
-            if (assumeSecondaryIndicesExist == false)
+            if (!context.Settings.TryGet<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, out var assumeSecondaryIndicesExist))
             {
-                logger.Warn($"The version of {nameof(AzureStoragePersistence)} used is not configured to optimize sagas creation. To enable optimization, use '.{nameof(ConfigureAzureSagaStorage.AssumeSecondaryIndicesExist)}()' configuration API.");
+                throw new Exception($"To optimize sagas creation, saga persistence has to be configured using {nameof(PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas>)}.{nameof(ConfigureAzureSagaStorage.AssumeSecondaryIndicesExist)} API.");
             }
 
             context.Container.ConfigureComponent(builder => new AzureSagaPersister(connectionstring, updateSchema, assumeSecondaryIndicesExist), DependencyLifecycle.InstancePerCall);
