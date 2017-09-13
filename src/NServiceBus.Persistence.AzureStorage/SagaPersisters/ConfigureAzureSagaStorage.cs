@@ -31,7 +31,7 @@
         }
 
         /// <summary>
-        /// Confirm that all sagas have secondary indices to pt-out from full table scanning upon new saga creation.
+        /// Confirm that all sagas have secondary indices to opt-out from full table scanning upon new saga creation.
         /// <remarks>Sagas created with NServiceBus.Persistence.AzureStorage NuGet package have secondary indices by default.
         /// Sagas created with NServiceBus.Azure NuGet package need to be migrated using upgrade guides provided on our documentation site.</remarks>
         /// <param name="config"></param>
