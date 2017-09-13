@@ -14,8 +14,9 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
     public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
         configuration.UsePersistence<AzureStoragePersistence, StorageType.Subscriptions>().ConnectionString(ConnectionString);
-        configuration.UsePersistence<AzureStoragePersistence, StorageType.Sagas>().ConnectionString(ConnectionString);
         configuration.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>().ConnectionString(ConnectionString);
+        var sagaPersistence = configuration.UsePersistence<AzureStoragePersistence, StorageType.Sagas>().ConnectionString(ConnectionString);
+        sagaPersistence.AssumeSecondaryIndicesExist(true);
 
         var recoverabilitySettings = configuration.Recoverability();
 
