@@ -154,7 +154,7 @@
             await TryUpdateSuccessfulRead(timeoutManagerDataTable).ConfigureAwait(false);
 
             var lastSuccessfulReadEntity = await GetLastSuccessfulRead(timeoutManagerDataTable).ConfigureAwait(false);
-            var lastSuccessfulRead = lastSuccessfulReadEntity?.LastSuccessfulRead;
+            var lastSuccessfulRead = lastSuccessfulReadEntity?.LastSuccessfullRead;
 
             TableQuery<TimeoutDataEntity> query;
 
@@ -192,7 +192,7 @@
             {
                 var catchingUp = lastSuccessfulRead.Value.AddSeconds(catchUpInterval);
                 lastSuccessfulRead = catchingUp > now ? now : catchingUp;
-                lastSuccessfulReadEntity.LastSuccessfulRead = lastSuccessfulRead.Value;
+                lastSuccessfulReadEntity.LastSuccessfullRead = lastSuccessfulRead.Value;
             }
 
             var future = futureTimeouts.SafeFirstOrDefault();
@@ -421,7 +421,7 @@
             {
                 read = new TimeoutManagerDataEntity(sanitizedEndpointInstanceName, string.Empty)
                 {
-                    LastSuccessfulRead = DateTime.UtcNow
+                    LastSuccessfullRead = DateTime.UtcNow
                 };
 
                 return TableOperation.Insert(read);
@@ -431,7 +431,7 @@
             {
                 ETag = read.ETag,
                 Timestamp = read.Timestamp,
-                LastSuccessfulRead = read.LastSuccessfulRead
+                LastSuccessfullRead = read.LastSuccessfullRead
             };
 
             return TableOperation.Replace(updated);

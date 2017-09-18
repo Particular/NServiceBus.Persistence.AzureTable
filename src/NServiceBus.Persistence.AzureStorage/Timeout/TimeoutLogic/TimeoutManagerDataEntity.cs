@@ -12,7 +12,7 @@ namespace NServiceBus.Persistence.AzureStorage
         {
         }
 
-        public DateTime LastSuccessfulRead { get; set; }
+        public DateTime LastSuccessfullRead { get; set; }
 
     }
 }
