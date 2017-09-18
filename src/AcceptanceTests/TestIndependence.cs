@@ -13,12 +13,12 @@ public class TestIndependence
 {
     public const string HeaderName = "$AcceptanceTesting.TestRunId";
 
-    public class TestIdAppendingSerializationDefinition<TOriginalSerializationDefintion> : SerializationDefinition
-        where TOriginalSerializationDefintion : SerializationDefinition, new()
+    public class TestIdAppendingSerializationDefinition<TOriginalSerializationDefinition> : SerializationDefinition
+        where TOriginalSerializationDefinition : SerializationDefinition, new()
     {
         public override Func<IMessageMapper, IMessageSerializer> Configure(ReadOnlySettings settings)
         {
-            var builder = new TOriginalSerializationDefintion().Configure(settings);
+            var builder = new TOriginalSerializationDefinition().Configure(settings);
             var scenarioContext = settings.GetOrDefault<ScenarioContext>();
 
             return mapper => Builder(builder, mapper, scenarioContext);

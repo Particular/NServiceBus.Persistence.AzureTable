@@ -3,7 +3,7 @@
     using Core;
     using System.Collections.Generic;
 
-    class TimoutChunkComparer : IEqualityComparer<TimeoutsChunk.Timeout>
+    class TimeoutChunkComparer : IEqualityComparer<TimeoutsChunk.Timeout>
     {
         public bool Equals(TimeoutsChunk.Timeout x, TimeoutsChunk.Timeout y)
         {
