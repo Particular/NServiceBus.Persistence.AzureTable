@@ -43,7 +43,7 @@
                 RetryPolicy = new ExponentialRetry()
             };
 
-            cloudBlobclient = account.CreateCloudBlobClient();
+            cloudBlobClient = account.CreateCloudBlobClient();
         }
 
         public async Task Add(TimeoutData timeout, ContextBag context)
@@ -154,7 +154,7 @@
             await TryUpdateSuccessfulRead(timeoutManagerDataTable).ConfigureAwait(false);
 
             var lastSuccessfulReadEntity = await GetLastSuccessfulRead(timeoutManagerDataTable).ConfigureAwait(false);
-            var lastSuccessfulRead = lastSuccessfulReadEntity?.LastSuccessfullRead;
+            var lastSuccessfulRead = lastSuccessfulReadEntity?.LastSuccessfulRead;
 
             TableQuery<TimeoutDataEntity> query;
 
@@ -192,7 +192,7 @@
             {
                 var catchingUp = lastSuccessfulRead.Value.AddSeconds(catchUpInterval);
                 lastSuccessfulRead = catchingUp > now ? now : catchingUp;
-                lastSuccessfulReadEntity.LastSuccessfullRead = lastSuccessfulRead.Value;
+                lastSuccessfulReadEntity.LastSuccessfulRead = lastSuccessfulRead.Value;
             }
 
             var future = futureTimeouts.SafeFirstOrDefault();
@@ -201,7 +201,7 @@
             var timeoutsChunk = new TimeoutsChunk(
                 pastTimeouts.Where(c => !string.IsNullOrEmpty(c.RowKey))
                     .Select(c => new TimeoutsChunk.Timeout(c.RowKey, c.Time))
-                    .Distinct(new TimoutChunkComparer())
+                    .Distinct(new TimeoutChunkComparer())
                     .ToArray(),
                 nextTimeToRunQuery);
 
@@ -328,7 +328,7 @@
 
         async Task SaveCurrentTimeoutState(byte[] state, string stateAddress)
         {
-            var container = cloudBlobclient.GetContainerReference(timeoutStateContainerName);
+            var container = cloudBlobClient.GetContainerReference(timeoutStateContainerName);
             var blob = container.GetBlockBlobReference(stateAddress);
             using (var stream = new MemoryStream(state))
             {
@@ -338,7 +338,7 @@
 
         async Task<byte[]> Download(string stateAddress)
         {
-            var container = cloudBlobclient.GetContainerReference(timeoutStateContainerName);
+            var container = cloudBlobClient.GetContainerReference(timeoutStateContainerName);
 
             var blob = container.GetBlockBlobReference(stateAddress);
             using (var stream = new MemoryStream())
@@ -375,7 +375,7 @@
 
         Task DeleteState(string stateAddress)
         {
-            var container = cloudBlobclient.GetContainerReference(timeoutStateContainerName);
+            var container = cloudBlobClient.GetContainerReference(timeoutStateContainerName);
             var blob = container.GetBlockBlobReference(stateAddress);
             return blob.DeleteIfExistsAsync();
         }
@@ -421,7 +421,7 @@
             {
                 read = new TimeoutManagerDataEntity(sanitizedEndpointInstanceName, string.Empty)
                 {
-                    LastSuccessfullRead = DateTime.UtcNow
+                    LastSuccessfulRead = DateTime.UtcNow
                 };
 
                 return TableOperation.Insert(read);
@@ -431,7 +431,7 @@
             {
                 ETag = read.ETag,
                 Timestamp = read.Timestamp,
-                LastSuccessfullRead = read.LastSuccessfullRead
+                LastSuccessfulRead = read.LastSuccessfulRead
             };
 
             return TableOperation.Replace(updated);
@@ -445,7 +445,7 @@
         string endpointName;
         string sanitizedEndpointInstanceName;
         CloudTableClient client;
-        CloudBlobClient cloudBlobclient;
+        CloudBlobClient cloudBlobClient;
         TableOperation updateSuccessfulReadOperationForNextSpin;
     }
 }

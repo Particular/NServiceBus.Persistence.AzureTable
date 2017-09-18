@@ -9,7 +9,7 @@
     using Microsoft.WindowsAzure.Storage.Table;
     using NUnit.Framework;
 
-    public class When_storying_saga_with_non_primitive_values
+    public class When_storing_saga_with_non_primitive_values
     {
         [Test]
         public async Task Should_persist_json_serializable_value()
