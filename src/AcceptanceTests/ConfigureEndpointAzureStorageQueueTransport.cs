@@ -11,6 +11,7 @@ public class ConfigureEndpointAzureStorageQueueTransport : IConfigureEndpointTes
     {
         var connectionString = ConnectionString;
 
+        configuration.UseSerialization<NewtonsoftSerializer>();
         var transportConfig = configuration.UseTransport<AzureStorageQueueTransport>();
 
         var transportRouting = transportConfig
