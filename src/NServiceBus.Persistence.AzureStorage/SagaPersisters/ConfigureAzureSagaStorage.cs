@@ -7,7 +7,7 @@
     /// <summary>
     /// Configuration extensions for the sagas storage
     /// </summary>
-    public static class ConfigureAzureSagaStorage
+    public static partial class ConfigureAzureSagaStorage
     {
         /// <summary>
         /// Connection string to use for sagas storage.
@@ -31,14 +31,17 @@
         }
 
         /// <summary>
-        /// Opt-out from full table scanning upon new saga creation by confirming that all sagas have secondary indices.
+        /// Confirm that all sagas have secondary indices to opt-out from full table scanning upon new saga creation.
         /// <remarks>Sagas created with NServiceBus.Persistence.AzureStorage NuGet package have secondary indices by default.
         /// Sagas created with NServiceBus.Azure NuGet package need to be migrated using upgrade guides provided on our documentation site.</remarks>
+        /// <param name="config"></param>
+        /// <param name="assumeSecondaryIndecesExist"></param>
         /// </summary>
-        public static PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> AssumeSecondaryIndicesExist(this PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> config)
+        public static PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> AssumeSecondaryIndicesExist(this PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> config, bool assumeSecondaryIndecesExist)
         {
-            config.GetSettings().Set(SagaStorageAssumeSecondaryIndicesExist, true);
+            config.GetSettings().Set(SagaStorageAssumeSecondaryIndicesExist, assumeSecondaryIndecesExist);
             return config;
         }
+
     }
 }

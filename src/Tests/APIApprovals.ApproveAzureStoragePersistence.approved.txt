@@ -19,7 +19,11 @@ namespace NServiceBus
     }
     public class static ConfigureAzureSagaStorage
     {
+        [System.ObsoleteAttribute("Replaced with new API. Use `.AssumeSecondaryIndicesExist(bool)` instead. The memb" +
+            "er currently throws a NotImplementedException. Will be removed in version 3.0.0." +
+            "", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> AssumeSecondaryIndicesExist(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> config) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> AssumeSecondaryIndicesExist(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> config, bool assumeSecondaryIndecesExist) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> config, string connectionString) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> CreateSchema(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.Persistence.StorageType.Sagas> config, bool createSchema) { }
     }
