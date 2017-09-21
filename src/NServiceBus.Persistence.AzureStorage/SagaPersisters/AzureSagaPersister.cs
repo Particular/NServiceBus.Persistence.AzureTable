@@ -42,7 +42,8 @@
             return Persist(sagaData, null, context);
         }
 
-        public async Task<TSagaData> Get<TSagaData>(Guid sagaId, SynchronizedStorageSession session, ContextBag context) where TSagaData : IContainSagaData
+        public async Task<TSagaData> Get<TSagaData>(Guid sagaId, SynchronizedStorageSession session, ContextBag context)
+            where TSagaData : class, IContainSagaData
         {
             var id = sagaId.ToString();
             var entityType = typeof(TSagaData);
@@ -66,7 +67,8 @@
             return entity;
         }
 
-        public Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context) where TSagaData : IContainSagaData
+        public Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context)
+            where TSagaData : class, IContainSagaData
         {
             return GetByCorrelationProperty<TSagaData>(propertyName, propertyValue, session, context, false);
         }
@@ -96,16 +98,16 @@
         }
 
         async Task<TSagaData> GetByCorrelationProperty<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce)
-            where TSagaData : IContainSagaData
+            where TSagaData : class, IContainSagaData
         {
             var sagaId = await secondaryIndices.FindSagaIdAndCreateIndexEntryIfNotFound<TSagaData>(propertyName, propertyValue).ConfigureAwait(false);
             if (sagaId == null)
             {
-                return default(TSagaData);
+                return null;
             }
 
             var sagaData = await Get<TSagaData>(sagaId.Value, session, context).ConfigureAwait(false);
-            if (Equals(sagaData, default(TSagaData)))
+            if (sagaData == null)
             {
                 // saga is not found, try invalidate cache and try getting value one more time
                 secondaryIndices.InvalidateCacheIfAny(propertyName, propertyValue, typeof(TSagaData));
