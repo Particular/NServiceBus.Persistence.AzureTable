@@ -16,7 +16,7 @@
         [Test]
         public async Task Should_not_issue_table_scan()
         {
-            var connectionString = AzurePersistenceTests.GetConnectionString();
+            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
             AzureSagaPersister createSagaPersister() => new AzureSagaPersister(connectionString, true, AssumeSecondaryIndicesExist);
 
             // warm up table cache

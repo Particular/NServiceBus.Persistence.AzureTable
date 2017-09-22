@@ -16,6 +16,7 @@
   
   <ItemGroup>
     <Compile Remove="NServiceBus.Persistence.AzureStorage.approved.cs" />
+    <Compile Include="..\AcceptanceTests\Util.cs" Link="Util.cs" />
     <PackageReference Include="WindowsAzure.Storage" Version="8.*" />
     <PackageReference Include="NServiceBus" Version="7.0.0-*" />
     <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.0.0-*" />
