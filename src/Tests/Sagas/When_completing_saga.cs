@@ -10,7 +10,7 @@
         [Test]
         public async Task Should_remove_saga_data()
         {
-            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionString();
+            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForTransport();
 
             var persister = new AzureSagaPersister(connectionString, true);
             var saga = new CompleteSagaData
@@ -33,7 +33,7 @@
         [Test]
         public async Task Should_allow_action_twice_without_throwing_error()
         {
-            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionString();
+            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForTransport();
 
             var persister = new AzureSagaPersister(connectionString, true);
             var sagaData = new CompleteSagaData
@@ -57,7 +57,7 @@
         [Test]
         public async Task Should_succeed_if_saga_doesnt_exist()
         {
-            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionString();
+            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForTransport();
 
             var persister = new AzureSagaPersister(connectionString, true);
             var saga = new CompleteSagaData

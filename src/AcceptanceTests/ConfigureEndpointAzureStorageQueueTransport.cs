@@ -4,7 +4,7 @@ using NServiceBus.AcceptanceTesting.Support;
 
 public class ConfigureEndpointAzureStorageQueueTransport : IConfigureEndpointTestExecution
 {
-    static string ConnectionString => Testing.Utillities.GetEnvConfiguredConnectionString();
+    static string ConnectionString => Testing.Utillities.GetEnvConfiguredConnectionStringForTransport();
 
     public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {

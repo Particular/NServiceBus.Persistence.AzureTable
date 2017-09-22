@@ -3,13 +3,12 @@ using NServiceBus;
 using NServiceBus.AcceptanceTesting.Support;
 using NServiceBus.AcceptanceTests.Routing.MessageDrivenSubscriptions;
 using NServiceBus.AcceptanceTests.Sagas;
-using NServiceBus.AcceptanceTests.ScenarioDescriptors;
 using NServiceBus.Persistence;
 using Conventions = NServiceBus.AcceptanceTesting.Customization.Conventions;
 
 public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestExecution
 {
-    static string ConnectionString => EnvironmentHelper.GetEnvironmentVariable($"{nameof(AzureStoragePersistence)}.ConnectionString") ?? "UseDevelopmentStorage=true";
+    static string ConnectionString => Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
 
     public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {

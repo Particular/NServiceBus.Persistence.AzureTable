@@ -16,7 +16,7 @@
     {
         public When_executing_concurrently()
         {
-            connectionString = Testing.Utillities.GetEnvConfiguredConnectionString();
+            connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForTransport();
             var account = CloudStorageAccount.Parse(connectionString);
             var client = account.CreateCloudTableClient();
             cloudTable = client.GetTableReference(typeof(ConcurrentSagaData).Name);

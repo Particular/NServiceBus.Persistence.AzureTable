@@ -10,7 +10,7 @@
         [Test]
         public void Should_throw_exception_if_table_does_not_exist_and_auto_schema_is_off()
         {
-            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionString();
+            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForTransport();
 
             var persister = new AzureSagaPersister(connectionString, false);
             var saga = new SaveSagaData

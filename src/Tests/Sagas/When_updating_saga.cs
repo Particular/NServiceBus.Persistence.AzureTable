@@ -10,7 +10,7 @@
         [Test]
         public async Task Should_save_updated_properties()
         {
-            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionString();
+            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForTransport();
 
             var persister = new AzureSagaPersister(connectionString, true);
             var originalProp = Guid.NewGuid().ToString();
