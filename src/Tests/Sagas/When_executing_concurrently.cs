@@ -16,7 +16,7 @@
     {
         public When_executing_concurrently()
         {
-            connectionString = AzurePersistenceTests.GetConnectionString();
+            connectionString = Testing.Utillities.GetEnvConfiguredConnectionString();
             var account = CloudStorageAccount.Parse(connectionString);
             var client = account.CreateCloudTableClient();
             cloudTable = client.GetTableReference(typeof(ConcurrentSagaData).Name);

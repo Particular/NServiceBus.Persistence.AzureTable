@@ -22,7 +22,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
             TimeoutPersister persister = null;
             try
             {
-                persister = new TimeoutPersister(AzurePersistenceTests.GetConnectionString(),
+                persister = new TimeoutPersister(Testing.Utillities.GetEnvConfiguredConnectionString(),
                     AzureTimeoutStorageDefaults.TimeoutDataTableName, AzureTimeoutStorageDefaults.TimeoutManagerDataTableName,
                     AzureTimeoutStorageDefaults.TimeoutStateContainerName, 3600,
                     AzureTimeoutStorageDefaults.PartitionKeyScope, EndpointName, RuntimeEnvironment.MachineName);
@@ -91,7 +91,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
 
         static async Task RemoveAllRowsForTable(string tableName)
         {
-            var cloudStorageAccount = CloudStorageAccount.Parse(AzurePersistenceTests.GetConnectionString());
+            var cloudStorageAccount = CloudStorageAccount.Parse(Testing.Utillities.GetEnvConfiguredConnectionString());
             var table = cloudStorageAccount.CreateCloudTableClient().GetTableReference(tableName);
 
             await table.CreateIfNotExistsAsync();
@@ -119,7 +119,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
 
         static async Task RemoveAllBlobs()
         {
-            var cloudStorageAccount = CloudStorageAccount.Parse(AzurePersistenceTests.GetConnectionString());
+            var cloudStorageAccount = CloudStorageAccount.Parse(Testing.Utillities.GetEnvConfiguredConnectionString());
             var container = cloudStorageAccount.CreateCloudBlobClient().GetContainerReference("timeoutstate");
             await container.CreateIfNotExistsAsync();
             foreach (var blob in (await container.ListBlobsSegmentedAsync(null)).Results)
