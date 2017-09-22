@@ -13,17 +13,12 @@
                 throw new Exception($"Oh no! We couldn't find an environment variable '{environmentVartiableName}' with Azure Storage connection string.");
             }
 
-            return UnescapeLinuxEnvironmentVariableValue(connectionString);
+            return connectionString;
 
             string GetEnvironmentVariable(string variable)
             {
                 var candidate = Environment.GetEnvironmentVariable(variable, EnvironmentVariableTarget.User);
                 return string.IsNullOrWhiteSpace(candidate) ? Environment.GetEnvironmentVariable(variable) : candidate;
-            }
-
-            string UnescapeLinuxEnvironmentVariableValue(string originalValue)
-            {
-                return originalValue.TrimStart('\'').TrimEnd('\'');
             }
         }
     }
