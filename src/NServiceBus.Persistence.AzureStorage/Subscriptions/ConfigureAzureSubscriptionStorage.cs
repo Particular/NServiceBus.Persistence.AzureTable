@@ -2,7 +2,6 @@
 {
     using System;
     using Configuration.AdvancedExtensibility;
-    using Persistence;
     using Subscriptions;
     using static Persistence.AzureStorage.Config.WellKnownConfigurationKeys;
 
