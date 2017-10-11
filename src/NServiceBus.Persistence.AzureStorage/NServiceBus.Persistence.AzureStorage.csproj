@@ -8,7 +8,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <Description>NServiceBus Azure Storage Persistence</Description>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="WindowsAzure.Storage" Version="[8.2.0, 9.0.0)" />
@@ -17,6 +16,7 @@
     <PackageReference Include="Obsolete.Fody" Version="4.*" PrivateAssets="All" />
     <PackageReference Include="Fody" Version="2.*" PrivateAssets="All" />
     <PackageReference Include="Particular.CodeRules" Version="*" PrivateAssets="All" />
+    <PackageReference Include="Particular.Packaging" Version="*" PrivateAssets="All" />
     <Reference Include="System.Configuration" Condition="$(TargetFrameworks) == 'net452'" />
   </ItemGroup>
 </Project>
