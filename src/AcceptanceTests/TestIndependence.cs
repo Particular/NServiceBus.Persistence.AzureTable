@@ -74,6 +74,23 @@ public class TestIndependence
         }
     }
 
+    // All messages that go out with outgoing logical pipelines will be stamped by this behavior.
+    public class StampOutgoingBehavior : IBehavior<IOutgoingLogicalMessageContext, IOutgoingLogicalMessageContext>
+    {
+        string testRunId;
+
+        public StampOutgoingBehavior(ScenarioContext scenarioContext)
+        {
+            testRunId = GetTestRunId(scenarioContext);
+        }
+
+        public Task Invoke(IOutgoingLogicalMessageContext context, Func<IOutgoingLogicalMessageContext, Task> next)
+        {
+            context.Headers[HeaderName] = testRunId;
+            return next(context);
+        }
+    }
+
     static string GetTestRunId(ScenarioContext scenarioContext)
     {
         return scenarioContext.TestRunId.ToString();
