@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2006
+VisualStudioVersion = 15.0.27130.0
 MinimumVisualStudioVersion = 15.0.26430.13
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NServiceBus.Persistence.AzureStorage", "NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj", "{12F1D9F1-0A2C-4442-8D18-67DD096C6300}"
 EndProject
@@ -12,6 +12,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{98E63ED0-83D3-475E-89AF-95D5659F2C40}"
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
+		..\GitVersion.yml = ..\GitVersion.yml
 	EndProjectSection
 EndProject
 Global
