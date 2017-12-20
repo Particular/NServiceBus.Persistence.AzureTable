@@ -133,12 +133,17 @@
 
             var results = await timeoutDataTable.ExecuteQueryAsync(query, take: 1000).ConfigureAwait(false);
 
+            var deletionTasks = new List<Task>(4);
             foreach (var timeoutDataEntityBySaga in results)
             {
-                await DeleteState(timeoutDataEntityBySaga.StateAddress).ConfigureAwait(false);
-                await DeleteTimeEntity(timeoutDataTable, timeoutDataEntityBySaga.Time.ToString(partitionKeyScope), timeoutDataEntityBySaga.RowKey).ConfigureAwait(false);
-                await DeleteMainEntity(timeoutDataTable, timeoutDataEntityBySaga.RowKey, string.Empty).ConfigureAwait(false);
-                await DeleteSagaEntity(timeoutDataTable, timeoutDataEntityBySaga).ConfigureAwait(false);
+                deletionTasks.Add(DeleteState(timeoutDataEntityBySaga.StateAddress));
+                deletionTasks.Add(DeleteTimeEntity(timeoutDataTable, timeoutDataEntityBySaga.Time.ToString(partitionKeyScope), timeoutDataEntityBySaga.RowKey));
+                deletionTasks.Add(DeleteMainEntity(timeoutDataTable, timeoutDataEntityBySaga.RowKey, string.Empty));
+                deletionTasks.Add(DeleteSagaEntity(timeoutDataTable, timeoutDataEntityBySaga));
+                
+                await Task.WhenAll(deletionTasks).ConfigureAwait(false);
+                
+                deletionTasks.Clear();
             }
         }
 
