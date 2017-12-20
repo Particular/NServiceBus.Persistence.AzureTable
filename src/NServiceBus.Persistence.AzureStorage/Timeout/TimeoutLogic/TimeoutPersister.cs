@@ -51,16 +51,8 @@
         {
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
 
-            string identifier;
-            timeout.Headers.TryGetValue(Headers.MessageId, out identifier);
-            if (string.IsNullOrEmpty(identifier))
-            {
-                identifier = Guid.NewGuid().ToString();
-            }
+            var identifier = Guid.NewGuid().ToString();
             timeout.Id = identifier;
-
-            var timeoutDataEntity = await GetTimeoutData(timeoutDataTable, identifier, string.Empty).ConfigureAwait(false);
-            if (timeoutDataEntity != null) return;
 
             var headers = Serialize(timeout.Headers);
 
