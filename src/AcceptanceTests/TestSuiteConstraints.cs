@@ -5,7 +5,7 @@
     public partial class TestSuiteConstraints
     {
         public bool SupportsDtc { get; } = false;
-        public bool SupportsCrossQueueTransactions { get; } = false;
+        public bool SupportsCrossQueueTransactions { get; } = true;
         public bool SupportsNativePubSub { get; } = false;
         public bool SupportsNativeDeferral { get; } = false;
         public bool SupportsOutbox { get; } = false;
