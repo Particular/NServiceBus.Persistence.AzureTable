@@ -50,19 +50,12 @@
         {
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
 
-            timeout.Headers.TryGetValue(Headers.MessageId, out var identifier);
-            if (string.IsNullOrEmpty(identifier))
-            {
-                identifier = Guid.NewGuid().ToString();
-            }
+            var identifier = Guid.NewGuid().ToString();
             timeout.Id = identifier;
-
-            var timeoutDataEntity = await GetTimeoutData(timeoutDataTable, identifier, string.Empty).ConfigureAwait(false);
-            if (timeoutDataEntity != null) return;
 
             var headers = Serialize(timeout.Headers);
 
-            var saveActions = new List<Task>
+            var saveActions = new List<Task>(3)
             {
                 SaveCurrentTimeoutState(timeout.State, identifier),
                 SaveTimeoutEntry(timeout, timeoutDataTable, identifier, headers),
@@ -108,10 +101,17 @@
 
             try
             {
-                await DeleteSagaEntity(timeoutId, timeoutDataTable, timeoutDataEntity).ConfigureAwait(false);
-                await DeleteTimeEntity(timeoutDataTable, timeoutDataEntity.Time.ToString(partitionKeyScope), timeoutId).ConfigureAwait(false);
-                await DeleteState(timeoutDataEntity.StateAddress).ConfigureAwait(false);
+                // main entity first as canary for concurrent removes
                 await DeleteMainEntity(timeoutDataEntity, timeoutDataTable).ConfigureAwait(false);
+                
+                var deleteActions = new List<Task>(3)
+                {
+                    DeleteSagaEntity(timeoutId, timeoutDataTable, timeoutDataEntity),
+                    DeleteTimeEntity(timeoutDataTable, timeoutDataEntity.Time.ToString(partitionKeyScope), timeoutId),
+                    DeleteState(timeoutDataEntity.StateAddress)
+                };
+
+                await Task.WhenAll(deleteActions).ConfigureAwait(false);
             }
             catch (StorageException e)
             {
@@ -135,12 +135,19 @@
 
             var results = await timeoutDataTable.ExecuteQueryAsync(query, take: 1000).ConfigureAwait(false);
 
+            var deletionTasks = new List<Task>(3);
             foreach (var timeoutDataEntityBySaga in results)
             {
-                await DeleteState(timeoutDataEntityBySaga.StateAddress).ConfigureAwait(false);
-                await DeleteTimeEntity(timeoutDataTable, timeoutDataEntityBySaga.Time.ToString(partitionKeyScope), timeoutDataEntityBySaga.RowKey).ConfigureAwait(false);
+                // main entity first as canary for concurrent removes
                 await DeleteMainEntity(timeoutDataTable, timeoutDataEntityBySaga.RowKey, string.Empty).ConfigureAwait(false);
-                await DeleteSagaEntity(timeoutDataTable, timeoutDataEntityBySaga).ConfigureAwait(false);
+                
+                deletionTasks.Add(DeleteState(timeoutDataEntityBySaga.StateAddress));
+                deletionTasks.Add(DeleteTimeEntity(timeoutDataTable, timeoutDataEntityBySaga.Time.ToString(partitionKeyScope), timeoutDataEntityBySaga.RowKey));
+                deletionTasks.Add(DeleteSagaEntity(timeoutDataTable, timeoutDataEntityBySaga));
+                
+                await Task.WhenAll(deletionTasks).ConfigureAwait(false);
+                
+                deletionTasks.Clear();
             }
         }
 
@@ -201,7 +208,7 @@
             var timeoutsChunk = new TimeoutsChunk(
                 pastTimeouts.Where(c => !string.IsNullOrEmpty(c.RowKey))
                     .Select(c => new TimeoutsChunk.Timeout(c.RowKey, c.Time))
-                    .Distinct(new TimeoutChunkComparer())
+                    .Distinct(timeoutChunkComparer)
                     .ToArray(),
                 nextTimeToRunQuery);
 
@@ -234,7 +241,7 @@
             }
         }
 
-        Task DeleteMainEntity(TimeoutDataEntity timeoutDataEntity, CloudTable timeoutDataTable)
+        static Task DeleteMainEntity(TimeoutDataEntity timeoutDataEntity, CloudTable timeoutDataTable)
         {
             var deleteOperation = TableOperation.Delete(timeoutDataEntity);
             return timeoutDataTable.ExecuteAsync(deleteOperation);
@@ -259,13 +266,13 @@
             }
         }
 
-        Task DeleteSagaEntity(CloudTable timeoutDataTable, TimeoutDataEntity sagaEntity)
+        static Task DeleteSagaEntity(CloudTable timeoutDataTable, TimeoutDataEntity sagaEntity)
         {
             var deleteSagaOperation = TableOperation.Delete(sagaEntity);
             return timeoutDataTable.ExecuteAsync(deleteSagaOperation);
         }
 
-        Task SaveMainEntry(TimeoutData timeout, string identifier, string headers, CloudTable timeoutDataTable)
+        static Task SaveMainEntry(TimeoutData timeout, string identifier, string headers, CloudTable timeoutDataTable)
         {
             var timeoutDataObject = new TimeoutDataEntity(identifier, string.Empty)
             {
@@ -359,7 +366,7 @@
             }
         }
 
-        string Serialize(Dictionary<string, string> headers)
+        static string Serialize(Dictionary<string, string> headers)
         {
             return JsonConvert.SerializeObject(headers);
         }
@@ -380,7 +387,7 @@
             return blob.DeleteIfExistsAsync();
         }
 
-        string Sanitize(string s)
+        static string Sanitize(string s)
         {
             var rgx = new Regex(@"[^a-zA-Z0-9\-_]");
             return rgx.Replace(s, "");
@@ -447,5 +454,6 @@
         CloudTableClient client;
         CloudBlobClient cloudBlobClient;
         TableOperation updateSuccessfulReadOperationForNextSpin;
+        static TimeoutChunkComparer timeoutChunkComparer = new TimeoutChunkComparer();
     }
 }
