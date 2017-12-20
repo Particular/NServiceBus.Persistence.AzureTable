@@ -232,7 +232,7 @@
             }
         }
 
-        Task DeleteMainEntity(TimeoutDataEntity timeoutDataEntity, CloudTable timeoutDataTable)
+        static Task DeleteMainEntity(TimeoutDataEntity timeoutDataEntity, CloudTable timeoutDataTable)
         {
             var deleteOperation = TableOperation.Delete(timeoutDataEntity);
             return timeoutDataTable.ExecuteAsync(deleteOperation);
@@ -257,13 +257,13 @@
             }
         }
 
-        Task DeleteSagaEntity(CloudTable timeoutDataTable, TimeoutDataEntity sagaEntity)
+        static Task DeleteSagaEntity(CloudTable timeoutDataTable, TimeoutDataEntity sagaEntity)
         {
             var deleteSagaOperation = TableOperation.Delete(sagaEntity);
             return timeoutDataTable.ExecuteAsync(deleteSagaOperation);
         }
 
-        Task SaveMainEntry(TimeoutData timeout, string identifier, string headers, CloudTable timeoutDataTable)
+        static Task SaveMainEntry(TimeoutData timeout, string identifier, string headers, CloudTable timeoutDataTable)
         {
             var timeoutDataObject = new TimeoutDataEntity(identifier, string.Empty)
             {
@@ -357,7 +357,7 @@
             }
         }
 
-        string Serialize(Dictionary<string, string> headers)
+        static string Serialize(Dictionary<string, string> headers)
         {
             return JsonConvert.SerializeObject(headers);
         }
@@ -378,7 +378,7 @@
             return blob.DeleteIfExistsAsync();
         }
 
-        string Sanitize(string s)
+        static string Sanitize(string s)
         {
             var rgx = new Regex(@"[^a-zA-Z0-9\-_]");
             return rgx.Replace(s, "");
