@@ -204,7 +204,7 @@
             var timeoutsChunk = new TimeoutsChunk(
                 pastTimeouts.Where(c => !string.IsNullOrEmpty(c.RowKey))
                     .Select(c => new TimeoutsChunk.Timeout(c.RowKey, c.Time))
-                    .Distinct(new TimeoutChunkComparer())
+                    .Distinct(timeoutChunkComparer)
                     .ToArray(),
                 nextTimeToRunQuery);
 
@@ -450,5 +450,6 @@
         CloudTableClient client;
         CloudBlobClient cloudBlobClient;
         TableOperation updateSuccessfulReadOperationForNextSpin;
+        static TimeoutChunkComparer timeoutChunkComparer = new TimeoutChunkComparer();
     }
 }
