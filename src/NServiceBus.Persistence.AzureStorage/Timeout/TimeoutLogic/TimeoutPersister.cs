@@ -101,6 +101,9 @@
 
             try
             {
+                // main entity first as canary for concurrent removes
+                await DeleteMainEntity(timeoutDataEntity, timeoutDataTable).ConfigureAwait(false);
+                
                 var deleteActions = new List<Task>(3)
                 {
                     DeleteSagaEntity(timeoutId, timeoutDataTable, timeoutDataEntity),
@@ -109,7 +112,6 @@
                 };
 
                 await Task.WhenAll(deleteActions).ConfigureAwait(false);
-                await DeleteMainEntity(timeoutDataEntity, timeoutDataTable).ConfigureAwait(false);
             }
             catch (StorageException e)
             {
@@ -133,12 +135,14 @@
 
             var results = await timeoutDataTable.ExecuteQueryAsync(query, take: 1000).ConfigureAwait(false);
 
-            var deletionTasks = new List<Task>(4);
+            var deletionTasks = new List<Task>(3);
             foreach (var timeoutDataEntityBySaga in results)
             {
+                // main entity first as canary for concurrent removes
+                await DeleteMainEntity(timeoutDataTable, timeoutDataEntityBySaga.RowKey, string.Empty).ConfigureAwait(false);
+                
                 deletionTasks.Add(DeleteState(timeoutDataEntityBySaga.StateAddress));
                 deletionTasks.Add(DeleteTimeEntity(timeoutDataTable, timeoutDataEntityBySaga.Time.ToString(partitionKeyScope), timeoutDataEntityBySaga.RowKey));
-                deletionTasks.Add(DeleteMainEntity(timeoutDataTable, timeoutDataEntityBySaga.RowKey, string.Empty));
                 deletionTasks.Add(DeleteSagaEntity(timeoutDataTable, timeoutDataEntityBySaga));
                 
                 await Task.WhenAll(deletionTasks).ConfigureAwait(false);
