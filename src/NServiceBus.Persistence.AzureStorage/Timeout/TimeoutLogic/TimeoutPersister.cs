@@ -55,7 +55,7 @@
 
             var headers = Serialize(timeout.Headers);
 
-            var saveActions = new List<Task>
+            var saveActions = new List<Task>(3)
             {
                 SaveCurrentTimeoutState(timeout.State, identifier),
                 SaveTimeoutEntry(timeout, timeoutDataTable, identifier, headers),
@@ -101,9 +101,14 @@
 
             try
             {
-                await DeleteSagaEntity(timeoutId, timeoutDataTable, timeoutDataEntity).ConfigureAwait(false);
-                await DeleteTimeEntity(timeoutDataTable, timeoutDataEntity.Time.ToString(partitionKeyScope), timeoutId).ConfigureAwait(false);
-                await DeleteState(timeoutDataEntity.StateAddress).ConfigureAwait(false);
+                var deleteActions = new List<Task>(3)
+                {
+                    DeleteSagaEntity(timeoutId, timeoutDataTable, timeoutDataEntity),
+                    DeleteTimeEntity(timeoutDataTable, timeoutDataEntity.Time.ToString(partitionKeyScope), timeoutId),
+                    DeleteState(timeoutDataEntity.StateAddress)
+                };
+
+                await Task.WhenAll(deleteActions).ConfigureAwait(false);
                 await DeleteMainEntity(timeoutDataEntity, timeoutDataTable).ConfigureAwait(false);
             }
             catch (StorageException e)
