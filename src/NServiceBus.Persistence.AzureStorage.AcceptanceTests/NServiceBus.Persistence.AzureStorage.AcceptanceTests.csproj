@@ -18,10 +18,22 @@
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
     <PackageReference Include="NServiceBus.AcceptanceTesting" Version="6.3.3" />
     <PackageReference Include="NServiceBus.AcceptanceTests.Sources" Version="6.3.3" />
-    <PackageReference Include="NServiceBus.Azure.Transports.WindowsAzureStorageQueues" Version="7.4.0" />
+    <PackageReference Include="NServiceBus.Azure.Transports.WindowsAzureStorageQueues" Version="7.5.3" />
     <PackageReference Include="NServiceBus" Version="6.3.3" />
     <PackageReference Include="NUnit" Version="3.7.1" />
     <PackageReference Include="System.Spatial" Version="5.8.2" />
     <ProjectReference Include="..\NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="\**\Routing\When_extending_command_routing.cs" />
+    <Compile Remove="\**\Routing\When_base_event_from_2_publishers.cs" />
+    <Compile Remove="\**\Routing\When_publishing.cs" />
+    <Compile Remove="\**\Routing\When_publishing_an_event_implementing_two_unrelated_interfaces.cs" />
+    <Compile Remove="\**\Routing\When_publishing_an_interface.cs" />
+    <Compile Remove="\**\Routing\When_publishing_an_interface_with_unobtrusive.cs" />
+    <Compile Remove="\**\Routing\When_publishing_using_root_type.cs" />
+    <Compile Remove="\**\Routing\MessageDrivenSubscriptions\When_unsubscribing_from_event.cs" />
+    <Compile Remove="\**\Versioning\When_multiple_versions_of_a_message_is_published.cs" />
   </ItemGroup>
 </Project>
