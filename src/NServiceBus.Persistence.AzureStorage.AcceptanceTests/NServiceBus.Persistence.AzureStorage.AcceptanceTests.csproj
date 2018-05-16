@@ -24,4 +24,8 @@
     <PackageReference Include="System.Spatial" Version="5.8.2" />
     <ProjectReference Include="..\NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="\**\Routing\When_extending_command_routing.cs" />
+  </ItemGroup>
 </Project>
