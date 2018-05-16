@@ -31,7 +31,7 @@
     <PackageReference Include="Fody" Version="2.1.0" />
     <PackageReference Include="Particular.CodeRules" Version="0.2.0" />
     <PackageReference Include="NuGetPackager" Version="0.6.3" />
-    <PackageReference Include="GitVersionTask" Version="4.0.0-beta0012" />
+    <PackageReference Include="GitVersionTask" Version="3.6.5" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
