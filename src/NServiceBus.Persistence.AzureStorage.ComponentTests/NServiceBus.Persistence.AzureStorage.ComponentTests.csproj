@@ -13,13 +13,8 @@
     <RootNamespace>NServiceBus.Persistence.AzureStorage.ComponentTests</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="NServiceBus.Azure.Transports.WindowsAzureStorageQueues.approved.cs" />
-    <Compile Remove="NServiceBus.Persistence.AzureStorage.approved.cs" />
-    <Compile Remove="NServiceBus.Persistence.AzureStorage.received.cs" />
-    <PackageReference Include="ObjectApproval" Version="1.6.0" />
     <PackageReference Include="NServiceBus" Version="6.3.3" />
     <PackageReference Include="ApprovalTests" Version="3.0.13" />
-    <PackageReference Include="ApprovalUtilities" Version="3.0.13" />
     <PackageReference Include="Microsoft.Azure.KeyVault.Core" Version="2.0.4" />
     <PackageReference Include="Microsoft.Data.Edm" Version="5.8.2" />
     <PackageReference Include="Microsoft.Data.OData" Version="5.8.2" />
@@ -29,8 +24,7 @@
     <PackageReference Include="NServiceBus.AcceptanceTesting" Version="6.3.3" />
     <PackageReference Include="NUnit" Version="3.7.1" />
     <PackageReference Include="Particular.CodeRules" Version="0.2.0" />
-    <PackageReference Include="ApiApprover" Version="6.1.0-beta2" />
-    <PackageReference Include="PublicApiGenerator" Version="6.1.0-beta2" />
+    <PackageReference Include="PublicApiGenerator" Version="7.0.1" />
     <ProjectReference Include="..\NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj" />
   </ItemGroup>
 </Project>

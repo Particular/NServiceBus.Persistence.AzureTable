@@ -1,12 +1,10 @@
 namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
     using NUnit.Framework;
-    using ObjectApproval;
     using Unicast.Subscriptions;
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
 
@@ -34,6 +32,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
             var subscribersSecond = await persister.GetSubscribers(type)
                 .ConfigureAwait(false);
             var secondTime = second.ElapsedMilliseconds;
+
             Assert.IsTrue(secondTime * 1000 < firstTime);
             Assert.AreEqual(subscribersFirst.Count(), subscribersSecond.Count());
         }
@@ -45,7 +44,16 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
             var type = new MessageType("type1", new Version(0, 0, 0, 0));
             persister.Subscribe(new Subscriber("address://test-queue", "endpoint"), type, null).Await();
             persister.GetSubscribers(type).Await();
-            VerifyCache(persister.Cache);
+
+            var cache = persister.Cache;
+            Assert.AreEqual(cache.Count, 1, "should only contain one item");
+
+            var subscribers = cache["type1,"].Subscribers.Result;
+            Assert.AreEqual(subscribers.Count(), 1, "should only contain one subscriber");
+
+            var subscriber = subscribers.First();
+            Assert.AreEqual(subscriber.TransportAddress, "address://test-queue");
+            Assert.AreEqual(subscriber.Endpoint, "endpoint");
         }
 
         [Test]
@@ -56,7 +64,9 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
             persister.Subscribe(new Subscriber("address://test-queue", "endpoint"), matchingType, null).Await();
             persister.GetSubscribers(matchingType).Await();
             persister.Subscribe(new Subscriber("address://test-queue", "endpoint"), matchingType, null).Await();
-            VerifyCache(persister.Cache);
+
+            var cache = persister.Cache;
+            Assert.AreEqual(cache.Count, 0, "should not contain any items");
         }
 
         [Test]
@@ -67,7 +77,9 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
             persister.Subscribe(new Subscriber("address://test-queue", "endpoint"), matchingType, null).Await();
             persister.GetSubscribers(matchingType).Await();
             persister.Unsubscribe(new Subscriber("address://test-queue", "endpoint"), matchingType, null).Await();
-            VerifyCache(persister.Cache);
+
+            var cache = persister.Cache;
+            Assert.AreEqual(cache.Count, 0, "should not contain any items");
         }
 
         [Test]
@@ -90,21 +102,33 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
             persister.GetSubscribers(type1, type3).Await();
             persister.GetSubscribers(type1, type2, type3).Await();
             persister.Unsubscribe(new Subscriber("address://test-queue", "endpoint"), type2, null).Await();
-            VerifyCache(persister.Cache);
-        }
 
-        static void VerifyCache(ConcurrentDictionary<string, AzureSubscriptionStorage.CacheItem> cache)
-        {
-            var items = cache
-                .OrderBy(_ => _.Key)
-                .ToDictionary(_ => _.Key,
-                    elementSelector: item =>
-                    {
-                        return item.Value.Subscribers.Result
-                            .OrderBy(_ => _.Endpoint)
-                            .ThenBy(_ => _.TransportAddress);
-                    });
-            ObjectApprover.VerifyWithJson(items);
+            var cache = persister.Cache;
+            Assert.AreEqual(cache.Count, 3, "should contain 3 items exactly");
+
+            // subscribers for "type1"
+            var subscribers = cache["type1,"].Subscribers.Result.ToArray();
+            Assert.AreEqual(subscribers.Length, 1, "should only contain one subscriber");
+
+            var subscriber = subscribers[0];
+            Assert.AreEqual(subscriber.TransportAddress, "address://test-queue");
+            Assert.AreEqual(subscriber.Endpoint, "endpoint");
+
+            // subscribers for "type1,type3,"
+            subscribers = cache["type1,type3,"].Subscribers.Result.ToArray();
+            Assert.AreEqual(subscribers.Length, 1, "should only contain one subscriber");
+
+            subscriber = subscribers[0];
+            Assert.AreEqual(subscriber.TransportAddress, "address://test-queue");
+            Assert.AreEqual(subscriber.Endpoint, "endpoint");
+
+            // subscribers for "type3,"
+            subscribers = cache["type3,"].Subscribers.Result.ToArray();
+            Assert.AreEqual(subscribers.Length, 1, "should only contain one subscriber");
+
+            subscriber = subscribers[0];
+            Assert.AreEqual(subscriber.TransportAddress, "address://test-queue");
+            Assert.AreEqual(subscriber.Endpoint, "endpoint");
         }
     }
 }
