@@ -53,8 +53,7 @@
             {
                 var meta = context.GetOrCreate<SagaInstanceMetadata>();
                 meta.AddEtag(entity, tableEntity.ETag);
-                EntityProperty value;
-                if (tableEntity.TryGetValue(SecondaryIndexIndicatorProperty, out value))
+                if (tableEntity.TryGetValue(SecondaryIndexIndicatorProperty, out var value))
                 {
                     var partitionRowKeyTuple = PartitionRowKeyTuple.Parse(value.StringValue);
                     if (partitionRowKeyTuple.HasValue)
@@ -128,8 +127,7 @@
         {
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
 
-            PartitionRowKeyTuple? secondaryIndexKey;
-            if (meta.TryGetSecondaryIndexKey(sagaData, out secondaryIndexKey))
+            if (meta.TryGetSecondaryIndexKey(sagaData, out var secondaryIndexKey))
             {
                 return secondaryIndices.RemoveSecondary(sagaData.GetType(), secondaryIndexKey.Value);
             }
@@ -204,10 +202,9 @@
             var rowkey = partitionKey;
 
             var type = entity.GetType();
-            string etag;
 
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            var update = meta.TryGetEtag(entity, out etag);
+            var update = meta.TryGetEtag(entity, out var etag);
 
             if (secondaryIndexKey == null && update)
             {
