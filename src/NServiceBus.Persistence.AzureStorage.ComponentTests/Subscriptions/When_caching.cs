@@ -1,7 +1,6 @@
 namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
