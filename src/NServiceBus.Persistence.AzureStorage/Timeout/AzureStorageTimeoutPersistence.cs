@@ -15,7 +15,7 @@ namespace NServiceBus
             DependsOn<TimeoutManager>();
             Defaults(s =>
             {
-#if NET452
+#if NETFRAMEWORK
                 var defaultConnectionString = System.Configuration.ConfigurationManager.AppSettings["NServiceBus/Persistence"];
                 if (string.IsNullOrEmpty(defaultConnectionString) != true)
                 {
