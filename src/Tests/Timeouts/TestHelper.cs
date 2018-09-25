@@ -30,7 +30,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
             catch (WebException exception)
             {
                 // Azure blob container CreateIfNotExists() can falsely report HTTP 409 error, swallow it
-                if (exception.Status != WebExceptionStatus.ProtocolError || (exception.Response is HttpWebResponse && ((HttpWebResponse) exception.Response).StatusCode != HttpStatusCode.NotFound))
+                if (exception.Status != WebExceptionStatus.ProtocolError || (exception.Response is HttpWebResponse response && response.StatusCode != HttpStatusCode.NotFound))
                 {
                     throw;
                 }
