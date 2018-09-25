@@ -23,8 +23,12 @@
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            return obj is PartitionRowKeyTuple && Equals((PartitionRowKeyTuple) obj);
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            return obj is PartitionRowKeyTuple tuple && Equals(tuple);
         }
 
         bool Equals(PartitionRowKeyTuple other)
@@ -51,7 +55,7 @@
             {
                 return null;
             }
-            
+
             var strings = str.Split(separator, StringSplitOptions.None);
             return new PartitionRowKeyTuple(strings[0], strings[1]);
         }
