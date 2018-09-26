@@ -88,6 +88,11 @@ namespace NServiceBus.Persistence.AzureStorage
                 }
                 else if (TryGetNullable(type, value, out DateTime? dateTime))
                 {
+                    if (!dateTime.HasValue || dateTime.Value < StorageTableMinDateTime)
+                    {
+                        throw new Exception($"Saga data of type '{entity.GetType().FullName}' with DateTime property '{name}' has an invalid value '{dateTime}'. Value cannot be null and must be equal to or greater than '{StorageTableMinDateTime}'.");
+                    }
+
                     toPersist[name] = new EntityProperty(dateTime);
                 }
                 else if (TryGetNullable(type, value, out Guid? guid))
@@ -235,6 +240,8 @@ namespace NServiceBus.Persistence.AzureStorage
         {
             ContractResolver = new NonAbstractDefaultContractResolver(),
         };
+
+        public static readonly DateTime StorageTableMinDateTime = new DateTime(1601, 1, 1);
 
         class NonAbstractDefaultContractResolver : DefaultContractResolver
         {
