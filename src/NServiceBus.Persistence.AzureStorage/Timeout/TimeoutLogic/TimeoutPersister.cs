@@ -18,7 +18,8 @@
 
     class TimeoutPersister : IPersistTimeouts, IQueryTimeouts
     {
-        public TimeoutPersister(string timeoutConnectionString, string timeoutDataTableName, string timeoutManagerDataTableName, string timeoutStateContainerName, int catchUpInterval, string partitionKeyScope, string endpointName, string hostDisplayName)
+        public TimeoutPersister(string timeoutConnectionString, string timeoutDataTableName, string timeoutManagerDataTableName, string timeoutStateContainerName, int catchUpInterval, string partitionKeyScope, string endpointName, string hostDisplayName,
+            Func<DateTime> currentDateTimeInUtc)
         {
             this.timeoutDataTableName = timeoutDataTableName;
             this.timeoutManagerDataTableName = timeoutManagerDataTableName;
@@ -26,7 +27,8 @@
             this.catchUpInterval = catchUpInterval;
             this.partitionKeyScope = partitionKeyScope;
             this.endpointName = endpointName;
-            this.timeoutNextExecutionStrategy = new TimeoutNextExecutionStrategy(TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1));
+            this.currentDateTimeInUtc = currentDateTimeInUtc;
+            timeoutNextExecutionStrategy = new TimeoutNextExecutionStrategy(TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), currentDateTimeInUtc);
 
             // Unicast sets the default for this value to the machine name.
             // NServiceBus.Host.AzureCloudService, when running in a cloud environment, sets this value to the current RoleInstanceId.
@@ -154,7 +156,7 @@
 
         public async Task<TimeoutsChunk> GetNextChunk(DateTime startSlice)
         {
-            var now = DateTime.UtcNow;
+            var now = currentDateTimeInUtc();
 
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
             var timeoutManagerDataTable = client.GetTableReference(timeoutManagerDataTableName);
@@ -190,7 +192,7 @@
             var allTimeouts = result.ToList();
             if (allTimeouts.Count == 0)
             {
-                return new TimeoutsChunk(new TimeoutsChunk.Timeout[0], now.AddSeconds(1));
+                return new TimeoutsChunk(new TimeoutsChunk.Timeout[0], timeoutNextExecutionStrategy.GetNextRun());
             }
 
             var pastTimeouts = allTimeouts.Where(c => c.Time > startSlice && c.Time <= now).ToList();
@@ -429,7 +431,7 @@
             {
                 read = new TimeoutManagerDataEntity(sanitizedEndpointInstanceName, string.Empty)
                 {
-                    LastSuccessfulRead = DateTime.UtcNow
+                    LastSuccessfulRead = currentDateTimeInUtc()
                 };
 
                 return TableOperation.Insert(read);
@@ -451,6 +453,7 @@
         int catchUpInterval;
         string partitionKeyScope;
         string endpointName;
+        readonly Func<DateTime> currentDateTimeInUtc;
         string sanitizedEndpointInstanceName;
         CloudTableClient client;
         CloudBlobClient cloudBlobClient;
