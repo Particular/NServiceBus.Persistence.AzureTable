@@ -18,7 +18,8 @@
 
     class TimeoutPersister : IPersistTimeouts, IQueryTimeouts
     {
-        public TimeoutPersister(string timeoutConnectionString, string timeoutDataTableName, string timeoutManagerDataTableName, string timeoutStateContainerName, int catchUpInterval, string partitionKeyScope, string endpointName, string hostDisplayName)
+        public TimeoutPersister(string timeoutConnectionString, string timeoutDataTableName, string timeoutManagerDataTableName, string timeoutStateContainerName, int catchUpInterval, string partitionKeyScope, string endpointName, string hostDisplayName,
+            Func<DateTime> currentDateTimeInUtc)
         {
             this.timeoutDataTableName = timeoutDataTableName;
             this.timeoutManagerDataTableName = timeoutManagerDataTableName;
@@ -26,6 +27,8 @@
             this.catchUpInterval = catchUpInterval;
             this.partitionKeyScope = partitionKeyScope;
             this.endpointName = endpointName;
+            this.currentDateTimeInUtc = currentDateTimeInUtc;
+            timeoutNextExecutionStrategy = new TimeoutNextExecutionStrategy(TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), currentDateTimeInUtc);
 
             // Unicast sets the default for this value to the machine name.
             // NServiceBus.Host.AzureCloudService, when running in a cloud environment, sets this value to the current RoleInstanceId.
@@ -103,7 +106,7 @@
             {
                 // main entity first as canary for concurrent removes
                 await DeleteMainEntity(timeoutDataEntity, timeoutDataTable).ConfigureAwait(false);
-                
+
                 var deleteActions = new List<Task>(3)
                 {
                     DeleteSagaEntity(timeoutId, timeoutDataTable, timeoutDataEntity),
@@ -140,20 +143,20 @@
             {
                 // main entity first as canary for concurrent removes
                 await DeleteMainEntity(timeoutDataTable, timeoutDataEntityBySaga.RowKey, string.Empty).ConfigureAwait(false);
-                
+
                 deletionTasks.Add(DeleteState(timeoutDataEntityBySaga.StateAddress));
                 deletionTasks.Add(DeleteTimeEntity(timeoutDataTable, timeoutDataEntityBySaga.Time.ToString(partitionKeyScope), timeoutDataEntityBySaga.RowKey));
                 deletionTasks.Add(DeleteSagaEntity(timeoutDataTable, timeoutDataEntityBySaga));
-                
+
                 await Task.WhenAll(deletionTasks).ConfigureAwait(false);
-                
+
                 deletionTasks.Clear();
             }
         }
 
         public async Task<TimeoutsChunk> GetNextChunk(DateTime startSlice)
         {
-            var now = DateTime.UtcNow;
+            var now = currentDateTimeInUtc();
 
             var timeoutDataTable = client.GetTableReference(timeoutDataTableName);
             var timeoutManagerDataTable = client.GetTableReference(timeoutManagerDataTableName);
@@ -189,7 +192,7 @@
             var allTimeouts = result.ToList();
             if (allTimeouts.Count == 0)
             {
-                return new TimeoutsChunk(new TimeoutsChunk.Timeout[0], now.AddSeconds(1));
+                return new TimeoutsChunk(new TimeoutsChunk.Timeout[0], timeoutNextExecutionStrategy.GetNextRun());
             }
 
             var pastTimeouts = allTimeouts.Where(c => c.Time > startSlice && c.Time <= now).ToList();
@@ -203,7 +206,7 @@
             }
 
             var future = futureTimeouts.SafeFirstOrDefault();
-            var nextTimeToRunQuery = lastSuccessfulRead ?? (future?.Time ?? now.AddSeconds(1));
+            var nextTimeToRunQuery = timeoutNextExecutionStrategy.GetNextRun(lastSuccessfulRead, future);
 
             var timeoutsChunk = new TimeoutsChunk(
                 pastTimeouts.Where(c => !string.IsNullOrEmpty(c.RowKey))
@@ -428,7 +431,7 @@
             {
                 read = new TimeoutManagerDataEntity(sanitizedEndpointInstanceName, string.Empty)
                 {
-                    LastSuccessfulRead = DateTime.UtcNow
+                    LastSuccessfulRead = currentDateTimeInUtc()
                 };
 
                 return TableOperation.Insert(read);
@@ -450,10 +453,12 @@
         int catchUpInterval;
         string partitionKeyScope;
         string endpointName;
+        readonly Func<DateTime> currentDateTimeInUtc;
         string sanitizedEndpointInstanceName;
         CloudTableClient client;
         CloudBlobClient cloudBlobClient;
         TableOperation updateSuccessfulReadOperationForNextSpin;
         static TimeoutChunkComparer timeoutChunkComparer = new TimeoutChunkComparer();
+        TimeoutNextExecutionStrategy timeoutNextExecutionStrategy;
     }
 }
