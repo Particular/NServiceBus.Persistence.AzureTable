@@ -17,7 +17,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
     {
         const string EndpointName = "Sales";
 
-        internal static TimeoutPersister CreateTimeoutPersister()
+        internal static TimeoutPersister CreateTimeoutPersister(Func<DateTime> dateTimeNowUtcGenerator = null)
         {
             TimeoutPersister persister = null;
             try
@@ -25,12 +25,13 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
                 persister = new TimeoutPersister(Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence(),
                     AzureTimeoutStorageDefaults.TimeoutDataTableName, AzureTimeoutStorageDefaults.TimeoutManagerDataTableName,
                     AzureTimeoutStorageDefaults.TimeoutStateContainerName, 3600,
-                    AzureTimeoutStorageDefaults.PartitionKeyScope, EndpointName, RuntimeEnvironment.MachineName);
+                    AzureTimeoutStorageDefaults.PartitionKeyScope, EndpointName, RuntimeEnvironment.MachineName,
+                    dateTimeNowUtcGenerator ?? (() => DateTime.UtcNow));
             }
             catch (WebException exception)
             {
                 // Azure blob container CreateIfNotExists() can falsely report HTTP 409 error, swallow it
-                if (exception.Status != WebExceptionStatus.ProtocolError || (exception.Response is HttpWebResponse && ((HttpWebResponse) exception.Response).StatusCode != HttpStatusCode.NotFound))
+                if (exception.Status != WebExceptionStatus.ProtocolError || (exception.Response is HttpWebResponse response && response.StatusCode != HttpStatusCode.NotFound))
                 {
                     throw;
                 }

@@ -83,8 +83,7 @@
             var retrieveOperation = TableOperation.Retrieve<TimeoutDataEntity>(messageType.ToString(), encodedAddress);
 
             var tableResult = await table.ExecuteAsync(retrieveOperation).ConfigureAwait(false);
-            var subscription = tableResult.Result as TimeoutDataEntity;
-            if (subscription != null)
+            if (tableResult.Result is TimeoutDataEntity subscription)
             {
                 var operation = TableOperation.Delete(subscription);
                 await table.ExecuteAsync(operation).ConfigureAwait(false);

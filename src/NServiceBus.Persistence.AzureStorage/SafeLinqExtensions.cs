@@ -8,7 +8,10 @@ namespace NServiceBus.Persistence.AzureStorage
     {
         public static TSource SafeFirstOrDefault<TSource>(this IEnumerable<TSource> source)
         {
-            if (source == null) return default(TSource);
+            if (source == null)
+            {
+                return default;
+            }
 
             try
             {
@@ -16,7 +19,10 @@ namespace NServiceBus.Persistence.AzureStorage
             }
             catch (StorageException ex)
             {
-                if (ex.RequestInformation.HttpStatusCode == 404) return default(TSource);
+                if (ex.RequestInformation.HttpStatusCode == 404)
+                {
+                    return default;
+                }
 
                 throw;
             }

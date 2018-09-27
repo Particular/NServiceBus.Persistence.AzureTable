@@ -1,5 +1,6 @@
 namespace NServiceBus
 {
+    using System;
     using System.Threading.Tasks;
     using Persistence.AzureStorage;
     using Features;
@@ -15,7 +16,7 @@ namespace NServiceBus
             DependsOn<TimeoutManager>();
             Defaults(s =>
             {
-#if NET452
+#if NETFRAMEWORK
                 var defaultConnectionString = System.Configuration.ConfigurationManager.AppSettings["NServiceBus/Persistence"];
                 if (string.IsNullOrEmpty(defaultConnectionString) != true)
                 {
@@ -54,7 +55,7 @@ namespace NServiceBus
 
             context.Container.ConfigureComponent(() =>
                 new TimeoutPersister(connectionString, timeoutDataTableName, timeoutManagerDataTableName, timeoutStateContainerName, catchUpInterval,
-                                     partitionKeyScope, endpointName, hostDisplayName),
+                                     partitionKeyScope, endpointName, hostDisplayName, () => DateTime.UtcNow),
                 DependencyLifecycle.InstancePerCall);
         }
 
