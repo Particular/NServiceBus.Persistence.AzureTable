@@ -1,23 +1,16 @@
-﻿using System.IO;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using ApprovalTests;
-using ApprovalTests.Reporters;
+﻿using NServiceBus;
 using NUnit.Framework;
+using Particular.Approvals;
 using PublicApiGenerator;
 
 [TestFixture]
 public class APIApprovals
 {
     [Test]
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    [UseReporter(typeof(DiffReporter), typeof(AllFailingTestsClipboardReporter))]
     public void ApproveAzureStoragePersistence()
     {
-        var combine = Path.Combine(TestContext.CurrentContext.TestDirectory, "NServiceBus.Persistence.AzureStorage.dll");
-        var assembly = Assembly.LoadFile(combine);
-        var publicApi = ApiGenerator.GeneratePublicApi(assembly);
-        Approvals.Verify(publicApi);
+        var publicApi = ApiGenerator.GeneratePublicApi(typeof(AzureStoragePersistence).Assembly, excludeAttributes: new[] { "System.Runtime.Versioning.TargetFrameworkAttribute" });
+        Approver.Verify(publicApi);
     }
 
 }
