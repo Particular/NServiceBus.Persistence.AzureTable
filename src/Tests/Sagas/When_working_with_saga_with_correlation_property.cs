@@ -1,4 +1,5 @@
-﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Persisters
+﻿#if NETFRAMEWORK
+namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Persisters
 {
     using System;
     using System.Linq;
@@ -69,8 +70,8 @@
                 recorder.Print(Console.Out);
 
                 var gets = recorder.Requests.Where(r => r.ToLower().Contains("get"));
-                var getsWithNoPartitionKey = gets.Where(get => 
-                    get.Contains("PartitionKey%20eq") == false && 
+                var getsWithNoPartitionKey = gets.Where(get =>
+                    get.Contains("PartitionKey%20eq") == false &&
                     get.Contains("PartitionKey=") == false).ToArray();
 
                 // only asking for a table
@@ -85,3 +86,4 @@
         public string Correlation { get; set; }
     }
 }
+#endif
