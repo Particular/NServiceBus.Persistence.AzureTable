@@ -6,7 +6,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
     using System.Linq;
     using System.Threading.Tasks;
     using NUnit.Framework;
-    using ObjectApproval;
+    using Particular.Approvals;
     using Unicast.Subscriptions;
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
 
@@ -104,7 +104,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
                             .OrderBy(_ => _.Endpoint)
                             .ThenBy(_ => _.TransportAddress);
                     });
-            ObjectApprover.VerifyWithJson(items);
+            Approver.Verify(items);
         }
     }
 }

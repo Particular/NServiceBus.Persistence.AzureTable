@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFrameworks>net461;netcoreapp2.1</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
-    <Optimize>false</Optimize>
     <AssemblyOriginatorKeyFile>$(SolutionDir)NServiceBus.snk</AssemblyOriginatorKeyFile>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
@@ -17,26 +16,14 @@
     <PackageReference Include="NServiceBus" Version="7.1.0" />
     <PackageReference Include="NUnit" Version="3.11.0" />
     <PackageReference Include="NServiceBus" Version="7.0.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.8.0-alpha1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition="$(TargetFramework) == 'net461'">
-    <PackageReference Include="ObjectApproval" Version="3.0.0" />
-    <PackageReference Include="ApprovalTests" Version="3.0.18" />
-    <PackageReference Include="PublicApiGenerator" Version="6.*" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.12.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+    <PackageReference Include="Particular.Approvals" Version="0.2.0" />
+    <PackageReference Include="PublicApiGenerator" Version="8.0.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\AcceptanceTests\Util.cs" Link="Util.cs" />
-  </ItemGroup>
-
-  <ItemGroup Condition="$(TargetFramework) == 'netcoreapp2.1'">
-    <Compile Remove="Subscriptions\When_caching.cs" />
-    <Compile Remove="APIApprovals.cs" />
-    <Compile Remove="ApprovalTestConfig.cs" />
-    <Compile Remove="AzureRequestRecorder.cs" />
-    <Compile Remove="Sagas\When_working_with_saga_with_correlation_property.cs" />
+    <Compile Include="..\AcceptanceTests\Util.cs" />
   </ItemGroup>
 
 </Project>
