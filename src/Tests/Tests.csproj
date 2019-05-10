@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="WindowsAzure.Storage" Version="9.*" />
     <PackageReference Include="NServiceBus" Version="7.1.0" />
     <PackageReference Include="NUnit" Version="3.11.0" />
     <PackageReference Include="NServiceBus" Version="7.0.0" />
