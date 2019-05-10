@@ -6,11 +6,9 @@
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
-    using Microsoft.WindowsAzure.Storage;
-    using Microsoft.WindowsAzure.Storage.RetryPolicies;
-    using Microsoft.WindowsAzure.Storage.Table;
     using Extensibility;
     using MessageDrivenSubscriptions;
+    using Microsoft.Azure.Cosmos.Table;
     using Persistence.AzureStorage;
 
     class AzureSubscriptionStorage : ISubscriptionStorage

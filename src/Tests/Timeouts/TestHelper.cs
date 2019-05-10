@@ -5,10 +5,9 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
     using System.Linq;
     using System.Net;
     using System.Threading.Tasks;
-    using Microsoft.WindowsAzure.Storage;
-    using Microsoft.WindowsAzure.Storage.Blob;
-    using Microsoft.WindowsAzure.Storage.RetryPolicies;
-    using Microsoft.WindowsAzure.Storage.Table;
+    using Microsoft.Azure.Cosmos.Table;
+    using Microsoft.Azure.Storage;
+    using Microsoft.Azure.Storage.Blob;
     using Support;
     using Timeout.Core;
     using NUnit.Framework;
@@ -92,7 +91,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
 
         static async Task RemoveAllRowsForTable(string tableName)
         {
-            var cloudStorageAccount = CloudStorageAccount.Parse(Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence());
+            var cloudStorageAccount = Microsoft.Azure.Cosmos.Table.CloudStorageAccount.Parse(Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence());
             var table = cloudStorageAccount.CreateCloudTableClient().GetTableReference(tableName);
 
             await table.CreateIfNotExistsAsync();
@@ -120,7 +119,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
 
         static async Task RemoveAllBlobs()
         {
-            var cloudStorageAccount = CloudStorageAccount.Parse(Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence());
+            var cloudStorageAccount = Microsoft.Azure.Storage.CloudStorageAccount.Parse(Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence());
             var container = cloudStorageAccount.CreateCloudBlobClient().GetContainerReference("timeoutstate");
             await container.CreateIfNotExistsAsync();
             foreach (var blob in (await container.ListBlobsSegmentedAsync(null)).Results)
@@ -128,11 +127,11 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
                 var cloudBlob = (ICloudBlob)blob;
                 var requestOptions = new BlobRequestOptions
                 {
-                    RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(15), 5)
+                    RetryPolicy = new Microsoft.Azure.Storage.RetryPolicies.ExponentialRetry(TimeSpan.FromSeconds(15), 5)
                 };
                 await cloudBlob.DeleteAsync(
                     deleteSnapshotsOption: DeleteSnapshotsOption.None,
-                    accessCondition: AccessCondition.GenerateEmptyCondition(),
+                    accessCondition: new AccessCondition(),
                     options: requestOptions,
                     operationContext: null);
             }

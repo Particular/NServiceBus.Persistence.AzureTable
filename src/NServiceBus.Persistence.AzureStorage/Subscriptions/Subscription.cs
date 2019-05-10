@@ -1,6 +1,6 @@
 ﻿namespace NServiceBus.Unicast.Subscriptions
 {
-    using Microsoft.WindowsAzure.Storage.Table;
+    using Microsoft.Azure.Cosmos.Table;
 
     class Subscription : TableEntity
     {

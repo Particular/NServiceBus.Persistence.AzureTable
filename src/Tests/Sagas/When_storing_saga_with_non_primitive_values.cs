@@ -5,8 +5,7 @@
     using System.Net;
     using System.Threading.Tasks;
     using Extensibility;
-    using Microsoft.WindowsAzure.Storage;
-    using Microsoft.WindowsAzure.Storage.Table;
+    using Microsoft.Azure.Cosmos.Table;
     using NUnit.Framework;
 
     public class When_storing_saga_with_non_primitive_values

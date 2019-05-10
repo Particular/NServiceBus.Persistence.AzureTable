@@ -3,8 +3,8 @@ namespace NServiceBus
     using System;
     using System.Threading.Tasks;
     using Features;
-    using Microsoft.WindowsAzure.Storage;
     using Logging;
+    using Microsoft.Azure.Cosmos.Table;
     using Persistence.AzureStorage.Config;
     using Unicast.Subscriptions;
     using Unicast.Subscriptions.MessageDrivenSubscriptions;

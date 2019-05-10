@@ -4,8 +4,7 @@
     using System.Linq;
     using System.Threading.Tasks;
     using Extensibility;
-    using Microsoft.WindowsAzure.Storage;
-    using Microsoft.WindowsAzure.Storage.Table;
+    using Microsoft.Azure.Cosmos.Table;
     using NServiceBus.Sagas;
     using NUnit.Framework;
 

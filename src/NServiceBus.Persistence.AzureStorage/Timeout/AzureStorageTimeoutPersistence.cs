@@ -5,7 +5,8 @@ namespace NServiceBus
     using Persistence.AzureStorage;
     using Features;
     using Logging;
-    using Microsoft.WindowsAzure.Storage;
+    using Microsoft.Azure.Cosmos.Table;
+    using Microsoft.Azure.Storage.Blob;
     using Persistence.AzureStorage.Config;
 
     /// <summary></summary>
@@ -87,7 +88,8 @@ namespace NServiceBus
                 var timeoutManagerTable = cloudTableClient.GetTableReference(timeoutManagerDataTableName);
                 await timeoutManagerTable.CreateIfNotExistsAsync().ConfigureAwait(false);
 
-                var container = account.CreateCloudBlobClient()
+                var blobAccount = Microsoft.Azure.Storage.CloudStorageAccount.Parse(connectionString);
+                var container = blobAccount.CreateCloudBlobClient()
                     .GetContainerReference(timeoutStateContainerName);
                 await container.CreateIfNotExistsAsync().ConfigureAwait(false);
             }

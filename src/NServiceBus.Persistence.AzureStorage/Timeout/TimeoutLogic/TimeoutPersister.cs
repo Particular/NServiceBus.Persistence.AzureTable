@@ -8,10 +8,8 @@
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using Extensibility;
-    using Microsoft.WindowsAzure.Storage;
-    using Microsoft.WindowsAzure.Storage.Blob;
-    using Microsoft.WindowsAzure.Storage.RetryPolicies;
-    using Microsoft.WindowsAzure.Storage.Table;
+    using Microsoft.Azure.Cosmos.Table;
+    using Microsoft.Azure.Storage.Blob;
     using Newtonsoft.Json;
     using Timeout.Core;
     using Timeout.TimeoutLogic;
@@ -46,7 +44,8 @@
                 RetryPolicy = new ExponentialRetry()
             };
 
-            cloudBlobClient = account.CreateCloudBlobClient();
+            var storageAccount = Microsoft.Azure.Storage.CloudStorageAccount.Parse(timeoutConnectionString);
+            cloudBlobClient = storageAccount.CreateCloudBlobClient();
         }
 
         public async Task Add(TimeoutData timeout, ContextBag context)

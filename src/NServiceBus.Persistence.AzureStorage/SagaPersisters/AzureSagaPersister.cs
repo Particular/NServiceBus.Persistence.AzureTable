@@ -9,8 +9,7 @@
     using System.Threading.Tasks;
     using Extensibility;
     using Logging;
-    using Microsoft.WindowsAzure.Storage;
-    using Microsoft.WindowsAzure.Storage.Table;
+    using Microsoft.Azure.Cosmos.Table;
     using Sagas;
     using SecondaryIndices;
 
