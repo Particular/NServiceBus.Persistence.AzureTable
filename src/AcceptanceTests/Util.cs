@@ -6,6 +6,19 @@
     {
         public static string GetEnvConfiguredConnectionStringForPersistence()
         {
+            var environmentVartiableName = "AzureStoragePersistence_CosmosDB_ConnectionString";
+            var connectionString = GetEnvironmentVariable(environmentVartiableName);
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new Exception($"Oh no! We couldn't find an environment variable '{environmentVartiableName}' with Azure CosmosDB (Table API) connection string.");
+            }
+
+            return connectionString;
+
+        }
+
+        public static string GetEnvConfiguredConnectionStringForBlobStorage()
+        {
             var environmentVartiableName = "AzureStoragePersistence_ConnectionString";
             var connectionString = GetEnvironmentVariable(environmentVartiableName);
             if (string.IsNullOrEmpty(connectionString))
