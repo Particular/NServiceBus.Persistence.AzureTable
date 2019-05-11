@@ -3,6 +3,7 @@
     static class WellKnownConfigurationKeys
     {
         public const string TimeoutStorageConnectionString = "AzureTimeoutStorage.ConnectionString";
+        public const string TimeoutStateStorageConnectionString = "AzureTimeoutStateStorage.ConnectionString";
         public const string TimeoutStorageCreateSchema = "AzureTimeoutStorage.CreateSchema";
         public const string TimeoutStorageTimeoutManagerDataTableName = "AzureTimeoutStorage.TimeoutManagerDataTableName";
         public const string TimeoutStorageTimeoutDataTableName = "AzureTimeoutStorage.TimeoutDataTableName";

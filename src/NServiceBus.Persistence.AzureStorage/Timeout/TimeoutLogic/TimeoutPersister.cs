@@ -16,7 +16,7 @@
 
     class TimeoutPersister : IPersistTimeouts, IQueryTimeouts
     {
-        public TimeoutPersister(string timeoutConnectionString, string timeoutDataTableName, string timeoutManagerDataTableName, string timeoutStateContainerName, int catchUpInterval, string partitionKeyScope, string endpointName, string hostDisplayName,
+        public TimeoutPersister(string timeoutConnectionString, string timeoutStateConnectionString, string timeoutDataTableName, string timeoutManagerDataTableName, string timeoutStateContainerName, int catchUpInterval, string partitionKeyScope, string endpointName, string hostDisplayName,
             Func<DateTime> currentDateTimeInUtc)
         {
             this.timeoutDataTableName = timeoutDataTableName;
@@ -44,7 +44,10 @@
                 RetryPolicy = new ExponentialRetry()
             };
 
-            var storageAccount = Microsoft.Azure.Storage.CloudStorageAccount.Parse(timeoutConnectionString);
+            // When Azure Storage account is used for the entire persistence and not CosmosDB
+            var timeoutBlobConnectionString = string.IsNullOrEmpty(timeoutStateConnectionString) ? timeoutConnectionString : timeoutStateConnectionString;
+
+            var storageAccount = Microsoft.Azure.Storage.CloudStorageAccount.Parse(timeoutBlobConnectionString);
             cloudBlobClient = storageAccount.CreateCloudBlobClient();
         }
 

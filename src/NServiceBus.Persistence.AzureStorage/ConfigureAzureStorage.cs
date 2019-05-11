@@ -24,5 +24,20 @@
 
             return config;
         }
+
+        /// <summary>
+        /// Connection string to use for azure Saga, Timeout and Subscription storage.
+        /// </summary>
+        /// <param name="config">The configuration.</param>
+        /// <param name="connectionString">The connection string.</param>
+        public static PersistenceExtensions<AzureStoragePersistence> TimeoutStageStorageConnectionString(this PersistenceExtensions<AzureStoragePersistence> config, string connectionString)
+        {
+            AzureStorageSagaGuard.CheckConnectionString(connectionString);
+
+            var settings = config.GetSettings();
+            settings.Set(TimeoutStateStorageConnectionString, connectionString);
+
+            return config;
+        }
     }
 }
