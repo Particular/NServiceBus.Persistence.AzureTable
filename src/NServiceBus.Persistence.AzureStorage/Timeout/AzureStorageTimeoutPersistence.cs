@@ -42,7 +42,7 @@ namespace NServiceBus
             var timeoutDataTableName = context.Settings.Get<string>(WellKnownConfigurationKeys.TimeoutStorageTimeoutDataTableName);
             var timeoutManagerDataTableName = context.Settings.Get<string>(WellKnownConfigurationKeys.TimeoutStorageTimeoutManagerDataTableName);
             var connectionString = context.Settings.Get<string>(WellKnownConfigurationKeys.TimeoutStorageConnectionString);
-            var blobConnectionString = context.Settings.Get<string>(WellKnownConfigurationKeys.TimeoutStateStorageConnectionString);
+            var blobConnectionString = context.Settings.GetOrDefault<string>(WellKnownConfigurationKeys.TimeoutStateStorageConnectionString);
             var catchUpInterval = context.Settings.Get<int>(WellKnownConfigurationKeys.TimeoutStorageCatchUpInterval);
             var partitionKeyScope = context.Settings.Get<string>(WellKnownConfigurationKeys.TimeoutStoragePartitionKeyScope);
             var endpointName = context.Settings.EndpointName();
