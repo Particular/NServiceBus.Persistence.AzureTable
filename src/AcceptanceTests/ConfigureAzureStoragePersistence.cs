@@ -9,11 +9,16 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
 {
     static string ConnectionString => Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
 
+    // TODO: needs to be conditional to accomodate testing of persistence with CosmosDB and Azure Storage only
+    static string TimeoutsStateConnectionString => Testing.Utillities.GetEnvConfiguredConnectionStringForBlobStorage();
+
     public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
         configuration.UsePersistence<AzureStoragePersistence, StorageType.Subscriptions>().ConnectionString(ConnectionString);
         configuration.UsePersistence<AzureStoragePersistence, StorageType.Sagas>().ConnectionString(ConnectionString);
-        configuration.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>().ConnectionString(ConnectionString);
+        var timeoutPersistence = configuration.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>();
+        timeoutPersistence.ConnectionString(ConnectionString);
+        timeoutPersistence.TimeoutStageStorageConnectionString(TimeoutsStateConnectionString);
 
         var recoverabilitySettings = configuration.Recoverability();
 
