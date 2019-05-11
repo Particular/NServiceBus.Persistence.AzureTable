@@ -22,6 +22,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
             try
             {
                 persister = new TimeoutPersister(Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence(),
+                    Testing.Utillities.GetEnvConfiguredConnectionStringForBlobStorage(),
                     AzureTimeoutStorageDefaults.TimeoutDataTableName, AzureTimeoutStorageDefaults.TimeoutManagerDataTableName,
                     AzureTimeoutStorageDefaults.TimeoutStateContainerName, 3600,
                     AzureTimeoutStorageDefaults.PartitionKeyScope, EndpointName, RuntimeEnvironment.MachineName,
@@ -119,7 +120,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
 
         static async Task RemoveAllBlobs()
         {
-            var cloudStorageAccount = Microsoft.Azure.Storage.CloudStorageAccount.Parse(Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence());
+            var cloudStorageAccount = Microsoft.Azure.Storage.CloudStorageAccount.Parse(Testing.Utillities.GetEnvConfiguredConnectionStringForBlobStorage());
             var container = cloudStorageAccount.CreateCloudBlobClient().GetContainerReference("timeoutstate");
             await container.CreateIfNotExistsAsync();
             foreach (var blob in (await container.ListBlobsSegmentedAsync(null)).Results)
