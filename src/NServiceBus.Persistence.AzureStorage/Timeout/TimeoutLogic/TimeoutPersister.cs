@@ -44,10 +44,7 @@
                 RetryPolicy = new ExponentialRetry()
             };
 
-            // When Azure Storage account is used for the entire persistence and not CosmosDB
-            var timeoutBlobConnectionString = string.IsNullOrEmpty(timeoutStateConnectionString) ? timeoutConnectionString : timeoutStateConnectionString;
-
-            var storageAccount = Microsoft.Azure.Storage.CloudStorageAccount.Parse(timeoutBlobConnectionString);
+            var storageAccount = Microsoft.Azure.Storage.CloudStorageAccount.Parse(timeoutStateConnectionString);
             cloudBlobClient = storageAccount.CreateCloudBlobClient();
         }
 

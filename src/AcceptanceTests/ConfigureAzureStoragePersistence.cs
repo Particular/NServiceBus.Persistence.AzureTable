@@ -18,7 +18,7 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
         configuration.UsePersistence<AzureStoragePersistence, StorageType.Sagas>().ConnectionString(ConnectionString);
         var timeoutPersistence = configuration.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>();
         timeoutPersistence.ConnectionString(ConnectionString);
-        timeoutPersistence.TimeoutStageStorageConnectionString(TimeoutsStateConnectionString);
+        timeoutPersistence.TimeoutStateStorageConnectionString(TimeoutsStateConnectionString);
 
         var recoverabilitySettings = configuration.Recoverability();
 

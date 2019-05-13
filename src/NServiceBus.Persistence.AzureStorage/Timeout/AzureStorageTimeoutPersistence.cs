@@ -49,14 +49,18 @@ namespace NServiceBus
             var hostDisplayName = context.Settings.GetOrDefault<string>("NServiceBus.HostInformation.DisplayName");
             var timeoutStateContainerName = context.Settings.GetOrDefault<string>(WellKnownConfigurationKeys.TimeoutStorageTimeoutStateContainerName);
 
+
+            // When Azure Storage account is used for the entire persistence and not CosmosDB
+            var timeoutBlobConnectionString = string.IsNullOrEmpty(blobConnectionString) ? connectionString : blobConnectionString;
+
             if (createIfNotExist)
             {
-                var startupTask = new StartupTask(timeoutDataTableName, connectionString, timeoutManagerDataTableName, timeoutStateContainerName);
+                var startupTask = new StartupTask(timeoutDataTableName, connectionString, timeoutBlobConnectionString, timeoutManagerDataTableName, timeoutStateContainerName);
                 context.RegisterStartupTask(startupTask);
             }
 
             context.Container.ConfigureComponent(() =>
-                new TimeoutPersister(connectionString, blobConnectionString, timeoutDataTableName, timeoutManagerDataTableName, timeoutStateContainerName, catchUpInterval,
+                new TimeoutPersister(connectionString, timeoutBlobConnectionString, timeoutDataTableName, timeoutManagerDataTableName, timeoutStateContainerName, catchUpInterval,
                                      partitionKeyScope, endpointName, hostDisplayName, () => DateTime.UtcNow),
                 DependencyLifecycle.InstancePerCall);
         }
@@ -66,13 +70,15 @@ namespace NServiceBus
             ILog log = LogManager.GetLogger<StartupTask>();
             string timeoutDataTableName;
             string connectionString;
+            string blobConnectionString;
             string timeoutManagerDataTableName;
             string timeoutStateContainerName;
 
-            public StartupTask(string timeoutDataTableName, string connectionString, string timeoutManagerDataTableName, string timeoutStateContainerName)
+            public StartupTask(string timeoutDataTableName, string connectionString, string blobConnectionString, string timeoutManagerDataTableName, string timeoutStateContainerName)
             {
                 this.timeoutDataTableName = timeoutDataTableName;
                 this.connectionString = connectionString;
+                this.blobConnectionString = blobConnectionString;
                 this.timeoutManagerDataTableName = timeoutManagerDataTableName;
                 this.timeoutStateContainerName = timeoutStateContainerName;
             }
@@ -89,7 +95,7 @@ namespace NServiceBus
                 var timeoutManagerTable = cloudTableClient.GetTableReference(timeoutManagerDataTableName);
                 await timeoutManagerTable.CreateIfNotExistsAsync().ConfigureAwait(false);
 
-                var blobAccount = Microsoft.Azure.Storage.CloudStorageAccount.Parse(connectionString);
+                var blobAccount = Microsoft.Azure.Storage.CloudStorageAccount.Parse(blobConnectionString);
                 var container = blobAccount.CreateCloudBlobClient()
                     .GetContainerReference(timeoutStateContainerName);
                 await container.CreateIfNotExistsAsync().ConfigureAwait(false);

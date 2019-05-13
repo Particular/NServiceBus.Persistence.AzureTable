@@ -1,6 +1,7 @@
 ﻿namespace NServiceBus
 {
     using Configuration.AdvancedExtensibility;
+    using Persistence.AzureStorage.Config;
     using static Persistence.AzureStorage.Config.WellKnownConfigurationKeys;
 
     /// <summary>
@@ -30,12 +31,12 @@
         /// </summary>
         /// <param name="config">The configuration.</param>
         /// <param name="connectionString">The connection string.</param>
-        public static PersistenceExtensions<AzureStoragePersistence> TimeoutStageStorageConnectionString(this PersistenceExtensions<AzureStoragePersistence> config, string connectionString)
+        public static PersistenceExtensions<AzureStoragePersistence> TimeoutStateStorageConnectionString(this PersistenceExtensions<AzureStoragePersistence> config, string connectionString)
         {
             AzureStorageSagaGuard.CheckConnectionString(connectionString);
 
             var settings = config.GetSettings();
-            settings.Set(TimeoutStateStorageConnectionString, connectionString);
+            settings.Set(WellKnownConfigurationKeys.TimeoutStateStorageConnectionString, connectionString);
 
             return config;
         }

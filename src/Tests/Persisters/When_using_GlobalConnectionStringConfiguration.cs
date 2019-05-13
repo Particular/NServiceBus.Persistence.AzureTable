@@ -34,7 +34,7 @@
             var endpointConfig = new EndpointConfiguration("Testendpoint");
             var persistence = endpointConfig.UsePersistence<AzureStoragePersistence>();
             persistence.ConnectionString(cosmosDbConnectionString);
-            persistence.TimeoutStageStorageConnectionString(blobConnectionString);
+            persistence.TimeoutStateStorageConnectionString(blobConnectionString);
 
             var settings = persistence.GetSettings();
 
