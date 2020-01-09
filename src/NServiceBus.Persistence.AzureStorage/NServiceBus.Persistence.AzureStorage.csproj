@@ -2,15 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net452</TargetFramework>
-    <AssemblyName>NServiceBus.Persistence.AzureStorage</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(SolutionDir)NServiceBus.snk</AssemblyOriginatorKeyFile>
-    <DebugType>full</DebugType>
-    <DebugSymbols>True</DebugSymbols>
-    <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <NoWarn>CS0419</NoWarn>
-    <NoWarn>1591, 0618</NoWarn>
+    <NoWarn>$(NoWarn);1591</NoWarn>
     <Description>Azure support for NServicebus</Description>
   </PropertyGroup>
 
