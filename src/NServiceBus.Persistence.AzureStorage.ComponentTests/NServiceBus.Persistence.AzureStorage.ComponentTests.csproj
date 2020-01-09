@@ -1,32 +1,25 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFramework>net452</TargetFramework>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(SolutionDir)NServiceBus.snk</AssemblyOriginatorKeyFile>
-    <DebugType>full</DebugType>
-    <DebugSymbols>True</DebugSymbols>
-    <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <NoWarn>PCR0001</NoWarn>
-    <RootNamespace>NServiceBus.Persistence.AzureStorage.ComponentTests</RootNamespace>
+    <NoWarn>$(NoWarn);PCR0001</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="NServiceBus" Version="6.3.3" />
-    <PackageReference Include="Microsoft.Azure.KeyVault.Core" Version="2.0.4" />
-    <PackageReference Include="Microsoft.Data.Edm" Version="5.8.2" />
-    <PackageReference Include="Microsoft.Data.OData" Version="5.8.2" />
-    <PackageReference Include="Microsoft.Data.Services.Client" Version="5.8.2" />
     <PackageReference Include="WindowsAzure.Storage" Version="8.1.4" />
-    <PackageReference Include="System.Spatial" Version="5.8.2" />
-    <PackageReference Include="NServiceBus.AcceptanceTesting" Version="6.3.3" />
     <PackageReference Include="NUnit" Version="3.11.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.11.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
-    <PackageReference Include="Particular.Approvals" Version="0.2.0" />
+    <PackageReference Include="Particular.Approvals" Version="0.1.0" />
     <PackageReference Include="Particular.CodeRules" Version="0.2.0" />
     <PackageReference Include="PublicApiGenerator" Version="8.0.1" />
-    <ProjectReference Include="..\NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj" />
   </ItemGroup>
+
 </Project>
