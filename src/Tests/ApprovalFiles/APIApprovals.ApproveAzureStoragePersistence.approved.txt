@@ -10,6 +10,9 @@ namespace NServiceBus
     {
         protected override void Setup(NServiceBus.Features.FeatureConfigurationContext context) { }
     }
+    [System.ObsoleteAttribute("Azure transports support timeouts natively and do not require timeout persistence" +
+        ". Will be treated as an error from version 3.0.0. Will be removed in version 4.0" +
+        ".0.", false)]
     public class AzureStorageTimeoutPersistence : NServiceBus.Features.Feature
     {
         protected override void Setup(NServiceBus.Features.FeatureConfigurationContext context) { }
@@ -33,12 +36,19 @@ namespace NServiceBus
     }
     public class static ConfigureAzureTimeoutStorage
     {
+        [System.ObsoleteAttribute(@"Azure transports support timeouts natively and do not require timeout persistence. For Azure Storage Queues transport refer to the delayed delivery API. Use `EndpointConfiguration.UseTransport<AzureStorageQueueTransport>().DelayedDelivery()` instead. Will be treated as an error from version 3.0.0. Will be removed in version 4.0.0.", false)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> CatchUpInterval(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, int catchUpInterval) { }
+        [System.ObsoleteAttribute(@"Azure transports support timeouts natively and do not require timeout persistence. For Azure Storage Queues transport refer to the delayed delivery API. Use `EndpointConfiguration.UseTransport<AzureStorageQueueTransport>().DelayedDelivery()` instead. Will be treated as an error from version 3.0.0. Will be removed in version 4.0.0.", false)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, string connectionString) { }
+        [System.ObsoleteAttribute(@"Azure transports support timeouts natively and do not require timeout persistence. For Azure Storage Queues transport refer to the delayed delivery API. Use `EndpointConfiguration.UseTransport<AzureStorageQueueTransport>().DelayedDelivery()` instead. Will be treated as an error from version 3.0.0. Will be removed in version 4.0.0.", false)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> CreateSchema(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, bool createSchema) { }
+        [System.ObsoleteAttribute(@"Azure transports support timeouts natively and do not require timeout persistence. For Azure Storage Queues transport refer to the delayed delivery API. Use `EndpointConfiguration.UseTransport<AzureStorageQueueTransport>().DelayedDelivery()` instead. Will be treated as an error from version 3.0.0. Will be removed in version 4.0.0.", false)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> PartitionKeyScope(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, string partitionKeyScope) { }
+        [System.ObsoleteAttribute(@"Azure transports support timeouts natively and do not require timeout persistence. For Azure Storage Queues transport refer to the delayed delivery API. Use `EndpointConfiguration.UseTransport<AzureStorageQueueTransport>().DelayedDelivery()` instead. Will be treated as an error from version 3.0.0. Will be removed in version 4.0.0.", false)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> TimeoutDataTableName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, string tableName) { }
+        [System.ObsoleteAttribute(@"Azure transports support timeouts natively and do not require timeout persistence. For Azure Storage Queues transport refer to the delayed delivery API. Use `EndpointConfiguration.UseTransport<AzureStorageQueueTransport>().DelayedDelivery()` instead. Will be treated as an error from version 3.0.0. Will be removed in version 4.0.0.", false)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> TimeoutManagerDataTableName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, string tableName) { }
+        [System.ObsoleteAttribute(@"Azure transports support timeouts natively and do not require timeout persistence. For Azure Storage Queues transport refer to the delayed delivery API. Use `EndpointConfiguration.UseTransport<AzureStorageQueueTransport>().DelayedDelivery()` instead. Will be treated as an error from version 3.0.0. Will be removed in version 4.0.0.", false)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> TimeoutStateContainerName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, string blobName) { }
     }
 }
