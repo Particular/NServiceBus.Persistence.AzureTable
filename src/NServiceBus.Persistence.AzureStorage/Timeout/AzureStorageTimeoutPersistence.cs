@@ -9,6 +9,9 @@ namespace NServiceBus
     using Persistence.AzureStorage.Config;
 
     /// <summary></summary>
+    [ObsoleteEx(Message = "Azure Storage Queues supports timeouts natively and does not require timeout persistence.",
+        TreatAsErrorFromVersion = "3",
+        RemoveInVersion = "4")]
     public class AzureStorageTimeoutPersistence : Feature
     {
         internal AzureStorageTimeoutPersistence()

@@ -76,8 +76,7 @@
         async Task DeletePrimary(Guid sagaId)
         {
             var entities = await cloudTable.ExecuteQueryAsync(new TableQuery<TableEntity>()).ConfigureAwait(false);
-            Guid guid;
-            var primary = entities.Single(te => Guid.TryParse(te.PartitionKey, out guid) && guid == sagaId);
+            var primary = entities.Single(te => Guid.TryParse(te.PartitionKey, out var guid) && guid == sagaId);
             await cloudTable.DeleteIgnoringNotFound(primary);
         }
 
