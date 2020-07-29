@@ -11,7 +11,7 @@
     {
         public bool SupportsDtc => false;
         public bool SupportsOutbox => false;
-        public bool SupportsFinders => true;
+        public bool SupportsFinders => false;
         public bool SupportsSubscriptions => true;
         public bool SupportsTimeouts => true;
         public bool SupportsPessimisticConcurrency => false;
