@@ -21,4 +21,9 @@
       <ProjectReference Include="..\NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="\**\Sagas\When_rolling_back_storage_session.cs" />
+      <Compile Remove="\**\Sagas\When_worker_tries_to_complete_saga_update_by_another_optimistic.cs"/>
+    </ItemGroup>
+
 </Project>
