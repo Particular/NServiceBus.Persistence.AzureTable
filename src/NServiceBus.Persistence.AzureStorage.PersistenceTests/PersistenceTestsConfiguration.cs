@@ -15,10 +15,6 @@
 
         public bool SupportsFinders => false;
 
-        public bool SupportsSubscriptions => true;
-
-        public bool SupportsTimeouts => true;
-
         public bool SupportsPessimisticConcurrency => false;
 
         public ISagaIdGenerator SagaIdGenerator { get; set; }
