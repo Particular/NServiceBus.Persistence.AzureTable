@@ -14,7 +14,6 @@ namespace NServiceBus
     {
         internal AzureStorageSubscriptionPersistence()
         {
-            DependsOn<MessageDrivenSubscriptions>();
             Defaults(s =>
             {
 #if NETFRAMEWORK
