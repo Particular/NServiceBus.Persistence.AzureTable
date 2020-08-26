@@ -1,27 +1,8 @@
 ﻿namespace NServiceBus
 {
-    using System;
-    using Features;
-
-    /// <summary></summary>
-    [ObsoleteEx(Message = "Azure Storage Queues supports timeouts natively and does not require timeout persistence.",
-        TreatAsErrorFromVersion = "3",
-        RemoveInVersion = "4")]
-    public class AzureStorageTimeoutPersistence : Feature
-    {
-        internal AzureStorageTimeoutPersistence()
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// See <see cref="Feature.Setup"/>
-        /// </summary>
-        protected override void Setup(FeatureConfigurationContext context)
-        {
-            throw new NotImplementedException();
-        }
-    }
+    using Configuration.AdvancedExtensibility;
+    using Timeout;
+    using static Persistence.AzureStorage.Config.WellKnownConfigurationKeys;
 
     /// <summary>
     /// Configuration extensions for the subscription storage
@@ -40,7 +21,10 @@
             RemoveInVersion = "4")]
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> ConnectionString(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, string connectionString)
         {
-            throw new NotImplementedException();
+            AzureTimeoutStorageGuard.CheckConnectionString(connectionString);
+
+            config.GetSettings().Set(TimeoutStorageConnectionString, connectionString);
+            return config;
         }
 
         /// <summary></summary>
@@ -50,7 +34,8 @@
             RemoveInVersion = "4")]
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> TimeoutStateContainerName(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, string blobName)
         {
-            throw new NotImplementedException();
+            config.GetSettings().Set(TimeoutStorageTimeoutStateContainerName, blobName);
+            return config;
         }
 
         /// <summary>
@@ -63,7 +48,8 @@
             RemoveInVersion = "4")]
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> CreateSchema(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, bool createSchema)
         {
-            throw new NotImplementedException();
+            config.GetSettings().Set(TimeoutStorageCreateSchema, createSchema);
+            return config;
         }
 
         /// <summary>
@@ -75,7 +61,10 @@
             RemoveInVersion = "4")]
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> TimeoutManagerDataTableName(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, string tableName)
         {
-            throw new NotImplementedException();
+            AzureTimeoutStorageGuard.CheckTableName(tableName);
+
+            config.GetSettings().Set(TimeoutStorageTimeoutManagerDataTableName, tableName);
+            return config;
         }
 
         /// <summary>
@@ -87,7 +76,10 @@
             RemoveInVersion = "4")]
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> TimeoutDataTableName(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, string tableName)
         {
-            throw new NotImplementedException();
+            AzureTimeoutStorageGuard.CheckTableName(tableName);
+
+            config.GetSettings().Set(TimeoutStorageTimeoutDataTableName, tableName);
+            return config;
         }
 
         /// <summary>
@@ -101,7 +93,10 @@
             RemoveInVersion = "4")]
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> CatchUpInterval(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, int catchUpInterval)
         {
-            throw new NotImplementedException();
+            AzureTimeoutStorageGuard.CheckCatchUpInterval(catchUpInterval);
+
+            config.GetSettings().Set(TimeoutStorageCatchUpInterval, catchUpInterval);
+            return config;
         }
 
         /// <summary>
@@ -116,7 +111,10 @@
             RemoveInVersion = "4")]
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> PartitionKeyScope(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, string partitionKeyScope)
         {
-            throw new NotImplementedException();
+            AzureTimeoutStorageGuard.CheckPartitionKeyScope(partitionKeyScope);
+
+            config.GetSettings().Set(TimeoutStoragePartitionKeyScope, partitionKeyScope);
+            return config;
         }
     }
 }

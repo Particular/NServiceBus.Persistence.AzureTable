@@ -13,6 +13,9 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
     {
         configuration.UsePersistence<AzureStoragePersistence, StorageType.Subscriptions>().ConnectionString(ConnectionString);
         configuration.UsePersistence<AzureStoragePersistence, StorageType.Sagas>().ConnectionString(ConnectionString);
+#pragma warning disable 0618
+        configuration.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>().ConnectionString(ConnectionString);
+#pragma warning restore 0618
 
         var recoverabilitySettings = configuration.Recoverability();
 
