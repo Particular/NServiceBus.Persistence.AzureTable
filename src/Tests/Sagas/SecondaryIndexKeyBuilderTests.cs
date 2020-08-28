@@ -24,7 +24,7 @@
         {
             public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
             {
-                return TaskEx.CompletedTask;
+                return Task.CompletedTask;
             }
 
             protected override void ConfigureHowToFindSaga(SagaPropertyMapper<SagaData> mapper)

@@ -135,7 +135,7 @@
                 return secondaryIndices.RemoveSecondary(sagaData.GetType(), secondaryIndexKey.Value);
             }
 
-            return TaskEx.CompletedTask;
+            return Task.CompletedTask;
         }
 
         async Task<DictionaryTableEntity> GetDictionaryTableEntity(string sagaId, Type entityType)
