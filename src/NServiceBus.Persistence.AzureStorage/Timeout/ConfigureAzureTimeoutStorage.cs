@@ -17,8 +17,8 @@
         /// </summary>
         [ObsoleteEx(Message = ObsoleteMessage,
             ReplacementTypeOrMember = ReplacementTypeOrMember,
-            TreatAsErrorFromVersion = "3",
-            RemoveInVersion = "4")]
+            TreatAsErrorFromVersion = "4",
+            RemoveInVersion = "5")]
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> ConnectionString(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, string connectionString)
         {
             AzureTimeoutStorageGuard.CheckConnectionString(connectionString);
@@ -30,8 +30,8 @@
         /// <summary></summary>
         [ObsoleteEx(Message = ObsoleteMessage,
             ReplacementTypeOrMember = ReplacementTypeOrMember,
-            TreatAsErrorFromVersion = "3",
-            RemoveInVersion = "4")]
+            TreatAsErrorFromVersion = "4",
+            RemoveInVersion = "5")]
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> TimeoutStateContainerName(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, string blobName)
         {
             config.GetSettings().Set(TimeoutStorageTimeoutStateContainerName, blobName);
@@ -44,8 +44,8 @@
         /// </summary>
         [ObsoleteEx(Message = ObsoleteMessage,
             ReplacementTypeOrMember = ReplacementTypeOrMember,
-            TreatAsErrorFromVersion = "3",
-            RemoveInVersion = "4")]
+            TreatAsErrorFromVersion = "4",
+            RemoveInVersion = "5")]
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> CreateSchema(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, bool createSchema)
         {
             config.GetSettings().Set(TimeoutStorageCreateSchema, createSchema);
@@ -57,8 +57,8 @@
         /// </summary>
         [ObsoleteEx(Message = ObsoleteMessage,
             ReplacementTypeOrMember = ReplacementTypeOrMember,
-            TreatAsErrorFromVersion = "3",
-            RemoveInVersion = "4")]
+            TreatAsErrorFromVersion = "4",
+            RemoveInVersion = "5")]
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> TimeoutManagerDataTableName(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, string tableName)
         {
             AzureTimeoutStorageGuard.CheckTableName(tableName);
@@ -72,8 +72,8 @@
         /// </summary>
         [ObsoleteEx(Message = ObsoleteMessage,
             ReplacementTypeOrMember = ReplacementTypeOrMember,
-            TreatAsErrorFromVersion = "3",
-            RemoveInVersion = "4")]
+            TreatAsErrorFromVersion = "4",
+            RemoveInVersion = "5")]
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> TimeoutDataTableName(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, string tableName)
         {
             AzureTimeoutStorageGuard.CheckTableName(tableName);
@@ -89,8 +89,8 @@
         /// <param name="config"></param>
         [ObsoleteEx(Message = ObsoleteMessage,
             ReplacementTypeOrMember = ReplacementTypeOrMember,
-            TreatAsErrorFromVersion = "3",
-            RemoveInVersion = "4")]
+            TreatAsErrorFromVersion = "4",
+            RemoveInVersion = "5")]
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> CatchUpInterval(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, int catchUpInterval)
         {
             AzureTimeoutStorageGuard.CheckCatchUpInterval(catchUpInterval);
@@ -107,8 +107,8 @@
         /// <remarks>For optimal performance, this should be in line with the CatchUpInterval.</remarks>
         [ObsoleteEx(Message = ObsoleteMessage,
             ReplacementTypeOrMember = ReplacementTypeOrMember,
-            TreatAsErrorFromVersion = "3",
-            RemoveInVersion = "4")]
+            TreatAsErrorFromVersion = "4",
+            RemoveInVersion = "5")]
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> PartitionKeyScope(this PersistenceExtensions<AzureStoragePersistence, StorageType.Timeouts> config, string partitionKeyScope)
         {
             AzureTimeoutStorageGuard.CheckPartitionKeyScope(partitionKeyScope);

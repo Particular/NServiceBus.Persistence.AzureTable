@@ -78,7 +78,7 @@
     {
         public Task Handle(CompleteSagaData message, IMessageHandlerContext context)
         {
-            return TaskEx.CompletedTask;
+            return Task.CompletedTask;
         }
 
         protected override void ConfigureHowToFindSaga(SagaPropertyMapper<CompleteSagaData> mapper)

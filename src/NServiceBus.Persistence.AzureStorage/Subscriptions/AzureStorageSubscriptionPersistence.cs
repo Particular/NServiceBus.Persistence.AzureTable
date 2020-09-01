@@ -12,9 +12,13 @@ namespace NServiceBus
     /// <summary></summary>
     public class AzureStorageSubscriptionPersistence : Feature
     {
+
         internal AzureStorageSubscriptionPersistence()
         {
+#pragma warning disable 618
             DependsOn<MessageDrivenSubscriptions>();
+#pragma warning restore 618
+            
             Defaults(s =>
             {
 #if NETFRAMEWORK
