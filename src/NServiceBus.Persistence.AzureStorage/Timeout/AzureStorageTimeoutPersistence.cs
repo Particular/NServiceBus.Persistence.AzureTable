@@ -5,8 +5,10 @@ namespace NServiceBus
     using Persistence.AzureStorage;
     using Features;
     using Logging;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.WindowsAzure.Storage;
     using Persistence.AzureStorage.Config;
+    using Timeout.Core;
 
     /// <summary></summary>
     [ObsoleteEx(Message = "Azure Storage Queues supports timeouts natively and does not require timeout persistence.",
@@ -56,10 +58,18 @@ namespace NServiceBus
                 context.RegisterStartupTask(startupTask);
             }
 
-            context.Container.ConfigureComponent(() =>
-                new TimeoutPersister(connectionString, timeoutDataTableName, timeoutManagerDataTableName, timeoutStateContainerName, catchUpInterval,
-                                     partitionKeyScope, endpointName, hostDisplayName, () => DateTime.UtcNow),
-                DependencyLifecycle.InstancePerCall);
+            context.Services.AddTransient(_ => new TimeoutPersister(
+                connectionString,
+                timeoutDataTableName,
+                timeoutManagerDataTableName,
+                timeoutStateContainerName,
+                catchUpInterval,
+                partitionKeyScope,
+                endpointName,
+                hostDisplayName,
+                () => DateTime.UtcNow));
+            context.Services.AddTransient<IPersistTimeouts>(sp => sp.GetRequiredService<TimeoutPersister>());
+            context.Services.AddTransient<IQueryTimeouts>(sp => sp.GetRequiredService<TimeoutPersister>());
         }
 
         class StartupTask : FeatureStartupTask
