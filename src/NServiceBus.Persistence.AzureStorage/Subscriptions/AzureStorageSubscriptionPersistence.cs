@@ -5,6 +5,7 @@ namespace NServiceBus
     using Features;
     using Microsoft.WindowsAzure.Storage;
     using Logging;
+    using Microsoft.Extensions.DependencyInjection;
     using Persistence.AzureStorage.Config;
     using Unicast.Subscriptions;
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
@@ -48,7 +49,7 @@ namespace NServiceBus
             }
 
             var subscriptionStorage = new AzureSubscriptionStorage(subscriptionTableName, connectionString, cacheFor);
-            context.Container.RegisterSingleton(typeof(ISubscriptionStorage), subscriptionStorage);
+            context.Services.AddSingleton<ISubscriptionStorage>(subscriptionStorage);
         }
 
         class StartupTask : FeatureStartupTask

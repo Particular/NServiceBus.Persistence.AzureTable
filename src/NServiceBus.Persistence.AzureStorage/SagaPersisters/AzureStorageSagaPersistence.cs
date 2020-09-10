@@ -2,8 +2,10 @@
 {
     using Features;
     using Logging;
+    using Microsoft.Extensions.DependencyInjection;
     using Persistence.AzureStorage;
     using Persistence.AzureStorage.Config;
+    using Sagas;
 
     /// <summary></summary>
     public class AzureStorageSagaPersistence : Feature
@@ -39,7 +41,7 @@
                 logger.Warn($"The version of {nameof(AzureStoragePersistence)} used is not configured to optimize sagas creation. To enable optimization, use '.{nameof(ConfigureAzureSagaStorage.AssumeSecondaryIndicesExist)}()' configuration API.");
             }
 
-            context.Container.ConfigureComponent(builder => new AzureSagaPersister(connectionstring, updateSchema, assumeSecondaryIndicesExist), DependencyLifecycle.InstancePerCall);
+            context.Services.AddSingleton<ISagaPersister>(_ => new AzureSagaPersister(connectionstring, updateSchema, assumeSecondaryIndicesExist));
         }
 
         static ILog logger = LogManager.GetLogger<AzureStorageSagaPersistence>();
