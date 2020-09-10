@@ -49,7 +49,7 @@ namespace NServiceBus
             }
 
             var subscriptionStorage = new AzureSubscriptionStorage(subscriptionTableName, connectionString, cacheFor);
-            context.Services.AddSingleton(typeof(ISubscriptionStorage), subscriptionStorage);
+            context.Services.AddSingleton<ISubscriptionStorage>(subscriptionStorage);
         }
 
         class StartupTask : FeatureStartupTask
