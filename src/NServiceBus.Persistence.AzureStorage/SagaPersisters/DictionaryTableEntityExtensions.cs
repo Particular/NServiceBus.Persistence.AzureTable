@@ -95,6 +95,15 @@ namespace NServiceBus.Persistence.AzureStorage
 
                     toPersist[name] = new EntityProperty(dateTime);
                 }
+                else if (TryGetNullable(type, value, out DateTimeOffset? dateTimeOffset))
+                {
+                    if (!dateTimeOffset.HasValue || dateTimeOffset.Value < StorageTableMinDateTime)
+                    {
+                        throw new Exception($"Saga data of type '{entity.GetType().FullName}' with DateTime property '{name}' has an invalid value '{dateTimeOffset}'. Value cannot be null and must be equal to or greater than '{StorageTableMinDateTime}'.");
+                    }
+
+                    toPersist[name] = new EntityProperty(dateTimeOffset);
+                }
                 else if (TryGetNullable(type, value, out Guid? guid))
                 {
                     toPersist[name] = new EntityProperty(guid);
@@ -157,6 +166,7 @@ namespace NServiceBus.Persistence.AzureStorage
         {
             return
                 TrySetNullable<bool>(value, toCreate, propertyInfo) ||
+                TrySetNullable<DateTimeOffset>(value, toCreate, propertyInfo) ||
                 TrySetNullable<DateTime>(value, toCreate, propertyInfo) ||
                 TrySetNullable<Guid>(value, toCreate, propertyInfo) ||
                 TrySetNullable<int>(value, toCreate, propertyInfo) ||
@@ -206,6 +216,10 @@ namespace NServiceBus.Persistence.AzureStorage
             else if (propertyInfo.PropertyType == typeof(DateTime))
             {
                 query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForDate(property, QueryComparisons.Equal, (DateTime)value));
+            }
+            else if (propertyInfo.PropertyType == typeof(DateTimeOffset))
+            {
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForDate(property, QueryComparisons.Equal, (DateTimeOffset)value));
             }
             else if (propertyInfo.PropertyType == typeof(Guid))
             {
