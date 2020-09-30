@@ -79,7 +79,6 @@
 
                         throw new RetryNeededException();
                     }
-
                     else
                     {
                         // data is null, this means that either the entry has been created as the secondary index after scanning the table or after storing the primary
