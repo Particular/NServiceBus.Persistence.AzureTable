@@ -35,7 +35,8 @@
                 {
                     items.AddRange(seg);
                 }
-            } while (token != null && !ct.IsCancellationRequested && items.Count < take);
+            } 
+            while (token != null && !ct.IsCancellationRequested && items.Count < take);
 
             return items;
         }

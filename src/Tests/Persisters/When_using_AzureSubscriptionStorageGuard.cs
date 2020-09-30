@@ -19,9 +19,7 @@
         [TestCase(null)]
         [TestCase("1table")]
         [TestCase("aa")]
-// ReSharper disable StringLiteralTypo
         [TestCase("aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffffgggg")] //
-// ReSharper restore StringLiteralTypo
         public void Should_not_allow_invalid_table_name(string tableName)
         {
             Assert.Throws<ArgumentException>(() => AzureSubscriptionStorageGuard.CheckTableName(tableName));

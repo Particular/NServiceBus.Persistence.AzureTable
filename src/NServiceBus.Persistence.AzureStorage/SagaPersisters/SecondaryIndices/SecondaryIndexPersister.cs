@@ -44,7 +44,6 @@
             // 1) try insert the 2nd index row
             // 2) if it fails, another worker has done it
             // 3) ensure that the primary is stored, throwing an exception afterwards in any way
-
             try
             {
                 await table.ExecuteAsync(TableOperation.Insert(newSecondaryIndexEntity)).ConfigureAwait(false);
@@ -81,7 +80,6 @@
                         throw new RetryNeededException();
                     }
 
-                    // ReSharper disable once RedundantIfElseBlock to make it visible for a reader
                     else
                     {
                         // data is null, this means that either the entry has been created as the secondary index after scanning the table or after storing the primary
