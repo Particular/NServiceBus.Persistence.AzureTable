@@ -31,7 +31,6 @@
             // 1) insert the 2nd index, containing the primary saga data (just in case of a failure)
             // 2) insert the primary saga data in its row, storing the identifier of the secondary index as well (for completions)
             // 3) remove the data of the primary from the 2nd index. It will be no longer needed
-
             var secondaryIndexKey = await secondaryIndices.Insert(sagaData, correlationProperty, context).ConfigureAwait(false);
             await Persist(sagaData, secondaryIndexKey, context).ConfigureAwait(false);
             await secondaryIndices.MarkAsHavingPrimaryPersisted(sagaData, correlationProperty).ConfigureAwait(false);
