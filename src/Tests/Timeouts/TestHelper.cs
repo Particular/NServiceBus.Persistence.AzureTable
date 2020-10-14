@@ -1,4 +1,5 @@
 using Azure;
+using Azure.Storage.Blobs.Models;
 
 namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
 {
@@ -131,27 +132,13 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
 
         static async Task RemoveAllBlobs()
         {
-            // TODO: Check if this works
             var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
             var blobContainerClient = new BlobContainerClient(connectionString, "timeoutstate");
-            await blobContainerClient.DeleteIfExistsAsync();
-
-            int attempt = 0;
-            RequestFailedException exception;
-            do
+            var blobs = blobContainerClient.GetBlobs();
+            foreach (var blob in blobs)
             {
-                try
-                {
-                    await blobContainerClient.CreateIfNotExistsAsync();
-                    exception = null;
-                }
-                catch (RequestFailedException e) when (e.Status == 409 || e.ErrorCode == "ContainerBeingDeleted")
-                {
-                    exception = e;
-                    await Task.Delay(attempt++ * 1000);
-                }
+                await blobContainerClient.DeleteBlobIfExistsAsync(blob.Name);
             }
-            while (exception != null);
         }
     }
 }

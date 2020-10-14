@@ -36,10 +36,10 @@
                 SelectColumns = query.SelectColumns
             };
             TableContinuationToken token = null;
-            var batchOperation = new TableBatchOperation();
+            var operationCount = 0;
             do
             {
-                runningQuery.TakeCount = query.TakeCount - batchOperation.Count;
+                runningQuery.TakeCount = query.TakeCount - operationCount;
 
                 var seg = await cloudTable.ExecuteQuerySegmentedAsync(runningQuery, token);
                 token = seg.ContinuationToken;
@@ -49,13 +49,12 @@
                     {
                         ETag = "*"
                     };
-                    batchOperation.Add(TableOperation.Delete(tableEntity));
+                    await cloudTable.ExecuteAsync(TableOperation.Delete(tableEntity));
+                    operationCount++;
                 }
 
             }
-            while (token != null && (query.TakeCount == null || batchOperation.Count < query.TakeCount.Value));
-
-            await cloudTable.ExecuteBatchAsync(batchOperation).ConfigureAwait(false);
+            while (token != null && (query.TakeCount == null || operationCount < query.TakeCount.Value));
         }
 
         [Test(Description = "The test covering a scenario, when a secondary index wasn't deleted properly")]
