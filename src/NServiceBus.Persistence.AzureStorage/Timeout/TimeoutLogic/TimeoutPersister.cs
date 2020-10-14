@@ -21,7 +21,6 @@
         {
             this.timeoutDataTableName = timeoutDataTableName;
             this.timeoutManagerDataTableName = timeoutManagerDataTableName;
-            this.timeoutStateContainerName = timeoutStateContainerName;
             this.catchUpInterval = catchUpInterval;
             this.partitionKeyScope = partitionKeyScope;
             this.endpointName = endpointName;
@@ -406,7 +405,7 @@
             var result = await table.ExecuteAsync(operation)
                 .ConfigureAwait(false);
 
-            //Concurrency Exception - PreCondition Failed or Entity Already Exists
+            // Concurrency Exception - PreCondition Failed or Entity Already Exists
             var statusCode = result.HttpStatusCode;
             if (statusCode == (int)HttpStatusCode.PreconditionFailed || statusCode == (int)HttpStatusCode.Conflict || statusCode == (int)HttpStatusCode.NoContent)
             {
@@ -444,7 +443,6 @@
 
         string timeoutDataTableName;
         string timeoutManagerDataTableName;
-        string timeoutStateContainerName;
         int catchUpInterval;
         string partitionKeyScope;
         string endpointName;

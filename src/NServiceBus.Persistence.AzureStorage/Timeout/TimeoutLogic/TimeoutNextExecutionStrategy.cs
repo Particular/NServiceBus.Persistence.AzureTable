@@ -10,11 +10,6 @@
 
         TimeSpan currentBackoff;
 
-        /// <summary>
-        /// </summary>
-        /// <param name="backoffIncrease">The amount of time to increase back-off each time.</param>
-        /// <param name="maximumBackoff">The maximum amount of time to back-off.</param>
-        /// <param name="currentDateTimeInUtc">Current DateTime.NowUtc generator.</param>
         public TimeoutNextExecutionStrategy(TimeSpan backoffIncrease, TimeSpan maximumBackoff, Func<DateTime> currentDateTimeInUtc)
         {
             this.backoffIncrease = backoffIncrease;

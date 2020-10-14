@@ -1,6 +1,3 @@
-using Azure;
-using Azure.Storage.Blobs.Models;
-
 namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
 {
     using System;
