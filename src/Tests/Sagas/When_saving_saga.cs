@@ -2,7 +2,7 @@
 {
     using System;
     using Extensibility;
-    using Microsoft.WindowsAzure.Storage;
+    using Microsoft.Azure.Cosmos.Table;
     using NUnit.Framework;
 
     public class When_saving_saga
