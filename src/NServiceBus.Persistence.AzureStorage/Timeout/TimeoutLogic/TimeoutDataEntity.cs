@@ -1,11 +1,13 @@
 namespace NServiceBus.Persistence.AzureStorage
 {
     using System;
-    using Microsoft.WindowsAzure.Storage.Table;
+    using Microsoft.Azure.Cosmos.Table;
 
     class TimeoutDataEntity : TableEntity
     {
-        public TimeoutDataEntity(){}
+        public TimeoutDataEntity()
+        {
+        }
 
         public TimeoutDataEntity(string partitionKey, string rowKey)
             : base(partitionKey, rowKey)

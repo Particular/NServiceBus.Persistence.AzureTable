@@ -7,11 +7,9 @@
     using System.Net;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
+    using Azure.Storage.Blobs;
     using Extensibility;
-    using Microsoft.WindowsAzure.Storage;
-    using Microsoft.WindowsAzure.Storage.Blob;
-    using Microsoft.WindowsAzure.Storage.RetryPolicies;
-    using Microsoft.WindowsAzure.Storage.Table;
+    using Microsoft.Azure.Cosmos.Table;
     using Newtonsoft.Json;
     using Timeout.Core;
     using Timeout.TimeoutLogic;
@@ -46,7 +44,7 @@
                 RetryPolicy = new ExponentialRetry()
             };
 
-            cloudBlobClient = account.CreateCloudBlobClient();
+            cloudBlobClient = new BlobContainerClient(timeoutConnectionString, timeoutStateContainerName);
         }
 
         public async Task Add(TimeoutData timeout, ContextBag context)
@@ -338,22 +336,21 @@
 
         async Task SaveCurrentTimeoutState(byte[] state, string stateAddress)
         {
-            var container = cloudBlobClient.GetContainerReference(timeoutStateContainerName);
-            var blob = container.GetBlockBlobReference(stateAddress);
+            var blobClient = cloudBlobClient.GetBlobClient(stateAddress);
+            // TODO: Make this more memory efficient
             using (var stream = new MemoryStream(state))
             {
-                await blob.UploadFromStreamAsync(stream).ConfigureAwait(false);
+                await blobClient.UploadAsync(stream).ConfigureAwait(false);
             }
         }
 
         async Task<byte[]> Download(string stateAddress)
         {
-            var container = cloudBlobClient.GetContainerReference(timeoutStateContainerName);
-
-            var blob = container.GetBlockBlobReference(stateAddress);
+            var blobClient = cloudBlobClient.GetBlobClient(stateAddress);
+            // TODO: Make this more memory efficient
             using (var stream = new MemoryStream())
             {
-                await blob.DownloadToStreamAsync(stream).ConfigureAwait(false);
+                await blobClient.DownloadToAsync(stream).ConfigureAwait(false);
                 stream.Position = 0;
 
                 var buffer = new byte[16 * 1024];
@@ -385,9 +382,7 @@
 
         Task DeleteState(string stateAddress)
         {
-            var container = cloudBlobClient.GetContainerReference(timeoutStateContainerName);
-            var blob = container.GetBlockBlobReference(stateAddress);
-            return blob.DeleteIfExistsAsync();
+            return cloudBlobClient.DeleteBlobIfExistsAsync(stateAddress);
         }
 
         static string Sanitize(string s)
@@ -456,7 +451,7 @@
         readonly Func<DateTime> currentDateTimeInUtc;
         string sanitizedEndpointInstanceName;
         CloudTableClient client;
-        CloudBlobClient cloudBlobClient;
+        BlobContainerClient cloudBlobClient;
         TableOperation updateSuccessfulReadOperationForNextSpin;
         static TimeoutChunkComparer timeoutChunkComparer = new TimeoutChunkComparer();
         TimeoutNextExecutionStrategy timeoutNextExecutionStrategy;

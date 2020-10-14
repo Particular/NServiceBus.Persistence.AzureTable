@@ -3,8 +3,8 @@ namespace NServiceBus
     using System;
     using System.Threading.Tasks;
     using Features;
-    using Microsoft.WindowsAzure.Storage;
     using Logging;
+    using Microsoft.Azure.Cosmos.Table;
     using Microsoft.Extensions.DependencyInjection;
     using Persistence.AzureStorage.Config;
     using Unicast.Subscriptions;
@@ -19,7 +19,7 @@ namespace NServiceBus
 #pragma warning disable 618
             DependsOn<MessageDrivenSubscriptions>();
 #pragma warning restore 618
-            
+
             Defaults(s =>
             {
 #if NETFRAMEWORK

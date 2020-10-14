@@ -2,8 +2,7 @@ namespace NServiceBus.Persistence.AzureStorage
 {
     using System;
     using System.Collections.Generic;
-    using Microsoft.WindowsAzure.Storage;
-    using Microsoft.WindowsAzure.Storage.Table;
+    using Microsoft.Azure.Cosmos.Table;
 
     class TimeoutManagerDataEntity : TableEntity
     {

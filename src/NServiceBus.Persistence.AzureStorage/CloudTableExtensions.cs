@@ -5,8 +5,7 @@
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.WindowsAzure.Storage;
-    using Microsoft.WindowsAzure.Storage.Table;
+    using Microsoft.Azure.Cosmos.Table;
 
     static class CloudTableExtensions
     {
@@ -35,7 +34,7 @@
                 {
                     items.AddRange(seg);
                 }
-            } 
+            }
             while (token != null && !ct.IsCancellationRequested && items.Count < take);
 
             return items;
