@@ -44,12 +44,12 @@
             await Save(persister1, v, Id1).ConfigureAwait(false);
 
             // get by property just to load to cache
-            await GetByCorrelationProperty(persister2).ConfigureAwait(false);
+            await GetByCorrelationProperty(persister2, new ContextBag()).ConfigureAwait(false);
 
             await DeletePrimary(Id1).ConfigureAwait(false);
 
             // only secondary exists now, ensure it's null
-            var byProperty = await GetByCorrelationProperty(persister2).ConfigureAwait(false);
+            var byProperty = await GetByCorrelationProperty(persister2, new ContextBag()).ConfigureAwait(false);
             Assert.IsNull(byProperty);
         }
 
@@ -60,7 +60,7 @@
             await Save(persister1, v, Id1).ConfigureAwait(false);
 
             // get by property just to load to cache
-            await GetByCorrelationProperty(persister2).ConfigureAwait(false);
+            await GetByCorrelationProperty(persister2, new ContextBag()).ConfigureAwait(false);
 
             await DeletePrimary(Id1).ConfigureAwait(false);
 
@@ -69,7 +69,7 @@
             // save a new saga with the same correlation id
             await Save(persister1, v2, Id2).ConfigureAwait(false);
 
-            var saga = await GetByCorrelationProperty(persister2).ConfigureAwait(false);
+            var saga = await GetByCorrelationProperty(persister2, new ContextBag()).ConfigureAwait(false);
             AssertSaga(saga, v2, Id2);
         }
 
@@ -98,22 +98,24 @@
 
             await Save(persister1, v, Id1).ConfigureAwait(false);
 
-            var saga1 = await Get(persister1, Id1).ConfigureAwait(false);
-            var saga2 = await Get(persister2, Id1).ConfigureAwait(false);
-            var saga1ByProperty = await GetByCorrelationProperty(persister1).ConfigureAwait(false);
-            var saga2ByProperty = await GetByCorrelationProperty(persister2).ConfigureAwait(false);
+            var persister1ContextBag = new ContextBag();
+            var saga1 = await Get(persister1, Id1, persister1ContextBag).ConfigureAwait(false);
+            var persister2ContextBag = new ContextBag();
+            var saga2 = await Get(persister2, Id1, persister2ContextBag).ConfigureAwait(false);
+            var saga1ByProperty = await GetByCorrelationProperty(persister1, new ContextBag()).ConfigureAwait(false);
+            var saga2ByProperty = await GetByCorrelationProperty(persister2, new ContextBag()).ConfigureAwait(false);
 
             AssertSaga(saga1, v, Id1);
             AssertSaga(saga2, v, Id1);
             AssertSaga(saga1ByProperty, v, Id1);
             AssertSaga(saga2ByProperty, v, Id1);
 
-            await Complete(saga1, persister1).ConfigureAwait(false);
+            await Complete(saga1, persister1, persister1ContextBag).ConfigureAwait(false);
 
-            saga1 = await Get(persister1, Id1).ConfigureAwait(false);
-            saga2 = await Get(persister2, Id1).ConfigureAwait(false);
-            saga1ByProperty = await GetByCorrelationProperty(persister1).ConfigureAwait(false);
-            saga2ByProperty = await GetByCorrelationProperty(persister2).ConfigureAwait(false);
+            saga1 = await Get(persister1, Id1, new ContextBag()).ConfigureAwait(false);
+            saga2 = await Get(persister2, Id1, new ContextBag()).ConfigureAwait(false);
+            saga1ByProperty = await GetByCorrelationProperty(persister1, new ContextBag()).ConfigureAwait(false);
+            saga2ByProperty = await GetByCorrelationProperty(persister2, new ContextBag()).ConfigureAwait(false);
 
             Assert.IsNull(saga1);
             Assert.IsNull(saga2);
@@ -123,10 +125,10 @@
             const string v2 = "2";
             await Save(p, v2, Id2).ConfigureAwait(false);
 
-            saga1 = await Get(persister1, Id2).ConfigureAwait(false);
-            saga2 = await Get(persister2, Id2).ConfigureAwait(false);
-            saga1ByProperty = await GetByCorrelationProperty(persister1).ConfigureAwait(false);
-            saga2ByProperty = await GetByCorrelationProperty(persister2).ConfigureAwait(false);
+            saga1 = await Get(persister1, Id2, new ContextBag()).ConfigureAwait(false);
+            saga2 = await Get(persister2, Id2, new ContextBag()).ConfigureAwait(false);
+            saga1ByProperty = await GetByCorrelationProperty(persister1, new ContextBag()).ConfigureAwait(false);
+            saga2ByProperty = await GetByCorrelationProperty(persister2, new ContextBag()).ConfigureAwait(false);
 
             AssertSaga(saga1, v2, Id2);
             AssertSaga(saga2, v2, Id2);
@@ -134,9 +136,9 @@
             AssertSaga(saga2ByProperty, v2, Id2);
         }
 
-        static Task Complete(IContainSagaData saga, ISagaPersister persister)
+        static Task Complete(IContainSagaData saga, ISagaPersister persister, ContextBag contextBag)
         {
-            return persister.Complete(saga, null, null);
+            return persister.Complete(saga, null, contextBag);
         }
 
         static void AssertSaga(ConcurrentSagaData saga, string value, Guid id)
@@ -147,14 +149,14 @@
             Assert.AreEqual(value, saga.Value);
         }
 
-        static Task<ConcurrentSagaData> Get(ISagaPersister persister, Guid id)
+        static Task<ConcurrentSagaData> Get(ISagaPersister persister, Guid id, ContextBag contextBag)
         {
-            return persister.Get<ConcurrentSagaData>(id, null, new ContextBag());
+            return persister.Get<ConcurrentSagaData>(id, null, contextBag);
         }
 
-        static Task<ConcurrentSagaData> GetByCorrelationProperty(ISagaPersister persister)
+        static Task<ConcurrentSagaData> GetByCorrelationProperty(ISagaPersister persister, ContextBag contextBag)
         {
-            return persister.Get<ConcurrentSagaData>(SagaCorrelationPropertyValue.Name, SagaCorrelationPropertyValue.Value, null, new ContextBag());
+            return persister.Get<ConcurrentSagaData>(SagaCorrelationPropertyValue.Name, SagaCorrelationPropertyValue.Value, null, contextBag);
         }
 
         static Task Save(ISagaPersister persister, string value, Guid id)
