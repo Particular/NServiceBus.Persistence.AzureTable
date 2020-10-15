@@ -76,19 +76,23 @@
         {
             var table = await GetTable(sagaData.GetType()).ConfigureAwait(false);
 
-            var sagaId = sagaData.Id;
-            var query = GenerateSagaTableQuery<DictionaryTableEntity>(sagaId);
-
-            var entity = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).SafeFirstOrDefault();
-            if (entity == null)
+            var sagaId = sagaData.Id.ToString();
+            var meta = context.GetOrCreate<SagaInstanceMetadata>();
+            if (!meta.TryGetEtag(sagaData, out var etag))
             {
-                return; // should not try to delete saga data that does not exist, this situation can occur on retry or parallel execution
+                etag = "*";
             }
 
-            await table.DeleteIgnoringNotFound(entity).ConfigureAwait(false);
+            var entity = new DictionaryTableEntity
+            {
+                ETag = etag,
+                PartitionKey = sagaId,
+                RowKey = sagaId
+            };
+            await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
             try
             {
-                await RemoveSecondaryIndex(sagaData, context).ConfigureAwait(false);
+                await RemoveSecondaryIndex(sagaData, meta).ConfigureAwait(false);
             }
             catch
             {
@@ -125,10 +129,8 @@
             return query.Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, sagaId.ToString()));
         }
 
-        Task RemoveSecondaryIndex(IContainSagaData sagaData, ContextBag context)
+        Task RemoveSecondaryIndex(IContainSagaData sagaData, SagaInstanceMetadata meta)
         {
-            var meta = context.GetOrCreate<SagaInstanceMetadata>();
-
             if (meta.TryGetSecondaryIndexKey(sagaData, out var secondaryIndexKey))
             {
                 return secondaryIndices.RemoveSecondary(sagaData.GetType(), secondaryIndexKey.Value);
