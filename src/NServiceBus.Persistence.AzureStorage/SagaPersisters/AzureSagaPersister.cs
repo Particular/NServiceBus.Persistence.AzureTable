@@ -95,10 +95,12 @@
             }
             catch (StorageException e)
             {
-                if (e.RequestInformation.HttpStatusCode != 404)
+                if (e.RequestInformation.HttpStatusCode == 404)
                 {
-                    throw;
+                    // should not try to delete saga data that does not exist, this situation can occur on retry or parallel execution
                 }
+
+                throw;
             }
             try
             {
