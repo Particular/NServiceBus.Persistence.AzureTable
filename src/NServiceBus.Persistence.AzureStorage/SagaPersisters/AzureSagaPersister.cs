@@ -93,15 +93,11 @@
             {
                 await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
             }
-            catch (StorageException e)
+            catch (StorageException e) when (e.RequestInformation.HttpStatusCode == (int) HttpStatusCode.NotFound)
             {
-                if (e.RequestInformation.HttpStatusCode == 404)
-                {
-                    // should not try to delete saga data that does not exist, this situation can occur on retry or parallel execution
-                }
-
-                throw;
+                // should not try to delete saga data that does not exist, this situation can occur on retry or parallel execution
             }
+
             try
             {
                 await RemoveSecondaryIndex(sagaData, meta).ConfigureAwait(false);
@@ -162,14 +158,9 @@
                 var tableEntity = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).SafeFirstOrDefault();
                 return tableEntity;
             }
-            catch (StorageException e)
+            catch (StorageException e) when(e.RequestInformation.HttpStatusCode == (int) HttpStatusCode.NotFound)
             {
-                if (e.RequestInformation.HttpStatusCode == (int) HttpStatusCode.NotFound)
-                {
-                    return null;
-                }
-
-                throw;
+                return null;
             }
         }
 
