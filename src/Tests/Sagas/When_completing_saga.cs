@@ -67,7 +67,7 @@
                 OriginalMessageId = "MooId"
             };
 
-            await persister.Complete(saga, null, null);
+            await persister.Complete(saga, null, new ContextBag());
 
             var sagaData = await persister.Get<CompleteSagaData>(saga.Id, null, null);
             Assert.IsNull(sagaData);
