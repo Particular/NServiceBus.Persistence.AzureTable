@@ -89,7 +89,17 @@
                 PartitionKey = sagaId,
                 RowKey = sagaId
             };
-            await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
+            try
+            {
+                await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
+            }
+            catch (StorageException e)
+            {
+                if (e.RequestInformation.HttpStatusCode != 404)
+                {
+                    throw;
+                }
+            }
             try
             {
                 await RemoveSecondaryIndex(sagaData, meta).ConfigureAwait(false);
