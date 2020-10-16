@@ -4,13 +4,28 @@ namespace NServiceBus.Persistence.AzureStorage.SecondaryIndices
     using System.IO;
     using Newtonsoft.Json;
     using Sagas;
+    using System.Security.Cryptography;
+    using System.Text;
 
     static class SecondaryIndexKeyBuilder
     {
         public static PartitionRowKeyTuple BuildTableKey(Type sagaType, SagaCorrelationProperty correlationProperty)
         {
             var sagaDataTypeName = sagaType.FullName;
-            return new PartitionRowKeyTuple($"Index_{sagaDataTypeName}_{correlationProperty.Name}_{Serialize(correlationProperty.Value)}", string.Empty);
+            var partitionKey = $"Index_{sagaDataTypeName}_{correlationProperty.Name}_{Serialize(correlationProperty.Value)}";
+            return new PartitionRowKeyTuple(partitionKey, DeterministicGuid(partitionKey).ToString());
+        }
+
+        static Guid DeterministicGuid(string src)
+        {
+            var stringBytes = Encoding.UTF8.GetBytes(src);
+
+            using (var sha1CryptoServiceProvider = new SHA1CryptoServiceProvider())
+            {
+                var hashedBytes = sha1CryptoServiceProvider.ComputeHash(stringBytes);
+                Array.Resize(ref hashedBytes, 16);
+                return new Guid(hashedBytes);
+            }
         }
 
         static string Serialize(object propertyValue)
