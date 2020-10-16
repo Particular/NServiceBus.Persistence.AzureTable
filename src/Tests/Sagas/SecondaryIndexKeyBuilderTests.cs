@@ -1,5 +1,6 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Sagas
 {
+    using System;
     using System.Threading.Tasks;
     using SecondaryIndices;
     using NServiceBus.Sagas;
@@ -17,7 +18,7 @@
 
             var key = SecondaryIndexKeyBuilder.BuildTableKey(typeof(SagaData), new SagaCorrelationProperty(sagaProp.Name, id));
             Assert.AreEqual("Index_NServiceBus.Persistence.AzureStorage.ComponentTests.Sagas.SecondaryIndexKeyBuilderTests+SagaData_AdditionalId_\"C4D91B59-A407-4CDA-A689-60AA3C334699\"", key.PartitionKey);
-            Assert.AreEqual("", key.RowKey);
+            Assert.IsTrue(Guid.TryParse(key.RowKey, out _));
         }
 
         class TestSaga : Saga<SagaData>, IAmStartedByMessages<StartSagaMessage>
