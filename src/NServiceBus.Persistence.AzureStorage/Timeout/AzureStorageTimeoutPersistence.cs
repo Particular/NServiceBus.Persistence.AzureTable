@@ -2,11 +2,12 @@ namespace NServiceBus
 {
     using System;
     using System.Threading.Tasks;
-    using Persistence.AzureStorage;
+    using Azure.Storage.Blobs;
     using Features;
     using Logging;
+    using Microsoft.Azure.Cosmos.Table;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.WindowsAzure.Storage;
+    using Persistence.AzureStorage;
     using Persistence.AzureStorage.Config;
     using Timeout.Core;
 
@@ -100,9 +101,8 @@ namespace NServiceBus
                 var timeoutManagerTable = cloudTableClient.GetTableReference(timeoutManagerDataTableName);
                 await timeoutManagerTable.CreateIfNotExistsAsync().ConfigureAwait(false);
 
-                var container = account.CreateCloudBlobClient()
-                    .GetContainerReference(timeoutStateContainerName);
-                await container.CreateIfNotExistsAsync().ConfigureAwait(false);
+                var cloudBlobClient = new BlobContainerClient(connectionString, timeoutStateContainerName);
+                await cloudBlobClient.CreateIfNotExistsAsync().ConfigureAwait(false);
             }
 
             protected override Task OnStop(IMessageSession session)

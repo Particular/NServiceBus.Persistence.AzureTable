@@ -4,8 +4,7 @@
     using System.Linq;
     using System.Threading.Tasks;
     using Extensibility;
-    using Microsoft.WindowsAzure.Storage;
-    using Microsoft.WindowsAzure.Storage.Table;
+    using Microsoft.Azure.Cosmos.Table;
     using NServiceBus.Sagas;
     using NUnit.Framework;
 
@@ -30,11 +29,32 @@
             persister2 = new AzureSagaPersister(connectionString, true);
 
             // clear whole table
-            var entities = await cloudTable.ExecuteQueryAsync(new TableQuery<TableEntity>()).ConfigureAwait(false);
-            foreach (var te in entities)
+            var query = cloudTable.CreateQuery<TableEntity>();
+            var runningQuery = new TableQuery<DynamicTableEntity>()
             {
-                await cloudTable.DeleteIgnoringNotFound(te).ConfigureAwait(false);
+                FilterString = query.FilterString,
+                SelectColumns = query.SelectColumns
+            };
+            TableContinuationToken token = null;
+            var operationCount = 0;
+            do
+            {
+                runningQuery.TakeCount = query.TakeCount - operationCount;
+
+                var seg = await cloudTable.ExecuteQuerySegmentedAsync(runningQuery, token);
+                token = seg.ContinuationToken;
+                foreach (var entity in seg)
+                {
+                    var tableEntity = new DynamicTableEntity(entity.PartitionKey, entity.RowKey)
+                    {
+                        ETag = "*"
+                    };
+                    await cloudTable.ExecuteAsync(TableOperation.Delete(tableEntity));
+                    operationCount++;
+                }
+
             }
+            while (token != null && (query.TakeCount == null || operationCount < query.TakeCount.Value));
         }
 
         [Test(Description = "The test covering a scenario, when a secondary index wasn't deleted properly")]

@@ -4,7 +4,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using Microsoft.WindowsAzure.Storage;
+    using Microsoft.Azure.Cosmos.Table;
 
     public class AzureRequestRecorder : IDisposable
     {

@@ -2,7 +2,7 @@ namespace NServiceBus.Persistence.AzureStorage
 {
     using System.Collections.Generic;
     using System.Linq;
-    using Microsoft.WindowsAzure.Storage;
+    using Microsoft.Azure.Cosmos.Table;
 
     static class SafeLinqExtensions
     {
