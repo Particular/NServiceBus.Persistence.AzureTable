@@ -23,4 +23,23 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="\**\Audit\*.*" />
+    <Compile Remove="\**\Correlation\*.*" />
+    <Compile Remove="\**\DataBus\*.*" />
+    <Compile Remove="\**\DelayedDelivery\*.*" />
+    <Compile Remove="\**\Forwarding\*.*" />
+    <Compile Remove="\**\MessageId\*.*" />
+    <Compile Remove="\**\Pipeline\*.*" />
+    <Compile Remove="\**\Recoverability\*.*" />
+    <Compile Remove="\**\Satellites\*.*" />
+    <Compile Remove="\**\Scheduling\*.*" />
+    <Compile Remove="\**\SelfVerification\*.*" />
+    <Compile Remove="\**\Serialization\*.*" />
+    <Compile Remove="\**\Timeout\*.*" />
+    <Compile Remove="\**\TimeToBeReceived\*.*" />
+    <Compile Remove="\**\Tx\**\*.*" />
+    <Compile Remove="\**\Versioning\*.*" />
+  </ItemGroup>
+
 </Project>
