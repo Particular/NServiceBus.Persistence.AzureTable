@@ -78,10 +78,10 @@
             var table = client.GetTableReference(subscriptionTableName);
             var encodedAddress = EncodeTo64(subscriber.TransportAddress);
 
-            var retrieveOperation = TableOperation.Retrieve<TimeoutDataEntity>(messageType.ToString(), encodedAddress);
+            var retrieveOperation = TableOperation.Retrieve<Subscription>(messageType.ToString(), encodedAddress);
 
             var tableResult = await table.ExecuteAsync(retrieveOperation).ConfigureAwait(false);
-            if (tableResult.Result is TimeoutDataEntity subscription)
+            if (tableResult.Result is Subscription subscription)
             {
                 var operation = TableOperation.Delete(subscription);
                 await table.ExecuteAsync(operation).ConfigureAwait(false);
