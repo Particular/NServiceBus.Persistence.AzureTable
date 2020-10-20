@@ -13,7 +13,7 @@ namespace NServiceBus
 
     public static class ConfigureAzureTimeoutStorage
     {
-        const string ObsoleteMessage = "Azure transports support timeouts natively and do not require timeout persistence.",";
+        const string ObsoleteMessage = "Azure transports support timeouts natively and do not require timeout persistence.";
 
         [ObsoleteEx(Message = ObsoleteMessage,
             TreatAsErrorFromVersion = "3",

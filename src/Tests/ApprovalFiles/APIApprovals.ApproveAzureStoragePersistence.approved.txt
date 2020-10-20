@@ -11,8 +11,8 @@ namespace NServiceBus
     {
         protected override void Setup(NServiceBus.Features.FeatureConfigurationContext context) { }
     }
-    [System.ObsoleteAttribute("Azure Storage Queues and Azure Service Bus supports timeouts natively and does no" +
-        "t require timeout persistence. Will be removed in version 4.0.0.", true)]
+    [System.ObsoleteAttribute("Azure transports support timeouts natively and do not require timeout persistence" +
+        ". Will be removed in version 4.0.0.", true)]
     public class AzureStorageTimeoutPersistence
     {
         public AzureStorageTimeoutPersistence() { }
@@ -36,33 +36,33 @@ namespace NServiceBus
     }
     public class static ConfigureAzureTimeoutStorage
     {
-        [System.ObsoleteAttribute("Azure Storage Queues and Azure Service Bus transport supports timeouts natively a" +
-            "nd does not require timeout persistence. The member currently throws a NotImplem" +
-            "entedException. Will be removed in version 4.0.0.", true)]
+        [System.ObsoleteAttribute("Azure transports support timeouts natively and do not require timeout persistence" +
+            ". The member currently throws a NotImplementedException. Will be removed in vers" +
+            "ion 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> CatchUpInterval(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, int catchUpInterval) { }
-        [System.ObsoleteAttribute("Azure Storage Queues and Azure Service Bus transport supports timeouts natively a" +
-            "nd does not require timeout persistence. The member currently throws a NotImplem" +
-            "entedException. Will be removed in version 4.0.0.", true)]
+        [System.ObsoleteAttribute("Azure transports support timeouts natively and do not require timeout persistence" +
+            ". The member currently throws a NotImplementedException. Will be removed in vers" +
+            "ion 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, string connectionString) { }
-        [System.ObsoleteAttribute("Azure Storage Queues and Azure Service Bus transport supports timeouts natively a" +
-            "nd does not require timeout persistence. The member currently throws a NotImplem" +
-            "entedException. Will be removed in version 4.0.0.", true)]
+        [System.ObsoleteAttribute("Azure transports support timeouts natively and do not require timeout persistence" +
+            ". The member currently throws a NotImplementedException. Will be removed in vers" +
+            "ion 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> CreateSchema(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, bool createSchema) { }
-        [System.ObsoleteAttribute("Azure Storage Queues and Azure Service Bus transport supports timeouts natively a" +
-            "nd does not require timeout persistence. The member currently throws a NotImplem" +
-            "entedException. Will be removed in version 4.0.0.", true)]
+        [System.ObsoleteAttribute("Azure transports support timeouts natively and do not require timeout persistence" +
+            ". The member currently throws a NotImplementedException. Will be removed in vers" +
+            "ion 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> PartitionKeyScope(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, string partitionKeyScope) { }
-        [System.ObsoleteAttribute("Azure Storage Queues and Azure Service Bus transport supports timeouts natively a" +
-            "nd does not require timeout persistence. The member currently throws a NotImplem" +
-            "entedException. Will be removed in version 4.0.0.", true)]
+        [System.ObsoleteAttribute("Azure transports support timeouts natively and do not require timeout persistence" +
+            ". The member currently throws a NotImplementedException. Will be removed in vers" +
+            "ion 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> TimeoutDataTableName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, string tableName) { }
-        [System.ObsoleteAttribute("Azure Storage Queues and Azure Service Bus transport supports timeouts natively a" +
-            "nd does not require timeout persistence. The member currently throws a NotImplem" +
-            "entedException. Will be removed in version 4.0.0.", true)]
+        [System.ObsoleteAttribute("Azure transports support timeouts natively and do not require timeout persistence" +
+            ". The member currently throws a NotImplementedException. Will be removed in vers" +
+            "ion 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> TimeoutManagerDataTableName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, string tableName) { }
-        [System.ObsoleteAttribute("Azure Storage Queues and Azure Service Bus transport supports timeouts natively a" +
-            "nd does not require timeout persistence. The member currently throws a NotImplem" +
-            "entedException. Will be removed in version 4.0.0.", true)]
+        [System.ObsoleteAttribute("Azure transports support timeouts natively and do not require timeout persistence" +
+            ". The member currently throws a NotImplementedException. Will be removed in vers" +
+            "ion 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> TimeoutStateContainerName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, string blobName) { }
     }
 }
