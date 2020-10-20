@@ -4,7 +4,7 @@ namespace NServiceBus
 {
     using System;
 
-    [ObsoleteEx(Message = "Azure Storage Queues and Azure Service Bus supports timeouts natively and does not require timeout persistence.",
+    [ObsoleteEx(Message = "Azure transports support timeouts natively and do not require timeout persistence.",
         TreatAsErrorFromVersion = "3",
         RemoveInVersion = "4")]
     public class AzureStorageTimeoutPersistence
@@ -13,7 +13,7 @@ namespace NServiceBus
 
     public static class ConfigureAzureTimeoutStorage
     {
-        const string ObsoleteMessage = "Azure Storage Queues and Azure Service Bus transport supports timeouts natively and does not require timeout persistence.";
+        const string ObsoleteMessage = "Azure transports support timeouts natively and do not require timeout persistence.",";
 
         [ObsoleteEx(Message = ObsoleteMessage,
             TreatAsErrorFromVersion = "3",
