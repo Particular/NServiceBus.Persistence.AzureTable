@@ -20,7 +20,6 @@
             var settings = config.GetSettings();
             settings.Set(SagaStorageConnectionString, connectionString);
             settings.Set(SubscriptionStorageConnectionString, connectionString);
-            settings.Set(TimeoutStorageConnectionString, connectionString);
 
             return config;
         }
