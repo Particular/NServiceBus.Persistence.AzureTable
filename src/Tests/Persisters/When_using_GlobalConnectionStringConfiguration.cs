@@ -20,7 +20,6 @@
 
             Assert.AreEqual(connectionString, settings.Get<string>("AzureSagaStorage.ConnectionString"));
             Assert.AreEqual(connectionString, settings.Get<string>("AzureSubscriptionStorage.ConnectionString"));
-            Assert.AreEqual(connectionString, settings.Get<string>("AzureTimeoutStorage.ConnectionString"));
         }
     }
 }
