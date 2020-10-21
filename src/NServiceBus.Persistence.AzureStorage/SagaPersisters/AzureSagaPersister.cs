@@ -146,6 +146,49 @@
             return sagaData;
         }
 
+        public async Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
+        {
+            var storageSession = (StorageSession)session;
+
+            // TODO: If there is no table holder at all we probably want to use the convention of using the saga type as a table name
+            var table = storageSession.TableHolder.Table;
+            var partitionKey = GetPartitionKey(context, sagaData.Id);
+
+            var meta = context.GetOrCreate<SagaInstanceMetadata>();
+            if (!meta.TryGetEtag(sagaData, out var etag))
+            {
+                etag = "*";
+            }
+
+            var sagaId = sagaData.Id.ToString();
+            var entity = new DictionaryTableEntity
+            {
+                ETag = etag,
+                PartitionKey = partitionKey.PartitionKey,
+                RowKey = sagaId,
+                WillBeStoredOnPremium = isPremiumEndpoint
+            };
+            try
+            {
+                await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
+            }
+            catch (StorageException e) when (e.RequestInformation.HttpStatusCode == (int) HttpStatusCode.NotFound)
+            {
+                // should not try to delete saga data that does not exist, this situation can occur on retry or parallel execution
+            }
+
+            try
+            {
+                // regardless whether the migration mode is enabled or not make sure if there was a secondary index
+                // property set try to delete the index row as best effort
+                await RemoveSecondaryIndex(sagaData, meta).ConfigureAwait(false);
+            }
+            catch
+            {
+                log.Warn($"Removal of the secondary index entry for the following saga failed: '{sagaId}'");
+            }
+        }
+
         public async Task<TSagaData> OldGet<TSagaData>(Guid sagaId, SynchronizedStorageSession session, ContextBag context)
             where TSagaData : class, IContainSagaData
         {
@@ -177,7 +220,7 @@
             return GetByCorrelationProperty<TSagaData>(propertyName, propertyValue, session, context, false);
         }
 
-        public async Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
+        public async Task OldComplete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
         {
             var table = await GetTable(sagaData.GetType()).ConfigureAwait(false);
 
