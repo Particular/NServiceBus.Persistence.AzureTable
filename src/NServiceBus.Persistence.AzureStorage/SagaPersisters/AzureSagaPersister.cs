@@ -23,7 +23,7 @@
             client = account.CreateCloudTableClient();
             isPremiumEndpoint = IsPremiumEndpoint(client);
 
-            secondaryIndices = new SecondaryIndexPersister(GetTable, ScanForSaga, Persist, assumeSecondaryIndicesExist);
+            secondaryIndices = new SecondaryIndexPersister(GetTable, ScanForSaga, assumeSecondaryIndicesExist);
         }
 
         // the SDK uses exactly this method of changing the underlying executor
@@ -213,12 +213,6 @@
             return null;
         }
 
-        public static TableQuery<TEntity> GenerateSagaTableQuery<TEntity>(Guid sagaId) where TEntity : ITableEntity, new()
-        {
-            var query = new TableQuery<TEntity>();
-            return query.Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, sagaId.ToString()));
-        }
-
         Task RemoveSecondaryIndex(IContainSagaData sagaData, SagaInstanceMetadata meta)
         {
             if (meta.TryGetSecondaryIndexKey(sagaData, out var secondaryIndexKey))
@@ -227,21 +221,6 @@
             }
 
             return Task.CompletedTask;
-        }
-
-        // TODO: This is also called by SecondaryIndexPersister, I have a hunch there are some troubles I need to understand first
-        async Task Persist(IContainSagaData saga, PartitionRowKeyTuple? secondaryIndexKey, ContextBag context)
-        {
-            var type = saga.GetType();
-            var table = await GetTable(type).ConfigureAwait(false);
-
-            var partitionKey = saga.Id.ToString();
-
-            var batch = new TableBatchOperation();
-
-            AddObjectToBatch(batch, saga, partitionKey, secondaryIndexKey, context, isPremiumEndpoint);
-
-            await table.ExecuteBatchAsync(batch).ConfigureAwait(false);
         }
 
         async Task<CloudTable> GetTable(Type sagaType)
@@ -268,39 +247,6 @@
             var table = await GetTable(sagaType).ConfigureAwait(false);
             var entities = await table.ExecuteQueryAsync(query).ConfigureAwait(false);
             return entities.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray();
-        }
-
-        static void AddObjectToBatch(TableBatchOperation batch, object entity, string partitionKey, PartitionRowKeyTuple? secondaryIndexKey, ContextBag context, bool isPremiumEndpoint)
-        {
-            var rowkey = partitionKey;
-
-            var type = entity.GetType();
-
-            var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            var update = meta.TryGetEtag(entity, out var etag);
-
-            if (secondaryIndexKey == null && update)
-            {
-                meta.TryGetSecondaryIndexKey(entity, out secondaryIndexKey);
-            }
-
-            var properties = SelectPropertiesToPersist(type);
-
-            var toPersist = DictionaryTableEntityExtensions.ToDictionaryTableEntity(entity, new DictionaryTableEntity
-            {
-                PartitionKey = partitionKey,
-                RowKey = rowkey,
-                ETag = etag,
-                WillBeStoredOnPremium = isPremiumEndpoint
-            }, properties);
-
-            if (secondaryIndexKey != null)
-            {
-                toPersist[SecondaryIndexIndicatorProperty] = EntityProperty.GeneratePropertyForString(secondaryIndexKey.ToString());
-            }
-
-            //no longer using InsertOrReplace as it ignores concurrency checks
-            batch.Add(update ? TableOperation.Replace(toPersist) : TableOperation.Insert(toPersist));
         }
 
         internal static PropertyInfo[] SelectPropertiesToPersist(Type sagaType)

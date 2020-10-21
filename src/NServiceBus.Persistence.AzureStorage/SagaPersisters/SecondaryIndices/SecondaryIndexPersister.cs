@@ -1,9 +1,7 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage.SecondaryIndices
 {
     using System;
-    using System.Net;
     using System.Threading.Tasks;
-    using Extensibility;
     using Microsoft.Azure.Cosmos.Table;
     using Sagas;
 
@@ -11,104 +9,11 @@
     {
         public delegate Task<Guid[]> ScanForSagas(Type sagaType, string propertyName, object propertyValue);
 
-        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, Func<IContainSagaData, PartitionRowKeyTuple?, ContextBag, Task> persist, bool assumeSecondaryIndicesExist)
+        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, bool assumeSecondaryIndicesExist)
         {
             this.getTableForSaga = getTableForSaga;
             this.scanner = scanner;
-            this.persist = persist;
             this.assumeSecondaryIndicesExist = assumeSecondaryIndicesExist;
-        }
-
-        public async Task<PartitionRowKeyTuple?> Insert(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, ContextBag context)
-        {
-            if (correlationProperty == SagaCorrelationProperty.None)
-            {
-                return null;
-            }
-
-            var sagaType = sagaData.GetType();
-            var table = await getTableForSaga(sagaType).ConfigureAwait(false);
-
-            var key = SecondaryIndexKeyBuilder.BuildTableKey(sagaType, correlationProperty);
-
-            var newSecondaryIndexEntity = new SecondaryIndexTableEntity
-            {
-                SagaId = sagaData.Id,
-                InitialSagaData = SagaDataSerializer.SerializeSagaData(sagaData),
-                PartitionKey = key.PartitionKey,
-                RowKey = key.RowKey
-            };
-
-            // the insert plan is following:
-            // 1) try insert the 2nd index row
-            // 2) if it fails, another worker has done it
-            // 3) ensure that the primary is stored, throwing an exception afterwards in any way
-            try
-            {
-                await table.ExecuteAsync(TableOperation.Insert(newSecondaryIndexEntity)).ConfigureAwait(false);
-                return key;
-            }
-            catch (StorageException ex)
-            {
-                var indexRowAlreadyExists = IsConflict(ex);
-                if (indexRowAlreadyExists)
-                {
-                    var exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.RowKey)).ConfigureAwait(false);
-                    var existingSecondaryIndexEntity = (SecondaryIndexTableEntity) exec.Result;
-                    var data = existingSecondaryIndexEntity?.InitialSagaData;
-                    if (data != null)
-                    {
-                        var deserializeSagaData = SagaDataSerializer.DeserializeSagaData(sagaType, data);
-
-                        // saga hasn't been saved under primary key. Try to store it
-                        try
-                        {
-                            await persist(deserializeSagaData, key, context).ConfigureAwait(false);
-                            return key;
-                        }
-                        catch (StorageException e)
-                        {
-                            if (!IsConflict(e))
-                            {
-                                // If there is no conflict, then include the exception details so we can troubleshoot better.
-                                // Otherwise we can drop through and throw a general RetryNeededException below
-                                throw new RetryNeededException(e);
-                            }
-                        }
-
-                        throw new RetryNeededException();
-                    }
-                    else
-                    {
-                        // data is null, this means that either the entry has been created as the secondary index after scanning the table or after storing the primary
-                        var sagaId = existingSecondaryIndexEntity?.SagaId;
-                        if (sagaId != null)
-                        {
-                            var query = AzureSagaPersister.GenerateSagaTableQuery<TableEntity>(sagaId.Value);
-                            var primary = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).SafeFirstOrDefault();
-                            if (primary != null)
-                            {
-                                // if the primary exist though, it means that a retry is required as the previous saga with the specified correlation hasn't been completed yet
-                                // and the secondary index isn't a leftover from a completion
-                                throw new RetryNeededException();
-                            }
-                        }
-
-                        try
-                        {
-                            //this single call replaces a pair of calls that did a Delete followed by an Insert
-                            newSecondaryIndexEntity.ETag = existingSecondaryIndexEntity?.ETag ?? "*";
-                            await table.ExecuteAsync(TableOperation.InsertOrReplace(newSecondaryIndexEntity)).ConfigureAwait(false);
-                            return key;
-                        }
-                        catch (Exception exception)
-                        {
-                            throw new RetryNeededException(exception);
-                        }
-                    }
-                }
-                throw;
-            }
         }
 
         public async Task<Guid?> FindSagaIdAndCreateIndexEntryIfNotFound<TSagaData>(string propertyName, object propertyValue)
@@ -215,14 +120,8 @@
             await table.DeleteIgnoringNotFound(e).ConfigureAwait(false);
         }
 
-        static bool IsConflict(StorageException ex)
-        {
-            return ex.RequestInformation.HttpStatusCode == (int) HttpStatusCode.Conflict;
-        }
-
         LRUCache<PartitionRowKeyTuple, Guid> cache = new LRUCache<PartitionRowKeyTuple, Guid>(LRUCapacity);
         Func<Type, Task<CloudTable>> getTableForSaga;
-        Func<IContainSagaData, PartitionRowKeyTuple?, ContextBag, Task> persist;
         bool assumeSecondaryIndicesExist;
         ScanForSagas scanner;
 
