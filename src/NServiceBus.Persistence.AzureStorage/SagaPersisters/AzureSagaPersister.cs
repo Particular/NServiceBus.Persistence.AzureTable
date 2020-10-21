@@ -32,7 +32,38 @@
             return lowerInvariant.Contains("https://localhost") && cloudTableClient.StorageUri.PrimaryUri.Port != 10002 || lowerInvariant.Contains(".table.cosmosdb.") || lowerInvariant.Contains(".table.cosmos.");
         }
 
-        public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context)
+        public Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context)
+        {
+            // TODO: If there is no table holder at all we probably want to use the convention of using the saga type as a table name
+            var storageSession = (StorageSession)session;
+            var partitionKey = GetPartitionKey(context, sagaData.Id);
+
+            var sagaDataType = sagaData.GetType();
+
+            var meta = context.GetOrCreate<SagaInstanceMetadata>();
+            meta.TryGetEtag(sagaData, out var etag);
+
+            var properties = SelectPropertiesToPersist(sagaDataType);
+
+            var sagaAsDictionaryTableEntity = DictionaryTableEntityExtensions.ToDictionaryTableEntity(sagaData, new DictionaryTableEntity
+            {
+                PartitionKey = partitionKey.PartitionKey,
+                RowKey = sagaData.Id.ToString(),
+                ETag = etag,
+                WillBeStoredOnPremium = isPremiumEndpoint
+            }, properties);
+
+            storageSession.Batch.Add(TableOperation.Insert(sagaAsDictionaryTableEntity));
+
+            return Task.CompletedTask;
+        }
+
+        public Task Update(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
+        {
+            return Task.CompletedTask;
+        }
+
+        public async Task OldSave(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context)
         {
             // The following operations have to be executed sequentially:
             // 1) insert the 2nd index, containing the primary saga data (just in case of a failure)
@@ -43,7 +74,7 @@
             await secondaryIndices.MarkAsHavingPrimaryPersisted(sagaData, correlationProperty).ConfigureAwait(false);
         }
 
-        public Task Update(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
+        public Task OldUpdate(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
         {
             return Persist(sagaData, null, context);
         }
@@ -252,6 +283,16 @@
         internal static PropertyInfo[] SelectPropertiesToPersist(Type sagaType)
         {
             return sagaType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        }
+
+        static TableEntityPartitionKey GetPartitionKey(ContextBag context, Guid sagaDataId)
+        {
+            if (!context.TryGet<TableEntityPartitionKey>(out var partitionKey))
+            {
+                partitionKey = new TableEntityPartitionKey(sagaDataId.ToString());
+            }
+
+            return partitionKey;
         }
 
         readonly ILog log = LogManager.GetLogger<AzureSagaPersister>();
