@@ -229,6 +229,7 @@
             return Task.CompletedTask;
         }
 
+        // TODO: This is also called by SecondaryIndexPersister, I have a hunch there are some troubles I need to understand first
         async Task Persist(IContainSagaData saga, PartitionRowKeyTuple? secondaryIndexKey, ContextBag context)
         {
             var type = saga.GetType();
