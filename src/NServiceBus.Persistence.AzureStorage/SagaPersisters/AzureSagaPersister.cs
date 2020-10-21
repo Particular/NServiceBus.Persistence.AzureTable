@@ -146,6 +146,22 @@
             return sagaData;
         }
 
+        public async Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context)
+            where TSagaData : class, IContainSagaData
+        {
+            // Derive the saga id from the property name and value
+            var sagaId = SagaIdGenerator.Generate(typeof(TSagaData), propertyName, propertyValue);
+            var sagaData = await Get<TSagaData>(sagaId, session, context).ConfigureAwait(false);
+
+            if (sagaData == null && migrationModeEnabled)
+            {
+                sagaData = await GetByCorrelationProperty<TSagaData>(propertyName, propertyValue, session, context, false)
+                    .ConfigureAwait(false);
+            }
+
+            return sagaData;
+        }
+
         public async Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
         {
             var storageSession = (StorageSession)session;
