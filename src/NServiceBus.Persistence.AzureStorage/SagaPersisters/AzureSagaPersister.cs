@@ -15,8 +15,9 @@
 
     class AzureSagaPersister : ISagaPersister
     {
-        public AzureSagaPersister(string connectionString, bool autoUpdateSchema, bool assumeSecondaryIndicesExist = false)
+        public AzureSagaPersister(string connectionString, bool autoUpdateSchema, bool migrationModeEnabled, bool assumeSecondaryIndicesExist = false)
         {
+            this.migrationModeEnabled = migrationModeEnabled;
             this.autoUpdateSchema = autoUpdateSchema;
             var account = CloudStorageAccount.Parse(connectionString);
             client = account.CreateCloudTableClient();
@@ -303,6 +304,7 @@
         const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
         static ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
         private bool isPremiumEndpoint;
+        private readonly bool migrationModeEnabled;
 
         /// <summary>
         /// Holds saga instance related metadata in a scope of a <see cref="ContextBag" />.

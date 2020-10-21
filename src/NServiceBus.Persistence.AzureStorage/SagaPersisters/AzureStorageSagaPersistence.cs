@@ -23,6 +23,7 @@
 #endif
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageCreateSchema, AzureStorageSagaDefaults.CreateSchema);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, AzureStorageSagaDefaults.AssumeSecondaryIndicesExist);
+                s.SetDefault(WellKnownConfigurationKeys.MigrationMode, AzureStorageSagaDefaults.MigrationModeEnabled);
 
                 s.EnableFeatureByDefault<SynchronizedStorage>();
                 s.SetDefault<ISagaIdGenerator>(new SagaIdGenerator());
@@ -38,6 +39,7 @@
         {
             var connectionstring = context.Settings.Get<string>(WellKnownConfigurationKeys.SagaStorageConnectionString);
             var updateSchema = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCreateSchema);
+            var migrationModeEnabled = context.Settings.Get<bool>(WellKnownConfigurationKeys.MigrationMode);
             var assumeSecondaryIndicesExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist);
 
             // TODO: Adjust when flag is flipped
@@ -46,7 +48,7 @@
                 logger.Warn($"The version of {nameof(AzureStoragePersistence)} used is not configured to optimize sagas creation. To enable optimization, use '.{nameof(ConfigureAzureSagaStorage.AssumeSecondaryIndicesExist)}()' configuration API.");
             }
 
-            context.Services.AddSingleton<ISagaPersister>(_ => new AzureSagaPersister(connectionstring, updateSchema, assumeSecondaryIndicesExist));
+            context.Services.AddSingleton<ISagaPersister>(_ => new AzureSagaPersister(connectionstring, updateSchema, migrationModeEnabled,assumeSecondaryIndicesExist));
         }
 
         static ILog logger = LogManager.GetLogger<AzureStorageSagaPersistence>();

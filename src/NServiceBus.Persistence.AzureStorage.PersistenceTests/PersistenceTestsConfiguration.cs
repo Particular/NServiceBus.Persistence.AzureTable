@@ -31,7 +31,7 @@
         {
             var connectionString = GetEnvConfiguredConnectionStringForPersistence();
             SagaIdGenerator = new DefaultSagaIdGenerator();
-            SagaStorage = new AzureSagaPersister(connectionString, true);
+            SagaStorage = new AzureSagaPersister(connectionString, true, false);
             SynchronizedStorage = new NoOpSynchronizedStorage();
             SynchronizedStorageAdapter = new NoOpSynchronizedStorageAdapter();
             return Task.CompletedTask;

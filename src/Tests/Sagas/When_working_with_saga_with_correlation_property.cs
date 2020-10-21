@@ -21,7 +21,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Persisters
             AzureSagaPersister createSagaPersister() => new AzureSagaPersister(connectionString, true, AssumeSecondaryIndicesExist);
 
             // warm up table cache
-            var warmUp = new AzureSagaPersister(connectionString, true);
+            var warmUp = new AzureSagaPersister(connectionString, true, false);
             await warmUp.Get<SagaData>(Guid.NewGuid(), null, new ContextBag()).ConfigureAwait(false);
 
             using (var recorder = new AzureRequestRecorder())

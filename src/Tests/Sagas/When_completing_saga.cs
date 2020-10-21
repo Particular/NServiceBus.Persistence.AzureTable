@@ -12,7 +12,7 @@
         {
             var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
 
-            var persister = new AzureSagaPersister(connectionString, true);
+            var persister = new AzureSagaPersister(connectionString, true, false);
             var saga = new CompleteSagaData
             {
                 Id = Guid.NewGuid(),
@@ -35,7 +35,7 @@
         {
             var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
 
-            var persister = new AzureSagaPersister(connectionString, true);
+            var persister = new AzureSagaPersister(connectionString, true, false);
             var sagaData = new CompleteSagaData
             {
                 Id = Guid.NewGuid(),
@@ -59,7 +59,7 @@
         {
             var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
 
-            var persister = new AzureSagaPersister(connectionString, true);
+            var persister = new AzureSagaPersister(connectionString, true, false);
             var saga = new CompleteSagaData
             {
                 Id = Guid.NewGuid(),
