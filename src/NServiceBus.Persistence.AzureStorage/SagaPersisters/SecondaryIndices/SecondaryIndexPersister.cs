@@ -191,23 +191,6 @@
             return SecondaryIndexKeyBuilder.BuildTableKey(sagaType, new SagaCorrelationProperty(propertyName, propertyValue));
         }
 
-        public async Task MarkAsHavingPrimaryPersisted(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty)
-        {
-            if (correlationProperty == SagaCorrelationProperty.None)
-            {
-                return;
-            }
-
-            var sagaType = sagaData.GetType();
-            var table = await getTableForSaga(sagaType).ConfigureAwait(false);
-            var secondaryIndexKey = SecondaryIndexKeyBuilder.BuildTableKey(sagaType, correlationProperty);
-
-            var secondaryIndexTableEntity = CreateIndexingOnlyEntity(secondaryIndexKey, sagaData.Id);
-            secondaryIndexTableEntity.ETag = "*";
-
-            await table.ExecuteAsync(TableOperation.Replace(secondaryIndexTableEntity)).ConfigureAwait(false);
-        }
-
         /// <summary>
         /// Creates an indexing only entity, without payload of the primary.
         /// </summary>
