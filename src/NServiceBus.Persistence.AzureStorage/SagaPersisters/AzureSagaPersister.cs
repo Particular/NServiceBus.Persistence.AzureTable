@@ -91,22 +91,6 @@
             return Task.CompletedTask;
         }
 
-        public async Task OldSave(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context)
-        {
-            // The following operations have to be executed sequentially:
-            // 1) insert the 2nd index, containing the primary saga data (just in case of a failure)
-            // 2) insert the primary saga data in its row, storing the identifier of the secondary index as well (for completions)
-            // 3) remove the data of the primary from the 2nd index. It will be no longer needed
-            var secondaryIndexKey = await secondaryIndices.Insert(sagaData, correlationProperty, context).ConfigureAwait(false);
-            await Persist(sagaData, secondaryIndexKey, context).ConfigureAwait(false);
-            await secondaryIndices.MarkAsHavingPrimaryPersisted(sagaData, correlationProperty).ConfigureAwait(false);
-        }
-
-        public Task OldUpdate(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
-        {
-            return Persist(sagaData, null, context);
-        }
-
         public async Task<TSagaData> Get<TSagaData>(Guid sagaId, SynchronizedStorageSession session, ContextBag context)
             where TSagaData : class, IContainSagaData
         {
@@ -205,74 +189,6 @@
             }
         }
 
-        public async Task<TSagaData> OldGet<TSagaData>(Guid sagaId, SynchronizedStorageSession session, ContextBag context)
-            where TSagaData : class, IContainSagaData
-        {
-            var id = sagaId.ToString();
-            var entityType = typeof(TSagaData);
-            var tableEntity = await GetDictionaryTableEntity(id, entityType).ConfigureAwait(false);
-            var entity = DictionaryTableEntityExtensions.ToEntity<TSagaData>(tableEntity);
-
-            if (!Equals(entity, default(TSagaData)))
-            {
-                var meta = context.GetOrCreate<SagaInstanceMetadata>();
-                meta.AddEtag(entity, tableEntity.ETag);
-                if (tableEntity.TryGetValue(SecondaryIndexIndicatorProperty, out var value))
-                {
-                    var partitionRowKeyTuple = PartitionRowKeyTuple.Parse(value.StringValue);
-                    if (partitionRowKeyTuple.HasValue)
-                    {
-                        meta.AddSecondaryIndexId(entity, partitionRowKeyTuple.Value);
-                    }
-                }
-            }
-
-            return entity;
-        }
-
-        public Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context)
-            where TSagaData : class, IContainSagaData
-        {
-            return GetByCorrelationProperty<TSagaData>(propertyName, propertyValue, session, context, false);
-        }
-
-        public async Task OldComplete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
-        {
-            var table = await GetTable(sagaData.GetType()).ConfigureAwait(false);
-
-            var sagaId = sagaData.Id.ToString();
-            var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            if (!meta.TryGetEtag(sagaData, out var etag))
-            {
-                etag = "*";
-            }
-
-            var entity = new DictionaryTableEntity
-            {
-                ETag = etag,
-                PartitionKey = sagaId,
-                RowKey = sagaId,
-                WillBeStoredOnPremium = isPremiumEndpoint
-            };
-            try
-            {
-                await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
-            }
-            catch (StorageException e) when (e.RequestInformation.HttpStatusCode == (int) HttpStatusCode.NotFound)
-            {
-                // should not try to delete saga data that does not exist, this situation can occur on retry or parallel execution
-            }
-
-            try
-            {
-                await RemoveSecondaryIndex(sagaData, meta).ConfigureAwait(false);
-            }
-            catch
-            {
-                log.Warn($"Removal of the secondary index entry for the following saga failed: '{sagaId}'");
-            }
-        }
-
         async Task<TSagaData> GetByCorrelationProperty<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce)
             where TSagaData : class, IContainSagaData
         {
@@ -311,27 +227,6 @@
             }
 
             return Task.CompletedTask;
-        }
-
-        async Task<DictionaryTableEntity> GetDictionaryTableEntity(string sagaId, Type entityType)
-        {
-            var table = await GetTable(entityType).ConfigureAwait(false);
-
-            var query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, sagaId));
-
-            try
-            {
-                var tableEntity = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).SafeFirstOrDefault();
-                if (tableEntity != null)
-                {
-                    tableEntity.WillBeStoredOnPremium = isPremiumEndpoint;
-                }
-                return tableEntity;
-            }
-            catch (StorageException e) when(e.RequestInformation.HttpStatusCode == (int) HttpStatusCode.NotFound)
-            {
-                return null;
-            }
         }
 
         async Task Persist(IContainSagaData saga, PartitionRowKeyTuple? secondaryIndexKey, ContextBag context)
