@@ -16,7 +16,7 @@
             this.assumeSecondaryIndicesExist = assumeSecondaryIndicesExist;
         }
 
-        public async Task<Guid?> FindSagaIdAndCreateIndexEntryIfNotFound<TSagaData>(string propertyName, object propertyValue)
+        public async Task<Guid?> FindSagaId<TSagaData>(string propertyName, object propertyValue)
             where TSagaData : IContainSagaData
         {
             var sagaType = typeof(TSagaData);
@@ -58,19 +58,8 @@
                 throw new DuplicatedSagaFoundException(sagaType, propertyName, ids);
             }
 
+            // no longer creation secondary index entries
             var id = ids[0];
-
-            var entity = CreateIndexingOnlyEntity(key.Value, id);
-
-            try
-            {
-                await table.ExecuteAsync(TableOperation.Insert(entity)).ConfigureAwait(false);
-            }
-            catch (StorageException)
-            {
-                throw new RetryNeededException();
-            }
-
             cache.Put(key.Value, id);
             return id;
         }
@@ -94,17 +83,6 @@
                 return null;
             }
             return SecondaryIndexKeyBuilder.BuildTableKey(sagaType, new SagaCorrelationProperty(propertyName, propertyValue));
-        }
-
-        /// <summary>
-        /// Creates an indexing only entity, without payload of the primary.
-        /// </summary>
-        static SecondaryIndexTableEntity CreateIndexingOnlyEntity(PartitionRowKeyTuple key, Guid id)
-        {
-            var entity = new SecondaryIndexTableEntity();
-            key.Apply(entity);
-            entity.SagaId = id;
-            return entity;
         }
 
         public async Task RemoveSecondary(Type sagaType, PartitionRowKeyTuple secondaryIndexKey)
