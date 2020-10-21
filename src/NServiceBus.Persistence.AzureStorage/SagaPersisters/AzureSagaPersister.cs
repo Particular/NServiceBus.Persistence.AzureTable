@@ -110,6 +110,45 @@
         public async Task<TSagaData> Get<TSagaData>(Guid sagaId, SynchronizedStorageSession session, ContextBag context)
             where TSagaData : class, IContainSagaData
         {
+            var storageSession = (StorageSession)session;
+
+            // TODO: If there is no table holder at all we probably want to use the convention of using the saga type as a table name
+            // reads need to go directly
+            var table = storageSession.TableHolder.Table;
+            var partitionKey = GetPartitionKey(context, sagaId);
+
+            var retrieveResult = await table.ExecuteAsync(
+                    TableOperation.Retrieve<DictionaryTableEntity>(partitionKey.PartitionKey, sagaId.ToString()))
+                .ConfigureAwait(false);
+
+            var sagaDataAsTableEntity = retrieveResult.Result as DictionaryTableEntity;
+            var sagaNotFound = retrieveResult.HttpStatusCode == (int)HttpStatusCode.NotFound || sagaDataAsTableEntity == null;
+
+            if (sagaNotFound)
+            {
+                return default;
+            }
+
+            sagaDataAsTableEntity.WillBeStoredOnPremium = isPremiumEndpoint;
+            var sagaData = DictionaryTableEntityExtensions.ToEntity<TSagaData>(sagaDataAsTableEntity);
+
+            // TODO: Maybe there is a smarter way to handle the etags consistently
+            var meta = context.GetOrCreate<SagaInstanceMetadata>();
+            meta.AddEtag(sagaData, sagaDataAsTableEntity.ETag);
+            if (sagaDataAsTableEntity.TryGetValue(SecondaryIndexIndicatorProperty, out var value))
+            {
+                var partitionRowKeyTuple = PartitionRowKeyTuple.Parse(value.StringValue);
+                if (partitionRowKeyTuple.HasValue)
+                {
+                    meta.AddSecondaryIndexId(sagaData, partitionRowKeyTuple.Value);
+                }
+            }
+            return sagaData;
+        }
+
+        public async Task<TSagaData> OldGet<TSagaData>(Guid sagaId, SynchronizedStorageSession session, ContextBag context)
+            where TSagaData : class, IContainSagaData
+        {
             var id = sagaId.ToString();
             var entityType = typeof(TSagaData);
             var tableEntity = await GetDictionaryTableEntity(id, entityType).ConfigureAwait(false);
