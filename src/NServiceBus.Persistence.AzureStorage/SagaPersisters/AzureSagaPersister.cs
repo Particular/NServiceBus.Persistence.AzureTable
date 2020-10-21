@@ -61,6 +61,33 @@
 
         public Task Update(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
         {
+            // TODO: If there is no table holder at all we probably want to use the convention of using the saga type as a table name
+            var storageSession = (StorageSession)session;
+            var partitionKey = GetPartitionKey(context, sagaData.Id);
+
+            var sagaDataType = sagaData.GetType();
+
+            var meta = context.GetOrCreate<SagaInstanceMetadata>();
+            meta.TryGetEtag(sagaData, out var etag);
+
+            var properties = SelectPropertiesToPersist(sagaDataType);
+
+            var sagaAsDictionaryTableEntity = DictionaryTableEntityExtensions.ToDictionaryTableEntity(sagaData, new DictionaryTableEntity
+            {
+                PartitionKey = partitionKey.PartitionKey,
+                RowKey = sagaData.Id.ToString(),
+                ETag = etag,
+                WillBeStoredOnPremium = isPremiumEndpoint
+            }, properties);
+
+            // regardless whether the migration mode is enabled or not make sure we never lose the property if it was there
+            if (meta.TryGetSecondaryIndexKey(sagaData, out var secondaryIndexKey))
+            {
+                sagaAsDictionaryTableEntity[SecondaryIndexIndicatorProperty] = EntityProperty.GeneratePropertyForString(secondaryIndexKey.ToString());
+            }
+
+            storageSession.Batch.Add(TableOperation.Replace(sagaAsDictionaryTableEntity));
+
             return Task.CompletedTask;
         }
 
