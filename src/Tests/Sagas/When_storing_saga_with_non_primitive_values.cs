@@ -13,7 +13,7 @@
         [Test]
         public async Task Should_persist_json_serializable_value()
         {
-            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
+            var connectionString = Testing.Utilities.GetEnvConfiguredConnectionStringForPersistence();
 
             var persister = new AzureSagaPersister(connectionString, true, false);
             var array = new[] { 1, 2, 3, 4 };
@@ -46,7 +46,7 @@
         static DictionaryTableEntity GetEntity(Guid sagaId)
         {
             var tableName = typeof(NonPrimitiveSerializableSagaData).Name;
-            var account = CloudStorageAccount.Parse(Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence());
+            var account = CloudStorageAccount.Parse(Testing.Utilities.GetEnvConfiguredConnectionStringForPersistence());
             var table = account.CreateCloudTableClient().GetTableReference(tableName);
 
             var query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, sagaId.ToString()));
@@ -79,7 +79,7 @@
         [Test]
         public void Should_fail_with_json_non_serializable_value()
         {
-            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
+            var connectionString = Testing.Utilities.GetEnvConfiguredConnectionStringForPersistence();
 
             var persister = new AzureSagaPersister(connectionString, true, false);
 

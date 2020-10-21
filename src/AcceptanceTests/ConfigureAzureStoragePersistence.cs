@@ -3,11 +3,12 @@ using NServiceBus;
 using NServiceBus.AcceptanceTesting.Support;
 using NServiceBus.AcceptanceTests.Routing.MessageDrivenSubscriptions;
 using NServiceBus.AcceptanceTests.Sagas;
+using NServiceBus.Persistence.AzureStorage.Testing;
 using Conventions = NServiceBus.AcceptanceTesting.Customization.Conventions;
 
 public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestExecution
 {
-    static string ConnectionString => Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
+    static string ConnectionString => Utilities.GetEnvConfiguredConnectionStringForPersistence();
 
     public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {

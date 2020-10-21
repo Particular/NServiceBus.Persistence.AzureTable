@@ -10,7 +10,7 @@
         [Test]
         public void Should_throw_exception_if_table_does_not_exist_and_auto_schema_is_off()
         {
-            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
+            var connectionString = Testing.Utilities.GetEnvConfiguredConnectionStringForPersistence();
 
             var persister = new AzureSagaPersister(connectionString, false, false);
             var saga = new SaveSagaData
@@ -26,7 +26,7 @@
         [Test]
         public void Should_throw_when_date_is_invalid()
         {
-            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
+            var connectionString = Testing.Utilities.GetEnvConfiguredConnectionStringForPersistence();
 
             var persister = new AzureSagaPersister(connectionString, false, false);
             var saga = new SaveSagaData

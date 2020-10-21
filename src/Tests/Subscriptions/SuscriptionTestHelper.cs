@@ -9,7 +9,7 @@
     {
         internal static async Task<AzureSubscriptionStorage> CreateAzureSubscriptionStorage()
         {
-            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
+            var connectionString = Testing.Utilities.GetEnvConfiguredConnectionStringForPersistence();
             var account = CloudStorageAccount.Parse(connectionString);
 
             var table = account.CreateCloudTableClient().GetTableReference(AzureSubscriptionStorageDefaults.TableName);
@@ -28,7 +28,7 @@
 
         static async Task RemoveAllRowsForTable(string tableName)
         {
-            var cloudStorageAccount = CloudStorageAccount.Parse(Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence());
+            var cloudStorageAccount = CloudStorageAccount.Parse(Testing.Utilities.GetEnvConfiguredConnectionStringForPersistence());
             var table = cloudStorageAccount.CreateCloudTableClient().GetTableReference(tableName);
 
             await table.CreateIfNotExistsAsync();

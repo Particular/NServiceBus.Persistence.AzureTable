@@ -16,5 +16,10 @@
         ///
         /// </summary>
         TableBatchOperation Batch { get; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        string PartitionKey { get; }
     }
 }

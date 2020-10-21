@@ -10,7 +10,7 @@
         [Test]
         public async Task Should_return_null_when_no_saga_data_exists()
         {
-            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
+            var connectionString = Testing.Utilities.GetEnvConfiguredConnectionStringForPersistence();
 
             var persister = new AzureSagaPersister(connectionString, false, false);
 
@@ -22,7 +22,7 @@
         [Test]
         public async Task Should_return_entity()
         {
-            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
+            var connectionString = Testing.Utilities.GetEnvConfiguredConnectionStringForPersistence();
 
             var persister = new AzureSagaPersister(connectionString, true, false);
             var saga = new GetSagaData

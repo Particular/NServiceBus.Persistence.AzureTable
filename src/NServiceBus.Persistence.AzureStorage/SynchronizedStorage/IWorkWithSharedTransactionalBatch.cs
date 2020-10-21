@@ -1,11 +1,9 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage
 {
-    using Microsoft.Azure.Cosmos.Table;
+    using Extensibility;
 
-    interface IWorkWithSharedTransactionalBatch
+    interface IWorkWithSharedTransactionalBatch : IAzureStorageStorageSession
     {
-        CloudTable Table { get; }
-
-        TableBatchOperation Batch { get; }
+        ContextBag CurrentContextBag { get; set; }
     }
 }

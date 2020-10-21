@@ -12,6 +12,7 @@
             this.commitOnComplete = commitOnComplete;
             CurrentContextBag = context;
             TableHolder = resolver.ResolveAndSetIfAvailable(context);
+            Batch = new TableBatchOperation();
         }
 
         Task CompletableSynchronizedStorageSession.CompleteAsync()
@@ -48,8 +49,15 @@
 
         public TableHolder TableHolder { get; set; }
         public ContextBag CurrentContextBag { get; set; }
+
+        // for the user path only
         public CloudTable Table => TableHolder.Table;
+
+        // for the user path only
         public TableBatchOperation Batch { get; }
+
+        // for the user path only
+        public string PartitionKey => !CurrentContextBag.TryGet<TableEntityPartitionKey>(out var partitionKey) ? null : partitionKey.PartitionKey;
 
         readonly bool commitOnComplete;
     }

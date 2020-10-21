@@ -17,7 +17,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Persisters
         [Test]
         public async Task Should_not_issue_table_scan()
         {
-            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
+            var connectionString = Testing.Utilities.GetEnvConfiguredConnectionStringForPersistence();
             AzureSagaPersister createSagaPersister() => new AzureSagaPersister(connectionString, true, AssumeSecondaryIndicesExist);
 
             // warm up table cache

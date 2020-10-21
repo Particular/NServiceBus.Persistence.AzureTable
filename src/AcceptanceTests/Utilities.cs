@@ -1,8 +1,8 @@
-﻿namespace Testing
+﻿namespace NServiceBus.Persistence.AzureStorage.Testing
 {
     using System;
 
-    public static class Utillities
+    public static class Utilities
     {
         public static string GetEnvConfiguredConnectionStringForPersistence()
         {
