@@ -23,7 +23,7 @@
             client = account.CreateCloudTableClient();
             isPremiumEndpoint = IsPremiumEndpoint(client);
 
-            secondaryIndices = new SecondaryIndexPersister(GetTable, ScanForSaga, assumeSecondaryIndicesExist);
+            secondaryIndices = new SecondaryIndex(GetTable, ScanForSaga, assumeSecondaryIndicesExist);
         }
 
         // the SDK uses exactly this method of changing the underlying executor
@@ -192,7 +192,7 @@
         async Task<TSagaData> GetByCorrelationProperty<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce)
             where TSagaData : class, IContainSagaData
         {
-            var sagaId = await secondaryIndices.FindSagaIdAndCreateIndexEntryIfNotFound<TSagaData>(propertyName, propertyValue).ConfigureAwait(false);
+            var sagaId = await secondaryIndices.FindSagaId<TSagaData>(propertyName, propertyValue).ConfigureAwait(false);
             if (sagaId == null)
             {
                 return null;
@@ -268,7 +268,7 @@
 
         bool autoUpdateSchema;
         CloudTableClient client;
-        SecondaryIndexPersister secondaryIndices;
+        SecondaryIndex secondaryIndices;
         const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
         static ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
         private bool isPremiumEndpoint;

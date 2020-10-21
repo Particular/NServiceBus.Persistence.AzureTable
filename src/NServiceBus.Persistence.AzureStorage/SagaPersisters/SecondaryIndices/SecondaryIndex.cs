@@ -5,11 +5,11 @@
     using Microsoft.Azure.Cosmos.Table;
     using Sagas;
 
-    class SecondaryIndexPersister
+    class SecondaryIndex
     {
         public delegate Task<Guid[]> ScanForSagas(Type sagaType, string propertyName, object propertyValue);
 
-        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, bool assumeSecondaryIndicesExist)
+        public SecondaryIndex(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, bool assumeSecondaryIndicesExist)
         {
             this.getTableForSaga = getTableForSaga;
             this.scanner = scanner;
