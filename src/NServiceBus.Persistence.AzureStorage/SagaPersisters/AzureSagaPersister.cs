@@ -11,7 +11,6 @@
     using Logging;
     using Microsoft.Azure.Cosmos.Table;
     using Sagas;
-    using SecondaryIndices;
 
     class AzureSagaPersister : ISagaPersister
     {
