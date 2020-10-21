@@ -41,9 +41,11 @@
 
             setAsDispatchedHolder.PartitionKey = partitionKey;
 
-            var retrieveResult = await setAsDispatchedHolder.TableHolder.Table.ExecuteAsync(TableOperation.Retrieve<OutboxRecord>(partitionKey.PartitionKey, messageId))
+            var outboxRecord = await setAsDispatchedHolder.TableHolder.Table
+                .ReadOutboxRecord(messageId, partitionKey, context)
                 .ConfigureAwait(false);
-            return retrieveResult.Result is OutboxRecord outboxRecord ? new OutboxMessage(outboxRecord.Id, outboxRecord.Operations) : null;
+
+            return outboxRecord != null ? new OutboxMessage(outboxRecord.Id, outboxRecord.Operations) : null;
         }
 
         public Task Store(OutboxMessage message, OutboxTransaction transaction, ContextBag context)
@@ -59,7 +61,8 @@
             {
                 Id = message.MessageId,
                 Operations = message.TransportOperations,
-                PartitionKey = azureStorageOutboxTransaction.PartitionKey.PartitionKey
+                // TODO: A bit of a train wreck, improve
+                PartitionKey = azureStorageOutboxTransaction.PartitionKey.Value.PartitionKey
             });
 
             azureStorageOutboxTransaction.StorageSession.Batch.Add(storeOperation);

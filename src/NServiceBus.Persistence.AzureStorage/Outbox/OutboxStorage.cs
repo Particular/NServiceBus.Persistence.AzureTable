@@ -1,7 +1,8 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage
 {
-    using System;
     using Features;
+    using Microsoft.Extensions.DependencyInjection;
+    using Outbox;
 
     class OutboxStorage : Feature
     {
@@ -17,8 +18,10 @@
 
         protected override void Setup(FeatureConfigurationContext context)
         {
-            //context.Container.ConfigureComponent(builder => new OutboxPersister(builder.Build<ContainerHolderResolver>(), serializer, ttlInSeconds), DependencyLifecycle.SingleInstance);
-            //context.Pipeline.Register(builder => new LogicalOutboxBehavior(builder.Build<ContainerHolderResolver>(), serializer), "Behavior that mimics the outbox as part of the logical stage.");
+            context.Services.AddSingleton<IOutboxStorage, OutboxPersister>();
+            context.Services.AddTransient<LogicalOutboxBehavior>();
+
+            context.Pipeline.Register(provider => provider.GetRequiredService<LogicalOutboxBehavior>(), "Behavior that mimics the outbox as part of the logical stage.");
         }
     }
 }
