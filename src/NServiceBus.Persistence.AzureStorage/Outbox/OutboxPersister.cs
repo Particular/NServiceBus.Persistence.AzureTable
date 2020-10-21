@@ -1,10 +1,10 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage
 {
+    using System;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Documents;
-    using Newtonsoft.Json;
-    using NServiceBus.Extensibility;
-    using NServiceBus.Outbox;
+    using Microsoft.Azure.Cosmos.Table;
+    using Extensibility;
+    using Outbox;
 
 
     class OutboxPersister  : IOutboxStorage
@@ -16,13 +16,13 @@
 
         public Task<OutboxTransaction> BeginTransaction(ContextBag context)
         {
-            var cosmosOutboxTransaction = new AzureStorageOutboxTransaction(tableHolderResolver, context);
+            var azureStorageOutboxTransaction = new AzureStorageOutboxTransaction(tableHolderResolver, context);
 
-            // if (context.TryGet<PartitionKey>(out var partitionKey))
-            // {
-            //     cosmosOutboxTransaction.PartitionKey = partitionKey;
-            // }
-            return Task.FromResult((OutboxTransaction)cosmosOutboxTransaction);
+            if (context.TryGet<TableEntityPartitionKey>(out var partitionKey))
+            {
+                azureStorageOutboxTransaction.PartitionKey = partitionKey;
+            }
+            return Task.FromResult((OutboxTransaction)azureStorageOutboxTransaction);
         }
 
         public async Task<OutboxMessage> Get(string messageId, ContextBag context)
@@ -33,7 +33,7 @@
             };
             context.Set(setAsDispatchedHolder);
 
-            if (!context.TryGet<PartitionKey>(out var partitionKey))
+            if (!context.TryGet<TableEntityPartitionKey>(out var partitionKey))
             {
                 // we return null here to enable outbox work at logical stage
                 return null;
@@ -41,49 +41,47 @@
 
             setAsDispatchedHolder.PartitionKey = partitionKey;
 
-            OutboxRecord outboxRecord = null;
-            // var outboxRecord = await setAsDispatchedHolder.TableHolder.Table.ReadOutboxRecord(messageId, partitionKey, serializer, context)
-            //     .ConfigureAwait(false);
-            return outboxRecord != null ? new OutboxMessage(outboxRecord.Id, /*outboxRecord.TransportOperations*/ null) : null;
+            var retrieveResult = await setAsDispatchedHolder.TableHolder.Table.ExecuteAsync(TableOperation.Retrieve<OutboxRecord>(partitionKey.PartitionKey, messageId))
+                .ConfigureAwait(false);
+            return retrieveResult.Result is OutboxRecord outboxRecord ? new OutboxMessage(outboxRecord.Id, outboxRecord.Operations) : null;
         }
 
         public Task Store(OutboxMessage message, OutboxTransaction transaction, ContextBag context)
         {
-            var cosmosTransaction = (AzureStorageOutboxTransaction)transaction;
+            var azureStorageOutboxTransaction = (AzureStorageOutboxTransaction)transaction;
 
-            if (cosmosTransaction == null || cosmosTransaction.SuppressStoreAndCommit || cosmosTransaction.PartitionKey == null)
+            if (azureStorageOutboxTransaction == null || azureStorageOutboxTransaction.SuppressStoreAndCommit || azureStorageOutboxTransaction.PartitionKey == default)
             {
                 return Task.CompletedTask;
             }
 
-            // cosmosTransaction.StorageSession.AddOperation(new OutboxStore(new OutboxRecord
-            //     {
-            //         Id = message.MessageId,
-            //         TransportOperations = message.TransportOperations
-            //     },
-            //     cosmosTransaction.PartitionKey.Value,
-            //     serializer,
-            //     context));
+            var storeOperation = TableOperation.Insert(new OutboxRecord
+            {
+                Id = message.MessageId,
+                Operations = message.TransportOperations,
+                PartitionKey = azureStorageOutboxTransaction.PartitionKey.PartitionKey
+            });
+
+            azureStorageOutboxTransaction.StorageSession.Batch.Add(storeOperation);
             return Task.CompletedTask;
         }
 
-        public Task SetAsDispatched(string messageId, ContextBag context)
+        public async Task SetAsDispatched(string messageId, ContextBag context)
         {
             var setAsDispatchedHolder = context.Get<SetAsDispatchedHolder>();
 
             var partitionKey = setAsDispatchedHolder.PartitionKey;
-            var containerHolder = setAsDispatchedHolder.TableHolder;
+            var tableHolder = setAsDispatchedHolder.TableHolder;
 
-            // var operation = new OutboxDelete(new OutboxRecord
-            // {
-            //     Id = messageId,
-            //     Dispatched = true
-            // }, partitionKey, serializer, ttlInSeconds, context);
-            //
-            // var transactionalBatch = containerHolder.Container.CreateTransactionalBatch(partitionKey);
-            //
-            // await transactionalBatch.ExecuteOperationAsync(operation, containerHolder.PartitionKeyPath).ConfigureAwait(false);
-            return Task.CompletedTask;
+            var replaceOperation = TableOperation.Replace(new OutboxRecord
+            {
+                Id = messageId,
+                Operations = Array.Empty<TransportOperation>(),
+                PartitionKey = partitionKey.PartitionKey
+            });
+
+            // TODO inspect result
+            await tableHolder.Table.ExecuteAsync(replaceOperation).ConfigureAwait(false);
         }
 
         TableHolderResolver tableHolderResolver;
