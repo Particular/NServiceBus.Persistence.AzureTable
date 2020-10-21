@@ -7,7 +7,5 @@
     class SecondaryIndexTableEntity : TableEntity
     {
         public Guid SagaId { get; set; }
-
-        public byte[] InitialSagaData { get; set; }
     }
 }
