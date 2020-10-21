@@ -1,6 +1,7 @@
 ﻿namespace NServiceBus
 {
     using Configuration.AdvancedExtensibility;
+    using NServiceBus.Persistence.AzureStorage;
     using static Persistence.AzureStorage.Config.WellKnownConfigurationKeys;
 
     /// <summary>
@@ -25,6 +26,8 @@
         /// </summary>
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> CreateSchema(this PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> config, bool createSchema)
         {
+            Guard.AgainstNull(nameof(config), config);
+
             config.GetSettings().Set(SagaStorageCreateSchema, createSchema);
             return config;
         }
@@ -34,10 +37,23 @@
         /// <remarks>Sagas created with NServiceBus.Persistence.AzureStorage NuGet package have secondary indices by default.
         /// Sagas created with NServiceBus.Azure NuGet package need to be migrated using upgrade guides provided on our documentation site.</remarks>
         /// </summary>
+        /// TODO: Flip setting and deprecate this one
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> AssumeSecondaryIndicesExist(this PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> config)
         {
+            Guard.AgainstNull(nameof(config), config);
+
             config.GetSettings().Set(SagaStorageAssumeSecondaryIndicesExist, true);
             return config;
+        }
+
+        /// <summary>
+        /// TODO, find a better name, good enough to get going
+        /// </summary>
+        public static void EnableMigrationMode(this PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> config)
+        {
+            Guard.AgainstNull(nameof(config), config);
+
+            config.GetSettings().Set(MigrationMode, true);
         }
     }
 }

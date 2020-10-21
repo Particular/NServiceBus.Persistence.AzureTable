@@ -9,5 +9,6 @@
         public const string SubscriptionStorageTableName = "AzureSubscriptionStorage.TableName";
         public const string SubscriptionStorageCacheFor = "AzureSubscriptionStorage.CacheFor";
         public const string SubscriptionStorageCreateSchema = "AzureSubscriptionStorage.CreateSchema";
+        public const string MigrationMode = "AzureSubscriptionStorage.EnableMigrationMode";
     }
 }
