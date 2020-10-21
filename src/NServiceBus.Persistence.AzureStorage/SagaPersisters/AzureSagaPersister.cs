@@ -283,17 +283,18 @@
             }
 
             var sagaData = await Get<TSagaData>(sagaId.Value, session, context).ConfigureAwait(false);
-            if (sagaData == null)
+            if (sagaData != null)
             {
-                // saga is not found, try invalidate cache and try getting value one more time
-                secondaryIndices.InvalidateCacheIfAny(propertyName, propertyValue, typeof(TSagaData));
-                if (triedAlreadyOnce == false)
-                {
-                    return await GetByCorrelationProperty<TSagaData>(propertyName, propertyValue, session, context, true).ConfigureAwait(false);
-                }
+                return sagaData;
+            }
+            // saga is not found, try invalidate cache and try getting value one more time
+            secondaryIndices.InvalidateCacheIfAny(propertyName, propertyValue, typeof(TSagaData));
+            if (triedAlreadyOnce == false)
+            {
+                return await GetByCorrelationProperty<TSagaData>(propertyName, propertyValue, session, context, true).ConfigureAwait(false);
             }
 
-            return sagaData;
+            return null;
         }
 
         public static TableQuery<TEntity> GenerateSagaTableQuery<TEntity>(Guid sagaId) where TEntity : ITableEntity, new()
