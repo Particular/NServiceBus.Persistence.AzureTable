@@ -21,7 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="\**\Sagas\When_rolling_back_storage_session.cs" />
   </ItemGroup>
 
   <ItemGroup>
