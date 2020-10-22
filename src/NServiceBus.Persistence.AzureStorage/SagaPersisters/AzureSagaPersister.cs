@@ -145,7 +145,7 @@
             return sagaData;
         }
 
-        public async Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
+        public Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
         {
             var storageSession = (StorageSession)session;
 
@@ -167,25 +167,20 @@
                 RowKey = sagaId,
                 WillBeStoredOnPremium = isPremiumEndpoint
             };
-            try
-            {
-                await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
-            }
-            catch (StorageException e) when (e.RequestInformation.HttpStatusCode == (int) HttpStatusCode.NotFound)
-            {
-                // should not try to delete saga data that does not exist, this situation can occur on retry or parallel execution
-            }
 
-            try
-            {
-                // regardless whether the migration mode is enabled or not make sure if there was a secondary index
-                // property set try to delete the index row as best effort
-                await RemoveSecondaryIndex(sagaData, meta).ConfigureAwait(false);
-            }
-            catch
-            {
-                log.Warn($"Removal of the secondary index entry for the following saga failed: '{sagaId}'");
-            }
+            storageSession.Batch.Add(TableOperation.Delete(entity));
+            return Task.CompletedTask;
+            // TODO: we cannot delete this here
+            // try
+            // {
+            //     // regardless whether the migration mode is enabled or not make sure if there was a secondary index
+            //     // property set try to delete the index row as best effort
+            //     await RemoveSecondaryIndex(sagaData, meta).ConfigureAwait(false);
+            // }
+            // catch
+            // {
+            //     log.Warn($"Removal of the secondary index entry for the following saga failed: '{sagaId}'");
+            // }
         }
 
         async Task<TSagaData> GetByCorrelationProperty<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce)
