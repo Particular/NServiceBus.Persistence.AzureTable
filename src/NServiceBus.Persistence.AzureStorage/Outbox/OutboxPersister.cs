@@ -81,7 +81,7 @@
             var tableHolder = setAsDispatchedHolder.TableHolder;
             var record = setAsDispatchedHolder.Record;
 
-            record.Operations = Array.Empty<TransportOperation>();
+            record.SetAsDispatched();
 
             var replaceOperation = TableOperation.Replace(record);
 
