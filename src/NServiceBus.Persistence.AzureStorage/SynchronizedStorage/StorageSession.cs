@@ -43,6 +43,11 @@
                 throw new Exception("TODO");
             }
 
+            if (Batch.Count == 0)
+            {
+                return;
+            }
+
             // TODO inspect the result and act accordingly
             await Table.ExecuteBatchAsync(Batch).ConfigureAwait(false);
         }
