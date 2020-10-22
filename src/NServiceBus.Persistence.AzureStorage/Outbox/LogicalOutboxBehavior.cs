@@ -66,7 +66,6 @@
             var tableHolder = tableHolderResolver.ResolveAndSetIfAvailable(context.Extensions);
 
             var setAsDispatchedHolder = context.Extensions.Get<SetAsDispatchedHolder>();
-            setAsDispatchedHolder.PartitionKey = partitionKey;
             setAsDispatchedHolder.TableHolder = tableHolder;
 
             outboxTransaction.PartitionKey = partitionKey;
@@ -80,6 +79,8 @@
                 await next(context).ConfigureAwait(false);
                 return;
             }
+
+            setAsDispatchedHolder.Record = outboxRecord;
 
             // Signals that Outbox persister Store and Commit should be no-ops
             outboxTransaction.SuppressStoreAndCommit = true;

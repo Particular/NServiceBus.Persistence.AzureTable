@@ -39,11 +39,11 @@
                 return null;
             }
 
-            setAsDispatchedHolder.PartitionKey = partitionKey;
-
             var outboxRecord = await setAsDispatchedHolder.TableHolder.Table
                 .ReadOutboxRecord(messageId, partitionKey, context)
                 .ConfigureAwait(false);
+
+            setAsDispatchedHolder.Record = outboxRecord;
 
             return outboxRecord != null ? new OutboxMessage(outboxRecord.Id, outboxRecord.Operations) : null;
         }
@@ -57,14 +57,19 @@
                 return Task.CompletedTask;
             }
 
-            var storeOperation = TableOperation.Insert(new OutboxRecord
+            var setAsDispatchedHolder = context.Get<SetAsDispatchedHolder>();
+
+            var outboxRecord = new OutboxRecord
             {
                 Id = message.MessageId,
                 Operations = message.TransportOperations,
                 // TODO: A bit of a train wreck, improve
                 PartitionKey = azureStorageOutboxTransaction.PartitionKey.Value.PartitionKey
-            });
+            };
 
+            setAsDispatchedHolder.Record = outboxRecord;
+
+            var storeOperation = TableOperation.Insert(outboxRecord);
             azureStorageOutboxTransaction.StorageSession.Batch.Add(storeOperation);
             return Task.CompletedTask;
         }
@@ -73,15 +78,12 @@
         {
             var setAsDispatchedHolder = context.Get<SetAsDispatchedHolder>();
 
-            var partitionKey = setAsDispatchedHolder.PartitionKey;
             var tableHolder = setAsDispatchedHolder.TableHolder;
+            var record = setAsDispatchedHolder.Record;
 
-            var replaceOperation = TableOperation.Replace(new OutboxRecord
-            {
-                Id = messageId,
-                Operations = Array.Empty<TransportOperation>(),
-                PartitionKey = partitionKey.PartitionKey
-            });
+            record.Operations = Array.Empty<TransportOperation>();
+
+            var replaceOperation = TableOperation.Replace(record);
 
             // TODO inspect result
             await tableHolder.Table.ExecuteAsync(replaceOperation).ConfigureAwait(false);
