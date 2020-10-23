@@ -39,14 +39,14 @@
 
         public async Task Commit()
         {
-            if (Table == null)
-            {
-                throw new Exception("TODO");
-            }
-
             if (Batch.Count == 0)
             {
                 return;
+            }
+
+            if (Table == null)
+            {
+                throw new Exception("TODO");
             }
 
             // TODO inspect the result and act accordingly
