@@ -40,51 +40,32 @@
 
             var sagaDataType = sagaData.GetType();
 
-            var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            meta.TryGetEtag(sagaData, out var etag);
-
             var properties = SelectPropertiesToPersist(sagaDataType);
-
-            var sagaAsDictionaryTableEntity = DictionaryTableEntityExtensions.ToDictionaryTableEntity(sagaData, new DictionaryTableEntity
+            var sagaDataEntityToSave = DictionaryTableEntityExtensions.ToDictionaryTableEntity(sagaData, new DictionaryTableEntity
             {
                 PartitionKey = partitionKey.PartitionKey,
                 RowKey = sagaData.Id.ToString(),
-                ETag = etag,
                 WillBeStoredOnPremium = isPremiumEndpoint
             }, properties);
 
-            storageSession.Batch.Add(TableOperation.Insert(sagaAsDictionaryTableEntity));
+            var meta = context.GetOrCreate<SagaInstanceMetadata>();
+            meta.Entities[sagaData] = sagaDataEntityToSave;
+            storageSession.Batch.Add(TableOperation.Insert(sagaDataEntityToSave));
 
             return Task.CompletedTask;
         }
 
         public Task Update(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
         {
-            // TODO: If there is no table holder at all we probably want to use the convention of using the saga type as a table name
             var storageSession = (StorageSession)session;
-            var partitionKey = GetPartitionKey(context, sagaData.Id);
-
             var sagaDataType = sagaData.GetType();
 
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            meta.TryGetEtag(sagaData, out var etag);
+            var sagaDataEntityToUpdate = meta.Entities[sagaData];
 
             var properties = SelectPropertiesToPersist(sagaDataType);
 
-            var sagaAsDictionaryTableEntity = DictionaryTableEntityExtensions.ToDictionaryTableEntity(sagaData, new DictionaryTableEntity
-            {
-                PartitionKey = partitionKey.PartitionKey,
-                RowKey = sagaData.Id.ToString(),
-                ETag = etag,
-                WillBeStoredOnPremium = isPremiumEndpoint
-            }, properties);
-
-            // regardless whether the migration mode is enabled or not make sure we never lose the property if it was there
-            if (meta.TryGetSecondaryIndexKey(sagaData, out var secondaryIndexKey))
-            {
-                sagaAsDictionaryTableEntity[SecondaryIndexIndicatorProperty] = EntityProperty.GeneratePropertyForString(secondaryIndexKey.ToString());
-            }
-
+            var sagaAsDictionaryTableEntity = DictionaryTableEntityExtensions.ToDictionaryTableEntity(sagaData, sagaDataEntityToUpdate, properties);
             storageSession.Batch.Add(TableOperation.Replace(sagaAsDictionaryTableEntity));
 
             return Task.CompletedTask;
@@ -104,28 +85,18 @@
                     TableOperation.Retrieve<DictionaryTableEntity>(partitionKey.PartitionKey, sagaId.ToString()))
                 .ConfigureAwait(false);
 
-            var sagaDataAsTableEntity = retrieveResult.Result as DictionaryTableEntity;
-            var sagaNotFound = retrieveResult.HttpStatusCode == (int)HttpStatusCode.NotFound || sagaDataAsTableEntity == null;
+            var readSagaDataEntity = retrieveResult.Result as DictionaryTableEntity;
+            var sagaNotFound = retrieveResult.HttpStatusCode == (int)HttpStatusCode.NotFound || readSagaDataEntity == null;
 
             if (sagaNotFound)
             {
                 return default;
             }
 
-            sagaDataAsTableEntity.WillBeStoredOnPremium = isPremiumEndpoint;
-            var sagaData = DictionaryTableEntityExtensions.ToEntity<TSagaData>(sagaDataAsTableEntity);
-
-            // TODO: Maybe there is a smarter way to handle the etags consistently
+            readSagaDataEntity.WillBeStoredOnPremium = isPremiumEndpoint;
+            var sagaData = DictionaryTableEntityExtensions.ToEntity<TSagaData>(readSagaDataEntity);
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            meta.AddEtag(sagaData, sagaDataAsTableEntity.ETag);
-            if (sagaDataAsTableEntity.TryGetValue(SecondaryIndexIndicatorProperty, out var value))
-            {
-                var partitionRowKeyTuple = PartitionRowKeyTuple.Parse(value.StringValue);
-                if (partitionRowKeyTuple.HasValue)
-                {
-                    meta.AddSecondaryIndexId(sagaData, partitionRowKeyTuple.Value);
-                }
-            }
+            meta.Entities[sagaData] = readSagaDataEntity;
             return sagaData;
         }
 
@@ -148,27 +119,9 @@
         public Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
         {
             var storageSession = (StorageSession)session;
-
-            // TODO: If there is no table holder at all we probably want to use the convention of using the saga type as a table name
-            var table = storageSession.TableHolder.Table;
-            var partitionKey = GetPartitionKey(context, sagaData.Id);
-
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            if (!meta.TryGetEtag(sagaData, out var etag))
-            {
-                etag = "*";
-            }
-
-            var sagaId = sagaData.Id.ToString();
-            var entity = new DictionaryTableEntity
-            {
-                ETag = etag,
-                PartitionKey = partitionKey.PartitionKey,
-                RowKey = sagaId,
-                WillBeStoredOnPremium = isPremiumEndpoint
-            };
-
-            storageSession.Batch.Add(TableOperation.Delete(entity));
+            var sagaDataEntityToDelete = meta.Entities[sagaData];
+            storageSession.Batch.Add(TableOperation.Delete(sagaDataEntityToDelete));
             return Task.CompletedTask;
             // TODO: we cannot delete this here
             // try
@@ -207,16 +160,15 @@
             return null;
         }
 
-        Task RemoveSecondaryIndex(IContainSagaData sagaData, SagaInstanceMetadata meta)
-        {
-            if (meta.TryGetSecondaryIndexKey(sagaData, out var secondaryIndexKey))
-            {
-                return secondaryIndices.RemoveSecondary(sagaData.GetType(), secondaryIndexKey.Value);
-            }
-
-            return Task.CompletedTask;
-        }
-
+        // Task RemoveSecondaryIndex(IContainSagaData sagaData, SagaInstanceMetadata meta)
+        // {
+        //     if (meta.TryGetSecondaryIndexKey(sagaData, out var secondaryIndexKey))
+        //     {
+        //         return secondaryIndices.RemoveSecondary(sagaData.GetType(), secondaryIndexKey.Value);
+        //     }
+        //
+        //     return Task.CompletedTask;
+        // }
         async Task<CloudTable> GetTable(Type sagaType)
         {
             var tableName = sagaType.Name;
@@ -273,28 +225,7 @@
         /// </summary>
         class SagaInstanceMetadata
         {
-            public void AddEtag(IContainSagaData entity, string etag)
-            {
-                etags[entity] = etag;
-            }
-
-            public void AddSecondaryIndexId(IContainSagaData entity, PartitionRowKeyTuple secondaryIndexKey)
-            {
-                secondaryIndexKeys[entity] = secondaryIndexKey;
-            }
-
-            public bool TryGetEtag(object entity, out string etag)
-            {
-                return etags.TryGetValue(entity, out etag);
-            }
-
-            public bool TryGetSecondaryIndexKey(object entity, out PartitionRowKeyTuple? secondaryIndexKey)
-            {
-                return secondaryIndexKeys.TryGetValue(entity, out secondaryIndexKey);
-            }
-
-            Dictionary<object, string> etags = new Dictionary<object, string>();
-            Dictionary<object, PartitionRowKeyTuple?> secondaryIndexKeys = new Dictionary<object, PartitionRowKeyTuple?>();
+            public Dictionary<object, DictionaryTableEntity> Entities { get; } = new Dictionary<object, DictionaryTableEntity>();
         }
     }
 }
