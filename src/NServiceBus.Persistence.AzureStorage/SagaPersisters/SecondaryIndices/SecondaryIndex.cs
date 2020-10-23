@@ -1,18 +1,16 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.Table;
     using Sagas;
 
     class SecondaryIndex
     {
-        public delegate Task<Guid[]> ScanForSagas(CloudTable table, Type sagaType, string propertyName, object propertyValue);
-
-        public SecondaryIndex(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, bool assumeSecondaryIndicesExist)
+        public SecondaryIndex(bool assumeSecondaryIndicesExist)
         {
-            this.getTableForSaga = getTableForSaga;
-            this.scanner = scanner;
             this.assumeSecondaryIndicesExist = assumeSecondaryIndicesExist;
         }
 
@@ -46,7 +44,7 @@
                 return null;
             }
 
-            var ids = await scanner(table, sagaType, propertyName, propertyValue)
+            var ids = await ScanForSaga(table, sagaType, propertyName, propertyValue)
                 .ConfigureAwait(false);
             if (ids == null || ids.Length == 0)
             {
@@ -62,6 +60,31 @@
             var id = ids[0];
             cache.Put(key.Value, id);
             return id;
+        }
+
+        static async Task<Guid[]> ScanForSaga(CloudTable table, Type sagaType, string propertyName, object propertyValue)
+        {
+            var query = DictionaryTableEntityExtensions.BuildWherePropertyQuery(sagaType, propertyName, propertyValue);
+            query.SelectColumns = new List<string>
+            {
+                "PartitionKey",
+                "RowKey"
+            };
+
+            var entities = await table.ExecuteQueryAsync(query).ConfigureAwait(false);
+            return entities.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray();
+        }
+
+        public Task RemoveSecondary(CloudTable table, PartitionRowKeyTuple secondaryIndexKey)
+        {
+            var e = new TableEntity
+            {
+                ETag = "*"
+            };
+
+            secondaryIndexKey.Apply(e);
+            cache.Remove(secondaryIndexKey);
+            return table.DeleteIgnoringNotFound(e);
         }
 
         /// <summary>
@@ -85,24 +108,8 @@
             return SecondaryIndexKeyBuilder.BuildTableKey(sagaType, new SagaCorrelationProperty(propertyName, propertyValue));
         }
 
-        public async Task RemoveSecondary(Type sagaType, PartitionRowKeyTuple secondaryIndexKey)
-        {
-            var table = await getTableForSaga(sagaType).ConfigureAwait(false);
-            var e = new TableEntity
-            {
-                ETag = "*"
-            };
-
-            secondaryIndexKey.Apply(e);
-            cache.Remove(secondaryIndexKey);
-            await table.DeleteIgnoringNotFound(e).ConfigureAwait(false);
-        }
-
         LRUCache<PartitionRowKeyTuple, Guid> cache = new LRUCache<PartitionRowKeyTuple, Guid>(LRUCapacity);
-        Func<Type, Task<CloudTable>> getTableForSaga;
-        bool assumeSecondaryIndicesExist;
-        ScanForSagas scanner;
-
+        readonly bool assumeSecondaryIndicesExist;
         const int LRUCapacity = 1000;
     }
 }

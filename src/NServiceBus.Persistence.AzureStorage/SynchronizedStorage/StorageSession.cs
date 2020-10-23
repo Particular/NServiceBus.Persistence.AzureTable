@@ -1,6 +1,7 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using Extensibility;
     using Microsoft.Azure.Cosmos.Table;
@@ -38,7 +39,7 @@
 
         public async Task Commit()
         {
-            if (TableHolder == null)
+            if (Table == null)
             {
                 throw new Exception("TODO");
             }
@@ -49,14 +50,21 @@
             }
 
             // TODO inspect the result and act accordingly
-            await Table.ExecuteBatchAsync(Batch).ConfigureAwait(false);
+            var batchResult = await Table.ExecuteBatchAsync(Batch).ConfigureAwait(false);
+            foreach (var work in AdditionalWorkAfterBatch)
+            {
+                await work().ConfigureAwait(false);
+            }
         }
+
+        // temporary, can be removed when secondary index is no longer a thing
+        public ICollection<Func<Task>> AdditionalWorkAfterBatch { get; } = new List<Func<Task>>();
 
         public TableHolder TableHolder { get; set; }
         public ContextBag CurrentContextBag { get; set; }
 
         // for the user path only
-        public CloudTable Table => TableHolder.Table;
+        public CloudTable Table => TableHolder?.Table;
 
         // for the user path only
         public TableBatchOperation Batch { get; }

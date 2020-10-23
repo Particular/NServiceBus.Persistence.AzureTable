@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Net;
     using System.Reflection;
     using System.Threading.Tasks;
@@ -22,7 +21,7 @@
             client = account.CreateCloudTableClient();
             isPremiumEndpoint = IsPremiumEndpoint(client);
 
-            secondaryIndices = new SecondaryIndex(GetTable, ScanForSaga, assumeSecondaryIndicesExist);
+            secondaryIndices = new SecondaryIndex(assumeSecondaryIndicesExist);
         }
 
         // the SDK uses exactly this method of changing the underlying executor
@@ -93,7 +92,7 @@
             }
 
             // reads need to go directly
-            var table = storageSession.TableHolder.Table;
+            var table = storageSession.Table;
             var partitionKey = GetPartitionKey(context, sagaId);
 
             var retrieveResult = await table.ExecuteAsync(
@@ -137,25 +136,39 @@
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
             var sagaDataEntityToDelete = meta.Entities[sagaData];
             storageSession.Batch.Add(TableOperation.Delete(sagaDataEntityToDelete));
+
+            //  if it is not an old saga just go ahead
+            if (!sagaDataEntityToDelete.TryGetValue(SecondaryIndexIndicatorProperty, out var secondaryIndexKey))
+            {
+                return Task.CompletedTask;
+            }
+
+            var partitionRowKeyTuple = PartitionRowKeyTuple.Parse(secondaryIndexKey.StringValue);
+            if (partitionRowKeyTuple.HasValue)
+            {
+                // There is some closure funkyness here but I guess it is fine to assume new saga data will become more widespread and then this problem is gone
+                storageSession.AdditionalWorkAfterBatch.Add(() => RemoveSecondaryIndex(sagaData.Id, storageSession, partitionRowKeyTuple.Value));
+            }
             return Task.CompletedTask;
-            // TODO: we cannot delete this here
-            // try
-            // {
-            //     // regardless whether the migration mode is enabled or not make sure if there was a secondary index
-            //     // property set try to delete the index row as best effort
-            //     await RemoveSecondaryIndex(sagaData, meta).ConfigureAwait(false);
-            // }
-            // catch
-            // {
-            //     log.Warn($"Removal of the secondary index entry for the following saga failed: '{sagaId}'");
-            // }
+        }
+
+        private async Task RemoveSecondaryIndex(Guid sagaDataId, IAzureStorageStorageSession storageSession, PartitionRowKeyTuple partitionRowKeyTuple)
+        {
+            try
+            {
+                await secondaryIndices.RemoveSecondary(storageSession.Table, partitionRowKeyTuple).ConfigureAwait(false);
+            }
+            catch
+            {
+                log.Warn($"Removal of the secondary index entry for the following saga failed: '{sagaDataId}'");
+            }
         }
 
         async Task<TSagaData> GetByCorrelationProperty<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce)
             where TSagaData : class, IContainSagaData
         {
             var storageSession = (StorageSession)session;
-            var sagaId = await secondaryIndices.FindSagaId<TSagaData>(storageSession.TableHolder.Table, propertyName, propertyValue).ConfigureAwait(false);
+            var sagaId = await secondaryIndices.FindSagaId<TSagaData>(storageSession.Table, propertyName, propertyValue).ConfigureAwait(false);
             if (sagaId == null)
             {
                 return null;
@@ -174,40 +187,6 @@
             }
 
             return null;
-        }
-
-        // Task RemoveSecondaryIndex(IContainSagaData sagaData, SagaInstanceMetadata meta)
-        // {
-        //     if (meta.TryGetSecondaryIndexKey(sagaData, out var secondaryIndexKey))
-        //     {
-        //         return secondaryIndices.RemoveSecondary(sagaData.GetType(), secondaryIndexKey.Value);
-        //     }
-        //
-        //     return Task.CompletedTask;
-        // }
-        async Task<CloudTable> GetTable(Type sagaType)
-        {
-            var tableName = sagaType.Name;
-            var table = client.GetTableReference(tableName);
-            if (autoUpdateSchema && !tableCreated.ContainsKey(tableName))
-            {
-                await table.CreateIfNotExistsAsync().ConfigureAwait(false);
-                tableCreated[tableName] = true;
-            }
-            return table;
-        }
-
-        async Task<Guid[]> ScanForSaga(CloudTable table, Type sagaType, string propertyName, object propertyValue)
-        {
-            var query = DictionaryTableEntityExtensions.BuildWherePropertyQuery(sagaType, propertyName, propertyValue);
-            query.SelectColumns = new List<string>
-            {
-                "PartitionKey",
-                "RowKey"
-            };
-
-            var entities = await table.ExecuteQueryAsync(query).ConfigureAwait(false);
-            return entities.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray();
         }
 
         internal static PropertyInfo[] SelectPropertiesToPersist(Type sagaType)
