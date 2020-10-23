@@ -76,7 +76,22 @@
         {
             var storageSession = (StorageSession)session;
 
-            // TODO: If there is no table holder at all we probably want to use the convention of using the saga type as a table name
+            if (storageSession.TableHolder == null)
+            {
+                // TODO: Probably want to encapsulate table creation including the autoUpdateSchema check into a thing that can be used by the storage session
+                var sagaTableNameByConvention = typeof(TSagaData).Name;
+                var sagaTableByConvention = client.GetTableReference(sagaTableNameByConvention);
+                if (autoUpdateSchema && !tableCreated.TryGetValue(sagaTableNameByConvention, out var isTableCreated) && !isTableCreated)
+                {
+                    await sagaTableByConvention.CreateIfNotExistsAsync().ConfigureAwait(false);
+                    tableCreated[sagaTableNameByConvention] = true;
+                }
+
+                var tableHolder = new TableHolder(sagaTableByConvention);
+                context.Set(tableHolder);
+                storageSession.TableHolder = tableHolder;
+            }
+
             // reads need to go directly
             var table = storageSession.TableHolder.Table;
             var partitionKey = GetPartitionKey(context, sagaId);
@@ -139,7 +154,8 @@
         async Task<TSagaData> GetByCorrelationProperty<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce)
             where TSagaData : class, IContainSagaData
         {
-            var sagaId = await secondaryIndices.FindSagaId<TSagaData>(propertyName, propertyValue).ConfigureAwait(false);
+            var storageSession = (StorageSession)session;
+            var sagaId = await secondaryIndices.FindSagaId<TSagaData>(storageSession.TableHolder.Table, propertyName, propertyValue).ConfigureAwait(false);
             if (sagaId == null)
             {
                 return null;
@@ -181,7 +197,7 @@
             return table;
         }
 
-        async Task<Guid[]> ScanForSaga(Type sagaType, string propertyName, object propertyValue)
+        async Task<Guid[]> ScanForSaga(CloudTable table, Type sagaType, string propertyName, object propertyValue)
         {
             var query = DictionaryTableEntityExtensions.BuildWherePropertyQuery(sagaType, propertyName, propertyValue);
             query.SelectColumns = new List<string>
@@ -190,7 +206,6 @@
                 "RowKey"
             };
 
-            var table = await GetTable(sagaType).ConfigureAwait(false);
             var entities = await table.ExecuteQueryAsync(query).ConfigureAwait(false);
             return entities.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray();
         }

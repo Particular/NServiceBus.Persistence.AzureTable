@@ -7,7 +7,7 @@
 
     class SecondaryIndex
     {
-        public delegate Task<Guid[]> ScanForSagas(Type sagaType, string propertyName, object propertyValue);
+        public delegate Task<Guid[]> ScanForSagas(CloudTable table, Type sagaType, string propertyName, object propertyValue);
 
         public SecondaryIndex(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, bool assumeSecondaryIndicesExist)
         {
@@ -16,7 +16,8 @@
             this.assumeSecondaryIndicesExist = assumeSecondaryIndicesExist;
         }
 
-        public async Task<Guid?> FindSagaId<TSagaData>(string propertyName, object propertyValue)
+        public async Task<Guid?> FindSagaId<TSagaData>(CloudTable table, string propertyName,
+            object propertyValue)
             where TSagaData : IContainSagaData
         {
             var sagaType = typeof(TSagaData);
@@ -32,7 +33,6 @@
                 return guid;
             }
 
-            var table = await getTableForSaga(sagaType).ConfigureAwait(false);
             var exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.Value.PartitionKey, key.Value.RowKey))
                 .ConfigureAwait(false);
             if (exec.Result is SecondaryIndexTableEntity secondaryIndexEntry)
@@ -46,7 +46,7 @@
                 return null;
             }
 
-            var ids = await scanner(sagaType, propertyName, propertyValue)
+            var ids = await scanner(table, sagaType, propertyName, propertyValue)
                 .ConfigureAwait(false);
             if (ids == null || ids.Length == 0)
             {
