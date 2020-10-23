@@ -18,10 +18,10 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Persisters
         public async Task Should_not_issue_table_scan()
         {
             var connectionString = Testing.Utilities.GetEnvConfiguredConnectionStringForPersistence();
-            AzureSagaPersister createSagaPersister() => new AzureSagaPersister(connectionString, true, AssumeSecondaryIndicesExist);
+            AzureSagaPersister createSagaPersister() => new AzureSagaPersister(new CloudTableClientFromConnectionString(connectionString), true, AssumeSecondaryIndicesExist);
 
             // warm up table cache
-            var warmUp = new AzureSagaPersister(connectionString, true, false);
+            var warmUp = new AzureSagaPersister(new CloudTableClientFromConnectionString(connectionString), true, false);
             await warmUp.Get<SagaData>(Guid.NewGuid(), null, new ContextBag()).ConfigureAwait(false);
 
             using (var recorder = new AzureRequestRecorder())

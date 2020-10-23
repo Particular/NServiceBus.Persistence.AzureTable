@@ -25,8 +25,8 @@
         public async Task SetUp()
         {
             await cloudTable.CreateIfNotExistsAsync().ConfigureAwait(false);
-            persister1 = new AzureSagaPersister(connectionString, true, false);
-            persister2 = new AzureSagaPersister(connectionString, true, false);
+            persister1 = new AzureSagaPersister(new CloudTableClientFromConnectionString(connectionString), true, false);
+            persister2 = new AzureSagaPersister(new CloudTableClientFromConnectionString(connectionString), true, false);
 
             // clear whole table
             var query = cloudTable.CreateQuery<TableEntity>();

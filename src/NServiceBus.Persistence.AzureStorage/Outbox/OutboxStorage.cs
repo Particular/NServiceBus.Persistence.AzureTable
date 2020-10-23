@@ -6,7 +6,7 @@
 
     class OutboxStorage : Feature
     {
-        OutboxStorage()
+        internal OutboxStorage()
         {
             Defaults(s =>
             {

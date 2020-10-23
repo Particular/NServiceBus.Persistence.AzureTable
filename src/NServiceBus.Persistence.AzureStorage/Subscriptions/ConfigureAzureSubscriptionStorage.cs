@@ -18,6 +18,7 @@
             AzureSubscriptionStorageGuard.CheckConnectionString(connectionString);
 
             config.GetSettings().Set(SubscriptionStorageConnectionString, connectionString);
+            config.GetSettings().Set<IProvideCloudTableClientForSubscriptions>(new CloudTableClientForSubscriptionsFromConnectionString(connectionString));
             return config;
         }
 

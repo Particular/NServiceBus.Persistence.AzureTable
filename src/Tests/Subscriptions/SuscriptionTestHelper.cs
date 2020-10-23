@@ -16,8 +16,8 @@
             await table.CreateIfNotExistsAsync();
 
             return new AzureSubscriptionStorage(
+                new CloudTableClientForSubscriptionsFromConnectionString(connectionString),
                 AzureSubscriptionStorageDefaults.TableName,
-                connectionString,
                 TimeSpan.FromSeconds(10));
         }
 

@@ -12,7 +12,7 @@
         {
             var connectionString = Testing.Utilities.GetEnvConfiguredConnectionStringForPersistence();
 
-            var persister = new AzureSagaPersister(connectionString, true, false);
+            var persister = new AzureSagaPersister(new CloudTableClientFromConnectionString(connectionString), true, false);
             var originalProp = Guid.NewGuid().ToString();
             var newProp = Guid.NewGuid().ToString();
             var saga = new UpdateSagaData

@@ -37,7 +37,6 @@
         /// </summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
-            var connectionstring = context.Settings.Get<string>(WellKnownConfigurationKeys.SagaStorageConnectionString);
             var updateSchema = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCreateSchema);
             var migrationModeEnabled = context.Settings.Get<bool>(WellKnownConfigurationKeys.MigrationMode);
             var assumeSecondaryIndicesExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist);
@@ -48,7 +47,7 @@
                 logger.Warn($"The version of {nameof(AzureStoragePersistence)} used is not configured to optimize sagas creation. To enable optimization, use '.{nameof(ConfigureAzureSagaStorage.AssumeSecondaryIndicesExist)}()' configuration API.");
             }
 
-            context.Services.AddSingleton<ISagaPersister>(_ => new AzureSagaPersister(connectionstring, updateSchema, migrationModeEnabled,assumeSecondaryIndicesExist));
+            context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideCloudTableClient>(), updateSchema, migrationModeEnabled,assumeSecondaryIndicesExist));
         }
 
         static ILog logger = LogManager.GetLogger<AzureStorageSagaPersistence>();

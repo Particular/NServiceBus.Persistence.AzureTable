@@ -8,7 +8,7 @@
         public bool SupportsCrossQueueTransactions { get; } = true;
         public bool SupportsNativePubSub { get; } = false;
         public bool SupportsNativeDeferral { get; } = true;
-        public bool SupportsOutbox { get; } = false;
+        public bool SupportsOutbox { get; } = true;
         public IConfigureEndpointTestExecution CreateTransportConfiguration() => new ConfigureEndpointAcceptanceTestingTransport(SupportsNativePubSub, SupportsNativeDeferral);
         public IConfigureEndpointTestExecution CreatePersistenceConfiguration() => new ConfigureEndpointAzureStoragePersistence();
     }

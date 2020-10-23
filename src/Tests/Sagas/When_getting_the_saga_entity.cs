@@ -12,7 +12,7 @@
         {
             var connectionString = Testing.Utilities.GetEnvConfiguredConnectionStringForPersistence();
 
-            var persister = new AzureSagaPersister(connectionString, false, false);
+            var persister = new AzureSagaPersister(new CloudTableClientFromConnectionString(connectionString), false, false);
 
             var sagaData = await persister.Get<GetSagaData>(Guid.NewGuid().ToString(), null, null, null);
 
@@ -24,7 +24,7 @@
         {
             var connectionString = Testing.Utilities.GetEnvConfiguredConnectionStringForPersistence();
 
-            var persister = new AzureSagaPersister(connectionString, true, false);
+            var persister = new AzureSagaPersister(new CloudTableClientFromConnectionString(connectionString), true, false);
             var saga = new GetSagaData
             {
                 Id = Guid.NewGuid(),

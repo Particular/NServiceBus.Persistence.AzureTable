@@ -15,7 +15,7 @@
         {
             var connectionString = Testing.Utilities.GetEnvConfiguredConnectionStringForPersistence();
 
-            var persister = new AzureSagaPersister(connectionString, true, false);
+            var persister = new AzureSagaPersister(new CloudTableClientFromConnectionString(connectionString), true, false);
             var array = new[] { 1, 2, 3, 4 };
             double? nullableDouble = 4.5;
 
@@ -81,7 +81,7 @@
         {
             var connectionString = Testing.Utilities.GetEnvConfiguredConnectionStringForPersistence();
 
-            var persister = new AzureSagaPersister(connectionString, true, false);
+            var persister = new AzureSagaPersister(new CloudTableClientFromConnectionString(connectionString), true, false);
 
             var saga = new NonSerializableSagaData
             {

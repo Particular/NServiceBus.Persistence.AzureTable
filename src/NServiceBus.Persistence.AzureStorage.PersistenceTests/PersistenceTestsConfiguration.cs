@@ -38,7 +38,7 @@
 
             SagaIdGenerator = new SagaIdGenerator();
             var resolver = new TableHolderResolver(this, new TableInformation(SetupFixture.TableName));
-            SagaStorage = new AzureSagaPersister(SetupFixture.GetEnvConfiguredConnectionStringForPersistence(), true, false);
+            SagaStorage = new AzureSagaPersister(this, true, false);
             SynchronizedStorage = new StorageSessionFactory(resolver, null);
             SynchronizedStorageAdapter = new StorageSessionAdapter(null);
             OutboxStorage = new OutboxPersister(resolver);
@@ -76,8 +76,6 @@
         {
             return Task.CompletedTask;
         }
-
-
 
         string partitionKey;
     }

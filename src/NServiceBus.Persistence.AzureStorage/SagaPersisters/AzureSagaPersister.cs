@@ -13,12 +13,11 @@
 
     class AzureSagaPersister : ISagaPersister
     {
-        public AzureSagaPersister(string connectionString, bool autoUpdateSchema, bool migrationModeEnabled, bool assumeSecondaryIndicesExist = false)
+        public AzureSagaPersister(IProvideCloudTableClient tableClientProvider, bool autoUpdateSchema, bool migrationModeEnabled, bool assumeSecondaryIndicesExist = false)
         {
             this.migrationModeEnabled = migrationModeEnabled;
             this.autoUpdateSchema = autoUpdateSchema;
-            var account = CloudStorageAccount.Parse(connectionString);
-            client = account.CreateCloudTableClient();
+            client = tableClientProvider.Client;
             isPremiumEndpoint = IsPremiumEndpoint(client);
 
             secondaryIndices = new SecondaryIndex(assumeSecondaryIndicesExist);

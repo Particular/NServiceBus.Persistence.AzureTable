@@ -9,7 +9,7 @@
     public static class ConfigureAzureStorage
     {
         /// <summary>
-        /// Connection string to use for azure Saga, Timeout and Subscription storage.
+        /// Connection string to use for azure Saga, Outbox and Subscription storage.
         /// </summary>
         /// <param name="config">The configuration.</param>
         /// <param name="connectionString">The connection string.</param>
@@ -19,7 +19,9 @@
 
             var settings = config.GetSettings();
             settings.Set(SagaStorageConnectionString, connectionString);
+            settings.Set<IProvideCloudTableClient>(new CloudTableClientFromConnectionString(connectionString));
             settings.Set(SubscriptionStorageConnectionString, connectionString);
+            settings.Set<IProvideCloudTableClientForSubscriptions>(new CloudTableClientForSubscriptionsFromConnectionString(connectionString));
 
             return config;
         }
