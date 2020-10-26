@@ -5,5 +5,6 @@
     {
         public OutboxRecord Record  { get; set; }
         public TableHolder TableHolder { get; set; }
+        public TableEntityPartitionKey PartitionKey { get; set; }
     }
 }

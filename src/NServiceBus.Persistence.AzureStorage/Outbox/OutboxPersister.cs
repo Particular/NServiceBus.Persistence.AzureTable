@@ -1,6 +1,5 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage
 {
-    using System;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.Table;
     using Extensibility;
@@ -44,6 +43,7 @@
                 .ConfigureAwait(false);
 
             setAsDispatchedHolder.Record = outboxRecord;
+            setAsDispatchedHolder.PartitionKey = partitionKey;
 
             return outboxRecord != null ? new OutboxMessage(outboxRecord.Id, outboxRecord.Operations) : null;
         }
@@ -69,12 +69,12 @@
 
             setAsDispatchedHolder.Record = outboxRecord;
 
-            var storeOperation = TableOperation.Insert(outboxRecord);
-            azureStorageOutboxTransaction.StorageSession.Batch.Add(storeOperation);
+            azureStorageOutboxTransaction.StorageSession.Add(new OutboxStore(azureStorageOutboxTransaction.PartitionKey.Value, outboxRecord, setAsDispatchedHolder.TableHolder.Table));
+
             return Task.CompletedTask;
         }
 
-        public async Task SetAsDispatched(string messageId, ContextBag context)
+        public Task SetAsDispatched(string messageId, ContextBag context)
         {
             var setAsDispatchedHolder = context.Get<SetAsDispatchedHolder>();
 
@@ -83,12 +83,11 @@
 
             record.SetAsDispatched();
 
-            var replaceOperation = TableOperation.Replace(record);
-
-            // TODO inspect result
-            await tableHolder.Table.ExecuteAsync(replaceOperation).ConfigureAwait(false);
+            var operation = new OutboxDelete(setAsDispatchedHolder.PartitionKey, record, tableHolder.Table);
+            var transactionalBatch = new TableBatchOperation();
+            return transactionalBatch.ExecuteOperationAsync(operation);
         }
 
-        TableHolderResolver tableHolderResolver;
+        readonly TableHolderResolver tableHolderResolver;
     }
 }

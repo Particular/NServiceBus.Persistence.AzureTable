@@ -14,6 +14,8 @@
         public bool WillBeStoredOnPremium { private get; set; }
         public bool WasStoredOnPremium => !properties.ContainsKey("Id");
 
+        public CloudTable Table { get; set; }
+
         public bool ContainsKey(string key)
         {
             return properties.ContainsKey(key);

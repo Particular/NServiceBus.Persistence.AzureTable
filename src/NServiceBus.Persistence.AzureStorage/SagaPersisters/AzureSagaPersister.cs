@@ -7,7 +7,6 @@
     using System.Reflection;
     using System.Threading.Tasks;
     using Extensibility;
-    using Logging;
     using Microsoft.Azure.Cosmos.Table;
     using Sagas;
 
@@ -30,12 +29,11 @@
             return lowerInvariant.Contains("https://localhost") && cloudTableClient.StorageUri.PrimaryUri.Port != 10002 || lowerInvariant.Contains(".table.cosmosdb.") || lowerInvariant.Contains(".table.cosmos.");
         }
 
-        public Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context)
+        public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context)
         {
-            // TODO: If there is no table holder at all we probably want to use the convention of using the saga type as a table name
             var storageSession = (StorageSession)session;
-            var partitionKey = GetPartitionKey(context, sagaData.Id);
 
+            var partitionKey = GetPartitionKey(context, sagaData.Id);
             var sagaDataType = sagaData.GetType();
 
             var properties = SelectPropertiesToPersist(sagaDataType);
@@ -46,16 +44,23 @@
                 WillBeStoredOnPremium = isPremiumEndpoint
             }, properties);
 
+            var table = await GetTableAndCreateIfNotExists(storageSession, sagaDataType)
+                .ConfigureAwait(false);
+
+            sagaDataEntityToSave.Table = table;
+
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
             meta.Entities[sagaData] = sagaDataEntityToSave;
-            storageSession.Batch.Add(TableOperation.Insert(sagaDataEntityToSave));
 
-            return Task.CompletedTask;
+
+            storageSession.Add(new SagaSave(partitionKey, sagaDataEntityToSave));
         }
 
         public Task Update(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
         {
             var storageSession = (StorageSession)session;
+            var partitionKey = GetPartitionKey(context, sagaData.Id);
+
             var sagaDataType = sagaData.GetType();
 
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
@@ -64,7 +69,8 @@
             var properties = SelectPropertiesToPersist(sagaDataType);
 
             var sagaAsDictionaryTableEntity = DictionaryTableEntityExtensions.ToDictionaryTableEntity(sagaData, sagaDataEntityToUpdate, properties);
-            storageSession.Batch.Add(TableOperation.Replace(sagaAsDictionaryTableEntity));
+
+            storageSession.Add(new SagaUpdate(partitionKey, sagaAsDictionaryTableEntity));
 
             return Task.CompletedTask;
         }
@@ -74,27 +80,13 @@
         {
             var storageSession = (StorageSession)session;
 
-            if (storageSession.TableHolder == null)
-            {
-                // TODO: Probably want to encapsulate table creation including the autoUpdateSchema check into a thing that can be used by the storage session
-                var sagaTableNameByConvention = typeof(TSagaData).Name;
-                var sagaTableByConvention = client.GetTableReference(sagaTableNameByConvention);
-                if (autoUpdateSchema && !tableCreated.TryGetValue(sagaTableNameByConvention, out var isTableCreated) && !isTableCreated)
-                {
-                    await sagaTableByConvention.CreateIfNotExistsAsync().ConfigureAwait(false);
-                    tableCreated[sagaTableNameByConvention] = true;
-                }
-
-                var tableHolder = new TableHolder(sagaTableByConvention);
-                context.Set(tableHolder);
-                storageSession.TableHolder = tableHolder;
-            }
+            var tableToReadFrom = await GetTableAndCreateIfNotExists(storageSession, typeof(TSagaData))
+                .ConfigureAwait(false);
 
             // reads need to go directly
-            var table = storageSession.Table;
             var partitionKey = GetPartitionKey(context, sagaId);
 
-            var retrieveResult = await table.ExecuteAsync(
+            var retrieveResult = await tableToReadFrom.ExecuteAsync(
                     TableOperation.Retrieve<DictionaryTableEntity>(partitionKey.PartitionKey, sagaId.ToString()))
                 .ConfigureAwait(false);
 
@@ -107,6 +99,8 @@
             }
 
             readSagaDataEntity.WillBeStoredOnPremium = isPremiumEndpoint;
+            readSagaDataEntity.Table = tableToReadFrom;
+
             var sagaData = DictionaryTableEntityExtensions.ToEntity<TSagaData>(readSagaDataEntity);
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
             meta.Entities[sagaData] = readSagaDataEntity;
@@ -129,45 +123,15 @@
             return sagaData;
         }
 
-        public Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
-        {
-            var storageSession = (StorageSession)session;
-            var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            var sagaDataEntityToDelete = meta.Entities[sagaData];
-            storageSession.Batch.Add(TableOperation.Delete(sagaDataEntityToDelete));
-
-            //  if it is not an old saga just go ahead
-            if (!sagaDataEntityToDelete.TryGetValue(SecondaryIndexIndicatorProperty, out var secondaryIndexKey))
-            {
-                return Task.CompletedTask;
-            }
-
-            var partitionRowKeyTuple = PartitionRowKeyTuple.Parse(secondaryIndexKey.StringValue);
-            if (partitionRowKeyTuple.HasValue)
-            {
-                // There is some closure funkyness here but I guess it is fine to assume new saga data will become more widespread and then this problem is gone
-                storageSession.AdditionalWorkAfterBatch.Add(() => RemoveSecondaryIndex(sagaData.Id, storageSession, partitionRowKeyTuple.Value));
-            }
-            return Task.CompletedTask;
-        }
-
-        private async Task RemoveSecondaryIndex(Guid sagaDataId, IAzureStorageStorageSession storageSession, PartitionRowKeyTuple partitionRowKeyTuple)
-        {
-            try
-            {
-                await secondaryIndices.RemoveSecondary(storageSession.Table, partitionRowKeyTuple).ConfigureAwait(false);
-            }
-            catch
-            {
-                log.Warn($"Removal of the secondary index entry for the following saga failed: '{sagaDataId}'");
-            }
-        }
-
         async Task<TSagaData> GetByCorrelationProperty<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce)
             where TSagaData : class, IContainSagaData
         {
             var storageSession = (StorageSession)session;
-            var sagaId = await secondaryIndices.FindSagaId<TSagaData>(storageSession.Table, propertyName, propertyValue).ConfigureAwait(false);
+
+            var tableToReadFrom = await GetTableAndCreateIfNotExists(storageSession, typeof(TSagaData))
+                .ConfigureAwait(false);
+
+            var sagaId = await secondaryIndices.FindSagaId<TSagaData>(tableToReadFrom, propertyName, propertyValue).ConfigureAwait(false);
             if (sagaId == null)
             {
                 return null;
@@ -188,6 +152,55 @@
             return null;
         }
 
+        private async Task<CloudTable> GetTableAndCreateIfNotExists(StorageSession storageSession, Type sagaDataType)
+        {
+            CloudTable tableToReadFrom;
+            if (storageSession.Table == null)
+            {
+                var sagaTableNameByConvention = sagaDataType.Name;
+                var sagaTableByConvention = client.GetTableReference(sagaTableNameByConvention);
+                if (autoUpdateSchema && !tableCreated.TryGetValue(sagaTableNameByConvention, out var isTableCreated) &&
+                    !isTableCreated)
+                {
+                    await sagaTableByConvention.CreateIfNotExistsAsync().ConfigureAwait(false);
+                    tableCreated[sagaTableNameByConvention] = true;
+                }
+
+                tableToReadFrom = sagaTableByConvention;
+            }
+            else
+            {
+                tableToReadFrom = storageSession.Table;
+            }
+
+            return tableToReadFrom;
+        }
+
+        public Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
+        {
+            var storageSession = (StorageSession)session;
+            var meta = context.GetOrCreate<SagaInstanceMetadata>();
+            var sagaDataEntityToDelete = meta.Entities[sagaData];
+            var partitionKey = GetPartitionKey(context, sagaData.Id);
+
+            storageSession.Add(new SagaDelete(partitionKey, sagaDataEntityToDelete));
+
+            //  if it is not an old saga just go ahead
+            if (!sagaDataEntityToDelete.TryGetValue(SecondaryIndexIndicatorProperty, out var secondaryIndexKey))
+            {
+                return Task.CompletedTask;
+            }
+
+            var partitionRowKeyTuple = PartitionRowKeyTuple.Parse(secondaryIndexKey.StringValue);
+            if (partitionRowKeyTuple.HasValue)
+            {
+                // fake partition key to make sure we get a dedicated batch for this operation
+                var tableEntityPartitionKey = new TableEntityPartitionKey(Guid.NewGuid().ToString());
+                storageSession.Add(new SagaRemoveSecondaryIndex(tableEntityPartitionKey, sagaData.Id, secondaryIndices, partitionRowKeyTuple.Value, sagaDataEntityToDelete.Table));
+            }
+            return Task.CompletedTask;
+        }
+
         internal static PropertyInfo[] SelectPropertiesToPersist(Type sagaType)
         {
             return sagaType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -202,8 +215,6 @@
 
             return partitionKey;
         }
-
-        readonly ILog log = LogManager.GetLogger<AzureSagaPersister>();
 
         bool autoUpdateSchema;
         CloudTableClient client;
@@ -221,4 +232,6 @@
             public Dictionary<object, DictionaryTableEntity> Entities { get; } = new Dictionary<object, DictionaryTableEntity>();
         }
     }
+
+
 }

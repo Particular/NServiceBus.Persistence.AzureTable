@@ -81,6 +81,7 @@
             }
 
             setAsDispatchedHolder.Record = outboxRecord;
+            setAsDispatchedHolder.PartitionKey = partitionKey;
 
             // Signals that Outbox persister Store and Commit should be no-ops
             outboxTransaction.SuppressStoreAndCommit = true;

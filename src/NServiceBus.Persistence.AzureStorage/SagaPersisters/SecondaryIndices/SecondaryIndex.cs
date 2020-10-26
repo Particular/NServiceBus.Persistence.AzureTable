@@ -75,16 +75,9 @@
             return entities.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray();
         }
 
-        public Task RemoveSecondary(CloudTable table, PartitionRowKeyTuple secondaryIndexKey)
+        public void InvalidateCache(PartitionRowKeyTuple secondaryIndexKey)
         {
-            var e = new TableEntity
-            {
-                ETag = "*"
-            };
-
-            secondaryIndexKey.Apply(e);
             cache.Remove(secondaryIndexKey);
-            return table.DeleteIgnoringNotFound(e);
         }
 
         /// <summary>

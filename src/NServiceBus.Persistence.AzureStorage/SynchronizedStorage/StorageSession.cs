@@ -33,32 +33,43 @@
 
         public void Dispose()
         {
-            // TODO, see if needed
             Batch.Clear();
+            operations.Clear();
+        }
+
+        public void Add(Operation operation)
+        {
+            var operationPartitionKey = operation.PartitionKey;
+
+            if (!operations.ContainsKey(operationPartitionKey))
+            {
+                operations.Add(operationPartitionKey, new Dictionary<int, Operation>());
+            }
+
+            var index = operations[operationPartitionKey].Count;
+            operations[operationPartitionKey].Add(index, operation);
         }
 
         public async Task Commit()
         {
-            if (Batch.Count == 0)
+            // in case there is nothing to do don't even bother checking the rest
+            if (operations.Count == 0)
             {
                 return;
             }
 
-            if (Table == null)
+            var index = 0;
+            foreach (var batchOfOperations in operations)
             {
-                throw new Exception("TODO");
-            }
+                // we need to make sure to weave in user operations if any
+                var transactionalBatch = index == 0 ? Batch : new TableBatchOperation();
 
-            // TODO inspect the result and act accordingly
-            var batchResult = await Table.ExecuteBatchAsync(Batch).ConfigureAwait(false);
-            foreach (var work in AdditionalWorkAfterBatch)
-            {
-                await work().ConfigureAwait(false);
+                await transactionalBatch.ExecuteOperationsAsync(batchOfOperations.Value)
+                    .ConfigureAwait(false);
+
+                index++;
             }
         }
-
-        // temporary, can be removed when secondary index is no longer a thing
-        public ICollection<Func<Task>> AdditionalWorkAfterBatch { get; } = new List<Func<Task>>();
 
         public TableHolder TableHolder { get; set; }
         public ContextBag CurrentContextBag { get; set; }
@@ -73,5 +84,7 @@
         public string PartitionKey => !CurrentContextBag.TryGet<TableEntityPartitionKey>(out var partitionKey) ? null : partitionKey.PartitionKey;
 
         readonly bool commitOnComplete;
+
+        readonly Dictionary<TableEntityPartitionKey, Dictionary<int, Operation>> operations = new Dictionary<TableEntityPartitionKey, Dictionary<int, Operation>>();
     }
 }
