@@ -2,7 +2,6 @@
 {
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.Table;
@@ -38,31 +37,6 @@
             while (token != null && !ct.IsCancellationRequested && items.Count < take);
 
             return items;
-        }
-
-        /// <summary>
-        /// Safely deletes an entitym ignoring not found exception.
-        /// </summary>
-        public static async Task DeleteIgnoringNotFound(this CloudTable table, ITableEntity entity)
-        {
-            try
-            {
-                await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
-            }
-            catch (StorageException ex)
-            {
-                // Horrible logic to check if item has already been deleted or not
-                var webException = ex.InnerException as WebException;
-                if (webException?.Response != null)
-                {
-                    var response = (HttpWebResponse) webException.Response;
-                    if ((int) response.StatusCode != 404)
-                    {
-                        // Was not a previously deleted exception, throw again
-                        throw;
-                    }
-                }
-            }
         }
     }
 }

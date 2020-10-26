@@ -1,4 +1,6 @@
-﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Sagas
+﻿using System.Net;
+
+namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Sagas
 {
     using System;
     using System.Linq;
@@ -97,7 +99,24 @@
         {
             var entities = await cloudTable.ExecuteQueryAsync(new TableQuery<TableEntity>()).ConfigureAwait(false);
             var primary = entities.Single(te => Guid.TryParse(te.PartitionKey, out var guid) && guid == sagaId);
-            await cloudTable.DeleteIgnoringNotFound(primary);
+            try
+            {
+                await cloudTable.ExecuteAsync(TableOperation.Delete(primary)).ConfigureAwait(false);
+            }
+            catch (StorageException ex)
+            {
+                // Horrible logic to check if item has already been deleted or not
+                var webException = ex.InnerException as WebException;
+                if (webException?.Response != null)
+                {
+                    var response = (HttpWebResponse) webException.Response;
+                    if ((int) response.StatusCode != 404)
+                    {
+                        // Was not a previously deleted exception, throw again
+                        throw;
+                    }
+                }
+            }
         }
 
         [Test]
