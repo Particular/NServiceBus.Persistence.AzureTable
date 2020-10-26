@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\AcceptanceTests\Utilities.cs" />
+    <Compile Include="..\NonTransactionalSagas.AcceptanceTests\Utilities.cs" />
     <Compile Include="..\TestSuppressions.cs" Link="TestSuppressions.cs" />
   </ItemGroup>
 
