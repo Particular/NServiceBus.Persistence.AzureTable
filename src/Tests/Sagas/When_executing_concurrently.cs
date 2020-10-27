@@ -1,7 +1,6 @@
-﻿using System.Net;
-
-namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Sagas
+﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Sagas
 {
+    using System.Net;
     using System;
     using System.Linq;
     using System.Threading.Tasks;
@@ -66,12 +65,12 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Sagas
             await Save(persister1, v, Id1).ConfigureAwait(false);
 
             // get by property just to load to cache
-            await GetByCorrelationProperty(persister2, new ContextBag()).ConfigureAwait(false);
+            await GetByCorrelationProperty(persister2).ConfigureAwait(false);
 
             await DeletePrimary(Id1).ConfigureAwait(false);
 
             // only secondary exists now, ensure it's null
-            var byProperty = await GetByCorrelationProperty(persister2, new ContextBag()).ConfigureAwait(false);
+            var byProperty = await GetByCorrelationProperty(persister2).ConfigureAwait(false);
             Assert.IsNull(byProperty);
         }
 
@@ -82,7 +81,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Sagas
             await Save(persister1, v, Id1).ConfigureAwait(false);
 
             // get by property just to load to cache
-            await GetByCorrelationProperty(persister2, new ContextBag()).ConfigureAwait(false);
+            await GetByCorrelationProperty(persister2).ConfigureAwait(false);
 
             await DeletePrimary(Id1).ConfigureAwait(false);
 
@@ -91,7 +90,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Sagas
             // save a new saga with the same correlation id
             await Save(persister1, v2, Id2).ConfigureAwait(false);
 
-            var saga = await GetByCorrelationProperty(persister2, new ContextBag()).ConfigureAwait(false);
+            var saga = await GetByCorrelationProperty(persister2).ConfigureAwait(false);
             AssertSaga(saga, v2, Id2);
         }
 
@@ -119,67 +118,6 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Sagas
             }
         }
 
-        [Test]
-        public Task Should_enable_insert_saga_again_through_same_persister()
-        {
-            return Should_enable_insert_saga_again(persister1);
-        }
-
-        [Test]
-        public Task Should_enable_insert_saga_again_through_another_persister()
-        {
-            return Should_enable_insert_saga_again(persister2);
-        }
-
-        async Task Should_enable_insert_saga_again(ISagaPersister p)
-        {
-            const string v = "1";
-
-            await Save(persister1, v, Id1).ConfigureAwait(false);
-
-            var persister1ContextBag = new ContextBag();
-            var saga1 = await Get(persister1, Id1, persister1ContextBag).ConfigureAwait(false);
-            var persister2ContextBag = new ContextBag();
-            var saga2 = await Get(persister2, Id1, persister2ContextBag).ConfigureAwait(false);
-            var saga1ByProperty = await GetByCorrelationProperty(persister1, new ContextBag()).ConfigureAwait(false);
-            var saga2ByProperty = await GetByCorrelationProperty(persister2, new ContextBag()).ConfigureAwait(false);
-
-            AssertSaga(saga1, v, Id1);
-            AssertSaga(saga2, v, Id1);
-            AssertSaga(saga1ByProperty, v, Id1);
-            AssertSaga(saga2ByProperty, v, Id1);
-
-            await Complete(saga1, persister1, persister1ContextBag).ConfigureAwait(false);
-
-            saga1 = await Get(persister1, Id1, new ContextBag()).ConfigureAwait(false);
-            saga2 = await Get(persister2, Id1, new ContextBag()).ConfigureAwait(false);
-            saga1ByProperty = await GetByCorrelationProperty(persister1, new ContextBag()).ConfigureAwait(false);
-            saga2ByProperty = await GetByCorrelationProperty(persister2, new ContextBag()).ConfigureAwait(false);
-
-            Assert.IsNull(saga1);
-            Assert.IsNull(saga2);
-            Assert.IsNull(saga1ByProperty);
-            Assert.IsNull(saga2ByProperty);
-
-            const string v2 = "2";
-            await Save(p, v2, Id2).ConfigureAwait(false);
-
-            saga1 = await Get(persister1, Id2, new ContextBag()).ConfigureAwait(false);
-            saga2 = await Get(persister2, Id2, new ContextBag()).ConfigureAwait(false);
-            saga1ByProperty = await GetByCorrelationProperty(persister1, new ContextBag()).ConfigureAwait(false);
-            saga2ByProperty = await GetByCorrelationProperty(persister2, new ContextBag()).ConfigureAwait(false);
-
-            AssertSaga(saga1, v2, Id2);
-            AssertSaga(saga2, v2, Id2);
-            AssertSaga(saga1ByProperty, v2, Id2);
-            AssertSaga(saga2ByProperty, v2, Id2);
-        }
-
-        static Task Complete(IContainSagaData saga, ISagaPersister persister, ContextBag contextBag)
-        {
-            return persister.Complete(saga, null, contextBag);
-        }
-
         static void AssertSaga(ConcurrentSagaData saga, string value, Guid id)
         {
             Assert.NotNull(saga);
@@ -188,14 +126,9 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Sagas
             Assert.AreEqual(value, saga.Value);
         }
 
-        static Task<ConcurrentSagaData> Get(ISagaPersister persister, Guid id, ContextBag contextBag)
+        static Task<ConcurrentSagaData> GetByCorrelationProperty(ISagaPersister persister)
         {
-            return persister.Get<ConcurrentSagaData>(id, null, contextBag);
-        }
-
-        static Task<ConcurrentSagaData> GetByCorrelationProperty(ISagaPersister persister, ContextBag contextBag)
-        {
-            return persister.Get<ConcurrentSagaData>(SagaCorrelationPropertyValue.Name, SagaCorrelationPropertyValue.Value, null, contextBag);
+            return persister.Get<ConcurrentSagaData>(SagaCorrelationPropertyValue.Name, SagaCorrelationPropertyValue.Value, null, null);
         }
 
         static Task Save(ISagaPersister persister, string value, Guid id)
