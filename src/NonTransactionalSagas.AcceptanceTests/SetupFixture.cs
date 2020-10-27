@@ -28,14 +28,11 @@
                 Console.WriteLine(e);
                 throw;
             }
-
-            handler = new TransactionalBatchCounterHandler();
         }
 
         [OneTimeTearDown]
         public Task OneTimeTearDown()
         {
-            handler.Dispose();
             return Table.DeleteIfExistsAsync();
         }
 
@@ -60,6 +57,5 @@
         public static string TableName;
         public static CloudTableClient TableClient;
         public static CloudTable Table;
-        private TransactionalBatchCounterHandler handler;
     }
 }

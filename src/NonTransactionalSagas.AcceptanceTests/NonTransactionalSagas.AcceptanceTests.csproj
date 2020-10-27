@@ -24,6 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\SharedAcceptanceTests.All\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="\**\Audit\*.*" />
     <Compile Remove="\**\Correlation\*.*" />
     <Compile Remove="\**\DataBus\*.*" />
