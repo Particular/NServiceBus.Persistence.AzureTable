@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using NServiceBus;
 using NServiceBus.AcceptanceTesting.Support;
+using NServiceBus.AcceptanceTests;
 using NServiceBus.AcceptanceTests.Routing.MessageDrivenSubscriptions;
 using NServiceBus.AcceptanceTests.Sagas;
 using NServiceBus.Persistence.AzureStorage.Testing;
@@ -12,7 +13,9 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
 
     public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
-        configuration.UsePersistence<AzureStoragePersistence>().ConnectionString(ConnectionString);
+        var persistence = configuration.UsePersistence<AzureStoragePersistence>();
+        persistence.ConnectionString(ConnectionString);
+        persistence.DefaultTable(SetupFixture.TableName);
 
         var recoverabilitySettings = configuration.Recoverability();
 
