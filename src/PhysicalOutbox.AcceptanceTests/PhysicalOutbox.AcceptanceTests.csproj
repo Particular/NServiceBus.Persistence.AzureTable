@@ -24,6 +24,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\SharedAcceptanceTests.All\*.cs" />
+    <Compile Include="..\SharedAcceptanceTests.RequirePartitionKey\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="\**\ConfigureEndpointInMemoryPersistence.cs" />
     <Compile Remove="\**\ConfigureEndpointLearningPersistence.cs" />
     <Compile Remove="\**\ConventionEnforcementTests.cs" />
