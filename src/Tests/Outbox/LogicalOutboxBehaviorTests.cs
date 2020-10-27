@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.Persistence.CosmosDB.Tests
+﻿namespace NServiceBus.Persistence.AzureStorage.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -6,10 +6,10 @@
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.Table;
     using AzureStorage;
-    using NServiceBus.Persistence.AzureStorage.Testing;
+    using Testing;
     using Outbox;
     using NUnit.Framework;
-    using Testing;
+    using NServiceBus.Testing;
     using Transport;
     using TransportOperation = Outbox.TransportOperation;
 
