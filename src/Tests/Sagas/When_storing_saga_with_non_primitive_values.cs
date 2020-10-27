@@ -1,7 +1,6 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Sagas
 {
     using System;
-    using System.IO;
     using System.Net;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.Table;
@@ -75,37 +74,5 @@
             public int[] NonPrimitiveValue { get; set; }
             public double? NullableDouble { get; set; }
         }
-
-        [Test]
-        public void Should_fail_with_json_non_serializable_value()
-        {
-            var connectionString = Testing.Utilities.GetEnvConfiguredConnectionStringForPersistence();
-
-            var persister = new AzureSagaPersister(new CloudTableClientFromConnectionString(connectionString), true, false);
-
-            var saga = new NonSerializableSagaData
-            {
-                Id = Guid.NewGuid(),
-                Originator = "Moo",
-                OriginalMessageId = "MooId",
-                NonserializableValue = new SomethingComplex { Disposable = new StringWriter() }
-            };
-
-            Assert.ThrowsAsync<NotSupportedException>(() => persister.Save(saga, null, null, new ContextBag()));
-        }
-
-        class NonSerializableSagaData : IContainSagaData
-        {
-            public Guid Id { get; set; }
-            public string Originator { get; set; }
-            public string OriginalMessageId { get; set; }
-            public SomethingComplex NonserializableValue { get; set; }
-        }
-
-        class SomethingComplex
-        {
-            public IDisposable Disposable { get; set; }
-        }
-
     }
 }
