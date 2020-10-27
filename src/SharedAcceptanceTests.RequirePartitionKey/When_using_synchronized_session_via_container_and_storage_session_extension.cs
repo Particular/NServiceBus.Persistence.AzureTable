@@ -1,12 +1,12 @@
-﻿using Microsoft.Azure.Cosmos.Table;
-using NServiceBus.Persistence.AzureStorage;
-
-namespace NServiceBus.AcceptanceTests
+﻿namespace NServiceBus.AcceptanceTests
 {
+    using System;
     using System.Threading.Tasks;
     using AcceptanceTesting;
     using EndpointTemplates;
     using NUnit.Framework;
+    using Microsoft.Azure.Cosmos.Table;
+    using Persistence.AzureStorage;
 
     [TestFixture]
     public class When_using_synchronized_session_via_container_and_storage_session_extension : NServiceBusAcceptanceTest
@@ -27,9 +27,6 @@ namespace NServiceBus.AcceptanceTests
 
         public class Context : ScenarioContext
         {
-            public const string Item1_Id = nameof(Item1_Id);
-            public const string Item2_Id = nameof(Item2_Id);
-
             public bool FirstHandlerIsDone { get; set; }
             public bool SecondHandlerIsDone { get; set; }
         }
@@ -53,7 +50,7 @@ namespace NServiceBus.AcceptanceTests
                 {
                     var entity = new MyTableEntity
                     {
-                        RowKey = Context.Item1_Id,
+                        RowKey = Guid.NewGuid().ToString(),
                         PartitionKey = context.TestRunId.ToString(),
                         Data = "MyCustomData"
                     };
@@ -80,7 +77,7 @@ namespace NServiceBus.AcceptanceTests
 
                     var entity = new MyTableEntity
                     {
-                        RowKey = Context.Item2_Id,
+                        RowKey = Guid.NewGuid().ToString(),
                         PartitionKey = session.PartitionKey,
                         Data = "MyCustomData"
                     };
