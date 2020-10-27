@@ -1,4 +1,4 @@
-[assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute(@"NServiceBus.Persistence.AzureStorage.PersistenceTests, PublicKey=00240000048000009400000006020000002400005253413100040000010001006dab16cbf58f948e25e061c40486817b00722158f0a2787d8cd3f503daf44978f96edac144e917e59ec98999e011ddde52c53938a6cb5a87a213aa2b5dfe2d45e9035ca40c63caf36c8692e06bbc3eb717070e8ca5813ef695153429dcc4fd7db4c790c724e959b37d9697f7dc22369a20ae67f4785b424edbc63c732dd9eecf")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute(@"PersistenceTests, PublicKey=00240000048000009400000006020000002400005253413100040000010001006dab16cbf58f948e25e061c40486817b00722158f0a2787d8cd3f503daf44978f96edac144e917e59ec98999e011ddde52c53938a6cb5a87a213aa2b5dfe2d45e9035ca40c63caf36c8692e06bbc3eb717070e8ca5813ef695153429dcc4fd7db4c790c724e959b37d9697f7dc22369a20ae67f4785b424edbc63c732dd9eecf")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute(@"Tests, PublicKey=00240000048000009400000006020000002400005253413100040000010001006dab16cbf58f948e25e061c40486817b00722158f0a2787d8cd3f503daf44978f96edac144e917e59ec98999e011ddde52c53938a6cb5a87a213aa2b5dfe2d45e9035ca40c63caf36c8692e06bbc3eb717070e8ca5813ef695153429dcc4fd7db4c790c724e959b37d9697f7dc22369a20ae67f4785b424edbc63c732dd9eecf")]
 namespace NServiceBus
 {
@@ -22,6 +22,7 @@ namespace NServiceBus
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> AssumeSecondaryIndicesExist(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config, string connectionString) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> CreateSchema(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config, bool createSchema) { }
+        public static void EnableMigrationMode(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config) { }
     }
     public class static ConfigureAzureStorage
     {
@@ -65,6 +66,29 @@ namespace NServiceBus
             "ion 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> TimeoutStateContainerName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, string blobName) { }
     }
+    public interface IProvideCloudTableClient
+    {
+        Microsoft.Azure.Cosmos.Table.CloudTableClient Client { get; }
+    }
+    public interface IProvideCloudTableClientForSubscriptions
+    {
+        Microsoft.Azure.Cosmos.Table.CloudTableClient Client { get; }
+    }
+    public struct TableEntityPartitionKey : System.IEquatable<NServiceBus.TableEntityPartitionKey>
+    {
+        public TableEntityPartitionKey(string partitionKey) { }
+        public string PartitionKey { get; }
+        public bool Equals(NServiceBus.TableEntityPartitionKey other) { }
+        public override bool Equals(object obj) { }
+        public override int GetHashCode() { }
+        public static bool ==(NServiceBus.TableEntityPartitionKey left, NServiceBus.TableEntityPartitionKey right) { }
+        public static bool !=(NServiceBus.TableEntityPartitionKey left, NServiceBus.TableEntityPartitionKey right) { }
+    }
+    public struct TableInformation
+    {
+        public TableInformation(string tableName) { }
+        public string TableName { get; }
+    }
 }
 namespace NServiceBus.Persistence.AzureStorage
 {
@@ -75,9 +99,33 @@ namespace NServiceBus.Persistence.AzureStorage
         public string PropertyName { get; }
         public System.Type SagaType { get; }
     }
+    public interface IAzureStorageStorageSession
+    {
+        Microsoft.Azure.Cosmos.Table.TableBatchOperation Batch { get; }
+        string PartitionKey { get; }
+        Microsoft.Azure.Cosmos.Table.CloudTable Table { get; }
+    }
+    public sealed class LogicalOutboxBehavior : NServiceBus.Pipeline.IBehavior, NServiceBus.Pipeline.IBehavior<NServiceBus.Pipeline.IIncomingLogicalMessageContext, NServiceBus.Pipeline.IIncomingLogicalMessageContext>
+    {
+        public System.Threading.Tasks.Task Invoke(NServiceBus.Pipeline.IIncomingLogicalMessageContext context, System.Func<NServiceBus.Pipeline.IIncomingLogicalMessageContext, System.Threading.Tasks.Task> next) { }
+    }
     public class RetryNeededException : System.Exception
     {
         public RetryNeededException() { }
         public RetryNeededException(System.Exception innerException) { }
+    }
+    public class static SynchronizedStorageSessionExtensions
+    {
+        public static NServiceBus.Persistence.AzureStorage.IAzureStorageStorageSession AzureStoragePersistenceSession(this NServiceBus.Persistence.SynchronizedStorageSession session) { }
+    }
+}
+namespace NServiceBus.Testing
+{
+    public class TestableAzureStorageStorageSession : NServiceBus.Persistence.AzureStorage.IAzureStorageStorageSession, NServiceBus.Persistence.SynchronizedStorageSession
+    {
+        public TestableAzureStorageStorageSession(NServiceBus.TableEntityPartitionKey partitionKey) { }
+        public Microsoft.Azure.Cosmos.Table.TableBatchOperation Batch { get; set; }
+        public string PartitionKey { get; }
+        public Microsoft.Azure.Cosmos.Table.CloudTable Table { get; set; }
     }
 }
