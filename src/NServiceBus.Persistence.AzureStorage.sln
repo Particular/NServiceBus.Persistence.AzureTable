@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistenceTests", "Persist
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicalOutbox.AcceptanceTests", "PhysicalOutbox.AcceptanceTests\PhysicalOutbox.AcceptanceTests.csproj", "{DD21A669-2627-4BC0-9197-69FA75E03959}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogicalOutbox.AcceptanceTests", "LogicalOutbox.AcceptanceTests\LogicalOutbox.AcceptanceTests.csproj", "{8D2A3F43-F947-45A8-85E1-BD683613FB0E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{DD21A669-2627-4BC0-9197-69FA75E03959}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DD21A669-2627-4BC0-9197-69FA75E03959}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DD21A669-2627-4BC0-9197-69FA75E03959}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D2A3F43-F947-45A8-85E1-BD683613FB0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D2A3F43-F947-45A8-85E1-BD683613FB0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D2A3F43-F947-45A8-85E1-BD683613FB0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D2A3F43-F947-45A8-85E1-BD683613FB0E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
