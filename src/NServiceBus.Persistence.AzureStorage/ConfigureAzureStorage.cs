@@ -1,6 +1,7 @@
 ﻿namespace NServiceBus
 {
     using Configuration.AdvancedExtensibility;
+    using NServiceBus.Persistence.AzureStorage;
     using static Persistence.AzureStorage.Config.WellKnownConfigurationKeys;
 
     /// <summary>
@@ -24,6 +25,19 @@
             settings.Set<IProvideCloudTableClientForSubscriptions>(new CloudTableClientForSubscriptionsFromConnectionString(connectionString));
 
             return config;
+        }
+
+        /// <summary>
+        /// Sets the default table name that will be used.
+        /// </summary>
+        /// <remarks>When the default table is not set the table information needs to be provided as part of the message handling pipeline.</remarks>
+        public static PersistenceExtensions<AzureStoragePersistence> DefaultTable(this PersistenceExtensions<AzureStoragePersistence> persistenceExtensions, string tableName)
+        {
+            Guard.AgainstNull(nameof(persistenceExtensions), persistenceExtensions);
+
+            persistenceExtensions.GetSettings().Set(new TableInformation(tableName));
+
+            return persistenceExtensions;
         }
     }
 }

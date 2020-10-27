@@ -27,6 +27,7 @@ namespace NServiceBus
     public static class ConfigureAzureStorage
     {
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> config, string connectionString) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> DefaultTable(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> persistenceExtensions, string tableName) { }
     }
     public static class ConfigureAzureSubscriptionStorage
     {
