@@ -10,15 +10,14 @@ namespace NServiceBus.AcceptanceTests
     using NServiceBus.AcceptanceTests.EndpointTemplates;
     using NUnit.Framework;
 
-
-    public partial class When_saga_with_complex_non_serializable_entity : NServiceBusAcceptanceTest
+    public partial class When_saga_with_complex_non_serializable_state : NServiceBusAcceptanceTest
     {
         [Test]
         public void Should_throw_not_supported()
         {
             var exception = Assert.ThrowsAsync<MessageFailedException>(async () =>
                 await Scenario.Define<Context>()
-                    .WithEndpoint<EndpointWithNonSerializableData>(b => b.When(session => session.SendLocal(new StartSagaMessage
+                    .WithEndpoint<EndpointWithNonSerializableSaga>(b => b.When(session => session.SendLocal(new StartSagaMessage
                     {
                         SomeId = Guid.NewGuid()
                     })))
@@ -35,20 +34,15 @@ namespace NServiceBus.AcceptanceTests
         {
         }
 
-        public class EndpointWithNonSerializableData : EndpointConfigurationBuilder
+        public class EndpointWithNonSerializableSaga : EndpointConfigurationBuilder
         {
-            public EndpointWithNonSerializableData()
+            public EndpointWithNonSerializableSaga()
             {
                 EndpointSetup<DefaultServer>();
             }
 
             public class NonSerializableSaga : Saga<NonSerializableSagaData>, IAmStartedByMessages<StartSagaMessage>
             {
-                public NonSerializableSaga(Context context)
-                {
-                    testContext = context;
-                }
-
                 public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
                     Data.NonserializableValue = new SomethingComplex();
@@ -60,8 +54,6 @@ namespace NServiceBus.AcceptanceTests
                     mapper.ConfigureMapping<StartSagaMessage>(m => m.SomeId)
                         .ToSaga(s => s.SomeId);
                 }
-
-                Context testContext;
             }
 
             public class NonSerializableSagaData : IContainSagaData
