@@ -11,7 +11,7 @@ namespace NServiceBus.Persistence.AzureStorage
         {
             var sagaDataTypeName = sagaType.FullName;
             var partitionKey = $"Index_{sagaDataTypeName}_{correlationProperty.Name}_{Serialize(correlationProperty.Value)}";
-            return new PartitionRowKeyTuple(partitionKey, partitionKey);
+            return new PartitionRowKeyTuple(partitionKey, string.Empty);
         }
 
         static string Serialize(object propertyValue)
