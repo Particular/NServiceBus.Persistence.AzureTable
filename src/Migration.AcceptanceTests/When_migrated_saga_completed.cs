@@ -55,11 +55,7 @@ namespace NServiceBus.AcceptanceTests
         {
             public EndpointWithSagaThatWasMigrated()
             {
-                EndpointSetup<DefaultServer>(c =>
-                {
-                    var persistence = c.UsePersistence<AzureStoragePersistence, StorageType.Sagas>();
-                    persistence.EnableMigrationMode();
-                });
+                EndpointSetup<DefaultServer>();
             }
 
             public class SagaWithMigratedData : Saga<MigratedSagaData>, IAmStartedByMessages<StartSagaMessage>, IHandleMessages<ContinueSagaMessage>

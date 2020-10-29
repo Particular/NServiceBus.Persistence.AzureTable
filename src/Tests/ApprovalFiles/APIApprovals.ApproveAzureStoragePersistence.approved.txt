@@ -19,10 +19,11 @@ namespace NServiceBus
     }
     public static class ConfigureAzureSagaStorage
     {
+        [System.Obsolete(@"The migration mode that supports looking up correlated sagas by secondary indexes is by default enabled and assumes no full table scan is required. In order to opt-in for a table scan for sagas stored with version 1.4 or earlier use `AllowSecondaryKeyLookupToFallbackToFullTableScan`. The member currently throws a NotImplementedException. Will be removed in version 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> AssumeSecondaryIndicesExist(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config, string connectionString) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> CreateSchema(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config, bool createSchema) { }
-        public static void EnableMigrationMode(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config) { }
+        public static NServiceBus.MigrationSettings Migration(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config) { }
     }
     public static class ConfigureAzureStorage
     {
@@ -74,6 +75,11 @@ namespace NServiceBus
     public interface IProvideCloudTableClientForSubscriptions
     {
         Microsoft.Azure.Cosmos.Table.CloudTableClient Client { get; }
+    }
+    public class MigrationSettings : NServiceBus.Configuration.AdvancedExtensibility.ExposeSettings
+    {
+        public void AllowSecondaryKeyLookupToFallbackToFullTableScan() { }
+        public void DisableSecondaryKeyLookupForSagasCorrelatedByProperties() { }
     }
     public readonly struct TableEntityPartitionKey : System.IEquatable<NServiceBus.TableEntityPartitionKey>
     {

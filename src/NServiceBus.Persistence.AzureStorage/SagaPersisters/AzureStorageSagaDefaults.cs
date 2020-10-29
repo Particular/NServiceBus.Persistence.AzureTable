@@ -3,7 +3,7 @@
     static class AzureStorageSagaDefaults
     {
         public const bool CreateSchema = true;
-        public const bool AssumeSecondaryIndicesExist = false;
-        public const bool MigrationModeEnabled = false;
+        public const bool AssumeSecondaryIndicesExist = true;
+        public const bool MigrationModeEnabled = true;
     }
 }
