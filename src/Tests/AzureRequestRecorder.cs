@@ -1,5 +1,4 @@
-﻿#if NETFRAMEWORK
-namespace NServiceBus.Persistence.AzureStorage.ComponentTests
+﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests
 {
     using System;
     using System.Collections.Generic;
@@ -38,4 +37,3 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests
         }
     }
 }
-#endif
