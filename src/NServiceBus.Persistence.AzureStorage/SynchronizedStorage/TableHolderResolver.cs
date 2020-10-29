@@ -20,15 +20,7 @@
                 return tableHolder;
             }
 
-            TableInformation? information;
-            if (context.TryGet<TableInformation>(out var containerInformation))
-            {
-                information = containerInformation;
-            }
-            else
-            {
-                information = defaultTableInformation;
-            }
+            var information = context.TryGet<TableInformation>(out var tableInformation) ? tableInformation : defaultTableInformation;
 
             if (!information.HasValue)
             {
