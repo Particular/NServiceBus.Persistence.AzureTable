@@ -9,6 +9,7 @@ using NServiceBus.AcceptanceTests.Sagas;
 using NServiceBus.Persistence.AzureStorage;
 using NServiceBus.Persistence.AzureStorage.Testing;
 using NServiceBus.Pipeline;
+using NServiceBus.Settings;
 using Conventions = NServiceBus.AcceptanceTesting.Customization.Conventions;
 
 public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestExecution
@@ -41,17 +42,26 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
 
     class PartitionKeyProviderBehavior : Behavior<IIncomingLogicalMessageContext>
     {
-        ScenarioContext scenarioContext;
+        private readonly ScenarioContext scenarioContext;
+        private readonly ReadOnlySettings settings;
 
-        public PartitionKeyProviderBehavior(ScenarioContext scenarioContext)
+        public PartitionKeyProviderBehavior(ScenarioContext scenarioContext, ReadOnlySettings settings)
         {
+            this.settings = settings;
             this.scenarioContext = scenarioContext;
         }
 
         public override Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
         {
-            context.Extensions.Set(new TableEntityPartitionKey(scenarioContext.TestRunId.ToString()));
-            context.Extensions.Set(new TableInformation(SetupFixture.TableName));
+            if (!context.Extensions.TryGet<TableEntityPartitionKey>(out _))
+            {
+                context.Extensions.Set(new TableEntityPartitionKey(scenarioContext.TestRunId.ToString()));
+            }
+
+            if (!settings.TryGet<TableInformation>(out _) && !context.Extensions.TryGet<TableInformation>(out _))
+            {
+                context.Extensions.Set(new TableInformation(SetupFixture.TableName));
+            }
             return next();
         }
 
@@ -60,7 +70,7 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
             public PartitionKeyProviderBehaviorRegisterStep() : base(nameof(PartitionKeyProviderBehavior),
                 typeof(PartitionKeyProviderBehavior),
                 "Populates the partition key",
-                provider => new PartitionKeyProviderBehavior(provider.GetRequiredService<ScenarioContext>()))
+                provider => new PartitionKeyProviderBehavior(provider.GetRequiredService<ScenarioContext>(), provider.GetRequiredService<ReadOnlySettings>()))
             {
                 InsertBeforeIfExists(nameof(LogicalOutboxBehavior));
             }
