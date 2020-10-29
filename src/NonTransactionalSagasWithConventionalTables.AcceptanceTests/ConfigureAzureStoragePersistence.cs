@@ -14,6 +14,8 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
         var persistence = configuration.UsePersistence<AzureStoragePersistence, StorageType.Sagas>();
         persistence.ConnectionString(ConnectionString);
 
+        persistence.Migration().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
+
         var recoverabilitySettings = configuration.Recoverability();
 
         if (endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))

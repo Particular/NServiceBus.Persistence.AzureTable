@@ -19,6 +19,8 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
         var sagaPersistence = configuration.UsePersistence<AzureStoragePersistence, StorageType.Sagas>();
         sagaPersistence.ConnectionString(ConnectionString);
 
+        sagaPersistence.Migration().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
+
         var outboxPersistence = configuration.UsePersistence<AzureStoragePersistence, StorageType.Outbox>();
         outboxPersistence.ConnectionString(ConnectionString);
 
