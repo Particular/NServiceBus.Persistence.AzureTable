@@ -1,5 +1,4 @@
-﻿#if NETFRAMEWORK
-namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Persisters
+﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Persisters
 {
     using System;
     using System.Linq;
@@ -86,4 +85,3 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Persisters
         public string Correlation { get; set; }
     }
 }
-#endif
