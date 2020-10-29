@@ -49,7 +49,7 @@
         /// </summary>
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> CreateSchema(this PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> config, bool createSchema)
         {
-            config.GetSettings().Set(SubscriptionStorageTableName, createSchema);
+            config.GetSettings().Set(SubscriptionStorageCreateSchema, createSchema);
             return config;
         }
     }
