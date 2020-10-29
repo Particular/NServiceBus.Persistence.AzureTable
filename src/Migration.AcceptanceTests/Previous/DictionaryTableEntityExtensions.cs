@@ -1,14 +1,16 @@
-using Microsoft.Azure.Cosmos.Table;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-
 namespace NServiceBus.Persistence.AzureStorage.Previous
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Reflection;
+    using Microsoft.Azure.Cosmos.Table;
+    using global::Newtonsoft.Json;
+    using global::Newtonsoft.Json.Serialization;
 
+    /// <summary>
+    /// This is a copy of the saga persister code 2.4.1
+    /// </summary>
     static class DictionaryTableEntityExtensions
     {
         public static TEntity ToEntity<TEntity>(DictionaryTableEntity entity)

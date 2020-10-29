@@ -5,6 +5,9 @@ namespace NServiceBus.Persistence.AzureStorage.Previous
     using global::Newtonsoft.Json;
     using Sagas;
 
+    /// <summary>
+    /// This is a copy of the saga persister code 2.4.1
+    /// </summary>
     static class SecondaryIndexKeyBuilder
     {
         public static PartitionRowKeyTuple BuildTableKey(Type sagaType, SagaCorrelationProperty correlationProperty)

@@ -1,15 +1,19 @@
 namespace NServiceBus.Persistence.AzureStorage.Previous
 {
-   using System.Collections.Generic;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
-   using Microsoft.Azure.Cosmos.Table;
+    using Microsoft.Azure.Cosmos.Table;
 
+    /// <summary>
+    /// This is a copy of the saga persister code 2.4.1
+    /// </summary>
     static class CloudTableExtensions
     {
-        public static async Task<IList<T>> ExecuteQueryAsync<T>(this CloudTable table, TableQuery<T> query, int take = int.MaxValue, CancellationToken ct = default(CancellationToken)) where T : ITableEntity, new()
+        public static async Task<IList<T>> ExecuteQueryAsync<T>(this CloudTable table, TableQuery<T> query,
+            int take = int.MaxValue, CancellationToken ct = default(CancellationToken)) where T : ITableEntity, new()
         {
             var items = new List<T>();
             TableContinuationToken token = null;
@@ -34,8 +38,7 @@ namespace NServiceBus.Persistence.AzureStorage.Previous
                 {
                     items.AddRange(seg);
                 }
-            }
-            while (token != null && !ct.IsCancellationRequested && items.Count < take);
+            } while (token != null && !ct.IsCancellationRequested && items.Count < take);
 
             return items;
         }

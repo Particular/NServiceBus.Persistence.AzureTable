@@ -12,6 +12,9 @@ namespace NServiceBus.Persistence.AzureStorage.Previous
     using Sagas;
     using System.Linq;
 
+    /// <summary>
+    /// This is a copy of the saga persister code 2.4.1
+    /// </summary>
     public class SagaPersisterUsingSecondaryIndexes : ISagaPersister
     {
         public SagaPersisterUsingSecondaryIndexes(string connectionString, bool autoUpdateSchema, bool assumeSecondaryIndicesExist = false)

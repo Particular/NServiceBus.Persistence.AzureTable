@@ -7,6 +7,9 @@
     using Sagas;
     using Microsoft.Azure.Cosmos.Table;
 
+    /// <summary>
+    /// This is a copy of the saga persister code 2.4.1
+    /// </summary>
     class SecondaryIndexPersister
     {
         public delegate Task<Guid[]> ScanForSagas(Type sagaType, string propertyName, object propertyValue);

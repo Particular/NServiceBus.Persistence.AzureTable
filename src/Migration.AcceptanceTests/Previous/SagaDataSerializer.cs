@@ -8,6 +8,9 @@ namespace NServiceBus.Persistence.AzureStorage.Previous
     using global::Newtonsoft.Json;
     using global::Newtonsoft.Json.Serialization;
 
+    /// <summary>
+    /// This is a copy of the saga persister code 2.4.1
+    /// </summary>
     class SagaDataSerializer
     {
         public static byte[] SerializeSagaData<TSagaData>(TSagaData sagaData) where TSagaData : IContainSagaData

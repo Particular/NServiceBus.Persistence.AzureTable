@@ -3,7 +3,9 @@
     using System;
     using Microsoft.Azure.Cosmos.Table;
 
-    // An entity holding information about the secondary index.
+    /// <summary>
+    /// This is a copy of the saga persister code 2.4.1
+    /// </summary>
     class SecondaryIndexTableEntity : TableEntity
     {
         public Guid SagaId { get; set; }

@@ -3,16 +3,8 @@ namespace NServiceBus.Persistence.AzureStorage.Previous
     using System.Collections.Generic;
 
     /// <summary>
-    /// This is a simple implementation of LRU cache.
+    /// This is a copy of the saga persister code 2.4.1
     /// </summary>
-    /// <remarks>
-    /// The LRUCache uses two fields in every operation:
-    /// <see cref="lru" /> - to provide last-recently-used behavior
-    /// <see cref="items" /> - to provide key-value mapping with O(1)
-    /// Locking everywhere ensures that these two parts can be updated atomically.
-    /// ConcurrentDictionary does not ensure lru behavior as it cannot remove the last item that was used,
-    /// hence a custom implementation for a thread safe LRU has been introduced.
-    /// </remarks>
     class LRUCache<TKey, TValue>
     {
         public LRUCache(int capacity)
