@@ -1,9 +1,7 @@
-﻿using System.Linq;
-
-namespace NServiceBus.AcceptanceTests
+﻿namespace NServiceBus.AcceptanceTests
 {
+    using System.Linq;
     using System;
-    using System.IO;
     using System.Threading.Tasks;
     using NUnit.Framework;
     using Microsoft.Azure.Cosmos.Table;
