@@ -2,7 +2,7 @@
 using NServiceBus;
 using NServiceBus.AcceptanceTesting.Support;
 using NServiceBus.AcceptanceTests;
-using NServiceBus.AcceptanceTests.Sagas;
+using NServiceBus.AcceptanceTests.Routing.MessageDrivenSubscriptions;
 using NServiceBus.Persistence.AzureStorage.Testing;
 using Conventions = NServiceBus.AcceptanceTesting.Customization.Conventions;
 
@@ -18,7 +18,9 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
 
         var recoverabilitySettings = configuration.Recoverability();
 
-        if (endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))
+        if (endpointName != Conventions.EndpointNamingConvention(typeof(When_multi_subscribing_to_a_polymorphic_event.Publisher1))
+            || endpointName != Conventions.EndpointNamingConvention(typeof(When_multi_subscribing_to_a_polymorphic_event.Publisher2))
+            || endpointName != Conventions.EndpointNamingConvention(typeof(When_multi_subscribing_to_a_polymorphic_event.Publisher2)))
         {
             recoverabilitySettings.Immediate(c => c.NumberOfRetries(1));
         }

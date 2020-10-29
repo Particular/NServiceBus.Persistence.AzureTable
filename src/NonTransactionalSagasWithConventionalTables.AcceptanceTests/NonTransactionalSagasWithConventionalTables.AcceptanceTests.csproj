@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <Compile Include="..\SharedAcceptanceTests.All\*.cs" />
+    <Compile Remove="..\SharedAcceptanceTests.All\When_saga_with_complex_state.cs" />
   </ItemGroup>
 
   <ItemGroup>

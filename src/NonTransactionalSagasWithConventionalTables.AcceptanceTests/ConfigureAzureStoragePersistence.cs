@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 using NServiceBus;
 using NServiceBus.AcceptanceTesting.Support;
-using NServiceBus.AcceptanceTests;
 using NServiceBus.AcceptanceTests.Sagas;
 using NServiceBus.Persistence.AzureStorage.Testing;
 using Conventions = NServiceBus.AcceptanceTesting.Customization.Conventions;
@@ -14,7 +13,6 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
     {
         var persistence = configuration.UsePersistence<AzureStoragePersistence>();
         persistence.ConnectionString(ConnectionString);
-        persistence.DefaultTable(SetupFixture.TableName);
 
         var recoverabilitySettings = configuration.Recoverability();
 

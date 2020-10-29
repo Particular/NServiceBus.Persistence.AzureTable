@@ -36,8 +36,8 @@
     <Compile Remove="\**\MessageId\*.*" />
     <Compile Remove="\**\Pipeline\*.*" />
     <Compile Remove="\**\Recoverability\*.*" />
-    <Compile Remove="\**\Routing\**" />
     <Compile Remove="\**\Satellites\*.*" />
+    <Compile Remove="\**\Sagas\*.*" />
     <Compile Remove="\**\Scheduling\*.*" />
     <Compile Remove="\**\SelfVerification\*.*" />
     <Compile Remove="\**\Serialization\*.*" />

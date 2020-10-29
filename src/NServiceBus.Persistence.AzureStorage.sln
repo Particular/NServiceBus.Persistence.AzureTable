@@ -21,6 +21,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicalOutbox.AcceptanceTe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogicalOutbox.AcceptanceTests", "LogicalOutbox.AcceptanceTests\LogicalOutbox.AcceptanceTests.csproj", "{8D2A3F43-F947-45A8-85E1-BD683613FB0E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NonTransactionalSagasWithConventionalTables.AcceptanceTests", "NonTransactionalSagasWithConventionalTables.AcceptanceTests\NonTransactionalSagasWithConventionalTables.AcceptanceTests.csproj", "{7E310A40-8736-4EF5-989A-7AA0B5805C2C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Subscription.AcceptanceTests", "Subscription.AcceptanceTests\Subscription.AcceptanceTests.csproj", "{EB5496F1-5B2C-4E4A-8B10-32F487233AD2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +55,14 @@ Global
 		{8D2A3F43-F947-45A8-85E1-BD683613FB0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D2A3F43-F947-45A8-85E1-BD683613FB0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8D2A3F43-F947-45A8-85E1-BD683613FB0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E310A40-8736-4EF5-989A-7AA0B5805C2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E310A40-8736-4EF5-989A-7AA0B5805C2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E310A40-8736-4EF5-989A-7AA0B5805C2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E310A40-8736-4EF5-989A-7AA0B5805C2C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB5496F1-5B2C-4E4A-8B10-32F487233AD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB5496F1-5B2C-4E4A-8B10-32F487233AD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB5496F1-5B2C-4E4A-8B10-32F487233AD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB5496F1-5B2C-4E4A-8B10-32F487233AD2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
