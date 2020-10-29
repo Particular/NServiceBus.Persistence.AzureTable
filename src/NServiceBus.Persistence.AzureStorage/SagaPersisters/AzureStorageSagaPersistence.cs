@@ -41,10 +41,9 @@
             var migrationModeEnabled = context.Settings.Get<bool>(WellKnownConfigurationKeys.MigrationMode);
             var assumeSecondaryIndicesExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist);
 
-            // TODO: Adjust when flag is flipped
             if (assumeSecondaryIndicesExist == false)
             {
-                logger.Warn($"The version of {nameof(AzureStoragePersistence)} used is not configured to optimize sagas creation. To enable optimization, use '.{nameof(ConfigureAzureSagaStorage.AssumeSecondaryIndicesExist)}()' configuration API.");
+                logger.Warn($"The version of {nameof(AzureStoragePersistence)} used is not configured to optimize sagas creation and might fall back to full table scanning to retrieve correlated sagas. It is suggested to migrate saga instances. Consult the upgrade guides for recommendations.");
             }
 
             context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideCloudTableClient>(), updateSchema, migrationModeEnabled,assumeSecondaryIndicesExist));
