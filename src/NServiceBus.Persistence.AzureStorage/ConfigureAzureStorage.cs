@@ -1,7 +1,7 @@
 ﻿namespace NServiceBus
 {
     using Configuration.AdvancedExtensibility;
-    using NServiceBus.Persistence.AzureStorage;
+    using Persistence.AzureStorage;
     using static Persistence.AzureStorage.Config.WellKnownConfigurationKeys;
 
     /// <summary>

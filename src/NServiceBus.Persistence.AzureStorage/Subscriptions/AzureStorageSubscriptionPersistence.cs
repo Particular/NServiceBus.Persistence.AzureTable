@@ -43,7 +43,17 @@ namespace NServiceBus
                 context.Services.AddSingleton(context.Settings.Get<IProvideCloudTableClientForSubscriptions>());
             }
 
-            var subscriptionTableName = context.Settings.Get<string>(WellKnownConfigurationKeys.SubscriptionStorageTableName);
+            // the subscription storage specific override takes precedence for backward compatibility
+            string subscriptionTableName;
+            if (context.Settings.TryGet<TableInformation>(out var info) && !context.Settings.HasExplicitValue(WellKnownConfigurationKeys.SubscriptionStorageTableName))
+            {
+                subscriptionTableName = info.TableName;
+            }
+            else
+            {
+                subscriptionTableName = context.Settings.Get<string>(WellKnownConfigurationKeys.SubscriptionStorageTableName);
+            }
+
             var createIfNotExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SubscriptionStorageCreateSchema);
             var cacheFor = context.Settings.GetOrDefault<TimeSpan>(WellKnownConfigurationKeys.SubscriptionStorageCacheFor);
 
