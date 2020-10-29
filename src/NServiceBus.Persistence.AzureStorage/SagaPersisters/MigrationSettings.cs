@@ -25,10 +25,10 @@ namespace NServiceBus
         /// <summary>
         /// Opt-in to full table scanning for sagas that have been stored with version 1.4 or earlier.
         /// </summary>
-        /// <remarks>Enabling this also enables <see cref="DisableSecondaryKeyLookupForSagasCorrelatedByProperties"/></remarks>
+        /// <remarks>Enabling this also enables the migration mode meaning enabling this is mutually exclusive to <see cref="DisableSecondaryKeyLookupForSagasCorrelatedByProperties"/></remarks>
         public void AllowSecondaryKeyLookupToFallbackToFullTableScan()
         {
-            DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
+            this.GetSettings().Set(WellKnownConfigurationKeys.MigrationMode, true);
             this.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, false);
         }
     }
