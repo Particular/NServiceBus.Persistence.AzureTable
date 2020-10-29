@@ -12,9 +12,9 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
 
     public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
-        var persistence = configuration.UsePersistence<AzureStoragePersistence>();
-        persistence.ConnectionString(ConnectionString);
-        persistence.DefaultTable(SetupFixture.TableName);
+        var subscriptionPersistence = configuration.UsePersistence<AzureStoragePersistence, StorageType.Subscriptions>();
+        subscriptionPersistence.ConnectionString(ConnectionString);
+        subscriptionPersistence.DefaultTable(SetupFixture.TableName);
 
         var recoverabilitySettings = configuration.Recoverability();
 
