@@ -159,13 +159,6 @@
             {
                 var sagaTableNameByConvention = sagaDataType.Name;
                 var sagaTableByConvention = client.GetTableReference(sagaTableNameByConvention);
-                if (autoUpdateSchema && !tableCreated.TryGetValue(sagaTableNameByConvention, out var isTableCreated) &&
-                    !isTableCreated)
-                {
-                    await sagaTableByConvention.CreateIfNotExistsAsync().ConfigureAwait(false);
-                    tableCreated[sagaTableNameByConvention] = true;
-                }
-
                 tableToReadFrom = sagaTableByConvention;
             }
             else
@@ -173,6 +166,14 @@
                 tableToReadFrom = storageSession.Table;
             }
 
+            if (!autoUpdateSchema || tableCreated.TryGetValue(tableToReadFrom.Name, out var isTableCreated) ||
+                isTableCreated)
+            {
+                return tableToReadFrom;
+            }
+
+            await tableToReadFrom.CreateIfNotExistsAsync().ConfigureAwait(false);
+            tableCreated[tableToReadFrom.Name] = true;
             return tableToReadFrom;
         }
 
