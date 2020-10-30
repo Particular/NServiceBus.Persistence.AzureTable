@@ -67,6 +67,7 @@ namespace NServiceBus.AcceptanceTests
 
                 public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
+                    // would have been called this way on older persistence
                     Data.SomeId = message.SomeId;
 
                     return context.SendLocal(new ContinueSagaMessage { SomeId = message.SomeId });
