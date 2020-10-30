@@ -79,6 +79,7 @@ namespace NServiceBus
     public class MigrationSettings : NServiceBus.Configuration.AdvancedExtensibility.ExposeSettings
     {
         public void AllowSecondaryKeyLookupToFallbackToFullTableScan() { }
+        public void AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey() { }
         public void DisableSecondaryKeyLookupForSagasCorrelatedByProperties() { }
     }
     public readonly struct TableEntityPartitionKey : System.IEquatable<NServiceBus.TableEntityPartitionKey>

@@ -31,5 +31,16 @@ namespace NServiceBus
             this.GetSettings().Set(WellKnownConfigurationKeys.MigrationMode, true);
             this.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, false);
         }
+
+        /// <summary>
+        /// Sagas that have been stored with a secondary index used an empty RowKey on the secondary index entry. This prevents migrating to cosmos table API. During migration to cosmos table API it is advised to
+        /// ensure all secondary index entries use RowKey = PartitionKey. By enabling this setting the secondary key lookups will assume RowKey = PartitionKey.
+        /// </summary>
+        /// <remarks>Enabling this also enables the migration mode meaning enabling this is mutually exclusive to <see cref="DisableSecondaryKeyLookupForSagasCorrelatedByProperties"/></remarks>
+        public void AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey()
+        {
+            this.GetSettings().Set(WellKnownConfigurationKeys.MigrationMode, true);
+            this.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey, true);
+        }
     }
 }

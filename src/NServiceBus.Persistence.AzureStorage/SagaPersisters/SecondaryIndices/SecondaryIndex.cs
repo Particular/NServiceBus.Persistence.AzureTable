@@ -9,8 +9,9 @@
 
     class SecondaryIndex
     {
-        public SecondaryIndex(bool assumeSecondaryIndicesExist)
+        public SecondaryIndex(bool assumeSecondaryIndicesExist, bool assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey)
         {
+            this.assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey = assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey;
             this.assumeSecondaryIndicesExist = assumeSecondaryIndicesExist;
         }
 
@@ -31,7 +32,8 @@
                 return guid;
             }
 
-            var exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.Value.PartitionKey, key.Value.RowKey))
+            var rowKey = assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey ? key.Value.PartitionKey : key.Value.RowKey;
+            var exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.Value.PartitionKey, rowKey))
                 .ConfigureAwait(false);
             if (exec.Result is SecondaryIndexTableEntity secondaryIndexEntry)
             {
@@ -102,7 +104,8 @@
         }
 
         LRUCache<PartitionRowKeyTuple, Guid> cache = new LRUCache<PartitionRowKeyTuple, Guid>(LRUCapacity);
-        readonly bool assumeSecondaryIndicesExist;
+        private readonly bool assumeSecondaryIndicesExist;
+        private readonly bool assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey;
         const int LRUCapacity = 1000;
     }
 }

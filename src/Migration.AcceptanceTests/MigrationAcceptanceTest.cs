@@ -16,6 +16,25 @@ namespace NServiceBus.AcceptanceTests
 
         protected SagaPersisterUsingSecondaryIndexes PersisterUsingSecondaryIndexes { get; }
 
+        protected static async Task ReplaceEntity<TSagaData>(DynamicTableEntity entity)
+        {
+            var table = SetupFixture.TableClient.GetTableReference(typeof(TSagaData).Name);
+
+            try
+            {
+                await table.ExecuteAsync(TableOperation.InsertOrReplace(entity));
+            }
+            catch (StorageException e)
+            {
+                if (e.RequestInformation.HttpStatusCode == (int)HttpStatusCode.NotFound)
+                {
+                    return;
+                }
+
+                throw;
+            }
+        }
+
         protected static async Task DeleteEntity<TSagaData>(DynamicTableEntity entity)
         {
             var table = SetupFixture.TableClient.GetTableReference(typeof(TSagaData).Name);

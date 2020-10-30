@@ -12,12 +12,12 @@
 
     class AzureSagaPersister : ISagaPersister
     {
-        public AzureSagaPersister(IProvideCloudTableClient tableClientProvider, bool autoUpdateSchema, bool migrationModeEnabled, bool assumeSecondaryIndicesExist = false)
+        public AzureSagaPersister(IProvideCloudTableClient tableClientProvider, bool autoUpdateSchema, bool migrationModeEnabled, bool assumeSecondaryIndicesExist = false, bool assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey = false)
         {
             this.migrationModeEnabled = migrationModeEnabled;
             this.autoUpdateSchema = autoUpdateSchema;
             client = tableClientProvider.Client;
-            secondaryIndices = new SecondaryIndex(assumeSecondaryIndicesExist);
+            secondaryIndices = new SecondaryIndex(assumeSecondaryIndicesExist, assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
         }
 
         public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context)
