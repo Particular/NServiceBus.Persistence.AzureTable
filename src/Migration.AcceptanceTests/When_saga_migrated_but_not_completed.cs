@@ -43,6 +43,7 @@ namespace NServiceBus.AcceptanceTests
 
             Assert.IsTrue(sagaEntity.Properties.ContainsKey("NServiceBus_2ndIndexKey"), "Secondary index property should be preserved");
             Assert.IsNotNull(secondaryIndexEntry);
+            Assert.AreEqual(sagaId, context.SagaId);
         }
 
         public class Context : ScenarioContext

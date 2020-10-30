@@ -43,6 +43,7 @@ namespace NServiceBus.AcceptanceTests
 
             Assert.IsNull(sagaEntity);
             Assert.IsNull(secondaryIndexEntry);
+            Assert.AreEqual(sagaId, context.SagaId);
         }
 
         public class Context : ScenarioContext
