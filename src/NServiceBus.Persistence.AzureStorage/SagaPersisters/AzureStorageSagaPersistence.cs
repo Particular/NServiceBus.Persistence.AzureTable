@@ -38,7 +38,8 @@
 
             if (migrationModeEnabled)
             {
-                Logger.Info($"The version of {nameof(AzureStoragePersistence)} uses the migration mode and will fallback to lookup correlated sages based on the secondary index if necessary.");
+                var addition = assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey? ", assuming the secondary index uses RowKey = PartitionKey," : string.Empty;
+                Logger.Info($"The version of {nameof(AzureStoragePersistence)} uses the migration mode and will fallback to lookup correlated sages based on the secondary index{addition} if necessary.");
             }
 
             if (assumeSecondaryIndicesExist == false)
