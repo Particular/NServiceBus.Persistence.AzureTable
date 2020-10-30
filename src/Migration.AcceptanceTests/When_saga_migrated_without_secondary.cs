@@ -57,11 +57,11 @@ namespace NServiceBus.AcceptanceTests
                 recorder.Print(Console.Out);
 
                 var gets = recorder.Requests.Where(r => r.ToLower().Contains("get"));
-                var getsWithPartitionKey = gets.Where(get =>
-                    get.Contains($"$filter=SomeId%20eq%20guid%{sagaId}%27&$select=PartitionKey%2CRowKey%2CTimestamp"))
+                var getWithFilter = gets.Where(get =>
+                    get.Contains($"$filter=SomeId%20eq%20guid%27{correlationPropertyValue}%27&$select=PartitionKey%2CRowKey%2CTimestamp"))
                     .ToArray();
 
-                CollectionAssert.IsEmpty(getsWithPartitionKey);
+                CollectionAssert.IsNotEmpty(getWithFilter);
                 Assert.AreEqual(sagaId, context.SagaId);
             }
         }
@@ -101,11 +101,11 @@ namespace NServiceBus.AcceptanceTests
                 recorder.Print(Console.Out);
 
                 var gets = recorder.Requests.Where(r => r.ToLower().Contains("get"));
-                var getsWithNoPartitionKey = gets.Where(get =>
-                    get.Contains($"$filter=SomeId%20eq%20guid%{sagaId}%27&$select=PartitionKey%2CRowKey%2CTimestamp"))
+                var getWithFilter = gets.Where(get =>
+                    get.Contains($"$filter=SomeId%20eq%20guid%27{correlationPropertyValue}%27&$select=PartitionKey%2CRowKey%2CTimestamp"))
                     .ToArray();
 
-                CollectionAssert.IsEmpty(getsWithNoPartitionKey);
+                CollectionAssert.IsEmpty(getWithFilter);
                 Assert.AreNotEqual(sagaId, context.SagaId);
             }
         }
