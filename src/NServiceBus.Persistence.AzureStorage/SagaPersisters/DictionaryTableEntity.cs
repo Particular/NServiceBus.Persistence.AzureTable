@@ -11,9 +11,14 @@
             properties = new Dictionary<string, EntityProperty>();
         }
 
-        public bool WillBeStoredOnPremium { private get; set; }
-        public bool WasStoredOnPremium => !properties.ContainsKey("Id");
+        [IgnoreProperty]
+        public string Id
+        {
+            get => RowKey;
+            set => RowKey = value;
+        }
 
+        [IgnoreProperty]
         public CloudTable Table { get; set; }
 
         public bool ContainsKey(string key)
@@ -28,25 +33,17 @@
 
         public EntityProperty this[string key]
         {
-            get { return properties[key]; }
-            set { properties[key] = value; }
+            get => properties[key];
+            set => properties[key] = value;
         }
 
         public override void ReadEntity(IDictionary<string, EntityProperty> entityProperties, OperationContext operationContext)
         {
             properties = entityProperties;
-            if (WasStoredOnPremium)
-            {
-                properties["Id"] = new EntityProperty(Guid.Parse(RowKey));
-            }
         }
 
         public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
         {
-            if (WillBeStoredOnPremium)
-            {
-                properties.Remove("Id");
-            }
             return properties;
         }
 

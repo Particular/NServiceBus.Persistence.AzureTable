@@ -17,16 +17,7 @@
             this.migrationModeEnabled = migrationModeEnabled;
             this.autoUpdateSchema = autoUpdateSchema;
             client = tableClientProvider.Client;
-            isPremiumEndpoint = IsPremiumEndpoint(client);
-
             secondaryIndices = new SecondaryIndex(assumeSecondaryIndicesExist);
-        }
-
-        // the SDK uses exactly this method of changing the underlying executor
-        static bool IsPremiumEndpoint(CloudTableClient cloudTableClient)
-        {
-            var lowerInvariant = cloudTableClient.StorageUri.PrimaryUri.OriginalString.ToLowerInvariant();
-            return lowerInvariant.Contains("https://localhost") && cloudTableClient.StorageUri.PrimaryUri.Port != 10002 || lowerInvariant.Contains(".table.cosmosdb.") || lowerInvariant.Contains(".table.cosmos.");
         }
 
         public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context)
@@ -41,7 +32,6 @@
             {
                 PartitionKey = partitionKey.PartitionKey,
                 RowKey = sagaData.Id.ToString(),
-                WillBeStoredOnPremium = isPremiumEndpoint
             }, properties);
 
             var table = await GetTableAndCreateIfNotExists(storageSession, sagaDataType)
@@ -98,7 +88,6 @@
                 return default;
             }
 
-            readSagaDataEntity.WillBeStoredOnPremium = isPremiumEndpoint;
             readSagaDataEntity.Table = tableToReadFrom;
 
             var sagaData = DictionaryTableEntityExtensions.ToEntity<TSagaData>(readSagaDataEntity);
@@ -222,7 +211,6 @@
         SecondaryIndex secondaryIndices;
         const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
         static ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
-        private bool isPremiumEndpoint;
         private readonly bool migrationModeEnabled;
 
         /// <summary>
