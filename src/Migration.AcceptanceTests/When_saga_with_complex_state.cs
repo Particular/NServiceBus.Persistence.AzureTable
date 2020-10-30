@@ -43,9 +43,9 @@ namespace NServiceBus.AcceptanceTests
 
             var context = await Scenario.Define<Context>()
                 .WithEndpoint<EndpointWithSagaWithComplexState>(b => b.When(session =>
-                    session.SendLocal(new StartSagaMessage
+                    session.SendLocal(new ContinueSagaMessage
                     {
-                        SomeId = Guid.NewGuid()
+                        SomeId = correlationPropertyValue
                     })))
                 .Done(c => c.Done)
                 .Run();
@@ -84,6 +84,8 @@ namespace NServiceBus.AcceptanceTests
 
             Assert.AreEqual(EdmType.Binary, byteArrayProp.PropertyType);
             CollectionAssert.AreEqual(new byte[] { 1 }, byteArrayProp.BinaryValue);
+
+            Assert.AreEqual(sagaId, context.SagaId);
         }
 
         public class Context : ScenarioContext
