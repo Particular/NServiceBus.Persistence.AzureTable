@@ -37,8 +37,61 @@ namespace NServiceBus.AcceptanceTests
             using (var recorder = new AzureRequestRecorder())
             {
                 var context = await Scenario.Define<Context>()
+                    .WithEndpoint<EndpointWithSagaThatWasMigrated>(b =>
+                    {
+                        b.CustomConfig(c =>
+                        {
+                            var sagaPersistence = c.UsePersistence<AzureStoragePersistence, StorageType.Sagas>();
+                            var migration = sagaPersistence.Migration();
+                            migration.AllowSecondaryKeyLookupToFallbackToFullTableScan();
+                        });
+                        b.When(session =>
+                            session.SendLocal(new ContinueSagaMessage
+                            {
+                                SomeId = correlationPropertyValue
+                            }));
+                    })
+                    .Done(c => c.Done)
+                    .Run();
+
+                recorder.Print(Console.Out);
+
+                var gets = recorder.Requests.Where(r => r.ToLower().Contains("get"));
+                var getsWithPartitionKey = gets.Where(get =>
+                    get.Contains($"$filter=SomeId%20eq%20guid%{sagaId}%27&$select=PartitionKey%2CRowKey%2CTimestamp"))
+                    .ToArray();
+
+                CollectionAssert.IsEmpty(getsWithPartitionKey);
+                Assert.AreEqual(sagaId, context.SagaId);
+            }
+        }
+
+        [Test]
+        public async Task Should_create_new_saga_and_not_issue_table_scan_if_not_enabled()
+        {
+            var correlationPropertyValue = Guid.NewGuid();
+            var sagaId = Guid.NewGuid();
+
+            var previousSagaData = new EndpointWithSagaThatWasMigrated.MigratedSagaData
+            {
+                Id = sagaId,
+                OriginalMessageId = "",
+                Originator = "",
+                SomeId = correlationPropertyValue
+            };
+
+            var sagaCorrelationProperty = new SagaCorrelationProperty("SomeId", correlationPropertyValue);
+            await PersisterUsingSecondaryIndexes.Save(previousSagaData, sagaCorrelationProperty, null, new ContextBag());
+
+            var partitionRowKeyTuple = SecondaryIndexKeyBuilder.BuildTableKey(typeof(EndpointWithSagaThatWasMigrated.MigratedSagaData), sagaCorrelationProperty);
+            var secondaryIndexEntry = GetByPartitionKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(partitionRowKeyTuple.PartitionKey);
+            await DeleteEntity<EndpointWithSagaThatWasMigrated.MigratedSagaData>(secondaryIndexEntry);
+
+            using (var recorder = new AzureRequestRecorder())
+            {
+                var context = await Scenario.Define<Context>()
                     .WithEndpoint<EndpointWithSagaThatWasMigrated>(b => b.When(session =>
-                        session.SendLocal(new ContinueSagaMessage
+                        session.SendLocal(new StartSagaMessage
                         {
                             SomeId = correlationPropertyValue
                         })))
@@ -49,11 +102,11 @@ namespace NServiceBus.AcceptanceTests
 
                 var gets = recorder.Requests.Where(r => r.ToLower().Contains("get"));
                 var getsWithNoPartitionKey = gets.Where(get =>
-                    get.Contains("PartitionKey%20eq") == true &&
-                    get.Contains("PartitionKey=") == true).ToArray();
+                    get.Contains($"$filter=SomeId%20eq%20guid%{sagaId}%27&$select=PartitionKey%2CRowKey%2CTimestamp"))
+                    .ToArray();
 
                 CollectionAssert.IsEmpty(getsWithNoPartitionKey);
-                Assert.AreEqual(sagaId, context.SagaId);
+                Assert.AreNotEqual(sagaId, context.SagaId);
             }
         }
 
@@ -67,12 +120,7 @@ namespace NServiceBus.AcceptanceTests
         {
             public EndpointWithSagaThatWasMigrated()
             {
-                EndpointSetup<DefaultServer>(c =>
-                {
-                    var sagaPersistence = c.UsePersistence<AzureStoragePersistence, StorageType.Sagas>();
-                    var migration = sagaPersistence.Migration();
-                    migration.AllowSecondaryKeyLookupToFallbackToFullTableScan();
-                });
+                EndpointSetup<DefaultServer>();
             }
 
             public class SagaWithMigratedData : Saga<MigratedSagaData>, IAmStartedByMessages<StartSagaMessage>, IHandleMessages<ContinueSagaMessage>
