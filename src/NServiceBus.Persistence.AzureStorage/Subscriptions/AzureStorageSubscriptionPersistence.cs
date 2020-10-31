@@ -31,10 +31,9 @@ namespace NServiceBus
         /// <summary></summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
-            if (!context.Services.Any(x => x.ServiceType == typeof(IProvideCloudTableClientForSubscriptions)))
-            {
-                context.Services.AddSingleton(context.Settings.Get<IProvideCloudTableClientForSubscriptions>());
-            }
+            // If a client has been registered in the container, it will added later in the configuration process and replace any client set here
+            context.Settings.TryGet(out IProvideCloudTableClientForSubscriptions cloudTableClientProvider);
+            context.Services.AddSingleton(cloudTableClientProvider ?? new ThrowIfNoCloudTableClientForSubscriptionsProvider());
 
             // the subscription storage specific override takes precedence for backward compatibility
             string subscriptionTableName;
