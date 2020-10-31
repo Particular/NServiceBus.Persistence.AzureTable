@@ -17,8 +17,6 @@
                 return default;
             }
 
-            context.Set($"cosmos_etag:{messageId}", retrieveResult.Etag);
-
             return (OutboxRecord) retrieveResult.Result;
         }
     }
