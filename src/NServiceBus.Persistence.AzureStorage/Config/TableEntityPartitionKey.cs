@@ -1,8 +1,8 @@
-﻿using System;
-using NServiceBus.Persistence.AzureStorage;
-
-namespace NServiceBus
+﻿namespace NServiceBus
 {
+    using System;
+    using Persistence.AzureStorage;
+
     /// <summary>
     ///
     /// </summary>

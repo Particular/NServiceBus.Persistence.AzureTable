@@ -1,7 +1,7 @@
-﻿using Microsoft.Azure.Cosmos.Table;
-
-namespace NServiceBus
+﻿namespace NServiceBus
 {
+    using Microsoft.Azure.Cosmos.Table;
+
     /// <summary>
     ///
     /// </summary>
