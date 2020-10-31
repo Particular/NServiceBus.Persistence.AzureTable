@@ -20,9 +20,7 @@
             AzureStorageSagaGuard.CheckConnectionString(connectionString);
 
             var settings = config.GetSettings();
-            settings.Set(SagaStorageConnectionString, connectionString);
             settings.Set<IProvideCloudTableClient>(new CloudTableClientFromConnectionString(connectionString));
-            settings.Set(SubscriptionStorageConnectionString, connectionString);
             settings.Set<IProvideCloudTableClientForSubscriptions>(new CloudTableClientForSubscriptionsFromConnectionString(connectionString));
 
             return config;
