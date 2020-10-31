@@ -1,6 +1,6 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage
 {
-    using System.Linq;
+    using Config;
     using Features;
     using Microsoft.Extensions.DependencyInjection;
 
@@ -8,10 +8,9 @@
     {
         protected override void Setup(FeatureConfigurationContext context)
         {
-            if (!context.Services.Any(x => x.ServiceType == typeof(IProvideCloudTableClient)))
-            {
-                context.Services.AddSingleton(context.Settings.Get<IProvideCloudTableClient>());
-            }
+            // If a client has been registered in the container, it will added later in the configuration process and replace any client set here
+            context.Settings.TryGet(out IProvideCloudTableClient cloudTableClientProvider);
+            context.Services.AddSingleton(cloudTableClientProvider ?? new ThrowIfNoCloudTableClientProvider());
 
             TableInformation? defaultTableInformation = null;
             if (context.Settings.TryGet<TableInformation>(out var info))
