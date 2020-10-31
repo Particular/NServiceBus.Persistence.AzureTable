@@ -1,6 +1,4 @@
-﻿using System.Runtime.ExceptionServices;
-
-namespace NServiceBus.Persistence.AzureStorage
+﻿namespace NServiceBus.Persistence.AzureStorage
 {
     using Microsoft.Azure.Cosmos.Table;
 
