@@ -2,7 +2,9 @@
 {
     using System;
     using Configuration.AdvancedExtensibility;
+    using Microsoft.Azure.Cosmos.Table;
     using Subscriptions;
+    using Persistence.AzureStorage;
     using static Persistence.AzureStorage.Config.WellKnownConfigurationKeys;
 
     /// <summary>
@@ -19,6 +21,19 @@
 
             config.GetSettings().Set(SubscriptionStorageConnectionString, connectionString);
             config.GetSettings().Set<IProvideCloudTableClientForSubscriptions>(new CloudTableClientForSubscriptionsFromConnectionString(connectionString));
+            return config;
+        }
+
+        /// <summary>
+        /// Cloud Table Client to use for the Subscription storage.
+        /// </summary>
+        public static PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> UseCloudTableClient(this PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> config, CloudTableClient client)
+        {
+            Guard.AgainstNull(nameof(client), client);
+
+            var settings = config.GetSettings();
+            settings.Set<IProvideCloudTableClientForSubscriptions>(new CloudTableClientForSubscriptionsFromConfiguration(client));
+
             return config;
         }
 

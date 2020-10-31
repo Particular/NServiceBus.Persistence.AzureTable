@@ -24,11 +24,13 @@ namespace NServiceBus
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config, string connectionString) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> CreateSchema(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config, bool createSchema) { }
         public static NServiceBus.MigrationSettings Migration(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> UseCloudTableClient(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config, Microsoft.Azure.Cosmos.Table.CloudTableClient client) { }
     }
     public static class ConfigureAzureStorage
     {
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> config, string connectionString) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> DefaultTable(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> persistenceExtensions, string tableName) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> UseCloudTableClient(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> config, Microsoft.Azure.Cosmos.Table.CloudTableClient client) { }
     }
     public static class ConfigureAzureSubscriptionStorage
     {
@@ -36,6 +38,7 @@ namespace NServiceBus
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> config, string connectionString) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> CreateSchema(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> config, bool createSchema) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> TableName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> config, string tableName) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> UseCloudTableClient(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> config, Microsoft.Azure.Cosmos.Table.CloudTableClient client) { }
     }
     public static class ConfigureAzureTimeoutStorage
     {
