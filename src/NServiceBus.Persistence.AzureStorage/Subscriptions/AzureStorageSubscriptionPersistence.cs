@@ -23,13 +23,6 @@ namespace NServiceBus
 
             Defaults(s =>
             {
-#if NETFRAMEWORK
-                var defaultConnectionString = System.Configuration.ConfigurationManager.AppSettings["NServiceBus/Persistence"];
-                if (string.IsNullOrEmpty(defaultConnectionString) != true)
-                {
-                    Logger.Warn(@"Connection string should be assigned using code API: var persistence = endpointConfiguration.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>();\npersistence.ConnectionString(""connectionString"");");
-                }
-#endif
                 s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageTableName, AzureSubscriptionStorageDefaults.TableName);
                 s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageCreateSchema , AzureSubscriptionStorageDefaults.CreateSchema);
             });
