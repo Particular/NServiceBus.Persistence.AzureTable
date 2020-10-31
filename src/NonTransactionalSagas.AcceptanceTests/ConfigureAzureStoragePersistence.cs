@@ -13,7 +13,7 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
     public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
         var persistence = configuration.UsePersistence<AzureStoragePersistence, StorageType.Sagas>();
-        persistence.ConnectionString(ConnectionString);
+        persistence.UseCloudTableClient(SetupFixture.TableClient);
         persistence.DefaultTable(SetupFixture.TableName);
 
         persistence.Migration().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
