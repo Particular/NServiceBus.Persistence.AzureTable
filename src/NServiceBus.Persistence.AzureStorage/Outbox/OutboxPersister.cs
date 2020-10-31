@@ -5,7 +5,6 @@
     using Extensibility;
     using Outbox;
 
-
     class OutboxPersister  : IOutboxStorage
     {
         public OutboxPersister(TableHolderResolver tableHolderResolver)
@@ -52,7 +51,7 @@
         {
             var azureStorageOutboxTransaction = (AzureStorageOutboxTransaction)transaction;
 
-            if (azureStorageOutboxTransaction == null || azureStorageOutboxTransaction.SuppressStoreAndCommit || azureStorageOutboxTransaction.PartitionKey == default)
+            if (azureStorageOutboxTransaction == null || azureStorageOutboxTransaction.SuppressStoreAndCommit || azureStorageOutboxTransaction.PartitionKey == null)
             {
                 return Task.CompletedTask;
             }
@@ -64,12 +63,12 @@
                 Id = message.MessageId,
                 Operations = message.TransportOperations,
                 // TODO: A bit of a train wreck, improve
-                PartitionKey = azureStorageOutboxTransaction.PartitionKey.Value.PartitionKey
+                PartitionKey = setAsDispatchedHolder.PartitionKey.PartitionKey
             };
 
             setAsDispatchedHolder.Record = outboxRecord;
 
-            azureStorageOutboxTransaction.StorageSession.Add(new OutboxStore(azureStorageOutboxTransaction.PartitionKey.Value, outboxRecord, setAsDispatchedHolder.TableHolder.Table));
+            azureStorageOutboxTransaction.StorageSession.Add(new OutboxStore(setAsDispatchedHolder.PartitionKey, outboxRecord, setAsDispatchedHolder.TableHolder.Table));
 
             return Task.CompletedTask;
         }
