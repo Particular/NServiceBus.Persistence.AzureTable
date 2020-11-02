@@ -71,14 +71,6 @@ namespace NServiceBus
             "ion 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> TimeoutStateContainerName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, string blobName) { }
     }
-    public interface IProvideCloudTableClient
-    {
-        Microsoft.Azure.Cosmos.Table.CloudTableClient Client { get; }
-    }
-    public interface IProvideCloudTableClientForSubscriptions
-    {
-        Microsoft.Azure.Cosmos.Table.CloudTableClient Client { get; }
-    }
     public class MigrationSettings : NServiceBus.Configuration.AdvancedExtensibility.ExposeSettings
     {
         public void AllowSecondaryKeyLookupToFallbackToFullTableScan() { }
@@ -115,6 +107,14 @@ namespace NServiceBus.Persistence.AzureStorage
         Microsoft.Azure.Cosmos.Table.TableBatchOperation Batch { get; }
         string PartitionKey { get; }
         Microsoft.Azure.Cosmos.Table.CloudTable Table { get; }
+    }
+    public interface IProvideCloudTableClient
+    {
+        Microsoft.Azure.Cosmos.Table.CloudTableClient Client { get; }
+    }
+    public interface IProvideCloudTableClientForSubscriptions
+    {
+        Microsoft.Azure.Cosmos.Table.CloudTableClient Client { get; }
     }
     public sealed class LogicalOutboxBehavior : NServiceBus.Pipeline.IBehavior, NServiceBus.Pipeline.IBehavior<NServiceBus.Pipeline.IIncomingLogicalMessageContext, NServiceBus.Pipeline.IIncomingLogicalMessageContext>
     {

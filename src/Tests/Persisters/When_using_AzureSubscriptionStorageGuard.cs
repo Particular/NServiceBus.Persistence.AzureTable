@@ -1,7 +1,6 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Persisters
 {
     using System;
-    using NServiceBus.Subscriptions;
     using NUnit.Framework;
 
     [TestFixture]

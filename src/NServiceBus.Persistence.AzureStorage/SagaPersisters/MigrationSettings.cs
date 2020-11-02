@@ -2,7 +2,7 @@ namespace NServiceBus
 {
     using Settings;
     using Configuration.AdvancedExtensibility;
-    using Persistence.AzureStorage.Config;
+    using Persistence.AzureStorage;
 
     /// <summary>
     /// Custom settings related to the outbox feature.

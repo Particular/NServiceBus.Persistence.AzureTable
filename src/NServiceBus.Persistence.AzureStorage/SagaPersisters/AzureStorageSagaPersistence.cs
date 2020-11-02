@@ -4,7 +4,6 @@
     using Logging;
     using Microsoft.Extensions.DependencyInjection;
     using Persistence.AzureStorage;
-    using Persistence.AzureStorage.Config;
     using Sagas;
 
     /// <summary></summary>

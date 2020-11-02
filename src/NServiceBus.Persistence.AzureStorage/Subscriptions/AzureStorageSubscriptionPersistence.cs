@@ -1,14 +1,12 @@
 namespace NServiceBus
 {
-    using System.Linq;
     using System;
     using System.Threading.Tasks;
     using Features;
     using Logging;
     using Microsoft.Azure.Cosmos.Table;
     using Microsoft.Extensions.DependencyInjection;
-    using Persistence.AzureStorage.Config;
-    using Unicast.Subscriptions;
+    using Persistence.AzureStorage;
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
 
     /// <summary></summary>

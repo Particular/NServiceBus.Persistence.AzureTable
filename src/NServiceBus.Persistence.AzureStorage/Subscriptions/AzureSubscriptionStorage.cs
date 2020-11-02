@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.Unicast.Subscriptions
+﻿namespace NServiceBus.Persistence.AzureStorage
 {
     using System.Net;
     using System;
@@ -8,8 +8,10 @@
     using System.Text;
     using System.Threading.Tasks;
     using Extensibility;
-    using MessageDrivenSubscriptions;
     using Microsoft.Azure.Cosmos.Table;
+    using Unicast.Subscriptions;
+    using Unicast.Subscriptions.MessageDrivenSubscriptions;
+
 
     class AzureSubscriptionStorage : ISubscriptionStorage
     {

@@ -3,7 +3,6 @@
     using Configuration.AdvancedExtensibility;
     using Microsoft.Azure.Cosmos.Table;
     using Persistence.AzureStorage;
-    using static Persistence.AzureStorage.Config.WellKnownConfigurationKeys;
 
     /// <summary>
     /// Configuration extensions for the sagas storage
@@ -42,7 +41,7 @@
         {
             Guard.AgainstNull(nameof(config), config);
 
-            config.GetSettings().Set(SagaStorageCreateSchema, createSchema);
+            config.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageCreateSchema, createSchema);
             return config;
         }
 

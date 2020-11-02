@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.Persistence.AzureStorage.Config
+﻿namespace NServiceBus.Persistence.AzureStorage
 {
     using System;
     using Microsoft.Azure.Cosmos.Table;

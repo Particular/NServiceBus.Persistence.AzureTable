@@ -1,6 +1,5 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage
 {
-    using Config;
     using Features;
     using Microsoft.Extensions.DependencyInjection;
 

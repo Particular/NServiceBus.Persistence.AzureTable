@@ -3,7 +3,6 @@
     using Configuration.AdvancedExtensibility;
     using Microsoft.Azure.Cosmos.Table;
     using Persistence.AzureStorage;
-    using static Persistence.AzureStorage.Config.WellKnownConfigurationKeys;
 
     /// <summary>
     /// Configuration extensions for all Azure storage settings

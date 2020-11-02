@@ -7,6 +7,7 @@
     using Microsoft.Azure.Cosmos.Table;
     using Microsoft.Extensions.DependencyInjection;
     using NUnit.Framework;
+    using Persistence.AzureStorage;
 
     public class When_custom_provider_registered : NServiceBusAcceptanceTest
     {

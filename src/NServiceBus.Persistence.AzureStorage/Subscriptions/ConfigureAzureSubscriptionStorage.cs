@@ -3,9 +3,7 @@
     using System;
     using Configuration.AdvancedExtensibility;
     using Microsoft.Azure.Cosmos.Table;
-    using Subscriptions;
     using Persistence.AzureStorage;
-    using static Persistence.AzureStorage.Config.WellKnownConfigurationKeys;
 
     /// <summary>
     /// Configuration extensions for the subscription storage
@@ -43,7 +41,7 @@
         {
             AzureSubscriptionStorageGuard.CheckTableName(tableName);
 
-            config.GetSettings().Set(SubscriptionStorageTableName, tableName);
+            config.GetSettings().Set(WellKnownConfigurationKeys.SubscriptionStorageTableName, tableName);
             return config;
         }
 
@@ -53,7 +51,7 @@
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> CacheFor(this PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> config, TimeSpan timeSpan)
         {
             AzureSubscriptionStorageGuard.AgainstNegativeAndZero(nameof(timeSpan), timeSpan);
-            config.GetSettings().Set(SubscriptionStorageCacheFor, timeSpan);
+            config.GetSettings().Set(WellKnownConfigurationKeys.SubscriptionStorageCacheFor, timeSpan);
             return config;
         }
 
@@ -63,7 +61,7 @@
         /// </summary>
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> CreateSchema(this PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> config, bool createSchema)
         {
-            config.GetSettings().Set(SubscriptionStorageCreateSchema, createSchema);
+            config.GetSettings().Set(WellKnownConfigurationKeys.SubscriptionStorageCreateSchema, createSchema);
             return config;
         }
     }
