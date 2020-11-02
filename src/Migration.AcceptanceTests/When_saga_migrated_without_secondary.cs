@@ -16,6 +16,8 @@ namespace NServiceBus.AcceptanceTests
         [Test]
         public async Task Should_find_via_table_scan_if_enabled()
         {
+            Requires.AzureTables();
+
             var correlationPropertyValue = Guid.NewGuid();
             var sagaId = Guid.NewGuid();
 
@@ -69,6 +71,8 @@ namespace NServiceBus.AcceptanceTests
         [Test]
         public async Task Should_create_new_saga_and_not_issue_table_scan_if_not_enabled()
         {
+            Requires.AzureTables();
+
             var correlationPropertyValue = Guid.NewGuid();
             var sagaId = Guid.NewGuid();
 

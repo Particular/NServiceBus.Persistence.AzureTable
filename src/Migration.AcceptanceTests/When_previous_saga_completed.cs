@@ -14,6 +14,8 @@ namespace NServiceBus.AcceptanceTests
         [Test]
         public async Task Should_create_new_saga()
         {
+            Requires.AzureTables();
+
             var correlationPropertyValue = Guid.NewGuid();
             var sagaId = Guid.NewGuid();
 

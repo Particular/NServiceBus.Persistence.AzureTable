@@ -16,6 +16,8 @@ namespace NServiceBus.AcceptanceTests
         [Test]
         public async Task Should_find_by_non_empty_row_key_if_enabled()
         {
+            Requires.AzureTables();
+
             var correlationPropertyValue = Guid.NewGuid();
             var sagaId = Guid.NewGuid();
 
@@ -68,6 +70,8 @@ namespace NServiceBus.AcceptanceTests
         [Test]
         public async Task Should_create_new_saga_if_find_by_non_empty_row_key_not_enabled()
         {
+            Requires.AzureTables();
+
             var correlationPropertyValue = Guid.NewGuid();
             var sagaId = Guid.NewGuid();
 

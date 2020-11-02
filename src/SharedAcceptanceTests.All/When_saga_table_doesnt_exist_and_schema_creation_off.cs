@@ -26,7 +26,9 @@ namespace NServiceBus.AcceptanceTests
 
             Assert.AreEqual(1, exception.ScenarioContext.FailedMessages.Count);
             StringAssert.Contains(
-                "Element 0 in the batch returned an unexpected response code.",
+                ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.TableClient)
+                    ? "The specified resource does not exist."
+                    : "Element 0 in the batch returned an unexpected response code.",
                 exception.FailedMessage.Exception.Message);
         }
 

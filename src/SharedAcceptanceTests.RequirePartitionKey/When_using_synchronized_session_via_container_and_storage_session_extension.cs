@@ -14,6 +14,9 @@
         [Test]
         public async Task Should_commit_all_operations_using_the_same_batch()
         {
+            // not possible to intercept cosmos API calls with OperationContext
+            Requires.AzureTables();
+
             TransactionalBatchCounterHandler.Reset();
 
             await Scenario.Define<Context>()

@@ -15,6 +15,8 @@ namespace NServiceBus.AcceptanceTests
         [Test]
         public async Task Should_preserve_secondary_index()
         {
+            Requires.AzureTables();
+
             var correlationPropertyValue = Guid.NewGuid();
             var sagaId = Guid.NewGuid();
 
