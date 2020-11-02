@@ -40,10 +40,12 @@
         public override void ReadEntity(IDictionary<string, EntityProperty> entityProperties, OperationContext operationContext)
         {
             properties = entityProperties;
+            properties.Add("Id", EntityProperty.GeneratePropertyForGuid(Guid.Parse(RowKey)));
         }
 
         public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
         {
+            properties.Remove("Id");
             return properties;
         }
 
