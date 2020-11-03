@@ -16,12 +16,12 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
 
     public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
-        var sagaPersistence = configuration.UsePersistence<AzureStoragePersistence, StorageType.Sagas>();
+        var sagaPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
         sagaPersistence.UseCloudTableClient(SetupFixture.TableClient);
 
         sagaPersistence.Migration().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
 
-        configuration.UsePersistence<AzureStoragePersistence, StorageType.Outbox>();
+        configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
 
         var recoverabilitySettings = configuration.Recoverability();
 

@@ -1,4 +1,4 @@
-namespace NServiceBus.Persistence.AzureStorage.Previous
+namespace NServiceBus.Persistence.AzureTable.Previous
 {
     using System.Collections.Generic;
 

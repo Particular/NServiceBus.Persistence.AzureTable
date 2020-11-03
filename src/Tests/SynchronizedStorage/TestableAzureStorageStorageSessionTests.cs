@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.Persistence.AzureStorage.Tests
+﻿namespace NServiceBus.Persistence.AzureTable.Tests
 {
     using System;
     using System.Threading.Tasks;
@@ -14,7 +14,7 @@
         {
             var transactionalBatch = new TableBatchOperation();
 
-            var testableSession = new TestableAzureStorageStorageSession(new TableEntityPartitionKey("mypartitionkey"))
+            var testableSession = new TestableAzureTableStorageStorageSession(new TableEntityPartitionKey("mypartitionkey"))
             {
                 Batch = transactionalBatch
             };
@@ -33,7 +33,7 @@
         {
             public Task Handle(MyMessage message, IMessageHandlerContext context)
             {
-                var session = context.SynchronizedStorageSession.AzureStoragePersistenceSession();
+                var session = context.SynchronizedStorageSession.AzureTablePersistenceSession();
                 var myItem = new MyItem
                 {
                     PartitionKey = session.PartitionKey,

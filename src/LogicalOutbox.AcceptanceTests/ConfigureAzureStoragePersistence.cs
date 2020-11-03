@@ -6,8 +6,8 @@ using NServiceBus.AcceptanceTesting;
 using NServiceBus.AcceptanceTesting.Support;
 using NServiceBus.AcceptanceTests;
 using NServiceBus.AcceptanceTests.Sagas;
-using NServiceBus.Persistence.AzureStorage;
-using NServiceBus.Persistence.AzureStorage.Testing;
+using NServiceBus.Persistence.AzureTable.Testing;
+using NServiceBus.Persistence.AzureTable;
 using NServiceBus.Pipeline;
 using NServiceBus.Settings;
 using Conventions = NServiceBus.AcceptanceTesting.Customization.Conventions;
@@ -18,11 +18,11 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
 
     public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
-        var sagaPersistence = configuration.UsePersistence<AzureStoragePersistence, StorageType.Sagas>();
+        var sagaPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
         sagaPersistence.UseCloudTableClient(SetupFixture.TableClient);
         sagaPersistence.Migration().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
 
-        configuration.UsePersistence<AzureStoragePersistence, StorageType.Outbox>();
+        configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
 
         var recoverabilitySettings = configuration.Recoverability();
 

@@ -10,10 +10,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="NServiceBus.AcceptanceTests.Sources" Version="8.0.0-alpha.631" />
     <PackageReference Include="Particular.CodeRules" Version="0.7.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
@@ -52,6 +48,10 @@
     <Compile Remove="\**\Versioning\*.*" />
     <!-- Can be removed once https://github.com/Particular/NServiceBus/pull/5825 is fixed and released -->
     <Compile Remove="\**\Outbox\When_blowing_up_just_after_dispatch.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj" />
   </ItemGroup>
 
 </Project>

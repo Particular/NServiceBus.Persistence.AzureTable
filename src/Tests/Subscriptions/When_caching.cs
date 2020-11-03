@@ -1,4 +1,4 @@
-namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
+namespace NServiceBus.Persistence.AzureTable.ComponentTests.Subscriptions
 {
     using System;
     using System.Collections.Concurrent;
@@ -11,7 +11,7 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Subscriptions
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
 
     [TestFixture]
-    [Category("AzureStoragePersistence")]
+    [Category("AzureTablePersistence")]
     public class When_caching
     {
         [SetUp]
