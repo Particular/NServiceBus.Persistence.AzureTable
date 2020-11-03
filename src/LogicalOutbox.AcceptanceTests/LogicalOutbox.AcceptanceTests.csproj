@@ -50,6 +50,8 @@
     <Compile Remove="\**\TimeToBeReceived\*.*" />
     <Compile Remove="\**\Tx\**\*.*" />
     <Compile Remove="\**\Versioning\*.*" />
+    <!-- Can be removed once https://github.com/Particular/NServiceBus/pull/5825 is fixed and released -->
+    <Compile Remove="\**\Outbox\When_blowing_up_just_after_dispatch.cs" />
   </ItemGroup>
 
 </Project>
