@@ -12,6 +12,3 @@ The tests require a connection to Azure Storage. We recommend [creating an Azure
 After creating the Azure Storage account, locate the connection string for the account. You can find it by selecting the storage account in the Azure portal, selecting "Access keys", then clicking "View connection string" next to the key you wish to use. (Click the ellipsis next to the key if you don't see the option to view the connection string.)
 
 Copy the connection string into an environment variable called `AzureStoragePersistence.ConnectionString` and into an environment variable called `AzureStorageQueueTransport.ConnectionString`.
-
-## Maintainers
-The following team is responsible for this repository: @Particular/azure-maintainers
