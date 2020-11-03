@@ -5,7 +5,7 @@ namespace NServiceBus
     using Persistence.AzureStorage;
 
     /// <summary>
-    /// Custom settings related to the outbox feature.
+    /// Custom settings related to the migration feature.
     /// </summary>
     public class MigrationSettings : ExposeSettings
     {
@@ -15,7 +15,8 @@ namespace NServiceBus
 
         /// <summary>
         /// By default the persistence operates in a backward compatible mode that tries to find sagas by using the secondary index property.
-        /// Once all sagas have been migrated the lookup can be disabled.
+        /// Once all sagas have been migrated from version 2.4.x of the persister to the current version the lookup can be disabled.
+        /// All migrated sagas do not contain a row called NServiceBus_2ndIndexKey
         /// </summary>
         public void DisableSecondaryKeyLookupForSagasCorrelatedByProperties()
         {

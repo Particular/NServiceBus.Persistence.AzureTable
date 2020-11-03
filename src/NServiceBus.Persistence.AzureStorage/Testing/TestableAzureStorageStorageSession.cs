@@ -24,17 +24,17 @@
         ContextBag IWorkWithSharedTransactionalBatch.CurrentContextBag { get; set; }
 
         /// <summary>
-        ///
+        /// The cloud table to be used.
         /// </summary>
         public CloudTable Table { get; set; }
 
         /// <summary>
-        ///
+        /// The batch to be used.
         /// </summary>
         public TableBatchOperation Batch { get; set; }
 
         /// <summary>
-        ///
+        /// The partition key to be used.
         /// </summary>
         public string PartitionKey { get; }
     }

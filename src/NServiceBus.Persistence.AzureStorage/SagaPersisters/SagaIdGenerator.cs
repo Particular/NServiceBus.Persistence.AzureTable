@@ -12,7 +12,6 @@
         {
             if (context.CorrelationProperty == SagaCorrelationProperty.None)
             {
-                // TODO: verify!
                 throw new Exception("The Azure Storage saga persister doesn't support custom saga finders.");
             }
 

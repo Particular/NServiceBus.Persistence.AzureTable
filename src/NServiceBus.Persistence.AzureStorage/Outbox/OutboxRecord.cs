@@ -8,6 +8,7 @@
 
     class OutboxRecord : TableEntity
     {
+        // ignoring this property to avoid double storing and clashing with Cosmos Id property.
         [IgnoreProperty]
         public string Id
         {
@@ -21,6 +22,7 @@
 
         public string DispatchedAt { get; set; }
 
+        // ignoring this property because we are custom serializing the operations into TransportOperations and deserializing it back
         [IgnoreProperty]
         public TransportOperation[] Operations { get; set; } = Array.Empty<TransportOperation>();
 
