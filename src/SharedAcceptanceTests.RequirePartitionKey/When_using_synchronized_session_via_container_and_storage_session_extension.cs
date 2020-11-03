@@ -6,7 +6,7 @@
     using EndpointTemplates;
     using NUnit.Framework;
     using Microsoft.Azure.Cosmos.Table;
-    using Persistence.AzureStorage;
+    using Persistence.AzureTable;
 
     [TestFixture]
     public class When_using_synchronized_session_via_container_and_storage_session_extension : NServiceBusAcceptanceTest
@@ -43,7 +43,7 @@
 
             public class MyHandlerUsingStorageSession : IHandleMessages<MyMessage>
             {
-                public MyHandlerUsingStorageSession(IAzureStorageStorageSession session, Context context)
+                public MyHandlerUsingStorageSession(IAzureTableStorageSession session, Context context)
                 {
                     this.session = session;
                     this.context = context;
@@ -64,7 +64,7 @@
                 }
 
                 Context context;
-                IAzureStorageStorageSession session;
+                IAzureTableStorageSession session;
             }
 
             public class MyHandlerUsingExtensionMethod : IHandleMessages<MyMessage>
@@ -76,7 +76,7 @@
 
                 public Task Handle(MyMessage message, IMessageHandlerContext handlerContext)
                 {
-                    var session = handlerContext.SynchronizedStorageSession.AzureStoragePersistenceSession();
+                    var session = handlerContext.SynchronizedStorageSession.AzureTablePersistenceSession();
 
                     var entity = new MyTableEntity
                     {

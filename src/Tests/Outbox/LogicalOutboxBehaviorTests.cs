@@ -1,11 +1,11 @@
-﻿namespace NServiceBus.Persistence.AzureStorage.Tests
+﻿namespace NServiceBus.Persistence.AzureTable.Tests
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.Table;
-    using AzureStorage;
+    using AzureTable;
     using Testing;
     using Outbox;
     using NUnit.Framework;

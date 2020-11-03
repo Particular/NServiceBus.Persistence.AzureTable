@@ -10,10 +10,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="NServiceBus.AcceptanceTests.Sources" Version="7.4.4" />
     <PackageReference Include="Particular.CodeRules" Version="0.7.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
@@ -47,6 +43,10 @@
     <Compile Remove="\**\Versioning\*.*" />
     <Compile Remove="\**\Outbox\*.*" />
     <Compile Remove="\**\Sagas\*.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj" />
   </ItemGroup>
 
 </Project>

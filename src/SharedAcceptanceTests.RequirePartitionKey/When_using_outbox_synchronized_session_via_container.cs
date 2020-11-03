@@ -3,7 +3,7 @@
     using System.Threading.Tasks;
     using AcceptanceTesting;
     using EndpointTemplates;
-    using Persistence.AzureStorage;
+    using Persistence.AzureTable;
     using NUnit.Framework;
 
     [TestFixture]
@@ -70,7 +70,7 @@
 
         public class MyRepository
         {
-            public MyRepository(IAzureStorageStorageSession storageSession, Context context)
+            public MyRepository(IAzureTableStorageSession storageSession, Context context)
             {
                 this.storageSession = storageSession;
                 this.context = context;
@@ -83,7 +83,7 @@
                 context.PartitionKey = storageSession.PartitionKey;
             }
 
-            IAzureStorageStorageSession storageSession;
+            IAzureTableStorageSession storageSession;
             Context context;
         }
 

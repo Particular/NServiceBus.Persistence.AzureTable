@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Persisters
+﻿namespace NServiceBus.Persistence.AzureTable.ComponentTests.Persisters
 {
     using Configuration.AdvancedExtensibility;
     using NUnit.Framework;
@@ -14,7 +14,7 @@
             var connectionString = "UseDevelopmentStorage=true";
 
             var endpointConfig = new EndpointConfiguration("Testendpoint");
-            var persistence = endpointConfig.UsePersistence<AzureStoragePersistence>().ConnectionString(connectionString);
+            var persistence = endpointConfig.UsePersistence<AzureTablePersistence>().ConnectionString(connectionString);
 
             var settings = persistence.GetSettings();
 

@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.Persistence.AzureStorage.Testing
+﻿namespace NServiceBus.Persistence.AzureTable.Testing
 {
     using System;
 

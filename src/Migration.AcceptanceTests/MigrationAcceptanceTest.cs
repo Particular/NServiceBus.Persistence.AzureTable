@@ -4,7 +4,7 @@ namespace NServiceBus.AcceptanceTests
     using System.Net;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.Table;
-    using Persistence.AzureStorage.Previous;
+    using Persistence.AzureTable.Previous;
     using NServiceBus.Persistence.AzureStorage.Testing;
 
     public class MigrationAcceptanceTest : NServiceBusAcceptanceTest

@@ -12,7 +12,7 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
 
     public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
-        var subscriptionPersistence = configuration.UsePersistence<AzureStoragePersistence, StorageType.Subscriptions>();
+        var subscriptionPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Subscriptions>();
         subscriptionPersistence.UseCloudTableClient(SetupFixture.TableClient);
         subscriptionPersistence.DefaultTable(SetupFixture.TableName);
 

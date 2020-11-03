@@ -7,9 +7,9 @@ using PublicApiGenerator;
 public class APIApprovals
 {
     [Test]
-    public void ApproveAzureStoragePersistence()
+    public void ApproveAzureTablePersistence()
     {
-        var publicApi = typeof(AzureStoragePersistence).Assembly.GeneratePublicApi(new ApiGeneratorOptions
+        var publicApi = typeof(AzureTablePersistence).Assembly.GeneratePublicApi(new ApiGeneratorOptions
         {
             ExcludeAttributes = new[] { "System.Runtime.Versioning.TargetFrameworkAttribute" }
         });

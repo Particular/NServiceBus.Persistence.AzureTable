@@ -5,7 +5,7 @@
     using NServiceBus.Outbox;
     using NServiceBus.Sagas;
     using Persistence;
-    using Persistence.AzureStorage;
+    using Persistence.AzureTable;
     using Microsoft.Azure.Cosmos.Table;
     using Extensibility;
 

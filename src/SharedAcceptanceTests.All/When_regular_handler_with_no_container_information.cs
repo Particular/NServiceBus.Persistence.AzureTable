@@ -6,7 +6,7 @@
     using AcceptanceTesting;
     using EndpointTemplates;
     using NUnit.Framework;
-    using Persistence.AzureStorage;
+    using Persistence.AzureTable;
 
     public class When_regular_handler_with_no_container_information : NServiceBusAcceptanceTest
     {
