@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NServiceBus.Persistence.Azu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{E25B5433-7166-4C10-A76E-C0546F9E2497}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AcceptanceTests", "AcceptanceTests\AcceptanceTests.csproj", "{EB7993F8-1F30-4688-B30B-E11370116EB0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NonTransactionalSagas.AcceptanceTests", "NonTransactionalSagas.AcceptanceTests\NonTransactionalSagas.AcceptanceTests.csproj", "{EB7993F8-1F30-4688-B30B-E11370116EB0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{98E63ED0-83D3-475E-89AF-95D5659F2C40}"
 	ProjectSection(SolutionItems) = preProject
@@ -15,7 +15,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\GitVersion.yml = ..\GitVersion.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBus.Persistence.AzureStorage.PersistenceTests", "NServiceBus.Persistence.AzureStorage.PersistenceTests\NServiceBus.Persistence.AzureStorage.PersistenceTests.csproj", "{25876184-D0C6-4049-AE23-8345A8D5097D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistenceTests", "PersistenceTests\PersistenceTests.csproj", "{25876184-D0C6-4049-AE23-8345A8D5097D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicalOutbox.AcceptanceTests", "PhysicalOutbox.AcceptanceTests\PhysicalOutbox.AcceptanceTests.csproj", "{DD21A669-2627-4BC0-9197-69FA75E03959}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogicalOutbox.AcceptanceTests", "LogicalOutbox.AcceptanceTests\LogicalOutbox.AcceptanceTests.csproj", "{8D2A3F43-F947-45A8-85E1-BD683613FB0E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NonTransactionalSagasWithConventionalTables.AcceptanceTests", "NonTransactionalSagasWithConventionalTables.AcceptanceTests\NonTransactionalSagasWithConventionalTables.AcceptanceTests.csproj", "{7E310A40-8736-4EF5-989A-7AA0B5805C2C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Subscription.AcceptanceTests", "Subscription.AcceptanceTests\Subscription.AcceptanceTests.csproj", "{EB5496F1-5B2C-4E4A-8B10-32F487233AD2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Migration.AcceptanceTests", "Migration.AcceptanceTests\Migration.AcceptanceTests.csproj", "{2EFA7EE6-1ADA-4DD6-8DBB-1310FEB7D3CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +49,26 @@ Global
 		{25876184-D0C6-4049-AE23-8345A8D5097D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{25876184-D0C6-4049-AE23-8345A8D5097D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{25876184-D0C6-4049-AE23-8345A8D5097D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD21A669-2627-4BC0-9197-69FA75E03959}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD21A669-2627-4BC0-9197-69FA75E03959}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD21A669-2627-4BC0-9197-69FA75E03959}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD21A669-2627-4BC0-9197-69FA75E03959}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D2A3F43-F947-45A8-85E1-BD683613FB0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D2A3F43-F947-45A8-85E1-BD683613FB0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D2A3F43-F947-45A8-85E1-BD683613FB0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D2A3F43-F947-45A8-85E1-BD683613FB0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E310A40-8736-4EF5-989A-7AA0B5805C2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E310A40-8736-4EF5-989A-7AA0B5805C2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E310A40-8736-4EF5-989A-7AA0B5805C2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E310A40-8736-4EF5-989A-7AA0B5805C2C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB5496F1-5B2C-4E4A-8B10-32F487233AD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB5496F1-5B2C-4E4A-8B10-32F487233AD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB5496F1-5B2C-4E4A-8B10-32F487233AD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB5496F1-5B2C-4E4A-8B10-32F487233AD2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2EFA7EE6-1ADA-4DD6-8DBB-1310FEB7D3CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2EFA7EE6-1ADA-4DD6-8DBB-1310FEB7D3CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2EFA7EE6-1ADA-4DD6-8DBB-1310FEB7D3CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2EFA7EE6-1ADA-4DD6-8DBB-1310FEB7D3CE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

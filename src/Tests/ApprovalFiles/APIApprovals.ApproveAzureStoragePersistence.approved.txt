@@ -1,5 +1,5 @@
-[assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute(@"NServiceBus.Persistence.AzureStorage.PersistenceTests, PublicKey=00240000048000009400000006020000002400005253413100040000010001006dab16cbf58f948e25e061c40486817b00722158f0a2787d8cd3f503daf44978f96edac144e917e59ec98999e011ddde52c53938a6cb5a87a213aa2b5dfe2d45e9035ca40c63caf36c8692e06bbc3eb717070e8ca5813ef695153429dcc4fd7db4c790c724e959b37d9697f7dc22369a20ae67f4785b424edbc63c732dd9eecf")]
-[assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute(@"Tests, PublicKey=00240000048000009400000006020000002400005253413100040000010001006dab16cbf58f948e25e061c40486817b00722158f0a2787d8cd3f503daf44978f96edac144e917e59ec98999e011ddde52c53938a6cb5a87a213aa2b5dfe2d45e9035ca40c63caf36c8692e06bbc3eb717070e8ca5813ef695153429dcc4fd7db4c790c724e959b37d9697f7dc22369a20ae67f4785b424edbc63c732dd9eecf")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo(@"PersistenceTests, PublicKey=00240000048000009400000006020000002400005253413100040000010001006dab16cbf58f948e25e061c40486817b00722158f0a2787d8cd3f503daf44978f96edac144e917e59ec98999e011ddde52c53938a6cb5a87a213aa2b5dfe2d45e9035ca40c63caf36c8692e06bbc3eb717070e8ca5813ef695153429dcc4fd7db4c790c724e959b37d9697f7dc22369a20ae67f4785b424edbc63c732dd9eecf")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo(@"Tests, PublicKey=00240000048000009400000006020000002400005253413100040000010001006dab16cbf58f948e25e061c40486817b00722158f0a2787d8cd3f503daf44978f96edac144e917e59ec98999e011ddde52c53938a6cb5a87a213aa2b5dfe2d45e9035ca40c63caf36c8692e06bbc3eb717070e8ca5813ef695153429dcc4fd7db4c790c724e959b37d9697f7dc22369a20ae67f4785b424edbc63c732dd9eecf")]
 namespace NServiceBus
 {
     public class AzureStoragePersistence : NServiceBus.Persistence.PersistenceDefinition { }
@@ -11,59 +11,86 @@ namespace NServiceBus
     {
         protected override void Setup(NServiceBus.Features.FeatureConfigurationContext context) { }
     }
-    [System.ObsoleteAttribute("Azure transports support timeouts natively and do not require timeout persistence" +
+    [System.Obsolete("Azure transports support timeouts natively and do not require timeout persistence" +
         ". Will be removed in version 4.0.0.", true)]
     public class AzureStorageTimeoutPersistence
     {
         public AzureStorageTimeoutPersistence() { }
     }
-    public class static ConfigureAzureSagaStorage
+    public static class ConfigureAzureSagaStorage
     {
+        [System.Obsolete(@"The migration mode that supports looking up correlated sagas by secondary indexes is by default enabled and assumes no full table scan is required. In order to opt-in for a table scan for sagas stored with version 1.4 or earlier use `AllowSecondaryKeyLookupToFallbackToFullTableScan`. The member currently throws a NotImplementedException. Will be removed in version 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> AssumeSecondaryIndicesExist(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config, string connectionString) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> CreateSchema(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config, bool createSchema) { }
+        public static NServiceBus.MigrationSettings Migration(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> UseCloudTableClient(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Sagas> config, Microsoft.Azure.Cosmos.Table.CloudTableClient client) { }
     }
-    public class static ConfigureAzureStorage
+    public static class ConfigureAzureStorage
     {
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> config, string connectionString) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> DefaultTable(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> persistenceExtensions, string tableName) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> UseCloudTableClient(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence> config, Microsoft.Azure.Cosmos.Table.CloudTableClient client) { }
     }
-    public class static ConfigureAzureSubscriptionStorage
+    public static class ConfigureAzureSubscriptionStorage
     {
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> CacheFor(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> config, System.TimeSpan timeSpan) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> config, string connectionString) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> CreateSchema(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> config, bool createSchema) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> TableName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> config, string tableName) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> UseCloudTableClient(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Subscriptions> config, Microsoft.Azure.Cosmos.Table.CloudTableClient client) { }
     }
-    public class static ConfigureAzureTimeoutStorage
+    public static class ConfigureAzureTimeoutStorage
     {
-        [System.ObsoleteAttribute("Azure transports support timeouts natively and do not require timeout persistence" +
+        [System.Obsolete("Azure transports support timeouts natively and do not require timeout persistence" +
             ". The member currently throws a NotImplementedException. Will be removed in vers" +
             "ion 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> CatchUpInterval(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, int catchUpInterval) { }
-        [System.ObsoleteAttribute("Azure transports support timeouts natively and do not require timeout persistence" +
+        [System.Obsolete("Azure transports support timeouts natively and do not require timeout persistence" +
             ". The member currently throws a NotImplementedException. Will be removed in vers" +
             "ion 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, string connectionString) { }
-        [System.ObsoleteAttribute("Azure transports support timeouts natively and do not require timeout persistence" +
+        [System.Obsolete("Azure transports support timeouts natively and do not require timeout persistence" +
             ". The member currently throws a NotImplementedException. Will be removed in vers" +
             "ion 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> CreateSchema(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, bool createSchema) { }
-        [System.ObsoleteAttribute("Azure transports support timeouts natively and do not require timeout persistence" +
+        [System.Obsolete("Azure transports support timeouts natively and do not require timeout persistence" +
             ". The member currently throws a NotImplementedException. Will be removed in vers" +
             "ion 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> PartitionKeyScope(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, string partitionKeyScope) { }
-        [System.ObsoleteAttribute("Azure transports support timeouts natively and do not require timeout persistence" +
+        [System.Obsolete("Azure transports support timeouts natively and do not require timeout persistence" +
             ". The member currently throws a NotImplementedException. Will be removed in vers" +
             "ion 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> TimeoutDataTableName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, string tableName) { }
-        [System.ObsoleteAttribute("Azure transports support timeouts natively and do not require timeout persistence" +
+        [System.Obsolete("Azure transports support timeouts natively and do not require timeout persistence" +
             ". The member currently throws a NotImplementedException. Will be removed in vers" +
             "ion 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> TimeoutManagerDataTableName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, string tableName) { }
-        [System.ObsoleteAttribute("Azure transports support timeouts natively and do not require timeout persistence" +
+        [System.Obsolete("Azure transports support timeouts natively and do not require timeout persistence" +
             ". The member currently throws a NotImplementedException. Will be removed in vers" +
             "ion 4.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> TimeoutStateContainerName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureStoragePersistence, NServiceBus.StorageType.Timeouts> config, string blobName) { }
+    }
+    public class MigrationSettings : NServiceBus.Configuration.AdvancedExtensibility.ExposeSettings
+    {
+        public void AllowSecondaryKeyLookupToFallbackToFullTableScan() { }
+        public void AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey() { }
+        public void DisableSecondaryKeyLookupForSagasCorrelatedByProperties() { }
+    }
+    public readonly struct TableEntityPartitionKey : System.IEquatable<NServiceBus.TableEntityPartitionKey>
+    {
+        public TableEntityPartitionKey(string partitionKey) { }
+        public string PartitionKey { get; }
+        public bool Equals(NServiceBus.TableEntityPartitionKey other) { }
+        public override bool Equals(object obj) { }
+        public override int GetHashCode() { }
+        public static bool operator !=(NServiceBus.TableEntityPartitionKey left, NServiceBus.TableEntityPartitionKey right) { }
+        public static bool operator ==(NServiceBus.TableEntityPartitionKey left, NServiceBus.TableEntityPartitionKey right) { }
+    }
+    public readonly struct TableInformation
+    {
+        public TableInformation(string tableName) { }
+        public string TableName { get; }
     }
 }
 namespace NServiceBus.Persistence.AzureStorage
@@ -75,9 +102,41 @@ namespace NServiceBus.Persistence.AzureStorage
         public string PropertyName { get; }
         public System.Type SagaType { get; }
     }
+    public interface IAzureStorageStorageSession
+    {
+        Microsoft.Azure.Cosmos.Table.TableBatchOperation Batch { get; }
+        string PartitionKey { get; }
+        Microsoft.Azure.Cosmos.Table.CloudTable Table { get; }
+    }
+    public interface IProvideCloudTableClient
+    {
+        Microsoft.Azure.Cosmos.Table.CloudTableClient Client { get; }
+    }
+    public interface IProvideCloudTableClientForSubscriptions
+    {
+        Microsoft.Azure.Cosmos.Table.CloudTableClient Client { get; }
+    }
+    public sealed class LogicalOutboxBehavior : NServiceBus.Pipeline.IBehavior, NServiceBus.Pipeline.IBehavior<NServiceBus.Pipeline.IIncomingLogicalMessageContext, NServiceBus.Pipeline.IIncomingLogicalMessageContext>
+    {
+        public System.Threading.Tasks.Task Invoke(NServiceBus.Pipeline.IIncomingLogicalMessageContext context, System.Func<NServiceBus.Pipeline.IIncomingLogicalMessageContext, System.Threading.Tasks.Task> next) { }
+    }
     public class RetryNeededException : System.Exception
     {
         public RetryNeededException() { }
         public RetryNeededException(System.Exception innerException) { }
+    }
+    public static class SynchronizedStorageSessionExtensions
+    {
+        public static NServiceBus.Persistence.AzureStorage.IAzureStorageStorageSession AzureStoragePersistenceSession(this NServiceBus.Persistence.SynchronizedStorageSession session) { }
+    }
+}
+namespace NServiceBus.Testing
+{
+    public class TestableAzureStorageStorageSession : NServiceBus.Persistence.AzureStorage.IAzureStorageStorageSession, NServiceBus.Persistence.SynchronizedStorageSession
+    {
+        public TestableAzureStorageStorageSession(NServiceBus.TableEntityPartitionKey partitionKey) { }
+        public Microsoft.Azure.Cosmos.Table.TableBatchOperation Batch { get; set; }
+        public string PartitionKey { get; }
+        public Microsoft.Azure.Cosmos.Table.CloudTable Table { get; set; }
     }
 }

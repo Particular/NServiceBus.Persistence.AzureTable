@@ -18,8 +18,8 @@
 
             var settings = persistence.GetSettings();
 
-            Assert.AreEqual(connectionString, settings.Get<string>("AzureSagaStorage.ConnectionString"));
-            Assert.AreEqual(connectionString, settings.Get<string>("AzureSubscriptionStorage.ConnectionString"));
+            Assert.IsNotAssignableFrom<CloudTableClientFromConfiguration>(settings.Get<IProvideCloudTableClient>());
+            Assert.IsNotAssignableFrom<CloudTableClientForSubscriptionsFromConfiguration>(settings.Get<IProvideCloudTableClient>());
         }
     }
 }

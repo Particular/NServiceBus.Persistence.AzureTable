@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)Test.snk</AssemblyOriginatorKeyFile>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NServiceBus.Persistence.AzureStorage\NServiceBus.Persistence.AzureStorage.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
+    <PackageReference Include="NServiceBus.PersistenceTests.Sources" Version="8.0.0-alpha.631" />
+    <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
+    <PackageReference Include="NUnit" Version="3.12.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
+    <PackageReference Include="Particular.CodeRules" Version="0.7.0" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\SharedAcceptanceTests.All\ConnectionStringHelper.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Remove once https://github.com/Particular/NServiceBus/pull/5808 is merged and new alpha released -->
+    <Compile Remove="\**\Outbox\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\TestSuppressions.cs" Link="TestSuppressions.cs" />
+  </ItemGroup>
+
+</Project>

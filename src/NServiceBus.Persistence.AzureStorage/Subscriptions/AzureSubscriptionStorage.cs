@@ -1,7 +1,6 @@
-﻿using System.Net;
-
-namespace NServiceBus.Unicast.Subscriptions
+﻿namespace NServiceBus.Persistence.AzureStorage
 {
+    using System.Net;
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
@@ -9,9 +8,10 @@ namespace NServiceBus.Unicast.Subscriptions
     using System.Text;
     using System.Threading.Tasks;
     using Extensibility;
-    using MessageDrivenSubscriptions;
     using Microsoft.Azure.Cosmos.Table;
-    using Persistence.AzureStorage;
+    using Unicast.Subscriptions;
+    using Unicast.Subscriptions.MessageDrivenSubscriptions;
+
 
     class AzureSubscriptionStorage : ISubscriptionStorage
     {
@@ -20,17 +20,11 @@ namespace NServiceBus.Unicast.Subscriptions
         CloudTableClient client;
         public ConcurrentDictionary<string, CacheItem> Cache;
 
-        public AzureSubscriptionStorage(string subscriptionTableName, string subscriptionConnectionString, TimeSpan? cacheFor)
+        public AzureSubscriptionStorage(IProvideCloudTableClientForSubscriptions tableClientProvider, string subscriptionTableName, TimeSpan? cacheFor)
         {
             this.subscriptionTableName = subscriptionTableName;
             this.cacheFor = cacheFor;
-            var account = CloudStorageAccount.Parse(subscriptionConnectionString);
-
-            client = account.CreateCloudTableClient();
-            client.DefaultRequestOptions = new TableRequestOptions
-            {
-                RetryPolicy = new ExponentialRetry()
-            };
+            client = tableClientProvider.Client;
 
             if (cacheFor != null)
             {
