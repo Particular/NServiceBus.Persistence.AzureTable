@@ -4,7 +4,7 @@
     using AcceptanceTesting;
     using EndpointTemplates;
     using NUnit.Framework;
-    using Persistence.AzureStorage;
+    using Persistence.AzureTable;
 
     [TestFixture]
     public class When_using_synchronized_session_via_container : NServiceBusAcceptanceTest
@@ -36,7 +36,7 @@
 
             public class MyHandler : IHandleMessages<MyMessage>
             {
-                public MyHandler(IAzureStorageStorageSession session, Context context)
+                public MyHandler(IAzureTableStorageSession session, Context context)
                 {
                     this.session = session;
                     this.context = context;
@@ -51,7 +51,7 @@
                 }
 
                 Context context;
-                IAzureStorageStorageSession session;
+                IAzureTableStorageSession session;
             }
         }
 

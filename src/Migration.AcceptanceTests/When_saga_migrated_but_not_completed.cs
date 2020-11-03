@@ -7,7 +7,7 @@ namespace NServiceBus.AcceptanceTests
     using EndpointTemplates;
     using NUnit.Framework;
     using Extensibility;
-    using Persistence.AzureStorage.Previous;
+    using Persistence.AzureTable.Previous;
     using Sagas;
 
     public class When_saga_migrated_but_not_completed : MigrationAcceptanceTest

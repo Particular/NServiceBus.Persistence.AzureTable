@@ -42,11 +42,11 @@ namespace NServiceBus.AcceptanceTests
             {
                 EndpointSetup<DefaultServer>(c =>
                 {
-                    var sagaPersistence = c.UsePersistence<AzureStoragePersistence, StorageType.Sagas>();
+                    var sagaPersistence = c.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
                     sagaPersistence.DefaultTable("doesnotexist");
                     sagaPersistence.CreateSchema(false);
 
-                    var subscriptionStorage = c.UsePersistence<AzureStoragePersistence, StorageType.Subscriptions>();
+                    var subscriptionStorage = c.UsePersistence<AzureTablePersistence, StorageType.Subscriptions>();
                     subscriptionStorage.CreateSchema(false);
                 });
             }

@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.Persistence.AzureStorage.Tests
+﻿namespace NServiceBus.Persistence.AzureTable.Tests
 {
     using NUnit.Framework;
 

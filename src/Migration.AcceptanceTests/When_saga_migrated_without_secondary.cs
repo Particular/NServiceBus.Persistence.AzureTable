@@ -8,7 +8,7 @@ namespace NServiceBus.AcceptanceTests
     using EndpointTemplates;
     using NUnit.Framework;
     using Extensibility;
-    using Persistence.AzureStorage.Previous;
+    using Persistence.AzureTable.Previous;
     using Sagas;
 
     public class When_saga_migrated_without_secondary : MigrationAcceptanceTest
@@ -43,7 +43,7 @@ namespace NServiceBus.AcceptanceTests
                     {
                         b.CustomConfig(c =>
                         {
-                            var sagaPersistence = c.UsePersistence<AzureStoragePersistence, StorageType.Sagas>();
+                            var sagaPersistence = c.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
                             var migration = sagaPersistence.Migration();
                             migration.AllowSecondaryKeyLookupToFallbackToFullTableScan();
                         });

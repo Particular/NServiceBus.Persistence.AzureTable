@@ -3,7 +3,7 @@ using NServiceBus;
 using NServiceBus.AcceptanceTesting.Support;
 using NServiceBus.AcceptanceTests;
 using NServiceBus.AcceptanceTests.Sagas;
-using NServiceBus.Persistence.AzureStorage.Testing;
+using NServiceBus.Persistence.AzureTable.Testing;
 using Conventions = NServiceBus.AcceptanceTesting.Customization.Conventions;
 
 public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestExecution
@@ -12,7 +12,7 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
 
     public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
-        var persistence = configuration.UsePersistence<AzureStoragePersistence, StorageType.Sagas>();
+        var persistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
         persistence.UseCloudTableClient(SetupFixture.TableClient);
         persistence.DefaultTable(SetupFixture.TableName);
 
