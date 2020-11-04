@@ -21,7 +21,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicalOutbox.StorageTable
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogicalOutbox.StorageTable.AcceptanceTests", "LogicalOutbox.StorageTable.AcceptanceTests\LogicalOutbox.StorageTable.AcceptanceTests.csproj", "{8D2A3F43-F947-45A8-85E1-BD683613FB0E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NonTransactionalSagasWithConventionalTables.AcceptanceTests", "NonTransactionalSagasWithConventionalTables.AcceptanceTests\NonTransactionalSagasWithConventionalTables.AcceptanceTests.csproj", "{7E310A40-8736-4EF5-989A-7AA0B5805C2C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NonTransactionalSagasWithConventionalTables.StorageTable.AcceptanceTests", "NonTransactionalSagasWithConventionalTables.StorageTable.AcceptanceTests\NonTransactionalSagasWithConventionalTables.StorageTable.AcceptanceTests.csproj", "{7E310A40-8736-4EF5-989A-7AA0B5805C2C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Subscription.StorageTable.AcceptanceTests", "Subscription.StorageTable.AcceptanceTests\Subscription.StorageTable.AcceptanceTests.csproj", "{EB5496F1-5B2C-4E4A-8B10-32F487233AD2}"
 EndProject
