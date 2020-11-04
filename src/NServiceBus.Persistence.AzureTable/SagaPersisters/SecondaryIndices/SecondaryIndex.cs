@@ -9,7 +9,7 @@
 
     class SecondaryIndex
     {
-        public SecondaryIndex(bool assumeSecondaryIndicesExist, bool assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey)
+        public SecondaryIndex(bool assumeSecondaryIndicesExist = false, bool assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey = false)
         {
             this.assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey = assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey;
             this.assumeSecondaryIndicesExist = assumeSecondaryIndicesExist;

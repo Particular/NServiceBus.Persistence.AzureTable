@@ -4,6 +4,7 @@
     using Logging;
     using Microsoft.Extensions.DependencyInjection;
     using Sagas;
+    using Migration;
 
     class SagaStorage : Feature
     {
@@ -41,7 +42,11 @@
                 Logger.Warn($"The version of {nameof(AzureTablePersistence)} used is not configured to optimize sagas creation and might fall back to full table scanning to retrieve correlated sagas. It is suggested to migrate saga instances. Consult the upgrade guides for recommendations.");
             }
 
-            context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideCloudTableClient>(), updateSchema, migrationModeEnabled, assumeSecondaryIndicesExist, assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey));
+            var secondaryIndices = new SecondaryIndex(assumeSecondaryIndicesExist, assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
+            context.Services.AddSingleton<IProvidePartitionKeyForMigrationScenarios>(provider =>
+                new ProvidePartitionKeyForMigrationScenarios(provider.GetRequiredService<IProvideCloudTableClient>(),
+                    provider.GetRequiredService<TableHolderResolver>(), secondaryIndices, migrationModeEnabled));
+            context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideCloudTableClient>(), updateSchema, migrationModeEnabled, secondaryIndices));
         }
 
         static readonly ILog Logger = LogManager.GetLogger<SagaStorage>();
