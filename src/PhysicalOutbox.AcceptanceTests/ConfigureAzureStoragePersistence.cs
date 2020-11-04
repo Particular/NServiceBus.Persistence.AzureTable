@@ -5,15 +5,12 @@ using NServiceBus.AcceptanceTesting;
 using NServiceBus.AcceptanceTesting.Support;
 using NServiceBus.AcceptanceTests;
 using NServiceBus.AcceptanceTests.Sagas;
-using NServiceBus.Persistence.AzureStorage.Testing;
 using NServiceBus.Pipeline;
 using NServiceBus.Settings;
 using Conventions = NServiceBus.AcceptanceTesting.Customization.Conventions;
 
 public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestExecution
 {
-    static string ConnectionString => Utilities.GetEnvConfiguredConnectionStringForPersistence();
-
     public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
         var sagaPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
