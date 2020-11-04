@@ -17,16 +17,16 @@
     <PackageReference Include="Particular.CodeRules" Version="0.7.0" PrivateAssets="All" />
   </ItemGroup>
 
-  <!-- The master is always the StorageTable project, if you need to deveate files for a specific table API copy 
+  <!-- The template project is always the StorageTable project, if you need to deveate files for a specific table API copy 
        them accordingly and adjust the compile includes -->
   <PropertyGroup>
-    <MasterProject>$(MSBuildProjectName.Replace(`CosmosDB`, `StorageTable`))</MasterProject>
+    <TemplateProject>$(MSBuildProjectName.Replace(`CosmosDB`, `StorageTable`))</TemplateProject>
   </PropertyGroup>
 
-  <Import Project="..\$(MasterProject)\Includes.targets" />
+  <Import Project="..\$(TemplateProject)\Includes.targets" />
 
   <ItemGroup>
-    <Compile Include="..\$(MasterProject)\*.cs" />
+    <Compile Include="..\$(TemplateProject)\*.cs" />
   </ItemGroup>
 
 </Project>
