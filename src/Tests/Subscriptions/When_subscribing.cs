@@ -9,7 +9,6 @@
     using NUnit.Framework;
 
     [TestFixture]
-    [Category("AzureStoragePersistence")]
     public class When_subscribing
     {
         [SetUp]

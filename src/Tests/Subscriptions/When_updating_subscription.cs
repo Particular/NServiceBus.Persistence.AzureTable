@@ -7,7 +7,6 @@
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
 
     [TestFixture]
-    [Category("AzureStoragePersistence")]
     public class When_updating_subscription
     {
         [SetUp]

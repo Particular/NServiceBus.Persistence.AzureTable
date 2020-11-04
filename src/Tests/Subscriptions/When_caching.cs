@@ -11,7 +11,6 @@ namespace NServiceBus.Persistence.AzureTable.ComponentTests.Subscriptions
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
 
     [TestFixture]
-    [Category("AzureTablePersistence")]
     public class When_caching
     {
         [SetUp]
