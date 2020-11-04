@@ -4,6 +4,7 @@
     using NServiceBus.Sagas;
     using NUnit.Framework;
 
+    [TestFixture]
     public class SecondaryIndexKeyBuilderTests
     {
         [Test]

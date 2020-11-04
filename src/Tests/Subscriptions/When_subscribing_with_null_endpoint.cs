@@ -6,20 +6,27 @@
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
     using NUnit.Framework;
 
-    [TestFixture]
-    [Category("AzureStoragePersistence")]
+    [TestFixture("StorageTable")]
+    [TestFixture("CosmosDB")]
     public class When_subscribing_with_null_endpoint
     {
+        private string tableApiType;
+
+        public When_subscribing_with_null_endpoint(string tableApiType)
+        {
+            this.tableApiType = tableApiType;
+        }
+
         [SetUp]
         public Task Setup()
         {
-           return SubscriptionTestHelper.PerformStorageCleanup();
+           return SubscriptionTestHelper.PerformStorageCleanup(tableApiType);
         }
 
         [Test]
         public async Task ensure_that_the_subscription_is_persisted()
         {
-            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage(tableApiType);
             var messageType = new MessageType(typeof(TestMessage));
             var messageTypes = new[]
             {

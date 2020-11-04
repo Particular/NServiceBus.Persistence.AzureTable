@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)Test.snk</AssemblyOriginatorKeyFile>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <RootNamespace>PersistenceTests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
+    <PackageReference Include="NServiceBus.PersistenceTests.Sources" Version="7.4.4" />
+    <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
+    <PackageReference Include="NUnit" Version="3.12.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
+    <PackageReference Include="Particular.CodeRules" Version="0.7.0" PrivateAssets="All" />
+  </ItemGroup>
+
+  <!-- The template project is always the StorageTable project, if you need to deveate files for a specific table API copy 
+       them accordingly and adjust the compile includes -->
+  <PropertyGroup>
+    <TemplateProject>$(MSBuildProjectName.Replace(`CosmosDB`, `StorageTable`))</TemplateProject>
+  </PropertyGroup>
+
+  <Import Project="..\$(TemplateProject)\Includes.targets" />
+
+  <ItemGroup>
+    <Compile Include="..\$(TemplateProject)\*.cs" />
+  </ItemGroup>
+
+</Project>
