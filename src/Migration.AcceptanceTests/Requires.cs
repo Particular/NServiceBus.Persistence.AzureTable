@@ -1,6 +1,7 @@
 namespace NServiceBus.AcceptanceTests
 {
     using NUnit.Framework;
+    using Testing;
 
     static partial class Requires
     {

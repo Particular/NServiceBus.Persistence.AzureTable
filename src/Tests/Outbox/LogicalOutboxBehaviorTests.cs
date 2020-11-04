@@ -9,7 +9,6 @@
     using Testing;
     using Outbox;
     using NUnit.Framework;
-    using NServiceBus.Testing;
     using Transport;
     using TransportOperation = Outbox.TransportOperation;
 
@@ -23,7 +22,7 @@
         [SetUp]
         public async Task SetUp()
         {
-            var account = CloudStorageAccount.Parse(Utilities.GetEnvConfiguredConnectionStringForPersistence());
+            var account = CloudStorageAccount.Parse(ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence());
 
             client = account.CreateCloudTableClient();
             tableName = nameof(LogicalOutboxBehaviorTests).ToLower();

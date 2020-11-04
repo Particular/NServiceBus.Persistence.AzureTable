@@ -1,4 +1,4 @@
-namespace NServiceBus.AcceptanceTests
+namespace NServiceBus.Testing
 {
     using System;
     using System.Linq;
@@ -18,12 +18,12 @@ namespace NServiceBus.AcceptanceTests
 
         public static string GetEnvConfiguredConnectionStringForPersistence(string tableApiType = "StorageTable")
         {
-            var environmentVartiableName = $"AzureTable_{tableApiType}_ConnectionString";
-            Console.WriteLine($":: Using connection string found in the '{environmentVartiableName}' environment variable. ::");
-            var connectionString = GetEnvironmentVariable(environmentVartiableName);
+            var environmentVariableName = $"AzureTable_{tableApiType}_ConnectionString";
+            Console.WriteLine($":: Using connection string found in the '{environmentVariableName}' environment variable. ::");
+            var connectionString = GetEnvironmentVariable(environmentVariableName);
             if (string.IsNullOrEmpty(connectionString))
             {
-                throw new Exception($"Oh no! We couldn't find an environment variable '{environmentVartiableName}' with Azure Storage connection string.");
+                throw new Exception($"Oh no! We couldn't find an environment variable '{environmentVariableName}' with Azure Storage connection string.");
             }
 
             return connectionString;

@@ -5,7 +5,7 @@
     using System.Threading.Tasks;
     using NUnit.Framework;
     using Microsoft.Azure.Cosmos.Table;
-    using AcceptanceTests;
+    using Testing;
 
     [SetUpFixture]
     public class SetupFixture
