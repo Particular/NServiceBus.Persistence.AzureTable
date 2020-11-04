@@ -8,19 +8,27 @@
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
     using NUnit.Framework;
 
-    [TestFixture]
+    [TestFixture("StorageTable")]
+    [TestFixture("CosmosDB")]
     public class When_subscribing
     {
+        private string tableApiType;
+
+        public When_subscribing(string tableApiType)
+        {
+            this.tableApiType = tableApiType;
+        }
+
         [SetUp]
         public Task Setup()
         {
-            return SubscriptionTestHelper.PerformStorageCleanup();
+            return SubscriptionTestHelper.PerformStorageCleanup(tableApiType);
         }
 
         [Test]
         public async Task ensure_that_the_subscription_is_persisted()
         {
-            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage(tableApiType);
             var messageType = new MessageType(typeof(TestMessage));
             await persister.Subscribe(new Subscriber("address://test-queue", "endpointName"), messageType, null).ConfigureAwait(false);
 
@@ -36,7 +44,7 @@
         [Test]
         public async Task ensure_that_the_subscription_is_version_ignorant()
         {
-            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage(tableApiType);
 
             var name = typeof(TestMessage).FullName;
 
@@ -63,7 +71,7 @@
         [Test]
         public async Task ensure_that_the_subscription_selects_proper_message_types()
         {
-            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage(tableApiType);
 
             await persister.Subscribe(new Subscriber("address://test-queue", "endpointName"), new MessageType(typeof(TestMessage)), new ContextBag()).ConfigureAwait(false);
             await persister.Subscribe(new Subscriber("address://test-queue2", "endpointName"), new MessageType(typeof(TestMessagea)), new ContextBag()).ConfigureAwait(false);

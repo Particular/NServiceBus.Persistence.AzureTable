@@ -7,9 +7,9 @@
 
     public class SubscriptionTestHelper
     {
-        internal static async Task<AzureSubscriptionStorage> CreateAzureSubscriptionStorage()
+        internal static async Task<AzureSubscriptionStorage> CreateAzureSubscriptionStorage(string tableApiType)
         {
-            var connectionString = ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence();
+            var connectionString = ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence(tableApiType);
             var account = CloudStorageAccount.Parse(connectionString);
 
             var table = account.CreateCloudTableClient().GetTableReference(AzureSubscriptionStorageDefaults.TableName);
@@ -21,14 +21,14 @@
                 TimeSpan.FromSeconds(10));
         }
 
-        internal static async Task PerformStorageCleanup()
+        internal static async Task PerformStorageCleanup(string tableApiType)
         {
-            await RemoveAllRowsForTable(AzureSubscriptionStorageDefaults.TableName);
+            await RemoveAllRowsForTable(AzureSubscriptionStorageDefaults.TableName, tableApiType);
         }
 
-        static async Task RemoveAllRowsForTable(string tableName)
+        static async Task RemoveAllRowsForTable(string tableName, string tableApiType)
         {
-            var cloudStorageAccount = CloudStorageAccount.Parse(ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence());
+            var cloudStorageAccount = CloudStorageAccount.Parse(ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence(tableApiType));
             var table = cloudStorageAccount.CreateCloudTableClient().GetTableReference(tableName);
 
             await table.CreateIfNotExistsAsync();

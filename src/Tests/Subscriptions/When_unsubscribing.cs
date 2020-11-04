@@ -6,19 +6,27 @@
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
     using NUnit.Framework;
 
-    [TestFixture]
+    [TestFixture("StorageTable")]
+    [TestFixture("CosmosDB")]
     public class When_unsubscribing
     {
+        private string tableApiType;
+
+        public When_unsubscribing(string tableApiType)
+        {
+            this.tableApiType = tableApiType;
+        }
+
         [SetUp]
         public Task Setup()
         {
-            return SubscriptionTestHelper.PerformStorageCleanup();
+            return SubscriptionTestHelper.PerformStorageCleanup(tableApiType);
         }
 
         [Test]
         public async Task The_subscription_should_be_removed()
         {
-            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage(tableApiType);
             var messageType = new MessageType(typeof(TestMessage));
             var messageTypes = new[]
             {

@@ -12,17 +12,24 @@
     using Transport;
     using TransportOperation = Outbox.TransportOperation;
 
-    [TestFixture]
+    [TestFixture("StorageTable")]
+    [TestFixture("CosmosDB")]
     public class LogicalOutboxBehaviorTests
     {
         private CloudTable cloudTable;
         private CloudTableClient client;
         private string tableName;
+        private string tableApiType;
+
+        public LogicalOutboxBehaviorTests(string tableApiType)
+        {
+            this.tableApiType = tableApiType;
+        }
 
         [SetUp]
         public async Task SetUp()
         {
-            var account = CloudStorageAccount.Parse(ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence());
+            var account = CloudStorageAccount.Parse(ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence(tableApiType));
 
             client = account.CreateCloudTableClient();
             tableName = nameof(LogicalOutboxBehaviorTests).ToLower();
