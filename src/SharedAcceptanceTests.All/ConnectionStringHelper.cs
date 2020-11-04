@@ -1,13 +1,25 @@
 namespace NServiceBus.AcceptanceTests
 {
     using System;
+    using System.Linq;
     using Microsoft.Azure.Cosmos.Table;
 
-    public class ConnectionStringHelper
+    public static class ConnectionStringHelper
     {
+        public static string GetEnvConfiguredConnectionStringByCallerConvention(this object caller)
+        {
+            var tableApiType = caller.GetType().Assembly.GetName().Name.Split(new[] {"."}, StringSplitOptions.RemoveEmptyEntries)
+                .Reverse().Skip(1).Take(1).SingleOrDefault();
+
+            return string.IsNullOrEmpty(tableApiType) ?
+                GetEnvConfiguredConnectionStringForPersistence() :
+                GetEnvConfiguredConnectionStringForPersistence(tableApiType);
+        }
+
         public static string GetEnvConfiguredConnectionStringForPersistence(string tableApiType = "StorageTable")
         {
             var environmentVartiableName = $"AzureTable_{tableApiType}_ConnectionString";
+            Console.WriteLine($":: Using connection string found in the '{environmentVartiableName}' environment variable. ::");
             var connectionString = GetEnvironmentVariable(environmentVartiableName);
             if (string.IsNullOrEmpty(connectionString))
             {

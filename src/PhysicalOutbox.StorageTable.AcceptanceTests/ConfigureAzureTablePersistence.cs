@@ -9,7 +9,7 @@ using NServiceBus.Pipeline;
 using NServiceBus.Settings;
 using Conventions = NServiceBus.AcceptanceTesting.Customization.Conventions;
 
-public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestExecution
+public class ConfigureAzureTablePersistence : IConfigureEndpointTestExecution
 {
     public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {

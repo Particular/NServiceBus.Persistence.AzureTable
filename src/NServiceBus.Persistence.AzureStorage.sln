@@ -17,7 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistenceTests", "PersistenceTests\PersistenceTests.csproj", "{25876184-D0C6-4049-AE23-8345A8D5097D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicalOutbox.AcceptanceTests", "PhysicalOutbox.AcceptanceTests\PhysicalOutbox.AcceptanceTests.csproj", "{DD21A669-2627-4BC0-9197-69FA75E03959}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicalOutbox.StorageTable.AcceptanceTests", "PhysicalOutbox.StorageTable.AcceptanceTests\PhysicalOutbox.StorageTable.AcceptanceTests.csproj", "{DD21A669-2627-4BC0-9197-69FA75E03959}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogicalOutbox.AcceptanceTests", "LogicalOutbox.AcceptanceTests\LogicalOutbox.AcceptanceTests.csproj", "{8D2A3F43-F947-45A8-85E1-BD683613FB0E}"
 EndProject

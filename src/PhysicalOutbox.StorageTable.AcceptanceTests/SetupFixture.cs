@@ -12,7 +12,7 @@
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
-            var connectionString = ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence();
+            var connectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
 
             TableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();
 

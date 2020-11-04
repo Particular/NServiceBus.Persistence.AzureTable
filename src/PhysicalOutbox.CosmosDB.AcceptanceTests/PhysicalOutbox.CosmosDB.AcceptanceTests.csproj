@@ -50,6 +50,11 @@
     <Compile Remove="\**\Outbox\When_blowing_up_just_after_dispatch.cs" />
   </ItemGroup>
 
+  <!-- The master is always the StorageTable project, if you need to deveate files for a specific table API copy them accordingly and just the compile includes -->
+  <ItemGroup>
+    <Compile Include="..\PhysicalOutbox.StorageTable.AcceptanceTests\*.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj" />
   </ItemGroup>
