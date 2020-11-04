@@ -17,26 +17,16 @@
     <PackageReference Include="Particular.CodeRules" Version="0.7.0" PrivateAssets="All" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Include="..\SharedAcceptanceTests.All\ConnectionStringHelper.cs" />
-  </ItemGroup>
+  <!-- The master is always the StorageTable project, if you need to deveate files for a specific table API copy 
+       them accordingly and adjust the compile includes -->
+  <PropertyGroup>
+    <MasterProject>$(MSBuildProjectName.Replace(`CosmosDB`, `StorageTable`))</MasterProject>
+  </PropertyGroup>
+
+  <Import Project="..\$(MasterProject)\Includes.targets" />
 
   <ItemGroup>
-    <!-- Remove once https://github.com/Particular/NServiceBus/pull/5808 is merged and new alpha released -->
-    <Compile Remove="\**\Outbox\*.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\TestSuppressions.cs" Link="TestSuppressions.cs" />
-  </ItemGroup>
-
-  <!-- The master is always the StorageTable project, if you need to deveate files for a specific table API copy them accordingly and just the compile includes -->
-  <ItemGroup>
-    <Compile Include="..\$(MSBuildProjectName.Replace(`CosmosDB`, `StorageTable`))\*.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj" />
+    <Compile Include="..\$(MasterProject)\*.cs" />
   </ItemGroup>
 
 </Project>
