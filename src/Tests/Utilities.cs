@@ -6,7 +6,7 @@
     {
         public static string GetEnvConfiguredConnectionStringForPersistence()
         {
-            var environmentVartiableName = "AzureStoragePersistence_ConnectionString";
+            var environmentVartiableName = "AzureTable_StorageTable_ConnectionString";
             var connectionString = GetEnvironmentVariable(environmentVartiableName);
             if (string.IsNullOrEmpty(connectionString))
             {
