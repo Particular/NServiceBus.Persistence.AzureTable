@@ -19,7 +19,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Persistence.StorageTable.Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicalOutbox.StorageTable.AcceptanceTests", "PhysicalOutbox.StorageTable.AcceptanceTests\PhysicalOutbox.StorageTable.AcceptanceTests.csproj", "{DD21A669-2627-4BC0-9197-69FA75E03959}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogicalOutbox.AcceptanceTests", "LogicalOutbox.AcceptanceTests\LogicalOutbox.AcceptanceTests.csproj", "{8D2A3F43-F947-45A8-85E1-BD683613FB0E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogicalOutbox.StorageTable.AcceptanceTests", "LogicalOutbox.StorageTable.AcceptanceTests\LogicalOutbox.StorageTable.AcceptanceTests.csproj", "{8D2A3F43-F947-45A8-85E1-BD683613FB0E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NonTransactionalSagasWithConventionalTables.AcceptanceTests", "NonTransactionalSagasWithConventionalTables.AcceptanceTests\NonTransactionalSagasWithConventionalTables.AcceptanceTests.csproj", "{7E310A40-8736-4EF5-989A-7AA0B5805C2C}"
 EndProject
@@ -32,6 +32,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Subscription.CosmosDB.AcceptanceTests", "Subscription.CosmosDB.AcceptanceTests\Subscription.CosmosDB.AcceptanceTests.csproj", "{8D80AF00-E205-4493-834E-B23F23E960EC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Persistence.CosmosDB.Tests", "Persistence.CosmosDB.Tests\Persistence.CosmosDB.Tests.csproj", "{2F277EC3-89B3-46D7-A77E-F3D8227ECC89}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogicalOutbox.CosmosDB.AcceptanceTests", "LogicalOutbox.CosmosDB.AcceptanceTests\LogicalOutbox.CosmosDB.AcceptanceTests.csproj", "{3605A895-4EF8-4CF9-8022-F1CC7F4882E7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -87,6 +89,10 @@ Global
 		{2F277EC3-89B3-46D7-A77E-F3D8227ECC89}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F277EC3-89B3-46D7-A77E-F3D8227ECC89}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F277EC3-89B3-46D7-A77E-F3D8227ECC89}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3605A895-4EF8-4CF9-8022-F1CC7F4882E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3605A895-4EF8-4CF9-8022-F1CC7F4882E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3605A895-4EF8-4CF9-8022-F1CC7F4882E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3605A895-4EF8-4CF9-8022-F1CC7F4882E7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
