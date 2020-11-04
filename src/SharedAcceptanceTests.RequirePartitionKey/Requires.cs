@@ -4,9 +4,17 @@ namespace NServiceBus.AcceptanceTests
 
     static partial class Requires
     {
-        public static void AzureTables()
+        public static void AzureStorageTable()
         {
             if (ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.TableClient))
+            {
+                Assert.Ignore("Ignoring because it requires Azure Tables.");
+            }
+        }
+
+        public static void AzureCosmosTable()
+        {
+            if (!ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.TableClient))
             {
                 Assert.Ignore("Ignoring because it requires Azure Tables.");
             }
