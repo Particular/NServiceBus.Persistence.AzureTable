@@ -5,13 +5,13 @@ namespace NServiceBus.AcceptanceTests
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.Table;
     using Persistence.AzureTable.Previous;
-    using NServiceBus.Persistence.AzureStorage.Testing;
+    using Testing;
 
     public class MigrationAcceptanceTest : NServiceBusAcceptanceTest
     {
         public MigrationAcceptanceTest()
         {
-            PersisterUsingSecondaryIndexes = new SagaPersisterUsingSecondaryIndexes(Utilities.GetEnvConfiguredConnectionStringForPersistence(), true, assumeSecondaryIndicesExist: true);
+            PersisterUsingSecondaryIndexes = new SagaPersisterUsingSecondaryIndexes(this.GetEnvConfiguredConnectionStringByCallerConvention(), true, assumeSecondaryIndicesExist: true);
         }
 
         protected SagaPersisterUsingSecondaryIndexes PersisterUsingSecondaryIndexes { get; }

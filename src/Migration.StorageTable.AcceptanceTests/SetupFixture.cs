@@ -5,6 +5,7 @@
     using System.Threading.Tasks;
     using NUnit.Framework;
     using Microsoft.Azure.Cosmos.Table;
+    using Testing;
 
     [SetUpFixture]
     public class SetupFixture
@@ -12,7 +13,7 @@
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
-            var connectionString = GetEnvConfiguredConnectionStringForPersistence();
+            var connectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
 
             var account = CloudStorageAccount.Parse(connectionString);
             TableClient = account.CreateCloudTableClient();
