@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <RootNamespace>Subscription.AcceptanceTests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -42,6 +43,11 @@
     <Compile Remove="\**\Tx\**\*.*" />
     <Compile Remove="\**\Versioning\*.*" />
     <Compile Remove="\**\Outbox\*.*" />
+  </ItemGroup>
+
+  <!-- The master is always the StorageTable project, if you need to deveate files for a specific table API copy them accordingly and just the compile includes -->
+  <ItemGroup>
+    <Compile Include="..\$(MSBuildProjectName.Replace(`CosmosDB`, `StorageTable`))\*.cs" />
   </ItemGroup>
 
   <ItemGroup>

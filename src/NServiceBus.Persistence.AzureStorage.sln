@@ -23,11 +23,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogicalOutbox.AcceptanceTes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NonTransactionalSagasWithConventionalTables.AcceptanceTests", "NonTransactionalSagasWithConventionalTables.AcceptanceTests\NonTransactionalSagasWithConventionalTables.AcceptanceTests.csproj", "{7E310A40-8736-4EF5-989A-7AA0B5805C2C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Subscription.AcceptanceTests", "Subscription.AcceptanceTests\Subscription.AcceptanceTests.csproj", "{EB5496F1-5B2C-4E4A-8B10-32F487233AD2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Subscription.StorageTable.AcceptanceTests", "Subscription.StorageTable.AcceptanceTests\Subscription.StorageTable.AcceptanceTests.csproj", "{EB5496F1-5B2C-4E4A-8B10-32F487233AD2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Migration.AcceptanceTests", "Migration.AcceptanceTests\Migration.AcceptanceTests.csproj", "{2EFA7EE6-1ADA-4DD6-8DBB-1310FEB7D3CE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicalOutbox.CosmosDB.AcceptanceTests", "PhysicalOutbox.CosmosDB.AcceptanceTests\PhysicalOutbox.CosmosDB.AcceptanceTests.csproj", "{F190D825-B92E-4C0C-BA05-CC9B9B9BDA76}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Subscription.CosmosDB.AcceptanceTests", "Subscription.CosmosDB.AcceptanceTests\Subscription.CosmosDB.AcceptanceTests.csproj", "{8D80AF00-E205-4493-834E-B23F23E960EC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,6 +77,10 @@ Global
 		{F190D825-B92E-4C0C-BA05-CC9B9B9BDA76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F190D825-B92E-4C0C-BA05-CC9B9B9BDA76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F190D825-B92E-4C0C-BA05-CC9B9B9BDA76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D80AF00-E205-4493-834E-B23F23E960EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D80AF00-E205-4493-834E-B23F23E960EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D80AF00-E205-4493-834E-B23F23E960EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D80AF00-E205-4493-834E-B23F23E960EC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

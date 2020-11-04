@@ -10,6 +10,6 @@
         public bool SupportsNativeDeferral { get; } = true;
         public bool SupportsOutbox { get; } = false;
         public IConfigureEndpointTestExecution CreateTransportConfiguration() => new ConfigureEndpointAcceptanceTestingTransport(SupportsNativePubSub, SupportsNativeDeferral);
-        public IConfigureEndpointTestExecution CreatePersistenceConfiguration() => new ConfigureEndpointAzureStoragePersistence();
+        public IConfigureEndpointTestExecution CreatePersistenceConfiguration() => new ConfigureEndpointAzureTablePersistence();
     }
 }
