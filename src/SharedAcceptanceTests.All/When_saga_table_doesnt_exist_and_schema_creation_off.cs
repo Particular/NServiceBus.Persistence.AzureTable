@@ -4,10 +4,10 @@ namespace NServiceBus.AcceptanceTests
     using System.Linq;
     using System.Threading.Tasks;
     using NServiceBus;
-    using NServiceBus.AcceptanceTesting;
+    using AcceptanceTesting;
     using NServiceBus.AcceptanceTesting.Support;
-    using NServiceBus.AcceptanceTests;
-    using NServiceBus.AcceptanceTests.EndpointTemplates;
+    using Testing;
+    using EndpointTemplates;
     using NUnit.Framework;
 
     public partial class When_saga_table_doesnt_exist_and_schema_creation_off : NServiceBusAcceptanceTest

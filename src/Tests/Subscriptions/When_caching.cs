@@ -10,20 +10,27 @@ namespace NServiceBus.Persistence.AzureTable.ComponentTests.Subscriptions
     using Unicast.Subscriptions;
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
 
-    [TestFixture]
-    [Category("AzureTablePersistence")]
+    [TestFixture("StorageTable")]
+    [TestFixture("CosmosDB")]
     public class When_caching
     {
+        private string tableApiType;
+
+        public When_caching(string tableApiType)
+        {
+            this.tableApiType = tableApiType;
+        }
+
         [SetUp]
         public Task Setup()
         {
-            return SubscriptionTestHelper.PerformStorageCleanup();
+            return SubscriptionTestHelper.PerformStorageCleanup(tableApiType);
         }
 
         [Test]
         public async Task Cached_get_should_be_faster()
         {
-            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage(tableApiType);
             var type = new MessageType("type1", new Version(0, 0, 0, 0));
             await persister.Subscribe(new Subscriber("address://test-queue", "endpoint"), type, null);
             var first = Stopwatch.StartNew();
@@ -41,7 +48,7 @@ namespace NServiceBus.Persistence.AzureTable.ComponentTests.Subscriptions
         [Test]
         public async Task Should_be_cached()
         {
-            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage(tableApiType);
             var type = new MessageType("type1", new Version(0, 0, 0, 0));
             await persister.Subscribe(new Subscriber("address://test-queue", "endpoint"), type, null);
             await persister.GetSubscribers(type);
@@ -51,7 +58,7 @@ namespace NServiceBus.Persistence.AzureTable.ComponentTests.Subscriptions
         [Test]
         public async Task Subscribe_with_same_type_should_clear_cache()
         {
-            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage(tableApiType);
             var matchingType = new MessageType("matchingType", new Version(0, 0, 0, 0));
             await persister.Subscribe(new Subscriber("address://test-queue", "endpoint"), matchingType, null);
             await persister.GetSubscribers(matchingType);
@@ -62,7 +69,7 @@ namespace NServiceBus.Persistence.AzureTable.ComponentTests.Subscriptions
         [Test]
         public async Task Unsubscribe_with_same_type_should_clear_cache()
         {
-            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage(tableApiType);
             var matchingType = new MessageType("matchingType", new Version(0, 0, 0, 0));
             await persister.Subscribe(new Subscriber("address://test-queue", "endpoint"), matchingType, null);
             await persister.GetSubscribers(matchingType);
@@ -73,7 +80,7 @@ namespace NServiceBus.Persistence.AzureTable.ComponentTests.Subscriptions
         [Test]
         public async Task Unsubscribe_with_part_type_should_partially_clear_cache()
         {
-            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage(tableApiType);
             var version = new Version(0, 0, 0, 0);
             var type1 = new MessageType("type1", version);
             var type2 = new MessageType("type2", version);

@@ -1,0 +1,20 @@
+<Project>
+
+    <ItemGroup>
+        <Compile Include="..\SharedAcceptanceTests.All\ConnectionStringHelper.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Remove once https://github.com/Particular/NServiceBus/pull/5808 is merged and new alpha released -->
+        <Compile Remove="\**\Outbox\*.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="..\TestSuppressions.cs" Link="TestSuppressions.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj" />
+    </ItemGroup>
+
+</Project>

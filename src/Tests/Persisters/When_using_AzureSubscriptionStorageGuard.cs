@@ -4,7 +4,6 @@
     using NUnit.Framework;
 
     [TestFixture]
-    [Category("Azure")]
     public class When_using_AzureSubscriptionStorageGuard
     {
         [TestCase("")]

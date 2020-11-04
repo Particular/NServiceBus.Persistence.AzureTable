@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <RootNamespace>Migration.AcceptanceTests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\TestSuppressions.cs" Link="TestSuppressions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NServiceBus.AcceptanceTests.Sources" Version="8.0.0-alpha.631" />
+    <PackageReference Include="Particular.CodeRules" Version="0.7.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
+    <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.2.0" />
+    <PackageReference Include="NUnit" Version="3.12.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\SharedAcceptanceTests.All\ConnectionStringHelper.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="\**\Audit\*.*" />
+    <Compile Remove="\**\Correlation\*.*" />
+    <Compile Remove="\**\DataBus\*.*" />
+    <Compile Remove="\**\DelayedDelivery\*.*" />
+    <Compile Remove="\**\Forwarding\*.*" />
+    <Compile Remove="\**\MessageId\*.*" />
+    <Compile Remove="\**\Pipeline\*.*" />
+    <Compile Remove="\**\Recoverability\*.*" />
+    <Compile Remove="\**\Routing\**" />
+    <Compile Remove="\**\Satellites\*.*" />
+    <Compile Remove="\**\Scheduling\*.*" />
+    <Compile Remove="\**\SelfVerification\*.*" />
+    <Compile Remove="\**\Serialization\*.*" />
+    <Compile Remove="\**\Timeout\*.*" />
+    <Compile Remove="\**\TimeToBeReceived\*.*" />
+    <Compile Remove="\**\Tx\**\*.*" />
+    <Compile Remove="\**\Versioning\*.*" />
+    <Compile Remove="\**\Outbox\*.*" />
+    <Compile Remove="\**\Sagas\*.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj" />
+  </ItemGroup>
+  
+</Project>

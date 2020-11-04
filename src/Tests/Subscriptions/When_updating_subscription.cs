@@ -6,20 +6,27 @@
     using Unicast.Subscriptions;
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
 
-    [TestFixture]
-    [Category("AzureStoragePersistence")]
+    [TestFixture("StorageTable")]
+    [TestFixture("CosmosDB")]
     public class When_updating_subscription
     {
+        private string tableApiType;
+
+        public When_updating_subscription(string tableApiType)
+        {
+            this.tableApiType = tableApiType;
+        }
+
         [SetUp]
         public Task Setup()
         {
-           return SubscriptionTestHelper.PerformStorageCleanup();
+           return SubscriptionTestHelper.PerformStorageCleanup(tableApiType);
         }
 
         [Test]
         public async Task New_subscription_should_overwrite_existing()
         {
-            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage();
+            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage(tableApiType);
             var messageType = new MessageType(typeof(TestMessage));
 
             await persister.Subscribe(new Subscriber("address://test-queue", null), messageType, null);
