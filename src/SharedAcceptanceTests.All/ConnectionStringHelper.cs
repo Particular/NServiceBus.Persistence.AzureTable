@@ -8,6 +8,7 @@ namespace NServiceBus.Testing
     {
         public static string GetEnvConfiguredConnectionStringByCallerConvention(this object caller)
         {
+            // [Prefix.]{TableApiType}.ProjectType --> ProjectType (skipped) TableApiType (taken) [Prefix] --> TableApiType
             var tableApiType = caller.GetType().Assembly.GetName().Name.Split(new[] {"."}, StringSplitOptions.RemoveEmptyEntries)
                 .Reverse().Skip(1).Take(1).SingleOrDefault();
 
