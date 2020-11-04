@@ -2,6 +2,7 @@
 {
     using NUnit.Framework;
 
+    [TestFixture]
     public class LRUCacheTests
     {
         public class When_cache_is_empty

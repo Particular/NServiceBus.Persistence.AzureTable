@@ -5,7 +5,6 @@
     using NServiceBus;
 
     [TestFixture]
-    [Category("Azure")]
     public class When_using_GlobalConnectionStringConfiguration
     {
         [Test]
