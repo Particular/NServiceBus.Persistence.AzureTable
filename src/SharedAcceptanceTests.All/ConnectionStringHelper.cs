@@ -5,9 +5,9 @@ namespace NServiceBus.AcceptanceTests
 
     public class ConnectionStringHelper
     {
-        public static string GetEnvConfiguredConnectionStringForPersistence()
+        public static string GetEnvConfiguredConnectionStringForPersistence(string tableApiType = "StorageTable")
         {
-            var environmentVartiableName = "AzureStoragePersistence_ConnectionString";
+            var environmentVartiableName = $"AzureTable_{tableApiType}_ConnectionString";
             var connectionString = GetEnvironmentVariable(environmentVartiableName);
             if (string.IsNullOrEmpty(connectionString))
             {

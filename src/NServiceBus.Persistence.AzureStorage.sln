@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Subscription.AcceptanceTest
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Migration.AcceptanceTests", "Migration.AcceptanceTests\Migration.AcceptanceTests.csproj", "{2EFA7EE6-1ADA-4DD6-8DBB-1310FEB7D3CE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicalOutbox.CosmosDB.AcceptanceTests", "PhysicalOutbox.CosmosDB.AcceptanceTests\PhysicalOutbox.CosmosDB.AcceptanceTests.csproj", "{F190D825-B92E-4C0C-BA05-CC9B9B9BDA76}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,10 @@ Global
 		{2EFA7EE6-1ADA-4DD6-8DBB-1310FEB7D3CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2EFA7EE6-1ADA-4DD6-8DBB-1310FEB7D3CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2EFA7EE6-1ADA-4DD6-8DBB-1310FEB7D3CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F190D825-B92E-4C0C-BA05-CC9B9B9BDA76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F190D825-B92E-4C0C-BA05-CC9B9B9BDA76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F190D825-B92E-4C0C-BA05-CC9B9B9BDA76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F190D825-B92E-4C0C-BA05-CC9B9B9BDA76}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
