@@ -11,13 +11,16 @@ namespace NServiceBus.Testing
             var tableApiType = caller.GetType().Assembly.GetName().Name.Split(new[] {"."}, StringSplitOptions.RemoveEmptyEntries)
                 .Reverse().Skip(1).Take(1).SingleOrDefault();
 
-            return string.IsNullOrEmpty(tableApiType) ?
-                GetEnvConfiguredConnectionStringForPersistence() :
-                GetEnvConfiguredConnectionStringForPersistence(tableApiType);
+            return GetEnvConfiguredConnectionStringForPersistence(tableApiType);
         }
 
-        public static string GetEnvConfiguredConnectionStringForPersistence(string tableApiType = "StorageTable")
+        public static string GetEnvConfiguredConnectionStringForPersistence(string tableApiType)
         {
+            if (string.IsNullOrEmpty(tableApiType))
+            {
+                throw new Exception("The table API type must either be `StorageTable` or `CosmosDB`.");
+            }
+
             var environmentVariableName = $"AzureTable_{tableApiType}_ConnectionString";
             Console.WriteLine($":: Using connection string found in the '{environmentVariableName}' environment variable. ::");
             var connectionString = GetEnvironmentVariable(environmentVariableName);
