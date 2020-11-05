@@ -3,8 +3,10 @@
     using System;
     using System.Threading.Tasks;
     using Extensibility;
+    using Microsoft.WindowsAzure.Storage;
     using NUnit.Framework;
 
+    [TestFixture]
     public class When_completing_saga
     {
         [Test]
@@ -31,31 +33,7 @@
         }
 
         [Test]
-        public async Task Should_allow_action_twice_without_throwing_error()
-        {
-            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
-
-            var persister = new AzureSagaPersister(connectionString, true);
-            var sagaData = new CompleteSagaData
-            {
-                Id = Guid.NewGuid(),
-                Originator = "Moo",
-                OriginalMessageId = "MooId"
-            };
-
-            var bag = new ContextBag();
-            await persister.Save(sagaData, null, null, bag);
-            Assert.IsNotNull(sagaData);
-
-            await persister.Complete(sagaData, null, bag);
-            await persister.Complete(sagaData, null, bag);
-
-            sagaData = await persister.Get<CompleteSagaData>(sagaData.Id, null, null);
-            Assert.IsNull(sagaData);
-        }
-
-        [Test]
-        public async Task Should_succeed_if_saga_doesnt_exist()
+        public void Should_throw_if_saga_doesnt_exist()
         {
             var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
 
@@ -67,10 +45,9 @@
                 OriginalMessageId = "MooId"
             };
 
-            await persister.Complete(saga, null, new ContextBag());
+            var bag = new ContextBag();
 
-            var sagaData = await persister.Get<CompleteSagaData>(saga.Id, null, null);
-            Assert.IsNull(sagaData);
+            Assert.ThrowsAsync<StorageException>(async () => await persister.Complete(saga, null, bag));
         }
     }
 
