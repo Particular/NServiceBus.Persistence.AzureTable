@@ -90,14 +90,8 @@
                 PartitionKey = sagaId,
                 RowKey = sagaId
             };
-            try
-            {
-                await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
-            }
-            catch (StorageException e) when (e.RequestInformation.HttpStatusCode == (int) HttpStatusCode.NotFound)
-            {
-                // should not try to delete saga data that does not exist, this situation can occur on retry or parallel execution
-            }
+
+            await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
 
             try
             {
