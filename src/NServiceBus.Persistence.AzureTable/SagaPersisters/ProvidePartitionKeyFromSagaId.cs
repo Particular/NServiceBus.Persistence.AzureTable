@@ -1,5 +1,6 @@
 namespace NServiceBus.Persistence.AzureTable.Migration
 {
+    using System;
     using System.Threading.Tasks;
     using Pipeline;
     using Sagas;
@@ -32,10 +33,16 @@ namespace NServiceBus.Persistence.AzureTable.Migration
             {
                 context.Extensions.Set(new TableInformation(sagaTable.Name));
             }
+
             if (context.Headers.TryGetValue(Headers.SagaId, out var sagaId))
             {
                 context.Extensions.Set(new TableEntityPartitionKey(sagaId));
                 return;
+            }
+
+            if (correlationProperty == SagaCorrelationProperty.None)
+            {
+                throw new Exception("The Azure Table saga persister doesn't support custom saga finders.");
             }
 
             if (migrationModeEnabled)
