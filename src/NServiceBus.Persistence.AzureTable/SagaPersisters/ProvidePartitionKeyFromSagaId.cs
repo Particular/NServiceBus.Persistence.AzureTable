@@ -8,11 +8,11 @@ namespace NServiceBus.Persistence.AzureTable.Migration
 
     class ProvidePartitionKeyFromSagaId : IProvidePartitionKeyFromSagaId
     {
-        public ProvidePartitionKeyFromSagaId(IProvideCloudTableClient tableClientProvider, TableHolderResolver resolver, SecondaryIndex secondaryIndices, bool migrationModeEnabled)
+        public ProvidePartitionKeyFromSagaId(IProvideCloudTableClient tableClientProvider, TableHolderResolver resolver, SecondaryIndex secondaryIndex, bool migrationModeEnabled)
         {
             this.migrationModeEnabled = migrationModeEnabled;
             this.resolver = resolver;
-            this.secondaryIndices = secondaryIndices;
+            this.secondaryIndex = secondaryIndex;
             client = tableClientProvider.Client;
         }
 
@@ -47,7 +47,7 @@ namespace NServiceBus.Persistence.AzureTable.Migration
 
             if (migrationModeEnabled)
             {
-                var nullableSagaId = await secondaryIndices.FindSagaId<TSagaData>(sagaTable, correlationProperty)
+                var nullableSagaId = await secondaryIndex.FindSagaId<TSagaData>(sagaTable, correlationProperty)
                     .ConfigureAwait(false);
 
                 if (nullableSagaId.HasValue)
@@ -61,7 +61,7 @@ namespace NServiceBus.Persistence.AzureTable.Migration
             context.Extensions.Set(new TableEntityPartitionKey(deterministicSagaId.ToString()));
         }
 
-        private readonly SecondaryIndex secondaryIndices;
+        private readonly SecondaryIndex secondaryIndex;
         private CloudTableClient client;
         private readonly TableHolderResolver resolver;
         private readonly bool migrationModeEnabled;

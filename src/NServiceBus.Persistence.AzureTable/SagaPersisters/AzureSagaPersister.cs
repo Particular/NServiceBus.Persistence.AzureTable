@@ -12,12 +12,12 @@
 
     class AzureSagaPersister : ISagaPersister
     {
-        public AzureSagaPersister(IProvideCloudTableClient tableClientProvider, bool autoUpdateSchema, bool migrationModeEnabled, SecondaryIndex secondaryIndices)
+        public AzureSagaPersister(IProvideCloudTableClient tableClientProvider, bool autoUpdateSchema, bool migrationModeEnabled, SecondaryIndex secondaryIndex)
         {
             this.migrationModeEnabled = migrationModeEnabled;
             this.autoUpdateSchema = autoUpdateSchema;
             client = tableClientProvider.Client;
-            this.secondaryIndices = secondaryIndices;
+            this.secondaryIndex = secondaryIndex;
         }
 
         public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context)
@@ -120,7 +120,7 @@
             var tableToReadFrom = await GetTableAndCreateIfNotExists(storageSession, typeof(TSagaData))
                 .ConfigureAwait(false);
 
-            var sagaId = await secondaryIndices.FindSagaId<TSagaData>(tableToReadFrom, correlationProperty).ConfigureAwait(false);
+            var sagaId = await secondaryIndex.FindSagaId<TSagaData>(tableToReadFrom, correlationProperty).ConfigureAwait(false);
             if (sagaId == null)
             {
                 return null;
@@ -132,7 +132,7 @@
                 return sagaData;
             }
             // saga is not found, try invalidate cache and try getting value one more time
-            secondaryIndices.InvalidateCacheIfAny<TSagaData>(correlationProperty);
+            secondaryIndex.InvalidateCacheIfAny<TSagaData>(correlationProperty);
             if (triedAlreadyOnce == false)
             {
                 return await GetByCorrelationProperty<TSagaData>(correlationProperty, session, context, true).ConfigureAwait(false);
@@ -186,7 +186,7 @@
             {
                 // fake partition key to make sure we get a dedicated batch for this operation
                 var tableEntityPartitionKey = new TableEntityPartitionKey(Guid.NewGuid().ToString());
-                storageSession.Add(new SagaRemoveSecondaryIndex(tableEntityPartitionKey, sagaData.Id, secondaryIndices, partitionRowKeyTuple.Value, sagaDataEntityToDelete.Table));
+                storageSession.Add(new SagaRemoveSecondaryIndex(tableEntityPartitionKey, sagaData.Id, secondaryIndex, partitionRowKeyTuple.Value, sagaDataEntityToDelete.Table));
             }
             return Task.CompletedTask;
         }
@@ -208,7 +208,7 @@
 
         bool autoUpdateSchema;
         CloudTableClient client;
-        SecondaryIndex secondaryIndices;
+        SecondaryIndex secondaryIndex;
         const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
         static ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
         private readonly bool migrationModeEnabled;
