@@ -15,7 +15,7 @@
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageCreateSchema, AzureStorageSagaDefaults.CreateSchema);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, AzureStorageSagaDefaults.AssumeSecondaryIndicesExist);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey, AzureStorageSagaDefaults.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
-                s.SetDefault(WellKnownConfigurationKeys.MigrationMode, AzureStorageSagaDefaults.MigrationModeEnabled);
+                s.SetDefault(WellKnownConfigurationKeys.SagaStorageMigrationMode, AzureStorageSagaDefaults.MigrationModeEnabled);
 
                 s.EnableFeatureByDefault<SynchronizedStorage>();
                 s.SetDefault<ISagaIdGenerator>(new SagaIdGenerator());
@@ -27,7 +27,7 @@
         protected override void Setup(FeatureConfigurationContext context)
         {
             var updateSchema = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCreateSchema);
-            var migrationModeEnabled = context.Settings.Get<bool>(WellKnownConfigurationKeys.MigrationMode);
+            var migrationModeEnabled = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageMigrationMode);
             var assumeSecondaryIndicesExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist);
             var assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
 
@@ -43,9 +43,11 @@
             }
 
             var secondaryIndices = new SecondaryIndex(assumeSecondaryIndicesExist, assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
-            context.Services.AddSingleton<IProvidePartitionKeyForMigrationScenarios>(provider =>
-                new ProvidePartitionKeyForMigrationScenarios(provider.GetRequiredService<IProvideCloudTableClient>(),
+
+            context.Services.AddSingleton<IProvidePartitionKeyFromSagaId>(provider =>
+                new ProvidePartitionKeyFromSagaId(provider.GetRequiredService<IProvideCloudTableClient>(),
                     provider.GetRequiredService<TableHolderResolver>(), secondaryIndices, migrationModeEnabled));
+
             context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideCloudTableClient>(), updateSchema, migrationModeEnabled, secondaryIndices));
         }
 

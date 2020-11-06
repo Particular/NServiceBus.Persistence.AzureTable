@@ -5,9 +5,9 @@ namespace NServiceBus.Persistence.AzureTable.Migration
     using Sagas;
     using Microsoft.Azure.Cosmos.Table;
 
-    class ProvidePartitionKeyForMigrationScenarios : IProvidePartitionKeyForMigrationScenarios
+    class ProvidePartitionKeyFromSagaId : IProvidePartitionKeyFromSagaId
     {
-        public ProvidePartitionKeyForMigrationScenarios(IProvideCloudTableClient tableClientProvider, TableHolderResolver resolver, SecondaryIndex secondaryIndices, bool migrationModeEnabled)
+        public ProvidePartitionKeyFromSagaId(IProvideCloudTableClient tableClientProvider, TableHolderResolver resolver, SecondaryIndex secondaryIndices, bool migrationModeEnabled)
         {
             this.migrationModeEnabled = migrationModeEnabled;
             this.resolver = resolver;
@@ -23,7 +23,15 @@ namespace NServiceBus.Persistence.AzureTable.Migration
             {
                 return;
             }
+            var tableHolder = resolver.ResolveAndSetIfAvailable(context.Extensions);
+            // slight duplication between saga persister and here when it comes to conventional tables
+            // assuming the table will be created by the saga persister
+            var sagaTable = tableHolder == null ? client.GetTableReference(typeof(TSagaData).Name) : tableHolder.Table;
 
+            if (!context.Extensions.TryGet<TableInformation>(out _))
+            {
+                context.Extensions.Set(new TableInformation(sagaTable.Name));
+            }
             if (context.Headers.TryGetValue(Headers.SagaId, out var sagaId))
             {
                 context.Extensions.Set(new TableEntityPartitionKey(sagaId));
@@ -32,11 +40,6 @@ namespace NServiceBus.Persistence.AzureTable.Migration
 
             if (migrationModeEnabled)
             {
-                var tableHolder = resolver.ResolveAndSetIfAvailable(context.Extensions);
-                // slight duplication between saga persister and here when it comes to conventional tables
-                // TODO: Is it ok to assume tables don't need to be created?
-                var sagaTable = tableHolder == null ? client.GetTableReference(typeof(TSagaData).Name) : tableHolder.Table;
-
                 var nullableSagaId = await secondaryIndices.FindSagaId<TSagaData>(sagaTable, correlationProperty.Name, correlationProperty.Value)
                     .ConfigureAwait(false);
 

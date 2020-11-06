@@ -1,4 +1,4 @@
-namespace NServiceBus.Persistence.AzureTable.Migration
+namespace NServiceBus.Persistence.AzureTable
 {
     using System.Threading.Tasks;
     using Pipeline;
@@ -7,7 +7,7 @@ namespace NServiceBus.Persistence.AzureTable.Migration
     /// <summary>
     /// TODO
     /// </summary>
-    public interface IProvidePartitionKeyForMigrationScenarios
+    public interface IProvidePartitionKeyFromSagaId
     {
         /// <summary>
         /// TODO
