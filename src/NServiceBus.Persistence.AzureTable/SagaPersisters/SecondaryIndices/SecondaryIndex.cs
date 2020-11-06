@@ -15,29 +15,23 @@
             this.assumeSecondaryIndicesExist = assumeSecondaryIndicesExist;
         }
 
-        public async Task<Guid?> FindSagaId<TSagaData>(CloudTable table, string propertyName,
-            object propertyValue)
+        public async Task<Guid?> FindSagaId<TSagaData>(CloudTable table, SagaCorrelationProperty correlationProperty)
             where TSagaData : IContainSagaData
         {
             var sagaType = typeof(TSagaData);
-            var key = TryBuildKey(propertyName, propertyValue, sagaType);
+            var key = SecondaryIndexKeyBuilder.BuildTableKey<TSagaData>(correlationProperty);
 
-            if (key == null)
-            {
-                return null;
-            }
-
-            if (cache.TryGet(key.Value, out var guid))
+            if (cache.TryGet(key, out var guid))
             {
                 return guid;
             }
 
-            var rowKey = assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey ? key.Value.PartitionKey : key.Value.RowKey;
-            var exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.Value.PartitionKey, rowKey))
+            var rowKey = assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey ? key.PartitionKey : key.RowKey;
+            var exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, rowKey))
                 .ConfigureAwait(false);
             if (exec.Result is SecondaryIndexTableEntity secondaryIndexEntry)
             {
-                cache.Put(key.Value, secondaryIndexEntry.SagaId);
+                cache.Put(key, secondaryIndexEntry.SagaId);
                 return secondaryIndexEntry.SagaId;
             }
 
@@ -46,7 +40,7 @@
                 return null;
             }
 
-            var ids = await ScanForSaga(table, sagaType, propertyName, propertyValue)
+            var ids = await ScanForSaga<TSagaData>(table, correlationProperty)
                 .ConfigureAwait(false);
             if (ids == null || ids.Length == 0)
             {
@@ -55,18 +49,19 @@
 
             if (ids.Length > 1)
             {
-                throw new DuplicatedSagaFoundException(sagaType, propertyName, ids);
+                throw new DuplicatedSagaFoundException(sagaType, correlationProperty.Name, ids);
             }
 
             // no longer creation secondary index entries
             var id = ids[0];
-            cache.Put(key.Value, id);
+            cache.Put(key, id);
             return id;
         }
 
-        static async Task<Guid[]> ScanForSaga(CloudTable table, Type sagaType, string propertyName, object propertyValue)
+        static async Task<Guid[]> ScanForSaga<TSagaData>(CloudTable table, SagaCorrelationProperty correlationProperty)
+            where TSagaData : IContainSagaData
         {
-            var query = DictionaryTableEntityExtensions.BuildWherePropertyQuery(sagaType, propertyName, propertyValue);
+            var query = DictionaryTableEntityExtensions.BuildWherePropertyQuery<TSagaData>(correlationProperty);
             query.SelectColumns = new List<string>
             {
                 "PartitionKey",
@@ -85,22 +80,17 @@
         /// <summary>
         /// Invalidates the secondary index cache if any exists for the specified property value.
         /// </summary>
-        public void InvalidateCacheIfAny(string propertyName, object propertyValue, Type sagaType)
+        public void InvalidateCacheIfAny<TSagaData>(SagaCorrelationProperty sagaCorrelationProperty)
+            where TSagaData : IContainSagaData
         {
-            var key = TryBuildKey(propertyName, propertyValue, sagaType);
-            if (key != null)
-            {
-                cache.Remove(key.Value);
-            }
+            var key = SecondaryIndexKeyBuilder.BuildTableKey<TSagaData>(sagaCorrelationProperty);
+            cache.Remove(key);
         }
 
-        static PartitionRowKeyTuple? TryBuildKey(string propertyName, object propertyValue, Type sagaType)
+        static PartitionRowKeyTuple? TryBuildKey<TSagaData>(SagaCorrelationProperty correlationProperty)
+            where TSagaData : IContainSagaData
         {
-            if (string.IsNullOrEmpty(propertyName) || propertyValue == null)
-            {
-                return null;
-            }
-            return SecondaryIndexKeyBuilder.BuildTableKey(sagaType, new SagaCorrelationProperty(propertyName, propertyValue));
+            return SecondaryIndexKeyBuilder.BuildTableKey<TSagaData>(correlationProperty);
         }
 
         LRUCache<PartitionRowKeyTuple, Guid> cache = new LRUCache<PartitionRowKeyTuple, Guid>(LRUCapacity);

@@ -42,7 +42,6 @@
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
             meta.Entities[sagaData] = sagaDataEntityToSave;
 
-
             storageSession.Add(new SagaSave(partitionKey, sagaDataEntityToSave));
         }
 
@@ -100,19 +99,20 @@
             where TSagaData : class, IContainSagaData
         {
             // Derive the saga id from the property name and value
-            var sagaId = SagaIdGenerator.Generate(typeof(TSagaData), propertyName, propertyValue);
+            var sagaCorrelationProperty = new SagaCorrelationProperty(propertyName, propertyValue);
+            var sagaId = SagaIdGenerator.Generate<TSagaData>(sagaCorrelationProperty);
             var sagaData = await Get<TSagaData>(sagaId, session, context).ConfigureAwait(false);
 
             if (sagaData == null && migrationModeEnabled)
             {
-                sagaData = await GetByCorrelationProperty<TSagaData>(propertyName, propertyValue, session, context, false)
+                sagaData = await GetByCorrelationProperty<TSagaData>(sagaCorrelationProperty, session, context, false)
                     .ConfigureAwait(false);
             }
 
             return sagaData;
         }
 
-        async Task<TSagaData> GetByCorrelationProperty<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce)
+        async Task<TSagaData> GetByCorrelationProperty<TSagaData>(SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce)
             where TSagaData : class, IContainSagaData
         {
             var storageSession = (StorageSession)session;
@@ -120,7 +120,7 @@
             var tableToReadFrom = await GetTableAndCreateIfNotExists(storageSession, typeof(TSagaData))
                 .ConfigureAwait(false);
 
-            var sagaId = await secondaryIndices.FindSagaId<TSagaData>(tableToReadFrom, propertyName, propertyValue).ConfigureAwait(false);
+            var sagaId = await secondaryIndices.FindSagaId<TSagaData>(tableToReadFrom, correlationProperty).ConfigureAwait(false);
             if (sagaId == null)
             {
                 return null;
@@ -132,10 +132,10 @@
                 return sagaData;
             }
             // saga is not found, try invalidate cache and try getting value one more time
-            secondaryIndices.InvalidateCacheIfAny(propertyName, propertyValue, typeof(TSagaData));
+            secondaryIndices.InvalidateCacheIfAny<TSagaData>(correlationProperty);
             if (triedAlreadyOnce == false)
             {
-                return await GetByCorrelationProperty<TSagaData>(propertyName, propertyValue, session, context, true).ConfigureAwait(false);
+                return await GetByCorrelationProperty<TSagaData>(correlationProperty, session, context, true).ConfigureAwait(false);
             }
 
             return null;

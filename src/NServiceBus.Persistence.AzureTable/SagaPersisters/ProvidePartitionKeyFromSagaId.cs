@@ -47,7 +47,7 @@ namespace NServiceBus.Persistence.AzureTable.Migration
 
             if (migrationModeEnabled)
             {
-                var nullableSagaId = await secondaryIndices.FindSagaId<TSagaData>(sagaTable, correlationProperty.Name, correlationProperty.Value)
+                var nullableSagaId = await secondaryIndices.FindSagaId<TSagaData>(sagaTable, correlationProperty)
                     .ConfigureAwait(false);
 
                 if (nullableSagaId.HasValue)
@@ -57,7 +57,7 @@ namespace NServiceBus.Persistence.AzureTable.Migration
                 }
             }
 
-            var deterministicSagaId = SagaIdGenerator.Generate(typeof(TSagaData), correlationProperty.Name, correlationProperty.Value);
+            var deterministicSagaId = SagaIdGenerator.Generate<TSagaData>(correlationProperty);
             context.Extensions.Set(new TableEntityPartitionKey(deterministicSagaId.ToString()));
         }
 

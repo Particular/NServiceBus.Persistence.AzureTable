@@ -7,9 +7,10 @@ namespace NServiceBus.Persistence.AzureTable
 
     static class SecondaryIndexKeyBuilder
     {
-        public static PartitionRowKeyTuple BuildTableKey(Type sagaType, SagaCorrelationProperty correlationProperty)
+        public static PartitionRowKeyTuple BuildTableKey<TSagaData>(SagaCorrelationProperty correlationProperty)
+            where TSagaData : IContainSagaData
         {
-            var sagaDataTypeName = sagaType.FullName;
+            var sagaDataTypeName = typeof(TSagaData).FullName;
             var partitionKey = $"Index_{sagaDataTypeName}_{correlationProperty.Name}_{Serialize(correlationProperty.Value)}";
             return new PartitionRowKeyTuple(partitionKey, string.Empty);
         }
