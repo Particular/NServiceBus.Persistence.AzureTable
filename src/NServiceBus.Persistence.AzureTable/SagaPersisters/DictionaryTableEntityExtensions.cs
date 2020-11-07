@@ -254,8 +254,8 @@ namespace NServiceBus.Persistence.AzureTable
             return query;
         }
 
-        static readonly ConcurrentDictionary<Type, IEnumerable<GetAccessor>> getterCache = new ConcurrentDictionary<Type, IEnumerable<GetAccessor>>();
-        static readonly ConcurrentDictionary<Type, IEnumerable<SetAccessor>> setterCache = new ConcurrentDictionary<Type, IEnumerable<SetAccessor>>();
+        static readonly ConcurrentDictionary<Type, IReadOnlyCollection<GetAccessor>> getterCache = new ConcurrentDictionary<Type, IReadOnlyCollection<GetAccessor>>();
+        static readonly ConcurrentDictionary<Type, IReadOnlyCollection<SetAccessor>> setterCache = new ConcurrentDictionary<Type, IReadOnlyCollection<SetAccessor>>();
 
         static readonly JsonSerializer jsonSerializer = JsonSerializer.Create();
         static readonly JsonSerializer jsonSerializerWithNonAbstractDefaultContractResolver = new JsonSerializer
