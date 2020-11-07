@@ -49,8 +49,6 @@
             var storageSession = (StorageSession)session;
             var partitionKey = GetPartitionKey(context, sagaData.Id);
 
-            var sagaDataType = sagaData.GetType();
-
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
             var sagaDataEntityToUpdate = meta.Entities[sagaData];
 
@@ -86,7 +84,7 @@
 
             readSagaDataEntity.Table = tableToReadFrom;
 
-            var sagaData = DictionaryTableEntityExtensions.ToEntity<TSagaData>(readSagaDataEntity);
+            var sagaData = DictionaryTableEntityExtensions.ToSagaData<TSagaData>(readSagaDataEntity);
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
             meta.Entities[sagaData] = readSagaDataEntity;
             return sagaData;

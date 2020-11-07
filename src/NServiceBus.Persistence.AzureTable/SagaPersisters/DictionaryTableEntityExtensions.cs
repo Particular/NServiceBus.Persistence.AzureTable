@@ -12,17 +12,18 @@ namespace NServiceBus.Persistence.AzureTable
 
     static class DictionaryTableEntityExtensions
     {
-        public static TEntity ToEntity<TEntity>(DictionaryTableEntity entity)
+        public static TEntity ToSagaData<TEntity>(DictionaryTableEntity entity)
+            where TEntity : IContainSagaData
         {
-            return (TEntity)ToEntity(typeof(TEntity), entity);
+            return (TEntity)ToSagaData(typeof(TEntity), entity);
         }
 
-        public static object ToEntity(Type entityType, DictionaryTableEntity entity)
+        private static object ToSagaData(Type sagaDataType, DictionaryTableEntity entity)
         {
-            var accessors = setterCache.GetOrAdd(entityType, eType =>
+            var accessors = setterCache.GetOrAdd(sagaDataType, dataType =>
             {
                 var setters = new List<SetAccessor>();
-                var entityProperties = eType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                var entityProperties = dataType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
                 foreach (var propertyInfo in entityProperties)
                 {
                     setters.Add(new SetAccessor(propertyInfo));
@@ -30,7 +31,7 @@ namespace NServiceBus.Persistence.AzureTable
                 return setters;
             });
 
-            var toCreate = Activator.CreateInstance(entityType);
+            var toCreate = Activator.CreateInstance(sagaDataType);
             foreach (var accessor in accessors)
             {
                 if (entity.ContainsKey(accessor.Name))
@@ -77,50 +78,12 @@ namespace NServiceBus.Persistence.AzureTable
             return toCreate;
         }
 
-        static ConcurrentDictionary<Type, IEnumerable<GetAccessor>> getterCache = new ConcurrentDictionary<Type, IEnumerable<GetAccessor>>();
-        static ConcurrentDictionary<Type, IEnumerable<SetAccessor>> setterCache = new ConcurrentDictionary<Type, IEnumerable<SetAccessor>>();
-
-        class GetAccessor
+        public static DictionaryTableEntity ToDictionaryTableEntity(object sagaData, DictionaryTableEntity toPersist)
         {
-            public GetAccessor(PropertyInfo propertyInfo)
-            {
-                var instance = Expression.Parameter(typeof(object), "instance");
-                var instanceCast = !propertyInfo.DeclaringType.IsValueType ? Expression.TypeAs(instance, propertyInfo.DeclaringType) : Expression.Convert(instance, propertyInfo.DeclaringType);
-                var getter = Expression.Lambda<Func<object, object>>(Expression.TypeAs(Expression.Call(instanceCast, propertyInfo.GetGetMethod()), typeof(object)), instance).Compile();
-                Getter = getter;
-                Name = propertyInfo.Name;
-                PropertyType = propertyInfo.PropertyType;
-            }
-            public Func<object, object> Getter { get; }
-            public string Name { get; }
-            public Type PropertyType { get; }
-        }
-
-        class SetAccessor
-        {
-            public SetAccessor(PropertyInfo propertyInfo)
-            {
-                var instance = Expression.Parameter(typeof(object), "instance");
-                var value = Expression.Parameter(typeof(object), "value");
-                // value as T is slightly faster than (T)value, so if it's not a value type, use that
-                var instanceCast = !propertyInfo.DeclaringType.IsValueType ? Expression.TypeAs(instance, propertyInfo.DeclaringType) : Expression.Convert(instance, propertyInfo.DeclaringType);
-                var valueCast = !propertyInfo.PropertyType.IsValueType ? Expression.TypeAs(value, propertyInfo.PropertyType) : Expression.Convert(value, propertyInfo.PropertyType);
-                var setter = Expression.Lambda<Action<object, object>>(Expression.Call(instanceCast, propertyInfo.GetSetMethod(), valueCast), new ParameterExpression[] { instance, value }).Compile();
-                Setter = setter;
-                Name = propertyInfo.Name;
-                PropertyType = propertyInfo.PropertyType;
-            }
-            public Action<object, object> Setter { get; }
-            public string Name { get; }
-            public Type PropertyType { get; }
-        }
-
-        public static DictionaryTableEntity ToDictionaryTableEntity(object entity, DictionaryTableEntity toPersist)
-        {
-            var accessors = getterCache.GetOrAdd(entity.GetType(), entityType =>
+            var accessors = getterCache.GetOrAdd(sagaData.GetType(), sagaDataType =>
             {
                 var getters = new List<GetAccessor>();
-                var entityProperties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                var entityProperties = sagaDataType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
                 foreach (var propertyInfo in entityProperties)
                 {
                     getters.Add(new GetAccessor(propertyInfo));
@@ -132,7 +95,7 @@ namespace NServiceBus.Persistence.AzureTable
             {
                 var name = accessor.Name;
                 var type = accessor.PropertyType;
-                var value = accessor.Getter(entity);
+                var value = accessor.Getter(sagaData);
 
                 if (type == typeof(byte[]))
                 {
@@ -146,7 +109,7 @@ namespace NServiceBus.Persistence.AzureTable
                 {
                     if (!dateTime.HasValue || dateTime.Value < StorageTableMinDateTime)
                     {
-                        throw new Exception($"Saga data of type '{entity.GetType().FullName}' with DateTime property '{name}' has an invalid value '{dateTime}'. Value cannot be null and must be equal to or greater than '{StorageTableMinDateTime}'.");
+                        throw new Exception($"Saga data of type '{sagaData.GetType().FullName}' with DateTime property '{name}' has an invalid value '{dateTime}'. Value cannot be null and must be equal to or greater than '{StorageTableMinDateTime}'.");
                     }
 
                     toPersist[name] = new EntityProperty(dateTime);
@@ -226,7 +189,7 @@ namespace NServiceBus.Persistence.AzureTable
             if (setter.PropertyType == typeof(TPrimitive))
             {
                 var value = (TPrimitive?)property.PropertyAsObject;
-                var nonNullableValue = value ?? default(TPrimitive);
+                var nonNullableValue = value ?? default;
                 setter.Setter(entity, nonNullableValue);
                 return true;
             }
@@ -291,13 +254,51 @@ namespace NServiceBus.Persistence.AzureTable
             return query;
         }
 
-        static JsonSerializer jsonSerializer = JsonSerializer.Create();
-        static JsonSerializer jsonSerializerWithNonAbstractDefaultContractResolver = new JsonSerializer
+        static readonly ConcurrentDictionary<Type, IEnumerable<GetAccessor>> getterCache = new ConcurrentDictionary<Type, IEnumerable<GetAccessor>>();
+        static readonly ConcurrentDictionary<Type, IEnumerable<SetAccessor>> setterCache = new ConcurrentDictionary<Type, IEnumerable<SetAccessor>>();
+
+        static readonly JsonSerializer jsonSerializer = JsonSerializer.Create();
+        static readonly JsonSerializer jsonSerializerWithNonAbstractDefaultContractResolver = new JsonSerializer
         {
             ContractResolver = new NonAbstractDefaultContractResolver(),
         };
 
-        public static readonly DateTime StorageTableMinDateTime = new DateTime(1601, 1, 1);
+        private static readonly DateTime StorageTableMinDateTime = new DateTime(1601, 1, 1);
+
+        class GetAccessor
+        {
+            public GetAccessor(PropertyInfo propertyInfo)
+            {
+                var instance = Expression.Parameter(typeof(object), "instance");
+                var instanceCast = !propertyInfo.DeclaringType.IsValueType ? Expression.TypeAs(instance, propertyInfo.DeclaringType) : Expression.Convert(instance, propertyInfo.DeclaringType);
+                var getter = Expression.Lambda<Func<object, object>>(Expression.TypeAs(Expression.Call(instanceCast, propertyInfo.GetGetMethod()), typeof(object)), instance).Compile();
+                Getter = getter;
+                Name = propertyInfo.Name;
+                PropertyType = propertyInfo.PropertyType;
+            }
+            public Func<object, object> Getter { get; }
+            public string Name { get; }
+            public Type PropertyType { get; }
+        }
+
+        class SetAccessor
+        {
+            public SetAccessor(PropertyInfo propertyInfo)
+            {
+                var instance = Expression.Parameter(typeof(object), "instance");
+                var value = Expression.Parameter(typeof(object), "value");
+                // value as T is slightly faster than (T)value, so if it's not a value type, use that
+                var instanceCast = !propertyInfo.DeclaringType.IsValueType ? Expression.TypeAs(instance, propertyInfo.DeclaringType) : Expression.Convert(instance, propertyInfo.DeclaringType);
+                var valueCast = !propertyInfo.PropertyType.IsValueType ? Expression.TypeAs(value, propertyInfo.PropertyType) : Expression.Convert(value, propertyInfo.PropertyType);
+                var setter = Expression.Lambda<Action<object, object>>(Expression.Call(instanceCast, propertyInfo.GetSetMethod(), valueCast), new ParameterExpression[] { instance, value }).Compile();
+                Setter = setter;
+                Name = propertyInfo.Name;
+                PropertyType = propertyInfo.PropertyType;
+            }
+            public Action<object, object> Setter { get; }
+            public string Name { get; }
+            public Type PropertyType { get; }
+        }
 
         class NonAbstractDefaultContractResolver : DefaultContractResolver
         {
@@ -309,7 +310,6 @@ namespace NServiceBus.Persistence.AzureTable
                 }
                 return base.CreateObjectContract(objectType);
             }
-
         }
     }
 }
