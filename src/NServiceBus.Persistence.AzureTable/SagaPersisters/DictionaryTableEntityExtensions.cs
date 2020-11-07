@@ -20,58 +20,49 @@ namespace NServiceBus.Persistence.AzureTable
 
         private static object ToSagaData(Type sagaDataType, DictionaryTableEntity entity)
         {
-            var accessors = setterCache.GetOrAdd(sagaDataType, dataType =>
-            {
-                var setters = new List<SetAccessor>();
-                var entityProperties = dataType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-                foreach (var propertyInfo in entityProperties)
-                {
-                    setters.Add(new SetAccessor(propertyInfo));
-                }
-                return setters;
-            });
-
             var toCreate = Activator.CreateInstance(sagaDataType);
-            foreach (var accessor in accessors)
+            foreach (var accessor in GetPropertyAccessors(sagaDataType))
             {
-                if (entity.ContainsKey(accessor.Name))
+                if (!entity.ContainsKey(accessor.Name))
                 {
-                    var value = entity[accessor.Name];
-                    var type = accessor.PropertyType;
+                    continue;
+                }
 
-                    if (type == typeof(byte[]))
+                var value = entity[accessor.Name];
+                var type = accessor.PropertyType;
+
+                if (type == typeof(byte[]))
+                {
+                    accessor.Setter(toCreate, value.BinaryValue);
+                }
+                else if (TrySetNullable(value, toCreate, accessor))
+                {
+                }
+                else if (type == typeof(string))
+                {
+                    accessor.Setter(toCreate, value.StringValue);
+                }
+                else
+                {
+                    if (value.PropertyType == EdmType.String)
                     {
-                        accessor.Setter(toCreate, value.BinaryValue);
-                    }
-                    else if (TrySetNullable(value, toCreate, accessor))
-                    {
-                    }
-                    else if (type == typeof(string))
-                    {
-                        accessor.Setter(toCreate, value.StringValue);
+                        // possibly serialized JSON.NET value
+                        try
+                        {
+                            using (var stringReader = new StringReader(value.StringValue))
+                            {
+                                var deserialized = jsonSerializer.Deserialize(stringReader, type);
+                                accessor.Setter(toCreate, deserialized);
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            throw new NotSupportedException($"The property type '{type.Name}' is not supported in Azure Table Storage and it cannot be deserialized with JSON.NET.");
+                        }
                     }
                     else
                     {
-                        if (value.PropertyType == EdmType.String)
-                        {
-                            // possibly serialized JSON.NET value
-                            try
-                            {
-                                using (var stringReader = new StringReader(value.StringValue))
-                                {
-                                    var deserialized = jsonSerializer.Deserialize(stringReader, type);
-                                    accessor.Setter(toCreate, deserialized);
-                                }
-                            }
-                            catch (Exception)
-                            {
-                                throw new NotSupportedException($"The property type '{type.Name}' is not supported in Azure Table Storage and it cannot be deserialized with JSON.NET.");
-                            }
-                        }
-                        else
-                        {
-                            throw new NotSupportedException($"The property type '{type.Name}' is not supported in Azure Table Storage");
-                        }
+                        throw new NotSupportedException($"The property type '{type.Name}' is not supported in Azure Table Storage");
                     }
                 }
             }
@@ -80,18 +71,7 @@ namespace NServiceBus.Persistence.AzureTable
 
         public static DictionaryTableEntity ToDictionaryTableEntity(object sagaData, DictionaryTableEntity toPersist)
         {
-            var accessors = getterCache.GetOrAdd(sagaData.GetType(), sagaDataType =>
-            {
-                var getters = new List<GetAccessor>();
-                var entityProperties = sagaDataType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-                foreach (var propertyInfo in entityProperties)
-                {
-                    getters.Add(new GetAccessor(propertyInfo));
-                }
-                return getters;
-            });
-
-            foreach (var accessor in accessors)
+            foreach (var accessor in GetPropertyAccessors(sagaData.GetType()))
             {
                 var name = accessor.Name;
                 var type = accessor.PropertyType;
@@ -153,6 +133,21 @@ namespace NServiceBus.Persistence.AzureTable
             return toPersist;
         }
 
+        private static IReadOnlyCollection<PropertyAccessor> GetPropertyAccessors(Type sagaDataType)
+        {
+            var accessors = propertyAccessorCache.GetOrAdd(sagaDataType, dataType =>
+            {
+                var setters = new List<PropertyAccessor>();
+                var entityProperties = dataType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                foreach (var propertyInfo in entityProperties)
+                {
+                    setters.Add(new PropertyAccessor(propertyInfo));
+                }
+                return setters;
+            });
+            return accessors;
+        }
+
         static bool TryGetNullable<TPrimitive>(Type type, object value, out TPrimitive? nullable)
             where TPrimitive : struct
         {
@@ -172,7 +167,7 @@ namespace NServiceBus.Persistence.AzureTable
             return false;
         }
 
-        static bool TrySetNullable(EntityProperty value, object toCreate, SetAccessor setter)
+        static bool TrySetNullable(EntityProperty value, object toCreate, PropertyAccessor setter)
         {
             return
                 TrySetNullable<bool>(value, toCreate, setter) ||
@@ -183,7 +178,7 @@ namespace NServiceBus.Persistence.AzureTable
                 TrySetNullable<long>(value, toCreate, setter);
         }
 
-        static bool TrySetNullable<TPrimitive>(EntityProperty property, object entity, SetAccessor setter)
+        static bool TrySetNullable<TPrimitive>(EntityProperty property, object entity, PropertyAccessor setter)
             where TPrimitive : struct
         {
             if (setter.PropertyType == typeof(TPrimitive))
@@ -254,8 +249,7 @@ namespace NServiceBus.Persistence.AzureTable
             return query;
         }
 
-        static readonly ConcurrentDictionary<Type, IReadOnlyCollection<GetAccessor>> getterCache = new ConcurrentDictionary<Type, IReadOnlyCollection<GetAccessor>>();
-        static readonly ConcurrentDictionary<Type, IReadOnlyCollection<SetAccessor>> setterCache = new ConcurrentDictionary<Type, IReadOnlyCollection<SetAccessor>>();
+        static readonly ConcurrentDictionary<Type, IReadOnlyCollection<PropertyAccessor>> propertyAccessorCache = new ConcurrentDictionary<Type, IReadOnlyCollection<PropertyAccessor>>();
 
         static readonly JsonSerializer jsonSerializer = JsonSerializer.Create();
         static readonly JsonSerializer jsonSerializerWithNonAbstractDefaultContractResolver = new JsonSerializer
@@ -265,37 +259,48 @@ namespace NServiceBus.Persistence.AzureTable
 
         private static readonly DateTime StorageTableMinDateTime = new DateTime(1601, 1, 1);
 
-        class GetAccessor
+        sealed class PropertyAccessor
         {
-            public GetAccessor(PropertyInfo propertyInfo)
+            public PropertyAccessor(PropertyInfo propertyInfo)
             {
-                var instance = Expression.Parameter(typeof(object), "instance");
-                var instanceCast = !propertyInfo.DeclaringType.IsValueType ? Expression.TypeAs(instance, propertyInfo.DeclaringType) : Expression.Convert(instance, propertyInfo.DeclaringType);
-                var getter = Expression.Lambda<Func<object, object>>(Expression.TypeAs(Expression.Call(instanceCast, propertyInfo.GetGetMethod()), typeof(object)), instance).Compile();
-                Getter = getter;
+                Setter = GenerateSetter(propertyInfo);
+                Getter = GenerateGetter(propertyInfo);
                 Name = propertyInfo.Name;
                 PropertyType = propertyInfo.PropertyType;
             }
-            public Func<object, object> Getter { get; }
-            public string Name { get; }
-            public Type PropertyType { get; }
-        }
 
-        class SetAccessor
-        {
-            public SetAccessor(PropertyInfo propertyInfo)
+            private static Func<object, object> GenerateGetter(PropertyInfo propertyInfo)
+            {
+                var instance = Expression.Parameter(typeof(object), "instance");
+                var instanceCast = !propertyInfo.DeclaringType.IsValueType
+                    ? Expression.TypeAs(instance, propertyInfo.DeclaringType)
+                    : Expression.Convert(instance, propertyInfo.DeclaringType);
+                var getter = Expression
+                    .Lambda<Func<object, object>>(
+                        Expression.TypeAs(Expression.Call(instanceCast, propertyInfo.GetGetMethod()), typeof(object)), instance)
+                    .Compile();
+                return getter;
+            }
+
+            private static Action<object, object> GenerateSetter(PropertyInfo propertyInfo)
             {
                 var instance = Expression.Parameter(typeof(object), "instance");
                 var value = Expression.Parameter(typeof(object), "value");
                 // value as T is slightly faster than (T)value, so if it's not a value type, use that
-                var instanceCast = !propertyInfo.DeclaringType.IsValueType ? Expression.TypeAs(instance, propertyInfo.DeclaringType) : Expression.Convert(instance, propertyInfo.DeclaringType);
-                var valueCast = !propertyInfo.PropertyType.IsValueType ? Expression.TypeAs(value, propertyInfo.PropertyType) : Expression.Convert(value, propertyInfo.PropertyType);
-                var setter = Expression.Lambda<Action<object, object>>(Expression.Call(instanceCast, propertyInfo.GetSetMethod(), valueCast), new ParameterExpression[] { instance, value }).Compile();
-                Setter = setter;
-                Name = propertyInfo.Name;
-                PropertyType = propertyInfo.PropertyType;
+                var instanceCast = !propertyInfo.DeclaringType.IsValueType
+                    ? Expression.TypeAs(instance, propertyInfo.DeclaringType)
+                    : Expression.Convert(instance, propertyInfo.DeclaringType);
+                var valueCast = !propertyInfo.PropertyType.IsValueType
+                    ? Expression.TypeAs(value, propertyInfo.PropertyType)
+                    : Expression.Convert(value, propertyInfo.PropertyType);
+                var setter = Expression
+                    .Lambda<Action<object, object>>(Expression.Call(instanceCast, propertyInfo.GetSetMethod(), valueCast), instance,
+                        value).Compile();
+                return setter;
             }
+
             public Action<object, object> Setter { get; }
+            public Func<object, object> Getter { get; }
             public string Name { get; }
             public Type PropertyType { get; }
         }
