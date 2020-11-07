@@ -5,6 +5,8 @@ namespace NServiceBus.Persistence.AzureTable
     using System.IO;
     using System.Reflection;
     using Microsoft.Azure.Cosmos.Table;
+    using System.Collections.Concurrent;
+    using System.Linq.Expressions;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;
 
@@ -17,24 +19,35 @@ namespace NServiceBus.Persistence.AzureTable
 
         public static object ToEntity(Type entityType, DictionaryTableEntity entity)
         {
-            var toCreate = Activator.CreateInstance(entityType);
-            foreach (var propertyInfo in entityType.GetProperties())
+            var accessors = setterCache.GetOrAdd(entityType, eType =>
             {
-                if (entity.ContainsKey(propertyInfo.Name))
+                var setters = new List<SetAccessor>();
+                var entityProperties = eType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                foreach (var propertyInfo in entityProperties)
                 {
-                    var value = entity[propertyInfo.Name];
-                    var type = propertyInfo.PropertyType;
+                    setters.Add(new SetAccessor(propertyInfo));
+                }
+                return setters;
+            });
+
+            var toCreate = Activator.CreateInstance(entityType);
+            foreach (var accessor in accessors)
+            {
+                if (entity.ContainsKey(accessor.Name))
+                {
+                    var value = entity[accessor.Name];
+                    var type = accessor.PropertyType;
 
                     if (type == typeof(byte[]))
                     {
-                        propertyInfo.SetValue(toCreate, value.BinaryValue, null);
+                        accessor.Setter(toCreate, value.BinaryValue);
                     }
-                    else if (TrySetNullable(value, toCreate, propertyInfo))
+                    else if (TrySetNullable(value, toCreate, accessor))
                     {
                     }
                     else if (type == typeof(string))
                     {
-                        propertyInfo.SetValue(toCreate, value.StringValue, null);
+                        accessor.Setter(toCreate, value.StringValue);
                     }
                     else
                     {
@@ -46,7 +59,7 @@ namespace NServiceBus.Persistence.AzureTable
                                 using (var stringReader = new StringReader(value.StringValue))
                                 {
                                     var deserialized = jsonSerializer.Deserialize(stringReader, type);
-                                    propertyInfo.SetValue(toCreate, deserialized, null);
+                                    accessor.Setter(toCreate, deserialized);
                                 }
                             }
                             catch (Exception)
@@ -64,13 +77,62 @@ namespace NServiceBus.Persistence.AzureTable
             return toCreate;
         }
 
-        public static DictionaryTableEntity ToDictionaryTableEntity(object entity, DictionaryTableEntity toPersist, IEnumerable<PropertyInfo> properties)
+        static ConcurrentDictionary<Type, IEnumerable<GetAccessor>> getterCache = new ConcurrentDictionary<Type, IEnumerable<GetAccessor>>();
+        static ConcurrentDictionary<Type, IEnumerable<SetAccessor>> setterCache = new ConcurrentDictionary<Type, IEnumerable<SetAccessor>>();
+
+        class GetAccessor
         {
-            foreach (var propertyInfo in properties)
+            public GetAccessor(PropertyInfo propertyInfo)
             {
-                var name = propertyInfo.Name;
-                var type = propertyInfo.PropertyType;
-                var value = propertyInfo.GetValue(entity, null);
+                var instance = Expression.Parameter(typeof(object), "instance");
+                var instanceCast = !propertyInfo.DeclaringType.IsValueType ? Expression.TypeAs(instance, propertyInfo.DeclaringType) : Expression.Convert(instance, propertyInfo.DeclaringType);
+                var getter = Expression.Lambda<Func<object, object>>(Expression.TypeAs(Expression.Call(instanceCast, propertyInfo.GetGetMethod()), typeof(object)), instance).Compile();
+                Getter = getter;
+                Name = propertyInfo.Name;
+                PropertyType = propertyInfo.PropertyType;
+            }
+            public Func<object, object> Getter { get; }
+            public string Name { get; }
+            public Type PropertyType { get; }
+        }
+
+        class SetAccessor
+        {
+            public SetAccessor(PropertyInfo propertyInfo)
+            {
+                var instance = Expression.Parameter(typeof(object), "instance");
+                var value = Expression.Parameter(typeof(object), "value");
+                // value as T is slightly faster than (T)value, so if it's not a value type, use that
+                var instanceCast = !propertyInfo.DeclaringType.IsValueType ? Expression.TypeAs(instance, propertyInfo.DeclaringType) : Expression.Convert(instance, propertyInfo.DeclaringType);
+                var valueCast = !propertyInfo.PropertyType.IsValueType ? Expression.TypeAs(value, propertyInfo.PropertyType) : Expression.Convert(value, propertyInfo.PropertyType);
+                var setter = Expression.Lambda<Action<object, object>>(Expression.Call(instanceCast, propertyInfo.GetSetMethod(), valueCast), new ParameterExpression[] { instance, value }).Compile();
+                Setter = setter;
+                Name = propertyInfo.Name;
+                PropertyType = propertyInfo.PropertyType;
+            }
+            public Action<object, object> Setter { get; }
+            public string Name { get; }
+            public Type PropertyType { get; }
+        }
+
+        public static DictionaryTableEntity ToDictionaryTableEntity(object entity, DictionaryTableEntity toPersist)
+        {
+            var accessors = getterCache.GetOrAdd(entity.GetType(), entityType =>
+            {
+                var getters = new List<GetAccessor>();
+                var entityProperties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                foreach (var propertyInfo in entityProperties)
+                {
+                    getters.Add(new GetAccessor(propertyInfo));
+                }
+                return getters;
+            });
+
+            foreach (var accessor in accessors)
+            {
+                var name = accessor.Name;
+                var type = accessor.PropertyType;
+                var value = accessor.Getter(entity);
 
                 if (type == typeof(byte[]))
                 {
@@ -147,32 +209,32 @@ namespace NServiceBus.Persistence.AzureTable
             return false;
         }
 
-        static bool TrySetNullable(EntityProperty value, object toCreate, PropertyInfo propertyInfo)
+        static bool TrySetNullable(EntityProperty value, object toCreate, SetAccessor setter)
         {
             return
-                TrySetNullable<bool>(value, toCreate, propertyInfo) ||
-                TrySetNullable<DateTime>(value, toCreate, propertyInfo) ||
-                TrySetNullable<Guid>(value, toCreate, propertyInfo) ||
-                TrySetNullable<int>(value, toCreate, propertyInfo) ||
-                TrySetNullable<double>(value, toCreate, propertyInfo) ||
-                TrySetNullable<long>(value, toCreate, propertyInfo);
+                TrySetNullable<bool>(value, toCreate, setter) ||
+                TrySetNullable<DateTime>(value, toCreate, setter) ||
+                TrySetNullable<Guid>(value, toCreate, setter) ||
+                TrySetNullable<int>(value, toCreate, setter) ||
+                TrySetNullable<double>(value, toCreate, setter) ||
+                TrySetNullable<long>(value, toCreate, setter);
         }
 
-        static bool TrySetNullable<TPrimitive>(EntityProperty property, object entity, PropertyInfo propertyInfo)
+        static bool TrySetNullable<TPrimitive>(EntityProperty property, object entity, SetAccessor setter)
             where TPrimitive : struct
         {
-            if (propertyInfo.PropertyType == typeof(TPrimitive))
+            if (setter.PropertyType == typeof(TPrimitive))
             {
                 var value = (TPrimitive?)property.PropertyAsObject;
                 var nonNullableValue = value ?? default(TPrimitive);
-                propertyInfo.SetValue(entity, nonNullableValue);
+                setter.Setter(entity, nonNullableValue);
                 return true;
             }
 
-            if (propertyInfo.PropertyType == typeof(TPrimitive?))
+            if (setter.PropertyType == typeof(TPrimitive?))
             {
                 var value = (TPrimitive?)property.PropertyAsObject;
-                propertyInfo.SetValue(entity, value);
+                setter.Setter(entity, value);
                 return true;
             }
 
@@ -247,6 +309,7 @@ namespace NServiceBus.Persistence.AzureTable
                 }
                 return base.CreateObjectContract(objectType);
             }
+
         }
     }
 }
