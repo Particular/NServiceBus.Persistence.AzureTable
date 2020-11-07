@@ -4,7 +4,6 @@
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Net;
-    using System.Reflection;
     using System.Threading.Tasks;
     using Extensibility;
     using Microsoft.Azure.Cosmos.Table;
@@ -27,12 +26,11 @@
             var partitionKey = GetPartitionKey(context, sagaData.Id);
             var sagaDataType = sagaData.GetType();
 
-            var properties = SelectPropertiesToPersist(sagaDataType);
             var sagaDataEntityToSave = DictionaryTableEntityExtensions.ToDictionaryTableEntity(sagaData, new DictionaryTableEntity
             {
                 PartitionKey = partitionKey.PartitionKey,
                 RowKey = sagaData.Id.ToString(),
-            }, properties);
+            });
 
             var table = await GetTableAndCreateIfNotExists(storageSession, sagaDataType)
                 .ConfigureAwait(false);
@@ -51,14 +49,10 @@
             var storageSession = (StorageSession)session;
             var partitionKey = GetPartitionKey(context, sagaData.Id);
 
-            var sagaDataType = sagaData.GetType();
-
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
             var sagaDataEntityToUpdate = meta.Entities[sagaData];
 
-            var properties = SelectPropertiesToPersist(sagaDataType);
-
-            var sagaAsDictionaryTableEntity = DictionaryTableEntityExtensions.ToDictionaryTableEntity(sagaData, sagaDataEntityToUpdate, properties);
+            var sagaAsDictionaryTableEntity = DictionaryTableEntityExtensions.ToDictionaryTableEntity(sagaData, sagaDataEntityToUpdate);
 
             storageSession.Add(new SagaUpdate(partitionKey, sagaAsDictionaryTableEntity));
 
@@ -90,7 +84,7 @@
 
             readSagaDataEntity.Table = tableToReadFrom;
 
-            var sagaData = DictionaryTableEntityExtensions.ToEntity<TSagaData>(readSagaDataEntity);
+            var sagaData = DictionaryTableEntityExtensions.ToSagaData<TSagaData>(readSagaDataEntity);
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
             meta.Entities[sagaData] = readSagaDataEntity;
             return sagaData;
@@ -189,11 +183,6 @@
                 storageSession.Add(new SagaRemoveSecondaryIndex(tableEntityPartitionKey, sagaData.Id, secondaryIndices, partitionRowKeyTuple.Value, sagaDataEntityToDelete.Table));
             }
             return Task.CompletedTask;
-        }
-
-        internal static PropertyInfo[] SelectPropertiesToPersist(Type sagaType)
-        {
-            return sagaType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
         }
 
         static TableEntityPartitionKey GetPartitionKey(ContextBag context, Guid sagaDataId)
