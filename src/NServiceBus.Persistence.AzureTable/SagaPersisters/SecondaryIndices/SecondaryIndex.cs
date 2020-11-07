@@ -15,7 +15,7 @@
             this.assumeSecondaryIndicesExist = assumeSecondaryIndicesExist;
         }
 
-        public async Task<Guid?> FindSagaId<TSagaData>(CloudTable table, SagaCorrelationProperty correlationProperty)
+        public virtual async Task<Guid?> FindSagaId<TSagaData>(CloudTable table, SagaCorrelationProperty correlationProperty)
             where TSagaData : IContainSagaData
         {
             var sagaType = typeof(TSagaData);
