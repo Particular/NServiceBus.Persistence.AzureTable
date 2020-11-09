@@ -4,6 +4,7 @@
     using Logging;
     using Microsoft.Extensions.DependencyInjection;
     using Sagas;
+    using Migration;
 
     class SagaStorage : Feature
     {
@@ -14,7 +15,7 @@
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageCreateSchema, AzureStorageSagaDefaults.CreateSchema);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, AzureStorageSagaDefaults.AssumeSecondaryIndicesExist);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey, AzureStorageSagaDefaults.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
-                s.SetDefault(WellKnownConfigurationKeys.MigrationMode, AzureStorageSagaDefaults.MigrationModeEnabled);
+                s.SetDefault(WellKnownConfigurationKeys.SagaStorageMigrationMode, AzureStorageSagaDefaults.MigrationModeEnabled);
 
                 s.EnableFeatureByDefault<SynchronizedStorage>();
                 s.SetDefault<ISagaIdGenerator>(new SagaIdGenerator());
@@ -26,7 +27,7 @@
         protected override void Setup(FeatureConfigurationContext context)
         {
             var updateSchema = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCreateSchema);
-            var migrationModeEnabled = context.Settings.Get<bool>(WellKnownConfigurationKeys.MigrationMode);
+            var migrationModeEnabled = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageMigrationMode);
             var assumeSecondaryIndicesExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist);
             var assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
 
@@ -41,7 +42,13 @@
                 Logger.Warn($"The version of {nameof(AzureTablePersistence)} used is not configured to optimize sagas creation and might fall back to full table scanning to retrieve correlated sagas. It is suggested to migrate saga instances. Consult the upgrade guides for recommendations.");
             }
 
-            context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideCloudTableClient>(), updateSchema, migrationModeEnabled, assumeSecondaryIndicesExist, assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey));
+            var secondaryIndices = new SecondaryIndex(assumeSecondaryIndicesExist, assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
+
+            context.Services.AddSingleton<IProvidePartitionKeyFromSagaId>(provider =>
+                new ProvidePartitionKeyFromSagaId(provider.GetRequiredService<IProvideCloudTableClient>(),
+                    provider.GetRequiredService<TableHolderResolver>(), secondaryIndices, migrationModeEnabled));
+
+            context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideCloudTableClient>(), updateSchema, migrationModeEnabled, secondaryIndices));
         }
 
         static readonly ILog Logger = LogManager.GetLogger<SagaStorage>();

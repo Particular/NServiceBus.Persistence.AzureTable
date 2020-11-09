@@ -14,6 +14,9 @@
         [Test]
         public async Task Should_roll_back_all_operations()
         {
+            // not possible to intercept cosmos API calls with OperationContext
+            Requires.AzureStorageTable();
+
             TransactionalBatchCounterHandler.Reset();
 
             await Scenario.Define<Context>()
