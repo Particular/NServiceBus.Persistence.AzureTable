@@ -13,7 +13,7 @@ namespace NServiceBus.AcceptanceTests
     using Persistence.AzureTable;
     using Pipeline;
 
-    public class When_saga_migrated_and_transactionality_required : MigrationAcceptanceTest
+    public class When_saga_migrated_and_transactionality_required : CompatibilityAcceptanceTest
     {
         [Test]
         public async Task Should_work_by_looking_up_sagaid()

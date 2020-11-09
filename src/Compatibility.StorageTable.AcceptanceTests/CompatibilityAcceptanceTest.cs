@@ -7,9 +7,9 @@ namespace NServiceBus.AcceptanceTests
     using Persistence.AzureTable.Previous;
     using Testing;
 
-    public class MigrationAcceptanceTest : NServiceBusAcceptanceTest
+    public class CompatibilityAcceptanceTest : NServiceBusAcceptanceTest
     {
-        public MigrationAcceptanceTest()
+        public CompatibilityAcceptanceTest()
         {
             PersisterUsingSecondaryIndexes = new SagaPersisterUsingSecondaryIndexes(this.GetEnvConfiguredConnectionStringByCallerConvention(), true, assumeSecondaryIndicesExist: true);
         }

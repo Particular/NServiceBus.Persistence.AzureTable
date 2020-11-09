@@ -11,9 +11,9 @@
 
     class AzureSagaPersister : ISagaPersister
     {
-        public AzureSagaPersister(IProvideCloudTableClient tableClientProvider, bool autoUpdateSchema, bool migrationModeEnabled, SecondaryIndex secondaryIndex)
+        public AzureSagaPersister(IProvideCloudTableClient tableClientProvider, bool autoUpdateSchema, bool compatibilityMode, SecondaryIndex secondaryIndex)
         {
-            this.migrationModeEnabled = migrationModeEnabled;
+            this.compatibilityMode = compatibilityMode;
             this.autoUpdateSchema = autoUpdateSchema;
             client = tableClientProvider.Client;
             this.secondaryIndex = secondaryIndex;
@@ -97,7 +97,7 @@
             var sagaId = SagaIdGenerator.Generate<TSagaData>(sagaCorrelationProperty);
             var sagaData = await Get<TSagaData>(sagaId, session, context).ConfigureAwait(false);
 
-            if (sagaData == null && migrationModeEnabled)
+            if (sagaData == null && compatibilityMode)
             {
                 sagaData = await GetByCorrelationProperty<TSagaData>(sagaCorrelationProperty, session, context, false)
                     .ConfigureAwait(false);
@@ -200,7 +200,7 @@
         SecondaryIndex secondaryIndex;
         const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
         static ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
-        private readonly bool migrationModeEnabled;
+        private readonly bool compatibilityMode;
 
         /// <summary>
         /// Holds saga instance related metadata in a scope of a <see cref="ContextBag" />.

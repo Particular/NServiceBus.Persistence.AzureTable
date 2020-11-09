@@ -13,7 +13,7 @@ public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestEx
         persistence.UseCloudTableClient(SetupFixture.TableClient);
         persistence.DefaultTable(SetupFixture.TableName);
 
-        persistence.Migration().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
+        persistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
 
         var recoverabilitySettings = configuration.Recoverability();
 
