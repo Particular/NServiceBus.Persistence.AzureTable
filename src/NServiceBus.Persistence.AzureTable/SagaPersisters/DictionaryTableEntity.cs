@@ -40,11 +40,13 @@
         public override void ReadEntity(IDictionary<string, EntityProperty> entityProperties, OperationContext operationContext)
         {
             properties = entityProperties;
+            // in order to make sure the entity can be turned into IContainsSagaData we need to restore the ID property from the row key.
             properties["Id"] = EntityProperty.GeneratePropertyForGuid(Guid.Parse(RowKey));
         }
 
         public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
         {
+            // The saga ID is already stored as the RowKey so there is no need to double store it.
             properties.Remove("Id");
             return properties;
         }
