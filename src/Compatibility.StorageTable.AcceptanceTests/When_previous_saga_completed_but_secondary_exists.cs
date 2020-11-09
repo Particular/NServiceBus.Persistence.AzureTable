@@ -9,7 +9,7 @@ namespace NServiceBus.AcceptanceTests
     using Extensibility;
     using Sagas;
 
-    public class When_previous_saga_completed : MigrationAcceptanceTest
+    public class When_previous_saga_completed_but_secondary_exists : CompatibilityAcceptanceTest
     {
         [Test]
         public async Task Should_create_new_saga()
@@ -28,9 +28,10 @@ namespace NServiceBus.AcceptanceTests
             };
 
             var sagaCorrelationProperty = new SagaCorrelationProperty("SomeId", correlationPropertyValue);
-
             await PersisterUsingSecondaryIndexes.Save(previousSagaData, sagaCorrelationProperty, null, new ContextBag());
-            await PersisterUsingSecondaryIndexes.Complete(previousSagaData, null, new ContextBag());
+
+            var sagaEntity = GetByRowKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(sagaId.ToString());
+            await DeleteEntity<EndpointWithSagaThatWasMigrated.MigratedSagaData>(sagaEntity);
 
             var context = await Scenario.Define<Context>()
                 .WithEndpoint<EndpointWithSagaThatWasMigrated>(b => b.When(session => session.SendLocal(new StartSagaMessage

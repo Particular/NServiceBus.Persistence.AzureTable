@@ -11,7 +11,7 @@ namespace NServiceBus.AcceptanceTests
     using Persistence.AzureTable.Previous;
     using Sagas;
 
-    public class When_saga_migrated_without_secondary : MigrationAcceptanceTest
+    public class When_saga_migrated_without_secondary : CompatibilityAcceptanceTest
     {
         [Test]
         public async Task Should_find_via_table_scan_if_enabled()
@@ -44,7 +44,7 @@ namespace NServiceBus.AcceptanceTests
                         b.CustomConfig(c =>
                         {
                             var sagaPersistence = c.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
-                            var migration = sagaPersistence.Migration();
+                            var migration = sagaPersistence.Compatibility();
                             migration.AllowSecondaryKeyLookupToFallbackToFullTableScan();
                         });
                         b.When(session =>

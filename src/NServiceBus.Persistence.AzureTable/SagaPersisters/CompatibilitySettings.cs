@@ -5,11 +5,11 @@ namespace NServiceBus
     using Persistence.AzureTable;
 
     /// <summary>
-    /// Custom settings related to the migration feature.
+    /// Custom settings related to backward compatibility.
     /// </summary>
-    public class MigrationSettings : ExposeSettings
+    public class CompatibilitySettings : ExposeSettings
     {
-        internal MigrationSettings(SettingsHolder settings) : base(settings)
+        internal CompatibilitySettings(SettingsHolder settings) : base(settings)
         {
         }
 
@@ -20,7 +20,7 @@ namespace NServiceBus
         /// </summary>
         public void DisableSecondaryKeyLookupForSagasCorrelatedByProperties()
         {
-            this.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageMigrationMode, false);
+            this.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageCompatibilityMode, false);
         }
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace NServiceBus
         /// <remarks>Enabling this also enables the migration mode meaning enabling this is mutually exclusive to <see cref="DisableSecondaryKeyLookupForSagasCorrelatedByProperties"/></remarks>
         public void AllowSecondaryKeyLookupToFallbackToFullTableScan()
         {
-            this.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageMigrationMode, true);
+            this.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageCompatibilityMode, true);
             this.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, false);
         }
 
@@ -40,7 +40,7 @@ namespace NServiceBus
         /// <remarks>Enabling this also enables the migration mode meaning enabling this is mutually exclusive to <see cref="DisableSecondaryKeyLookupForSagasCorrelatedByProperties"/></remarks>
         public void AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey()
         {
-            this.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageMigrationMode, true);
+            this.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageCompatibilityMode, true);
             this.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey, true);
         }
     }

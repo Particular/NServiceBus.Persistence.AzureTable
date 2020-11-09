@@ -15,7 +15,7 @@
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageCreateSchema, AzureStorageSagaDefaults.CreateSchema);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, AzureStorageSagaDefaults.AssumeSecondaryIndicesExist);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey, AzureStorageSagaDefaults.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
-                s.SetDefault(WellKnownConfigurationKeys.SagaStorageMigrationMode, AzureStorageSagaDefaults.MigrationModeEnabled);
+                s.SetDefault(WellKnownConfigurationKeys.SagaStorageCompatibilityMode, AzureStorageSagaDefaults.CompatibilityModeEnabled);
 
                 s.EnableFeatureByDefault<SynchronizedStorage>();
                 s.SetDefault<ISagaIdGenerator>(new SagaIdGenerator());
@@ -27,11 +27,11 @@
         protected override void Setup(FeatureConfigurationContext context)
         {
             var updateSchema = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCreateSchema);
-            var migrationModeEnabled = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageMigrationMode);
+            var compatibilityModeEnabled = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCompatibilityMode);
             var assumeSecondaryIndicesExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist);
             var assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
 
-            if (migrationModeEnabled)
+            if (compatibilityModeEnabled)
             {
                 var addition = assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey? ", assuming the secondary index uses RowKey = PartitionKey," : string.Empty;
                 Logger.Info($"The version of {nameof(AzureTablePersistence)} uses the migration mode and will fallback to lookup correlated sages based on the secondary index{addition} if necessary.");
@@ -46,9 +46,9 @@
 
             context.Services.AddSingleton<IProvidePartitionKeyFromSagaId>(provider =>
                 new ProvidePartitionKeyFromSagaId(provider.GetRequiredService<IProvideCloudTableClient>(),
-                    provider.GetRequiredService<TableHolderResolver>(), secondaryIndices, migrationModeEnabled));
+                    provider.GetRequiredService<TableHolderResolver>(), secondaryIndices, compatibilityModeEnabled));
 
-            context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideCloudTableClient>(), updateSchema, migrationModeEnabled, secondaryIndices));
+            context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideCloudTableClient>(), updateSchema, compatibilityModeEnabled, secondaryIndices));
         }
 
         static readonly ILog Logger = LogManager.GetLogger<SagaStorage>();

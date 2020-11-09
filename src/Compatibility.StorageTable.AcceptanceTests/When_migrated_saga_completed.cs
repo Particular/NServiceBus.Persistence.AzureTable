@@ -10,10 +10,10 @@ namespace NServiceBus.AcceptanceTests
     using Persistence.AzureTable.Previous;
     using Sagas;
 
-    public class When_saga_migrated_but_not_completed : MigrationAcceptanceTest
+    public class When_migrated_saga_completed : CompatibilityAcceptanceTest
     {
         [Test]
-        public async Task Should_preserve_secondary_index()
+        public async Task Should_remove_secondary_index()
         {
             Requires.AzureTables();
 
@@ -43,8 +43,8 @@ namespace NServiceBus.AcceptanceTests
             var partitionRowKeyTuple = SecondaryIndexKeyBuilder.BuildTableKey(typeof(EndpointWithSagaThatWasMigrated.MigratedSagaData), sagaCorrelationProperty);
             var secondaryIndexEntry = GetByPartitionKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(partitionRowKeyTuple.PartitionKey);
 
-            Assert.IsTrue(sagaEntity.Properties.ContainsKey("NServiceBus_2ndIndexKey"), "Secondary index property should be preserved");
-            Assert.IsNotNull(secondaryIndexEntry);
+            Assert.IsNull(sagaEntity);
+            Assert.IsNull(secondaryIndexEntry);
             Assert.AreEqual(sagaId, context.SagaId);
         }
 
@@ -80,6 +80,7 @@ namespace NServiceBus.AcceptanceTests
                 {
                     testContext.SagaId = Data.Id;
                     testContext.Done = true;
+                    MarkAsComplete();
                     return Task.CompletedTask;
                 }
 

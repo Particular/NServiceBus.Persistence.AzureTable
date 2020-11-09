@@ -11,7 +11,7 @@ namespace NServiceBus.AcceptanceTests
     using Sagas;
 
     // Verifies that even with complex data our entity conversion stays compatible
-    public class When_saga_with_complex_state : MigrationAcceptanceTest
+    public class When_saga_with_complex_state : CompatibilityAcceptanceTest
     {
         [Test]
         public async Task Should_work()
