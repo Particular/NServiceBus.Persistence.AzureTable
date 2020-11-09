@@ -47,16 +47,16 @@
                 previousTable = currentTable;
                 currentTable = operation.Apply(transactionalBatch);
 
-                var nameMatch = previousTable?.Name.Equals(currentTable.Name, StringComparison.OrdinalIgnoreCase);
+                var nameMatch = previousTable?.Name.Equals(currentTable?.Name, StringComparison.OrdinalIgnoreCase);
                 if (nameMatch.HasValue && !nameMatch.Value)
                 {
-                    throw new Exception("Table must match for the same batch");
+                    throw new Exception($"All operations in the same batch must be executed against the same table and the table cannot be null. Tables found: '{previousTable.Name}' and '{currentTable?.Name ?? "null"}'");
                 }
             }
 
             if (currentTable == null)
             {
-                throw new Exception("TODO");
+                throw new Exception("Unable to determine the table to write the current batch to. Make sure to provide the necessary table information either by providing a default table or setting it with a custom pipeline behavior");
             }
 
             try
@@ -67,14 +67,13 @@
                     var result = batchResult[i];
 
                     operationMappings.TryGetValue(i, out var operation);
-                    // operation = operation ?? ThrowOnConflictOperation.Instance;
+                    operation = operation ?? ThrowOnConflictOperation.Instance;
                     if (result.IsSuccessStatusCode())
                     {
                         operation.Success(result);
                         continue;
                     }
 
-                    // TODO: Check if this even makes sense
                     // guaranteed to throw
                     operation.Conflict(result);
                 }

@@ -62,7 +62,6 @@
             {
                 Id = message.MessageId,
                 Operations = message.TransportOperations,
-                // TODO: A bit of a train wreck, improve
                 PartitionKey = setAsDispatchedHolder.PartitionKey.PartitionKey
             };
 

@@ -15,17 +15,21 @@
                 throw new Exception("The Azure Table saga persister doesn't support custom saga finders.");
             }
 
-            return Generate(context.SagaMetadata.SagaEntityType, context.CorrelationProperty.Name, context.CorrelationProperty.Value);
+            return Generate(context.SagaMetadata.SagaEntityType, context.CorrelationProperty);
         }
 
-        public static Guid Generate(Type sagaEntityType, string correlationPropertyName, object correlationPropertyValue) => Generate(sagaEntityType.FullName, correlationPropertyName, correlationPropertyValue);
+        public static Guid Generate<TSagaData>(SagaCorrelationProperty correlationProperty)
+            where TSagaData : IContainSagaData
+            => Generate(typeof(TSagaData), correlationProperty);
 
-        public static Guid Generate(string sagaEntityTypeFullName, string correlationPropertyName, object correlationPropertyValue)
+        public static Guid Generate(Type sagaEntityType, SagaCorrelationProperty correlationProperty) => Generate(sagaEntityType.FullName, correlationProperty);
+
+        public static Guid Generate(string sagaEntityTypeFullName, SagaCorrelationProperty correlationProperty)
         {
             // assumes single correlated sagas since v6 doesn't allow more than one corr prop
             // will still have to use a GUID since moving to a string id will have to wait since its a breaking change
-            var serializedPropertyValue = JsonConvert.SerializeObject(correlationPropertyValue);
-            return DeterministicGuid($"{sagaEntityTypeFullName}_{correlationPropertyName}_{serializedPropertyValue}");
+            var serializedPropertyValue = JsonConvert.SerializeObject(correlationProperty.Value);
+            return DeterministicGuid($"{sagaEntityTypeFullName}_{correlationProperty.Name}_{serializedPropertyValue}");
         }
 
         static Guid DeterministicGuid(string src)

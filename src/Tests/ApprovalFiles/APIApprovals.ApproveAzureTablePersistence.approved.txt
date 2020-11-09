@@ -127,6 +127,11 @@ namespace NServiceBus.Persistence.AzureTable
     {
         Microsoft.Azure.Cosmos.Table.CloudTableClient Client { get; }
     }
+    public interface IProvidePartitionKeyFromSagaId
+    {
+        System.Threading.Tasks.Task SetPartitionKey<TSagaData>(NServiceBus.Pipeline.IIncomingLogicalMessageContext context, NServiceBus.Sagas.SagaCorrelationProperty correlationProperty)
+            where TSagaData : NServiceBus.IContainSagaData;
+    }
     public sealed class LogicalOutboxBehavior : NServiceBus.Pipeline.IBehavior, NServiceBus.Pipeline.IBehavior<NServiceBus.Pipeline.IIncomingLogicalMessageContext, NServiceBus.Pipeline.IIncomingLogicalMessageContext>
     {
         public System.Threading.Tasks.Task Invoke(NServiceBus.Pipeline.IIncomingLogicalMessageContext context, System.Func<NServiceBus.Pipeline.IIncomingLogicalMessageContext, System.Threading.Tasks.Task> next) { }
@@ -139,6 +144,11 @@ namespace NServiceBus.Persistence.AzureTable
     public static class SynchronizedStorageSessionExtensions
     {
         public static NServiceBus.Persistence.AzureTable.IAzureTableStorageSession AzureTablePersistenceSession(this NServiceBus.Persistence.SynchronizedStorageSession session) { }
+    }
+    public sealed class TableBatchOperationException : System.Exception
+    {
+        public TableBatchOperationException(Microsoft.Azure.Cosmos.Table.TableResult result) { }
+        public Microsoft.Azure.Cosmos.Table.TableResult Result { get; }
     }
 }
 namespace NServiceBus.Testing

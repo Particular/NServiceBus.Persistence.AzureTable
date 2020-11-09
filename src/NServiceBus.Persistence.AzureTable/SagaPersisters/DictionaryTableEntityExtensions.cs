@@ -1,3 +1,5 @@
+using NServiceBus.Sagas;
+
 namespace NServiceBus.Persistence.AzureTable
 {
     using System;
@@ -199,11 +201,12 @@ namespace NServiceBus.Persistence.AzureTable
             return false;
         }
 
-        public static TableQuery<DictionaryTableEntity> BuildWherePropertyQuery(Type type, string property, object value)
+        public static TableQuery<DictionaryTableEntity> BuildWherePropertyQuery<TSagaData>(SagaCorrelationProperty correlationProperty)
+            where TSagaData : IContainSagaData
         {
             TableQuery<DictionaryTableEntity> query;
 
-            var propertyInfo = type.GetProperty(property);
+            var propertyInfo = typeof(TSagaData).GetProperty(correlationProperty.Name);
             if (propertyInfo == null)
             {
                 return null;
@@ -211,35 +214,35 @@ namespace NServiceBus.Persistence.AzureTable
 
             if (propertyInfo.PropertyType == typeof(byte[]))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForBinary(property, QueryComparisons.Equal, (byte[])value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForBinary(correlationProperty.Name, QueryComparisons.Equal, (byte[])correlationProperty.Value));
             }
             else if (propertyInfo.PropertyType == typeof(bool))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForBool(property, QueryComparisons.Equal, (bool)value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForBool(correlationProperty.Name, QueryComparisons.Equal, (bool)correlationProperty.Value));
             }
             else if (propertyInfo.PropertyType == typeof(DateTime))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForDate(property, QueryComparisons.Equal, (DateTime)value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForDate(correlationProperty.Name, QueryComparisons.Equal, (DateTime)correlationProperty.Value));
             }
             else if (propertyInfo.PropertyType == typeof(Guid))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForGuid(property, QueryComparisons.Equal, (Guid)value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForGuid(correlationProperty.Name, QueryComparisons.Equal, (Guid)correlationProperty.Value));
             }
             else if (propertyInfo.PropertyType == typeof(int))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForInt(property, QueryComparisons.Equal, (int)value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForInt(correlationProperty.Name, QueryComparisons.Equal, (int)correlationProperty.Value));
             }
             else if (propertyInfo.PropertyType == typeof(long))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForLong(property, QueryComparisons.Equal, (long)value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForLong(correlationProperty.Name, QueryComparisons.Equal, (long)correlationProperty.Value));
             }
             else if (propertyInfo.PropertyType == typeof(double))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForDouble(property, QueryComparisons.Equal, (double)value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForDouble(correlationProperty.Name, QueryComparisons.Equal, (double)correlationProperty.Value));
             }
             else if (propertyInfo.PropertyType == typeof(string))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterCondition(property, QueryComparisons.Equal, (string)value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterCondition(correlationProperty.Name, QueryComparisons.Equal, (string)correlationProperty.Value));
             }
             else
             {
