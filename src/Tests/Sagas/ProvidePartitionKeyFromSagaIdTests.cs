@@ -127,7 +127,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         }
 
         [Test]
-        public async Task Should_use_found_sagaid_from_secondary_index_when_migration_mode_enabled()
+        public async Task Should_use_found_sagaid_from_secondary_index_when_compatibility_mode_enabled()
         {
             var secondaryIndex = new TestableSecondaryIndex();
             var migrationModeEnabled = true;
@@ -146,7 +146,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         }
 
         [Test]
-        public async Task Should_fallback_to_deterministic_id_when_migration_mode_enabled()
+        public async Task Should_fallback_to_deterministic_id_when_compatibility_mode_enabled()
         {
             var secondaryIndex = new TestableSecondaryIndex();
             var migrationModeEnabled = true;
@@ -162,7 +162,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         }
 
         [Test]
-        public async Task Should_fallback_to_deterministic_id_when_migration_mode_disabled()
+        public async Task Should_fallback_to_deterministic_id_when_compatibility_mode_disabled()
         {
             var secondaryIndex = new TestableSecondaryIndex();
             var migrationModeEnabled = false;

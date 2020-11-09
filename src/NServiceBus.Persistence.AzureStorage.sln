@@ -25,7 +25,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NonTransactionalSagasWithCo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Subscription.StorageTable.AcceptanceTests", "Subscription.StorageTable.AcceptanceTests\Subscription.StorageTable.AcceptanceTests.csproj", "{EB5496F1-5B2C-4E4A-8B10-32F487233AD2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Migration.StorageTable.AcceptanceTests", "Migration.StorageTable.AcceptanceTests\Migration.StorageTable.AcceptanceTests.csproj", "{2EFA7EE6-1ADA-4DD6-8DBB-1310FEB7D3CE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Compatibility.StorageTable.AcceptanceTests", "Compatibility.StorageTable.AcceptanceTests\Compatibility.StorageTable.AcceptanceTests.csproj", "{2EFA7EE6-1ADA-4DD6-8DBB-1310FEB7D3CE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicalOutbox.CosmosDB.AcceptanceTests", "PhysicalOutbox.CosmosDB.AcceptanceTests\PhysicalOutbox.CosmosDB.AcceptanceTests.csproj", "{F190D825-B92E-4C0C-BA05-CC9B9B9BDA76}"
 EndProject

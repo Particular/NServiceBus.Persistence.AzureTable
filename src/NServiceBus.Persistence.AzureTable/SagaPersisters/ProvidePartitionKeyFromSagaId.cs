@@ -8,9 +8,9 @@ namespace NServiceBus.Persistence.AzureTable.Migration
 
     class ProvidePartitionKeyFromSagaId : IProvidePartitionKeyFromSagaId
     {
-        public ProvidePartitionKeyFromSagaId(IProvideCloudTableClient tableClientProvider, TableHolderResolver resolver, SecondaryIndex secondaryIndex, bool migrationModeEnabled)
+        public ProvidePartitionKeyFromSagaId(IProvideCloudTableClient tableClientProvider, TableHolderResolver resolver, SecondaryIndex secondaryIndex, bool compatibilityMode)
         {
-            this.migrationModeEnabled = migrationModeEnabled;
+            this.compatibilityMode = compatibilityMode;
             this.resolver = resolver;
             this.secondaryIndex = secondaryIndex;
             client = tableClientProvider.Client;
@@ -45,7 +45,7 @@ namespace NServiceBus.Persistence.AzureTable.Migration
                 throw new Exception("The Azure Table saga persister doesn't support custom saga finders.");
             }
 
-            if (migrationModeEnabled)
+            if (compatibilityMode)
             {
                 var nullableSagaId = await secondaryIndex.FindSagaId<TSagaData>(sagaTable, correlationProperty)
                     .ConfigureAwait(false);
@@ -64,6 +64,6 @@ namespace NServiceBus.Persistence.AzureTable.Migration
         private readonly SecondaryIndex secondaryIndex;
         private CloudTableClient client;
         private readonly TableHolderResolver resolver;
-        private readonly bool migrationModeEnabled;
+        private readonly bool compatibilityMode;
     }
 }

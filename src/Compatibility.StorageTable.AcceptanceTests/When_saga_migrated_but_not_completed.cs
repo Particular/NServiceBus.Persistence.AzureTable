@@ -10,10 +10,10 @@ namespace NServiceBus.AcceptanceTests
     using Persistence.AzureTable.Previous;
     using Sagas;
 
-    public class When_saga_migrated_with_modified_secondary : MigrationAcceptanceTest
+    public class When_saga_migrated_but_not_completed : CompatibilityAcceptanceTest
     {
         [Test]
-        public async Task Should_find_by_non_empty_row_key_if_enabled()
+        public async Task Should_preserve_secondary_index()
         {
             Requires.AzureTables();
 
@@ -31,78 +31,21 @@ namespace NServiceBus.AcceptanceTests
             var sagaCorrelationProperty = new SagaCorrelationProperty("SomeId", correlationPropertyValue);
             await PersisterUsingSecondaryIndexes.Save(previousSagaData, sagaCorrelationProperty, null, new ContextBag());
 
-            var partitionRowKeyTuple = SecondaryIndexKeyBuilder.BuildTableKey(typeof(EndpointWithSagaThatWasMigrated.MigratedSagaData), sagaCorrelationProperty);
-            var secondaryIndexEntry = GetByPartitionKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(partitionRowKeyTuple.PartitionKey);
-
-            // when migrating to Cosmos Table API this is crucial!
-            await DeleteEntity<EndpointWithSagaThatWasMigrated.MigratedSagaData>(secondaryIndexEntry);
-            secondaryIndexEntry.RowKey = secondaryIndexEntry.PartitionKey;
-            await ReplaceEntity<EndpointWithSagaThatWasMigrated.MigratedSagaData>(secondaryIndexEntry);
-
             var context = await Scenario.Define<Context>()
-                .WithEndpoint<EndpointWithSagaThatWasMigrated>(b =>
+                .WithEndpoint<EndpointWithSagaThatWasMigrated>(b => b.When(session => session.SendLocal(new ContinueSagaMessage
                 {
-                    b.CustomConfig(c =>
-                    {
-                        var sagaPersistence = c.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
-                        var migration = sagaPersistence.Migration();
-                        migration.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey();
-                    });
-                    b.When(session =>
-                        session.SendLocal(new ContinueSagaMessage
-                        {
-                            SomeId = correlationPropertyValue
-                        }));
-                })
+                    SomeId = correlationPropertyValue
+                })))
                 .Done(c => c.Done)
                 .Run();
 
             var sagaEntity = GetByRowKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(context.SagaId.ToString());
-            secondaryIndexEntry = GetByPartitionKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(partitionRowKeyTuple.PartitionKey);
-
-            Assert.IsTrue(sagaEntity.Properties.ContainsKey("NServiceBus_2ndIndexKey"), "Secondary index property should be preserved");
-            Assert.IsNotNull(secondaryIndexEntry);
-            Assert.That(secondaryIndexEntry.RowKey, Is.EqualTo(secondaryIndexEntry.PartitionKey));
-            Assert.AreEqual(sagaId, context.SagaId);
-        }
-
-        [Test]
-        public async Task Should_create_new_saga_if_find_by_non_empty_row_key_not_enabled()
-        {
-            Requires.AzureTables();
-
-            var correlationPropertyValue = Guid.NewGuid();
-            var sagaId = Guid.NewGuid();
-
-            var previousSagaData = new EndpointWithSagaThatWasMigrated.MigratedSagaData
-            {
-                Id = sagaId,
-                OriginalMessageId = "",
-                Originator = "",
-                SomeId = correlationPropertyValue
-            };
-
-            var sagaCorrelationProperty = new SagaCorrelationProperty("SomeId", correlationPropertyValue);
-            await PersisterUsingSecondaryIndexes.Save(previousSagaData, sagaCorrelationProperty, null, new ContextBag());
-
             var partitionRowKeyTuple = SecondaryIndexKeyBuilder.BuildTableKey(typeof(EndpointWithSagaThatWasMigrated.MigratedSagaData), sagaCorrelationProperty);
             var secondaryIndexEntry = GetByPartitionKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(partitionRowKeyTuple.PartitionKey);
 
-            // when migrating to Cosmos Table API this is crucial!
-            await DeleteEntity<EndpointWithSagaThatWasMigrated.MigratedSagaData>(secondaryIndexEntry);
-            secondaryIndexEntry.RowKey = secondaryIndexEntry.PartitionKey;
-            await ReplaceEntity<EndpointWithSagaThatWasMigrated.MigratedSagaData>(secondaryIndexEntry);
-
-            var context = await Scenario.Define<Context>()
-                .WithEndpoint<EndpointWithSagaThatWasMigrated>(b => b.When(session =>
-                    session.SendLocal(new StartSagaMessage
-                    {
-                        SomeId = correlationPropertyValue
-                    })))
-                .Done(c => c.Done)
-                .Run();
-
-            Assert.AreNotEqual(sagaId, context.SagaId);
+            Assert.IsTrue(sagaEntity.Properties.ContainsKey("NServiceBus_2ndIndexKey"), "Secondary index property should be preserved");
+            Assert.IsNotNull(secondaryIndexEntry);
+            Assert.AreEqual(sagaId, context.SagaId);
         }
 
         public class Context : ScenarioContext

@@ -12,7 +12,7 @@ public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExec
         var persistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
         persistence.UseCloudTableClient(SetupFixture.TableClient);
 
-        persistence.Migration().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
+        persistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
 
         var recoverabilitySettings = configuration.Recoverability();
 

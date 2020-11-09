@@ -45,16 +45,14 @@
             return config;
         }
 
-
-
         /// <summary>
-        /// Configures the migration specific settings.
+        /// Configures the backward compatibility specific settings.
         /// </summary>
-        public static MigrationSettings Migration(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config)
+        public static CompatibilitySettings Compatibility(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config)
         {
             Guard.AgainstNull(nameof(config), config);
 
-            return new MigrationSettings(config.GetSettings());
+            return new CompatibilitySettings(config.GetSettings());
         }
     }
 }

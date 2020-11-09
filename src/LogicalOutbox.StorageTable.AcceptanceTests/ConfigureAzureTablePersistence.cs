@@ -16,7 +16,7 @@ public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExec
     {
         var sagaPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
         sagaPersistence.UseCloudTableClient(SetupFixture.TableClient);
-        sagaPersistence.Migration().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
+        sagaPersistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
 
         configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
 
