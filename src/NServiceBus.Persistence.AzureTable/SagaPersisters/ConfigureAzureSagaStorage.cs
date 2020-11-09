@@ -34,15 +34,14 @@
         }
 
         /// <summary>
-        /// Should an attempt be made to create saga storage table or not.
-        /// <remarks>Operation will fail if connection string does not allow access to create storage tables</remarks>
+        /// Disables the table creation for the Saga storage.
         /// </summary>
-        public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> CreateSchema(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config, bool createSchema)
+        public static void DisableTableCreation(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> persistenceExtensions)
         {
-            Guard.AgainstNull(nameof(config), config);
+            Guard.AgainstNull(nameof(persistenceExtensions), persistenceExtensions);
 
-            config.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageCreateSchema, createSchema);
-            return config;
+            var settings = persistenceExtensions.GetSettings();
+            settings.GetOrCreate<SynchronizedStorageInstallerSettings>().Disabled = true;
         }
 
         /// <summary>

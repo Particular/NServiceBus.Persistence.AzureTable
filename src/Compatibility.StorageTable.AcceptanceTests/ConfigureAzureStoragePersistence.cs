@@ -8,6 +8,7 @@ public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExec
     public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
         var persistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
+        persistence.DisableTableCreation();
         persistence.UseCloudTableClient(SetupFixture.TableClient);
 
         return Task.FromResult(0);

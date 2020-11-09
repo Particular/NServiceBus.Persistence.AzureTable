@@ -44,10 +44,10 @@ namespace NServiceBus.AcceptanceTests
                 {
                     var sagaPersistence = c.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
                     sagaPersistence.DefaultTable("doesnotexist");
-                    sagaPersistence.CreateSchema(false);
+                    sagaPersistence.DisableTableCreation();
 
                     var subscriptionStorage = c.UsePersistence<AzureTablePersistence, StorageType.Subscriptions>();
-                    subscriptionStorage.CreateSchema(false);
+                    subscriptionStorage.DisableTableCreation();
                 });
             }
 

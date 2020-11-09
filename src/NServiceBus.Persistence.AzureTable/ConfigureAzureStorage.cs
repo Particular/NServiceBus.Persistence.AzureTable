@@ -26,7 +26,7 @@
         }
 
         /// <summary>
-        /// Cloud Table Client to use for azure Saga, Outbox and Subscription storage.
+        /// Cloud Table Client to use for Saga, Outbox and Subscription storage.
         /// </summary>
         public static PersistenceExtensions<AzureTablePersistence> UseCloudTableClient(this PersistenceExtensions<AzureTablePersistence> config, CloudTableClient client)
         {
@@ -40,7 +40,7 @@
         }
 
         /// <summary>
-        /// Sets the default table name that will be used.
+        /// Sets the default table name that will be used for Saga, Outbox and Subscription storage.
         /// </summary>
         /// <remarks>When the default table is not set the table information needs to be provided as part of the message handling pipeline.</remarks>
         public static PersistenceExtensions<AzureTablePersistence> DefaultTable(this PersistenceExtensions<AzureTablePersistence> persistenceExtensions, string tableName)
@@ -50,6 +50,18 @@
             persistenceExtensions.GetSettings().Set(new TableInformation(tableName));
 
             return persistenceExtensions;
+        }
+
+        /// <summary>
+        /// Disables the table creation for Saga, Outbox and Subscription storage.
+        /// </summary>
+        public static void DisableTableCreation(this PersistenceExtensions<AzureTablePersistence> persistenceExtensions)
+        {
+            Guard.AgainstNull(nameof(persistenceExtensions), persistenceExtensions);
+
+            var settings = persistenceExtensions.GetSettings();
+            settings.GetOrCreate<SynchronizedStorageInstallerSettings>().Disabled = true;
+            settings.GetOrCreate<SubscriptionStorageInstallerSettings>().Disabled = true;
         }
     }
 }

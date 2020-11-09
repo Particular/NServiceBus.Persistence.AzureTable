@@ -11,10 +11,10 @@
 
     class AzureSagaPersister : ISagaPersister
     {
-        public AzureSagaPersister(IProvideCloudTableClient tableClientProvider, bool autoUpdateSchema, bool compatibilityMode, SecondaryIndex secondaryIndex)
+        public AzureSagaPersister(IProvideCloudTableClient tableClientProvider, bool disableTableCreation, bool compatibilityMode, SecondaryIndex secondaryIndex)
         {
             this.compatibilityMode = compatibilityMode;
-            this.autoUpdateSchema = autoUpdateSchema;
+            this.disableTableCreation = disableTableCreation;
             client = tableClientProvider.Client;
             this.secondaryIndex = secondaryIndex;
         }
@@ -149,7 +149,7 @@
                 tableToReadFrom = storageSession.Table;
             }
 
-            if (!autoUpdateSchema || tableCreated.TryGetValue(tableToReadFrom.Name, out var isTableCreated) ||
+            if (disableTableCreation || tableCreated.TryGetValue(tableToReadFrom.Name, out var isTableCreated) ||
                 isTableCreated)
             {
                 return tableToReadFrom;
@@ -195,7 +195,7 @@
             return partitionKey;
         }
 
-        bool autoUpdateSchema;
+        bool disableTableCreation;
         CloudTableClient client;
         SecondaryIndex secondaryIndex;
         const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
