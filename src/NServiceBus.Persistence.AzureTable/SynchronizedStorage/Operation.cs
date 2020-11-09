@@ -1,5 +1,6 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
+    using System;
     using Microsoft.Azure.Cosmos.Table;
 
     abstract class Operation
@@ -19,11 +20,26 @@
 
         public virtual void Conflict(TableResult result)
         {
+            throw new TableBatchOperationException(result);
         }
 
         public virtual bool Handle(StorageException storageException)
         {
             return false;
+        }
+    }
+
+    class ThrowOnConflictOperation : Operation
+    {
+        private ThrowOnConflictOperation() : base(default)
+        {
+        }
+
+        public static Operation Instance { get; } = new ThrowOnConflictOperation();
+
+        public override CloudTable Apply(TableBatchOperation transactionalBatch)
+        {
+            return null;
         }
     }
 }

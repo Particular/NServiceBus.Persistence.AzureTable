@@ -67,14 +67,13 @@
                     var result = batchResult[i];
 
                     operationMappings.TryGetValue(i, out var operation);
-                    // operation = operation ?? ThrowOnConflictOperation.Instance;
+                    operation = operation ?? ThrowOnConflictOperation.Instance;
                     if (result.IsSuccessStatusCode())
                     {
                         operation.Success(result);
                         continue;
                     }
 
-                    // TODO: Check if this even makes sense
                     // guaranteed to throw
                     operation.Conflict(result);
                 }

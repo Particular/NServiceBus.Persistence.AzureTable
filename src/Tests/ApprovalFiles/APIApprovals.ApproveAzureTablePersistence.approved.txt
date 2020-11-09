@@ -145,6 +145,11 @@ namespace NServiceBus.Persistence.AzureTable
     {
         public static NServiceBus.Persistence.AzureTable.IAzureTableStorageSession AzureTablePersistenceSession(this NServiceBus.Persistence.SynchronizedStorageSession session) { }
     }
+    public sealed class TableBatchOperationException : System.Exception
+    {
+        public TableBatchOperationException(Microsoft.Azure.Cosmos.Table.TableResult result) { }
+        public Microsoft.Azure.Cosmos.Table.TableResult Result { get; }
+    }
 }
 namespace NServiceBus.Testing
 {
