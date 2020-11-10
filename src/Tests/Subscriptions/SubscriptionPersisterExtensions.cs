@@ -1,4 +1,4 @@
-namespace NServiceBus.Persistence.AzureTable.ComponentTests.Subscriptions
+namespace NServiceBus.Persistence.AzureTable.Tests
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;

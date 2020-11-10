@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.Persistence.AzureTable.ComponentTests.Subscriptions
+﻿namespace NServiceBus.Persistence.AzureTable.Tests
 {
     class TestMessagea
     {
