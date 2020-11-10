@@ -10,7 +10,8 @@ namespace NServiceBus.Persistence.AzureStorage.SecondaryIndices
         public static PartitionRowKeyTuple BuildTableKey(Type sagaType, SagaCorrelationProperty correlationProperty)
         {
             var sagaDataTypeName = sagaType.FullName;
-            return new PartitionRowKeyTuple($"Index_{sagaDataTypeName}_{correlationProperty.Name}_{Serialize(correlationProperty.Value)}", string.Empty);
+            var partitionKey = $"Index_{sagaDataTypeName}_{correlationProperty.Name}_{Serialize(correlationProperty.Value)}";
+            return new PartitionRowKeyTuple(partitionKey, partitionKey);
         }
 
         static string Serialize(object propertyValue)

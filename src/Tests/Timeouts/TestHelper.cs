@@ -5,10 +5,8 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
     using System.Linq;
     using System.Net;
     using System.Threading.Tasks;
-    using Microsoft.WindowsAzure.Storage;
-    using Microsoft.WindowsAzure.Storage.Blob;
-    using Microsoft.WindowsAzure.Storage.RetryPolicies;
-    using Microsoft.WindowsAzure.Storage.Table;
+    using Azure.Storage.Blobs;
+    using Microsoft.Azure.Cosmos.Table;
     using Support;
     using Timeout.Core;
     using NUnit.Framework;
@@ -102,39 +100,41 @@ namespace NServiceBus.Persistence.AzureStorage.ComponentTests.Timeouts
                 "Destination"
             });
 
-            // Define an entity resolver to work with the entity after retrieval.
-            EntityResolver<Tuple<string, string>> resolver = (pk, rk, ts, props, etag) => props.ContainsKey("Destination") ? new Tuple<string, string>(pk, rk) : null;
-
-            foreach (var tuple in await table.ExecuteQuerySegmentedAsync(
-                query: projectionQuery,
-                resolver: resolver,
-                token: null))
+            var runningQuery = new TableQuery<DynamicTableEntity>()
             {
-                var tableEntity = new DynamicTableEntity(tuple.Item1, tuple.Item2)
+                FilterString = projectionQuery.FilterString,
+                SelectColumns = projectionQuery.SelectColumns
+            };
+            TableContinuationToken token = null;
+            var operationCount = 0;
+            do
+            {
+                runningQuery.TakeCount = projectionQuery.TakeCount - operationCount;
+
+                var seg = await table.ExecuteQuerySegmentedAsync(runningQuery, token);
+                token = seg.ContinuationToken;
+                foreach (var entity in seg)
                 {
-                    ETag = "*"
-                };
-                await table.ExecuteAsync(TableOperation.Delete(tableEntity));
+                    var tableEntity = new DynamicTableEntity(entity.PartitionKey, entity.RowKey)
+                    {
+                        ETag = "*"
+                    };
+                    await table.ExecuteAsync(TableOperation.Delete(tableEntity));
+                    operationCount++;
+                }
+
             }
+            while (token != null && (projectionQuery.TakeCount == null || operationCount < projectionQuery.TakeCount.Value));
         }
 
         static async Task RemoveAllBlobs()
         {
-            var cloudStorageAccount = CloudStorageAccount.Parse(Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence());
-            var container = cloudStorageAccount.CreateCloudBlobClient().GetContainerReference("timeoutstate");
-            await container.CreateIfNotExistsAsync();
-            foreach (var blob in (await container.ListBlobsSegmentedAsync(null)).Results)
+            var connectionString = Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence();
+            var blobContainerClient = new BlobContainerClient(connectionString, "timeoutstate");
+            var blobs = blobContainerClient.GetBlobs();
+            foreach (var blob in blobs)
             {
-                var cloudBlob = (ICloudBlob)blob;
-                var requestOptions = new BlobRequestOptions
-                {
-                    RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(15), 5)
-                };
-                await cloudBlob.DeleteAsync(
-                    deleteSnapshotsOption: DeleteSnapshotsOption.None,
-                    accessCondition: AccessCondition.GenerateEmptyCondition(),
-                    options: requestOptions,
-                    operationContext: null);
+                await blobContainerClient.DeleteBlobIfExistsAsync(blob.Name);
             }
         }
     }

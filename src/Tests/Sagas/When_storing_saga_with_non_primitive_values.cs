@@ -4,9 +4,8 @@
     using System.IO;
     using System.Net;
     using System.Threading.Tasks;
+    using Microsoft.Azure.Cosmos.Table;
     using Extensibility;
-    using Microsoft.WindowsAzure.Storage;
-    using Microsoft.WindowsAzure.Storage.Table;
     using NUnit.Framework;
 
     public class When_storing_saga_with_non_primitive_values
@@ -38,13 +37,13 @@
             Assert.AreEqual(nullableDouble, sagaData.NullableDouble);
 
             // assert structure
-            var entity = await GetEntity(saga.Id);
+            var entity = GetEntity(saga.Id);
             var nullableDoubleProp = entity[nameof(NonPrimitiveSerializableSagaData.NullableDouble)];
             Assert.AreEqual(EdmType.Double, nullableDoubleProp.PropertyType);
             Assert.AreEqual(nullableDouble, nullableDoubleProp.DoubleValue);
         }
 
-        static async Task<DictionaryTableEntity> GetEntity(Guid sagaId)
+        static DictionaryTableEntity GetEntity(Guid sagaId)
         {
             var tableName = typeof(NonPrimitiveSerializableSagaData).Name;
             var account = CloudStorageAccount.Parse(Testing.Utillities.GetEnvConfiguredConnectionStringForPersistence());
@@ -54,7 +53,7 @@
 
             try
             {
-                var tableEntity = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).SafeFirstOrDefault();
+                var tableEntity = table.ExecuteQuery(query).SafeFirstOrDefault();
                 return tableEntity;
             }
             catch (StorageException e)

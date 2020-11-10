@@ -9,8 +9,7 @@
     using System.Threading.Tasks;
     using Extensibility;
     using Logging;
-    using Microsoft.WindowsAzure.Storage;
-    using Microsoft.WindowsAzure.Storage.Table;
+    using Microsoft.Azure.Cosmos.Table;
     using Sagas;
     using SecondaryIndices;
 
@@ -21,8 +20,16 @@
             this.autoUpdateSchema = autoUpdateSchema;
             var account = CloudStorageAccount.Parse(connectionString);
             client = account.CreateCloudTableClient();
+            isPremiumEndpoint = IsPremiumEndpoint(client);
 
             secondaryIndices = new SecondaryIndexPersister(GetTable, ScanForSaga, Persist, assumeSecondaryIndicesExist);
+        }
+
+        // the SDK uses exactly this method of changing the underlying executor
+        static bool IsPremiumEndpoint(CloudTableClient cloudTableClient)
+        {
+            var lowerInvariant = cloudTableClient.StorageUri.PrimaryUri.OriginalString.ToLowerInvariant();
+            return lowerInvariant.Contains("https://localhost") && cloudTableClient.StorageUri.PrimaryUri.Port != 10002 || lowerInvariant.Contains(".table.cosmosdb.") || lowerInvariant.Contains(".table.cosmos.");
         }
 
         public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context)
@@ -87,7 +94,8 @@
             {
                 ETag = etag,
                 PartitionKey = sagaId,
-                RowKey = sagaId
+                RowKey = sagaId,
+                WillBeStoredOnPremium = isPremiumEndpoint
             };
 
             await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
@@ -150,6 +158,10 @@
             try
             {
                 var tableEntity = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).SafeFirstOrDefault();
+                if (tableEntity != null)
+                {
+                    tableEntity.WillBeStoredOnPremium = isPremiumEndpoint;
+                }
                 return tableEntity;
             }
             catch (StorageException e) when(e.RequestInformation.HttpStatusCode == (int) HttpStatusCode.NotFound)
@@ -167,7 +179,7 @@
 
             var batch = new TableBatchOperation();
 
-            AddObjectToBatch(batch, saga, partitionKey, secondaryIndexKey, context);
+            AddObjectToBatch(batch, saga, partitionKey, secondaryIndexKey, context, isPremiumEndpoint);
 
             await table.ExecuteBatchAsync(batch).ConfigureAwait(false);
         }
@@ -198,7 +210,7 @@
             return entities.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray();
         }
 
-        static void AddObjectToBatch(TableBatchOperation batch, object entity, string partitionKey, PartitionRowKeyTuple? secondaryIndexKey, ContextBag context)
+        static void AddObjectToBatch(TableBatchOperation batch, object entity, string partitionKey, PartitionRowKeyTuple? secondaryIndexKey, ContextBag context, bool isPremiumEndpoint)
         {
             var rowkey = partitionKey;
 
@@ -218,12 +230,13 @@
             {
                 PartitionKey = partitionKey,
                 RowKey = rowkey,
-                ETag = etag
+                ETag = etag,
+                WillBeStoredOnPremium = isPremiumEndpoint
             }, properties);
 
             if (secondaryIndexKey != null)
             {
-                toPersist.Add(SecondaryIndexIndicatorProperty, secondaryIndexKey.ToString());
+                toPersist[SecondaryIndexIndicatorProperty] = EntityProperty.GeneratePropertyForString(secondaryIndexKey.ToString());
             }
 
             //no longer using InsertOrReplace as it ignores concurrency checks
@@ -242,6 +255,7 @@
         SecondaryIndexPersister secondaryIndices;
         const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
         static ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
+        private bool isPremiumEndpoint;
 
         /// <summary>
         /// Holds saga instance related metadata in a scope of a <see cref="ContextBag" />.

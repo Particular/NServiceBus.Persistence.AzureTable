@@ -4,10 +4,9 @@ namespace NServiceBus.Persistence.AzureStorage
     using System.Collections.Generic;
     using System.IO;
     using System.Reflection;
-    using Microsoft.WindowsAzure.Storage.Table;
+    using Microsoft.Azure.Cosmos.Table;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;
-    using EdmType = Microsoft.WindowsAzure.Storage.Table.EdmType;
 
     static class DictionaryTableEntityExtensions
     {
