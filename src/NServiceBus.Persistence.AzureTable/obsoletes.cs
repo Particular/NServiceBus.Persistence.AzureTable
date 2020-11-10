@@ -74,7 +74,7 @@ namespace NServiceBus
 
     public static partial class ConfigureAzureSagaStorage
     {
-        [ObsoleteEx(Message = "The migration mode that supports looking up correlated sagas by secondary indexes is by default enabled and assumes no full table scan is required. In order to opt-in for a table scan for sagas stored with version 1.4 or earlier use `AllowSecondaryKeyLookupToFallbackToFullTableScan`",
+        [ObsoleteEx(Message = "The compatibility mode that supports looking up correlated sagas by secondary indexes is by default enabled and assumes no full table scan is required. In order to opt-in for a table scan for sagas stored with version 1.4 or earlier use `AllowSecondaryKeyLookupToFallbackToFullTableScan`",
             TreatAsErrorFromVersion = "3",
             RemoveInVersion = "4")]
         public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> AssumeSecondaryIndicesExist(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config)
