@@ -7,8 +7,10 @@
     {
         /// <summary></summary>
         public Type SagaType { get; }
+
         /// <summary></summary>
         public Guid[] Identifiers { get; }
+
         /// <summary></summary>
         public string PropertyName { get; }
 
