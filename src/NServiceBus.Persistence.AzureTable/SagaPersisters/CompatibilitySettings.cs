@@ -1,11 +1,10 @@
-using System;
-
 namespace NServiceBus
 {
     using Settings;
     using Configuration.AdvancedExtensibility;
     using Persistence.AzureTable;
-
+    using System;
+    
     /// <summary>
     /// Custom settings related to backward compatibility.
     /// </summary>
