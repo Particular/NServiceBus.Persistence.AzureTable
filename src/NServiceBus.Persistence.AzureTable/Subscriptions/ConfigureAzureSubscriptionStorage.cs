@@ -8,7 +8,7 @@
     /// <summary>
     /// Configuration extensions for the subscription storage
     /// </summary>
-    public static class ConfigureAzureSubscriptionStorage
+    public static partial class ConfigureAzureSubscriptionStorage
     {
         /// <summary>
         /// Connection string to use for subscriptions storage.
@@ -56,12 +56,15 @@
         }
 
         /// <summary>
-        /// Should an attempt at startup be made to verify if subscriptions storage table exists or not and if not create it.
-        /// <remarks>Operation will fail if connection string does not allow access to create storage tables</remarks>
+        /// Disables the table creation for the subscription storage.
         /// </summary>
-        public static PersistenceExtensions<AzureTablePersistence, StorageType.Subscriptions> CreateSchema(this PersistenceExtensions<AzureTablePersistence, StorageType.Subscriptions> config, bool createSchema)
+        public static PersistenceExtensions<AzureTablePersistence, StorageType.Subscriptions> DisableTableCreation(this PersistenceExtensions<AzureTablePersistence, StorageType.Subscriptions> config)
         {
-            config.GetSettings().Set(WellKnownConfigurationKeys.SubscriptionStorageCreateSchema, createSchema);
+            Guard.AgainstNull(nameof(config), config);
+
+            var settings = config.GetSettings();
+            settings.GetOrCreate<SubscriptionStorageInstallerSettings>().Disabled = true;
+
             return config;
         }
     }

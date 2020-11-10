@@ -12,7 +12,6 @@
         {
             Defaults(s =>
             {
-                s.SetDefault(WellKnownConfigurationKeys.SagaStorageCreateSchema, AzureStorageSagaDefaults.CreateSchema);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, AzureStorageSagaDefaults.AssumeSecondaryIndicesExist);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey, AzureStorageSagaDefaults.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageCompatibilityMode, AzureStorageSagaDefaults.CompatibilityModeEnabled);
@@ -26,7 +25,6 @@
 
         protected override void Setup(FeatureConfigurationContext context)
         {
-            var updateSchema = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCreateSchema);
             var compatibilityModeEnabled = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCompatibilityMode);
             var assumeSecondaryIndicesExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist);
             var assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
@@ -48,7 +46,9 @@
                 new ProvidePartitionKeyFromSagaId(provider.GetRequiredService<IProvideCloudTableClient>(),
                     provider.GetRequiredService<TableHolderResolver>(), secondaryIndices, compatibilityModeEnabled));
 
-            context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideCloudTableClient>(), updateSchema, compatibilityModeEnabled, secondaryIndices));
+            var installerSettings = context.Settings.Get<SynchronizedStorageInstallerSettings>();
+            context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideCloudTableClient>(),
+                installerSettings.Disabled, compatibilityModeEnabled, secondaryIndices));
         }
 
         static readonly ILog Logger = LogManager.GetLogger<SagaStorage>();
