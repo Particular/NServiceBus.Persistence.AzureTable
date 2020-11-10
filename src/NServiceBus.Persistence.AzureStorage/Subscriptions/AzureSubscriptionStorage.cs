@@ -1,4 +1,6 @@
-﻿namespace NServiceBus.Unicast.Subscriptions
+﻿using System.Net;
+
+namespace NServiceBus.Unicast.Subscriptions
 {
     using System;
     using System.Collections.Concurrent;
@@ -76,15 +78,21 @@
         public async Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
         {
             var table = client.GetTableReference(subscriptionTableName);
-            var encodedAddress = EncodeTo64(subscriber.TransportAddress);
-
-            var retrieveOperation = TableOperation.Retrieve<TimeoutDataEntity>(messageType.ToString(), encodedAddress);
-
-            var tableResult = await table.ExecuteAsync(retrieveOperation).ConfigureAwait(false);
-            if (tableResult.Result is TimeoutDataEntity subscription)
+            try
             {
+                var subscription = new Subscription
+                {
+                    RowKey = EncodeTo64(subscriber.TransportAddress),
+                    PartitionKey = messageType.ToString(),
+                    EndpointName = subscriber.Endpoint,
+                    ETag = "*"
+                };
                 var operation = TableOperation.Delete(subscription);
                 await table.ExecuteAsync(operation).ConfigureAwait(false);
+            }
+            catch (StorageException ex) when(ex.RequestInformation.HttpStatusCode == (int) HttpStatusCode.NotFound)
+            {
+                // intentionally ignored
             }
             ClearForMessageType(messageType);
         }

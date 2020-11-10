@@ -3,7 +3,7 @@
     using System;
     using System.Threading.Tasks;
     using Extensibility;
-    using Microsoft.WindowsAzure.Storage;
+    using Microsoft.Azure.Cosmos.Table;
     using NUnit.Framework;
 
     [TestFixture]

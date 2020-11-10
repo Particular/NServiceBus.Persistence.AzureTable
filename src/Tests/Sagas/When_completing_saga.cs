@@ -3,8 +3,8 @@
     using System;
     using System.Threading.Tasks;
     using Extensibility;
-    using Microsoft.WindowsAzure.Storage;
     using NUnit.Framework;
+    using Microsoft.Azure.Cosmos.Table;
 
     [TestFixture]
     public class When_completing_saga
