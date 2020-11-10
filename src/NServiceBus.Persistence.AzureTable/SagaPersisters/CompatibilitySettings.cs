@@ -22,10 +22,10 @@ namespace NServiceBus
         /// </summary>
         public void DisableSecondaryKeyLookupForSagasCorrelatedByProperties()
         {
-            if (wasAssumeSecondaryIndicesExistSet || wasAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKeySet)
+            if (this.GetSettings().HasExplicitValue(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist) || this.GetSettings().HasExplicitValue(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey))
                 throw new InvalidOperationException("Compatibility mode cannot be disabled when AllowSecondaryKeyLookupToFallbackToFullTableScan or AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey are called.");
+            
             this.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageCompatibilityMode, false);
-            wasCompatibilityModeDisabled = true;
         }
 
         /// <summary>
@@ -34,12 +34,10 @@ namespace NServiceBus
         /// <remarks>Enabling this also enables the migration mode meaning enabling this is mutually exclusive to <see cref="DisableSecondaryKeyLookupForSagasCorrelatedByProperties"/></remarks>
         public void AllowSecondaryKeyLookupToFallbackToFullTableScan()
         {
-            if (wasCompatibilityModeDisabled)
+            if (this.GetSettings().HasExplicitValue(WellKnownConfigurationKeys.SagaStorageCompatibilityMode) && this.GetSettings().Get<bool>(WellKnownConfigurationKeys.SagaStorageCompatibilityMode) == false)
                 throw new InvalidOperationException("Compatibility mode was disabled. AllowSecondaryKeyLookupToFallbackToFullTableScan requires compatibility mode to be enabled.");
 
-            this.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageCompatibilityMode, true);
             this.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, false);
-            wasAssumeSecondaryIndicesExistSet = true;
         }
 
         /// <summary>
@@ -49,17 +47,10 @@ namespace NServiceBus
         /// <remarks>Enabling this also enables the migration mode meaning enabling this is mutually exclusive to <see cref="DisableSecondaryKeyLookupForSagasCorrelatedByProperties"/></remarks>
         public void AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey()
         {
-            if (wasCompatibilityModeDisabled)
+            if (this.GetSettings().HasExplicitValue(WellKnownConfigurationKeys.SagaStorageCompatibilityMode) && this.GetSettings().Get<bool>(WellKnownConfigurationKeys.SagaStorageCompatibilityMode) == false)
                 throw new InvalidOperationException("Compatibility mode was disabled. AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey requires compatibility mode to be enabled.");
 
-            this.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageCompatibilityMode, true);
             this.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey, true);
-            wasAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKeySet = true;
         }
-        
-        bool wasCompatibilityModeDisabled { get; set; }
-        bool wasAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKeySet { get; set; }
-        bool wasAssumeSecondaryIndicesExistSet { get; set; }
     }
-
 }
