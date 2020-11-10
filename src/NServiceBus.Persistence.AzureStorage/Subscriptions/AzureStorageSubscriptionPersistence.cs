@@ -5,8 +5,7 @@ namespace NServiceBus
     using Features;
     using Logging;
     using Microsoft.Azure.Cosmos.Table;
-    using Persistence.AzureStorage.Config;
-    using Unicast.Subscriptions;
+    using Persistence.AzureStorage;
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
 
     /// <summary></summary>
@@ -18,13 +17,6 @@ namespace NServiceBus
 
             Defaults(s =>
             {
-#if NETFRAMEWORK
-                var defaultConnectionString = System.Configuration.ConfigurationManager.AppSettings["NServiceBus/Persistence"];
-                if (string.IsNullOrEmpty(defaultConnectionString) != true)
-                {
-                    logger.Warn(@"Connection string should be assigned using code API: var persistence = endpointConfiguration.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>();\npersistence.ConnectionString(""connectionString"");");
-                }
-#endif
                 s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageTableName, AzureSubscriptionStorageDefaults.TableName);
                 s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageCreateSchema , AzureSubscriptionStorageDefaults.CreateSchema);
             });
@@ -33,47 +25,56 @@ namespace NServiceBus
         /// <summary></summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
-            var subscriptionTableName = context.Settings.Get<string>(WellKnownConfigurationKeys.SubscriptionStorageTableName);
-            var connectionString = context.Settings.Get<string>(WellKnownConfigurationKeys.SubscriptionStorageConnectionString);
+            // If a client has been registered in the container, it will added later in the configuration process and replace any client set here
+            context.Settings.TryGet(out IProvideCloudTableClientForSubscriptions cloudTableClientProvider);
+            context.Container.ConfigureComponent(builder => cloudTableClientProvider ?? new ThrowIfNoCloudTableClientForSubscriptionsProvider(), DependencyLifecycle.SingleInstance);
+
+            // the subscription storage specific override takes precedence for backward compatibility
+            string subscriptionTableName;
+            if (context.Settings.TryGet<TableInformation>(out var info) && !context.Settings.HasExplicitValue(WellKnownConfigurationKeys.SubscriptionStorageTableName))
+            {
+                subscriptionTableName = info.TableName;
+            }
+            else
+            {
+                subscriptionTableName = context.Settings.Get<string>(WellKnownConfigurationKeys.SubscriptionStorageTableName);
+            }
+
             var createIfNotExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SubscriptionStorageCreateSchema);
             var cacheFor = context.Settings.GetOrDefault<TimeSpan>(WellKnownConfigurationKeys.SubscriptionStorageCacheFor);
 
             if (createIfNotExist)
             {
-                var startupTask = new StartupTask(subscriptionTableName, connectionString);
-                context.RegisterStartupTask(startupTask);
+                context.RegisterStartupTask(builder => new StartupTask(subscriptionTableName, builder.Build<IProvideCloudTableClientForSubscriptions>()));
             }
 
-            var subscriptionStorage = new AzureSubscriptionStorage(subscriptionTableName, connectionString, cacheFor);
-            context.Container.RegisterSingleton(typeof(ISubscriptionStorage), subscriptionStorage);
+            context.Container.ConfigureComponent<ISubscriptionStorage>(builder => new AzureSubscriptionStorage(builder.Build<IProvideCloudTableClientForSubscriptions>(), subscriptionTableName, cacheFor), DependencyLifecycle.SingleInstance);
         }
 
         class StartupTask : FeatureStartupTask
         {
-            ILog log = LogManager.GetLogger<StartupTask>();
-            string subscriptionTableName;
-            string connectionString;
-
-            public StartupTask(string subscriptionTableName, string connectionString)
+            public StartupTask(string subscriptionTableName, IProvideCloudTableClientForSubscriptions tableClientProvider)
             {
                 this.subscriptionTableName = subscriptionTableName;
-                this.connectionString = connectionString;
+                client = tableClientProvider.Client;
             }
 
             protected override Task OnStart(IMessageSession session)
             {
-                log.Info("Creating Subscription Table");
-                var account = CloudStorageAccount.Parse(connectionString);
-                var table = account.CreateCloudTableClient().GetTableReference(subscriptionTableName);
+                Logger.Info("Creating Subscription Table");
+                var table = client.GetTableReference(subscriptionTableName);
                 return table.CreateIfNotExistsAsync();
             }
 
             protected override Task OnStop(IMessageSession session)
             {
-                return Task.FromResult(0);
+                return Task.CompletedTask;
             }
+
+            string subscriptionTableName;
+            private CloudTableClient client;
         }
 
-        static ILog logger => LogManager.GetLogger<AzureStorageSubscriptionPersistence>();
+        static ILog Logger => LogManager.GetLogger<AzureStorageSubscriptionPersistence>();
     }
 }

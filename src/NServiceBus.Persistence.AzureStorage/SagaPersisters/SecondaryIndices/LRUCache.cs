@@ -1,4 +1,4 @@
-namespace NServiceBus.Persistence.AzureStorage.SecondaryIndices
+namespace NServiceBus.Persistence.AzureStorage
 {
     using System.Collections.Generic;
 

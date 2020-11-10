@@ -3,26 +3,25 @@
     using Features;
     using Logging;
     using Persistence.AzureStorage;
-    using Persistence.AzureStorage.Config;
+    using Sagas;
 
     /// <summary></summary>
     public class AzureStorageSagaPersistence : Feature
     {
         internal AzureStorageSagaPersistence()
         {
-            DependsOn<Features.Sagas>();
             Defaults(s =>
             {
-#if NETFRAMEWORK
-                var defaultConnectionString = System.Configuration.ConfigurationManager.AppSettings["NServiceBus/Persistence"];
-                if (string.IsNullOrEmpty(defaultConnectionString) != true)
-                {
-                    logger.Warn(@"Connection string should be assigned using code API: var persistence = endpointConfiguration.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>();\npersistence.ConnectionString(""connectionString"");");
-                }
-#endif
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageCreateSchema, AzureStorageSagaDefaults.CreateSchema);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, AzureStorageSagaDefaults.AssumeSecondaryIndicesExist);
+                s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey, AzureStorageSagaDefaults.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
+                s.SetDefault(WellKnownConfigurationKeys.MigrationMode, AzureStorageSagaDefaults.MigrationModeEnabled);
+
+                s.EnableFeatureByDefault<SynchronizedStorage>();
+                s.SetDefault<ISagaIdGenerator>(new SagaIdGenerator());
             });
+            DependsOn<SynchronizedStorage>();
+            DependsOn<Features.Sagas>();
         }
 
         /// <summary>
@@ -30,18 +29,25 @@
         /// </summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
-            var connectionstring = context.Settings.Get<string>(WellKnownConfigurationKeys.SagaStorageConnectionString);
             var updateSchema = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCreateSchema);
+            var migrationModeEnabled = context.Settings.Get<bool>(WellKnownConfigurationKeys.MigrationMode);
             var assumeSecondaryIndicesExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist);
+            var assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
+
+            if (migrationModeEnabled)
+            {
+                var addition = assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey? ", assuming the secondary index uses RowKey = PartitionKey," : string.Empty;
+                Logger.Info($"The version of {nameof(AzureStoragePersistence)} uses the migration mode and will fallback to lookup correlated sages based on the secondary index{addition} if necessary.");
+            }
 
             if (assumeSecondaryIndicesExist == false)
             {
-                logger.Warn($"The version of {nameof(AzureStoragePersistence)} used is not configured to optimize sagas creation. To enable optimization, use '.{nameof(ConfigureAzureSagaStorage.AssumeSecondaryIndicesExist)}()' configuration API.");
+                Logger.Warn($"The version of {nameof(AzureStoragePersistence)} used is not configured to optimize sagas creation and might fall back to full table scanning to retrieve correlated sagas. It is suggested to migrate saga instances. Consult the upgrade guides for recommendations.");
             }
 
-            context.Container.ConfigureComponent(builder => new AzureSagaPersister(connectionstring, updateSchema, assumeSecondaryIndicesExist), DependencyLifecycle.InstancePerCall);
+            context.Container.ConfigureComponent<ISagaPersister>(builder => new AzureSagaPersister(builder.Build<IProvideCloudTableClient>(), updateSchema, migrationModeEnabled, assumeSecondaryIndicesExist, assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey), DependencyLifecycle.SingleInstance);
         }
 
-        static ILog logger = LogManager.GetLogger<AzureStorageSagaPersistence>();
+        static readonly ILog Logger = LogManager.GetLogger<AzureStorageSagaPersistence>();
     }
 }

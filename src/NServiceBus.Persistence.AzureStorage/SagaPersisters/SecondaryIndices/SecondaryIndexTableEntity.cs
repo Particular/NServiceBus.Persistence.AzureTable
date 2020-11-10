@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.Persistence.AzureStorage.SecondaryIndices
+﻿namespace NServiceBus.Persistence.AzureStorage
 {
     using System;
     using Microsoft.Azure.Cosmos.Table;
@@ -7,7 +7,5 @@
     class SecondaryIndexTableEntity : TableEntity
     {
         public Guid SagaId { get; set; }
-
-        public byte[] InitialSagaData { get; set; }
     }
 }

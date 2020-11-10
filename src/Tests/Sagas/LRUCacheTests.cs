@@ -1,6 +1,5 @@
 ﻿namespace NServiceBus.Persistence.AzureStorage.Tests
 {
-    using SecondaryIndices;
     using NUnit.Framework;
 
     public class LRUCacheTests

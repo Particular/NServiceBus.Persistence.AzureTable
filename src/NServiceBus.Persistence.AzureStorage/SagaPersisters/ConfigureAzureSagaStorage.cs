@@ -1,12 +1,13 @@
 ﻿namespace NServiceBus
 {
     using Configuration.AdvancedExtensibility;
-    using static Persistence.AzureStorage.Config.WellKnownConfigurationKeys;
+    using Microsoft.Azure.Cosmos.Table;
+    using Persistence.AzureStorage;
 
     /// <summary>
     /// Configuration extensions for the sagas storage
     /// </summary>
-    public static class ConfigureAzureSagaStorage
+    public static partial class ConfigureAzureSagaStorage
     {
         /// <summary>
         /// Connection string to use for sagas storage.
@@ -15,7 +16,20 @@
         {
             AzureStorageSagaGuard.CheckConnectionString(connectionString);
 
-            config.GetSettings().Set(SagaStorageConnectionString, connectionString);
+            config.GetSettings().Set<IProvideCloudTableClient>(new CloudTableClientFromConnectionString(connectionString));
+            return config;
+        }
+
+        /// <summary>
+        /// Cloud Table Client to use for the saga storage.
+        /// </summary>
+        public static PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> UseCloudTableClient(this PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> config, CloudTableClient client)
+        {
+            Guard.AgainstNull(nameof(client), client);
+
+            var settings = config.GetSettings();
+            settings.Set<IProvideCloudTableClient>(new CloudTableClientFromConfiguration(client));
+
             return config;
         }
 
@@ -25,19 +39,22 @@
         /// </summary>
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> CreateSchema(this PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> config, bool createSchema)
         {
-            config.GetSettings().Set(SagaStorageCreateSchema, createSchema);
+            Guard.AgainstNull(nameof(config), config);
+
+            config.GetSettings().Set(WellKnownConfigurationKeys.SagaStorageCreateSchema, createSchema);
             return config;
         }
 
+
+
         /// <summary>
-        /// Opt-out from full table scanning upon new saga creation by confirming that all sagas have secondary indices.
-        /// <remarks>Sagas created with NServiceBus.Persistence.AzureStorage NuGet package have secondary indices by default.
-        /// Sagas created with NServiceBus.Azure NuGet package need to be migrated using upgrade guides provided on our documentation site.</remarks>
+        /// Configures the migration specific settings.
         /// </summary>
-        public static PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> AssumeSecondaryIndicesExist(this PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> config)
+        public static MigrationSettings Migration(this PersistenceExtensions<AzureStoragePersistence, StorageType.Sagas> config)
         {
-            config.GetSettings().Set(SagaStorageAssumeSecondaryIndicesExist, true);
-            return config;
+            Guard.AgainstNull(nameof(config), config);
+
+            return new MigrationSettings(config.GetSettings());
         }
     }
 }

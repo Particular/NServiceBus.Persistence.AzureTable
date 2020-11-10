@@ -17,11 +17,6 @@ namespace NServiceBus.Persistence.AzureStorage
 
         public static object ToEntity(Type entityType, DictionaryTableEntity entity)
         {
-            if (entity == null)
-            {
-                return null;
-            }
-
             var toCreate = Activator.CreateInstance(entityType);
             foreach (var propertyInfo in entityType.GetProperties())
             {

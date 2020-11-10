@@ -1,0 +1,1 @@
+src\SharedAcceptanceTests.All contains tests shared betweet all acceptance tests

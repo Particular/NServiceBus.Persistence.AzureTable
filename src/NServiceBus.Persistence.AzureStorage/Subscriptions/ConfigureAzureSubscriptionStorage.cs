@@ -2,8 +2,8 @@
 {
     using System;
     using Configuration.AdvancedExtensibility;
-    using Subscriptions;
-    using static Persistence.AzureStorage.Config.WellKnownConfigurationKeys;
+    using Microsoft.Azure.Cosmos.Table;
+    using Persistence.AzureStorage;
 
     /// <summary>
     /// Configuration extensions for the subscription storage
@@ -17,7 +17,20 @@
         {
             AzureSubscriptionStorageGuard.CheckConnectionString(connectionString);
 
-            config.GetSettings().Set(SubscriptionStorageConnectionString, connectionString);
+            config.GetSettings().Set<IProvideCloudTableClientForSubscriptions>(new CloudTableClientForSubscriptionsFromConnectionString(connectionString));
+            return config;
+        }
+
+        /// <summary>
+        /// Cloud Table Client to use for the Subscription storage.
+        /// </summary>
+        public static PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> UseCloudTableClient(this PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> config, CloudTableClient client)
+        {
+            Guard.AgainstNull(nameof(client), client);
+
+            var settings = config.GetSettings();
+            settings.Set<IProvideCloudTableClientForSubscriptions>(new CloudTableClientForSubscriptionsFromConfiguration(client));
+
             return config;
         }
 
@@ -28,7 +41,7 @@
         {
             AzureSubscriptionStorageGuard.CheckTableName(tableName);
 
-            config.GetSettings().Set(SubscriptionStorageTableName, tableName);
+            config.GetSettings().Set(WellKnownConfigurationKeys.SubscriptionStorageTableName, tableName);
             return config;
         }
 
@@ -38,7 +51,7 @@
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> CacheFor(this PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> config, TimeSpan timeSpan)
         {
             AzureSubscriptionStorageGuard.AgainstNegativeAndZero(nameof(timeSpan), timeSpan);
-            config.GetSettings().Set(SubscriptionStorageCacheFor, timeSpan);
+            config.GetSettings().Set(WellKnownConfigurationKeys.SubscriptionStorageCacheFor, timeSpan);
             return config;
         }
 
@@ -48,7 +61,7 @@
         /// </summary>
         public static PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> CreateSchema(this PersistenceExtensions<AzureStoragePersistence, StorageType.Subscriptions> config, bool createSchema)
         {
-            config.GetSettings().Set(SubscriptionStorageTableName, createSchema);
+            config.GetSettings().Set(WellKnownConfigurationKeys.SubscriptionStorageCreateSchema, createSchema);
             return config;
         }
     }
