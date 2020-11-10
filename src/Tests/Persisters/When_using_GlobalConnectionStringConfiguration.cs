@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.Persistence.AzureTable.ComponentTests.Persisters
+﻿namespace NServiceBus.Persistence.AzureTable.Tests
 {
     using Configuration.AdvancedExtensibility;
     using NUnit.Framework;
