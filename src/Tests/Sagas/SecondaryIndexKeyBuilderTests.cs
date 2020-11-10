@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.Persistence.AzureTable.ComponentTests.Sagas
+﻿namespace NServiceBus.Persistence.AzureTable.Tests
 {
     using System.Threading.Tasks;
     using NServiceBus.Sagas;
