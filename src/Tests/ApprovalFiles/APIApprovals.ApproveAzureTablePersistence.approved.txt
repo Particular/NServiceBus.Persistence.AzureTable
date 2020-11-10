@@ -3,30 +3,6 @@
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo(@"Tests, PublicKey=00240000048000009400000006020000002400005253413100040000010001006dab16cbf58f948e25e061c40486817b00722158f0a2787d8cd3f503daf44978f96edac144e917e59ec98999e011ddde52c53938a6cb5a87a213aa2b5dfe2d45e9035ca40c63caf36c8692e06bbc3eb717070e8ca5813ef695153429dcc4fd7db4c790c724e959b37d9697f7dc22369a20ae67f4785b424edbc63c732dd9eecf")]
 namespace NServiceBus
 {
-    [System.Obsolete("The persistence has been renamed from AzureStorage to AzureTable. Use `AzureTable" +
-        "Persistence` instead. Will be removed in version 4.0.0.", true)]
-    public class AzureStoragePersistence : NServiceBus.Persistence.PersistenceDefinition
-    {
-        public AzureStoragePersistence() { }
-    }
-    [System.Obsolete("The saga persistence feature is no longer exposed as a public type. Will be remov" +
-        "ed in version 4.0.0.", true)]
-    public class AzureStorageSagaPersistence
-    {
-        public AzureStorageSagaPersistence() { }
-    }
-    [System.Obsolete("The subscription persistence feature is no longer exposed as a public type. Will " +
-        "be removed in version 4.0.0.", true)]
-    public class AzureStorageSubscriptionPersistence
-    {
-        public AzureStorageSubscriptionPersistence() { }
-    }
-    [System.Obsolete("Azure transports support timeouts natively and do not require timeout persistence" +
-        ". Will be removed in version 4.0.0.", true)]
-    public class AzureStorageTimeoutPersistence
-    {
-        public AzureStorageTimeoutPersistence() { }
-    }
     public sealed class AzureTablePersistence : NServiceBus.Persistence.PersistenceDefinition { }
     public class CompatibilitySettings : NServiceBus.Configuration.AdvancedExtensibility.ExposeSettings
     {
@@ -36,12 +12,8 @@ namespace NServiceBus
     }
     public static class ConfigureAzureSagaStorage
     {
-        [System.Obsolete(@"The compatibility mode that supports looking up correlated sagas by secondary indexes is by default enabled and assumes no full table scan is required. In order to opt-in for a table scan for sagas stored with version 1.4 or earlier use `AllowSecondaryKeyLookupToFallbackToFullTableScan`. The member currently throws a NotImplementedException. Will be removed in version 4.0.0.", true)]
-        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> AssumeSecondaryIndicesExist(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config) { }
         public static NServiceBus.CompatibilitySettings Compatibility(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config, string connectionString) { }
-        [System.Obsolete(@"The table creation is enabled when the installers are enabled. In order to disable table creation either remove `endpointConfiguration.EnableInstallers()` or opt-out from table creation by calling `DisableTableCreation`. Table creation at runtime without installers enabled is no longer supported. The tables required at runtime when the installers are disabled need to be created during via operational scripting. Consolidate the upgrade guide for more details. The member currently throws a NotImplementedException. Will be removed in version 4.0.0.", true)]
-        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> CreateSchema(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config, bool createSchema) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> DisableTableCreation(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> UseCloudTableClient(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config, Microsoft.Azure.Cosmos.Table.CloudTableClient client) { }
     }
@@ -56,42 +28,9 @@ namespace NServiceBus
     {
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> CacheFor(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> config, System.TimeSpan timeSpan) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> config, string connectionString) { }
-        [System.Obsolete(@"The table creation is enabled when the installers are enabled. In order to disable table creation either remove `endpointConfiguration.EnableInstallers()` or opt-out from table creation by calling `DisableTableCreation`. Table creation at runtime without installers enabled is no longer supported. The tables required at runtime when the installers are disabled need to be created during via operational scripting. Consolidate the upgrade guide for more details. The member currently throws a NotImplementedException. Will be removed in version 4.0.0.", true)]
-        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> CreateSchema(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> config, bool createSchema) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> DisableTableCreation(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> config) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> TableName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> config, string tableName) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> UseCloudTableClient(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> config, Microsoft.Azure.Cosmos.Table.CloudTableClient client) { }
-    }
-    public static class ConfigureAzureTimeoutStorage
-    {
-        [System.Obsolete("Azure transports support timeouts natively and do not require timeout persistence" +
-            ". The member currently throws a NotImplementedException. Will be removed in vers" +
-            "ion 4.0.0.", true)]
-        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Timeouts> CatchUpInterval(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Timeouts> config, int catchUpInterval) { }
-        [System.Obsolete("Azure transports support timeouts natively and do not require timeout persistence" +
-            ". The member currently throws a NotImplementedException. Will be removed in vers" +
-            "ion 4.0.0.", true)]
-        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Timeouts> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Timeouts> config, string connectionString) { }
-        [System.Obsolete("Azure transports support timeouts natively and do not require timeout persistence" +
-            ". The member currently throws a NotImplementedException. Will be removed in vers" +
-            "ion 4.0.0.", true)]
-        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Timeouts> CreateSchema(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Timeouts> config, bool createSchema) { }
-        [System.Obsolete("Azure transports support timeouts natively and do not require timeout persistence" +
-            ". The member currently throws a NotImplementedException. Will be removed in vers" +
-            "ion 4.0.0.", true)]
-        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Timeouts> PartitionKeyScope(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Timeouts> config, string partitionKeyScope) { }
-        [System.Obsolete("Azure transports support timeouts natively and do not require timeout persistence" +
-            ". The member currently throws a NotImplementedException. Will be removed in vers" +
-            "ion 4.0.0.", true)]
-        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Timeouts> TimeoutDataTableName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Timeouts> config, string tableName) { }
-        [System.Obsolete("Azure transports support timeouts natively and do not require timeout persistence" +
-            ". The member currently throws a NotImplementedException. Will be removed in vers" +
-            "ion 4.0.0.", true)]
-        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Timeouts> TimeoutManagerDataTableName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Timeouts> config, string tableName) { }
-        [System.Obsolete("Azure transports support timeouts natively and do not require timeout persistence" +
-            ". The member currently throws a NotImplementedException. Will be removed in vers" +
-            "ion 4.0.0.", true)]
-        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Timeouts> TimeoutStateContainerName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Timeouts> config, string blobName) { }
     }
     public readonly struct TableEntityPartitionKey : System.IEquatable<NServiceBus.TableEntityPartitionKey>
     {

@@ -7,7 +7,7 @@
     /// <summary>
     /// Configuration extensions for the sagas storage
     /// </summary>
-    public static partial class ConfigureAzureSagaStorage
+    public static class ConfigureAzureSagaStorage
     {
         /// <summary>
         /// Connection string to use for sagas storage.
