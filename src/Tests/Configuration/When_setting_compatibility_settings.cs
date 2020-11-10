@@ -1,11 +1,11 @@
-﻿using System;
-using NServiceBus.Configuration.AdvancedExtensibility;
-using NServiceBus.Persistence.AzureTable;
-using NServiceBus.Settings;
-using NUnit.Framework;
-
-namespace NServiceBus.Testing.Configuration
+﻿namespace NServiceBus.Persistence.AzureTable.Tests
 {
+    using System;
+    using NServiceBus.Configuration.AdvancedExtensibility;
+    using NServiceBus.Persistence.AzureTable;
+    using NServiceBus.Settings;
+    using NUnit.Framework;
+
     [TestFixture]
     public class When_setting_compatibility_settings
     {
@@ -39,7 +39,7 @@ namespace NServiceBus.Testing.Configuration
             settings.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey();
             Assert.Throws<InvalidOperationException>(() => settings.DisableSecondaryKeyLookupForSagasCorrelatedByProperties());
         }
-        
+
         [Test]
         public void Should_throw_when_allowSecondaryKeyLookupToFallbackToFullTableScan_and_disable_compatibility_mode_called()
         {
