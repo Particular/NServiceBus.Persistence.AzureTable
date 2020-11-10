@@ -58,12 +58,14 @@
         /// <summary>
         /// Disables the table creation for the subscription storage.
         /// </summary>
-        public static void DisableTableCreation(this PersistenceExtensions<AzureTablePersistence, StorageType.Subscriptions> persistenceExtensions)
+        public static PersistenceExtensions<AzureTablePersistence, StorageType.Subscriptions> DisableTableCreation(this PersistenceExtensions<AzureTablePersistence, StorageType.Subscriptions> config)
         {
-            Guard.AgainstNull(nameof(persistenceExtensions), persistenceExtensions);
+            Guard.AgainstNull(nameof(config), config);
 
-            var settings = persistenceExtensions.GetSettings();
+            var settings = config.GetSettings();
             settings.GetOrCreate<SubscriptionStorageInstallerSettings>().Disabled = true;
+
+            return config;
         }
     }
 }

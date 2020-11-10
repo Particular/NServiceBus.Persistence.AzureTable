@@ -43,25 +43,27 @@
         /// Sets the default table name that will be used for Saga, Outbox and Subscription storage.
         /// </summary>
         /// <remarks>When the default table is not set the table information needs to be provided as part of the message handling pipeline.</remarks>
-        public static PersistenceExtensions<AzureTablePersistence> DefaultTable(this PersistenceExtensions<AzureTablePersistence> persistenceExtensions, string tableName)
+        public static PersistenceExtensions<AzureTablePersistence> DefaultTable(this PersistenceExtensions<AzureTablePersistence> config, string tableName)
         {
-            Guard.AgainstNull(nameof(persistenceExtensions), persistenceExtensions);
+            Guard.AgainstNull(nameof(config), config);
 
-            persistenceExtensions.GetSettings().Set(new TableInformation(tableName));
+            config.GetSettings().Set(new TableInformation(tableName));
 
-            return persistenceExtensions;
+            return config;
         }
 
         /// <summary>
         /// Disables the table creation for Saga, Outbox and Subscription storage.
         /// </summary>
-        public static void DisableTableCreation(this PersistenceExtensions<AzureTablePersistence> persistenceExtensions)
+        public static PersistenceExtensions<AzureTablePersistence>  DisableTableCreation(this PersistenceExtensions<AzureTablePersistence> config)
         {
-            Guard.AgainstNull(nameof(persistenceExtensions), persistenceExtensions);
+            Guard.AgainstNull(nameof(config), config);
 
-            var settings = persistenceExtensions.GetSettings();
+            var settings = config.GetSettings();
             settings.GetOrCreate<SynchronizedStorageInstallerSettings>().Disabled = true;
             settings.GetOrCreate<SubscriptionStorageInstallerSettings>().Disabled = true;
+
+            return config;
         }
     }
 }

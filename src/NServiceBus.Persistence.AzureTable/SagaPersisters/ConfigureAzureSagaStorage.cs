@@ -36,12 +36,14 @@
         /// <summary>
         /// Disables the table creation for the Saga storage.
         /// </summary>
-        public static void DisableTableCreation(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> persistenceExtensions)
+        public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> DisableTableCreation(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config)
         {
-            Guard.AgainstNull(nameof(persistenceExtensions), persistenceExtensions);
+            Guard.AgainstNull(nameof(config), config);
 
-            var settings = persistenceExtensions.GetSettings();
+            var settings = config.GetSettings();
             settings.GetOrCreate<SynchronizedStorageInstallerSettings>().Disabled = true;
+
+            return config;
         }
 
         /// <summary>
