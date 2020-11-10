@@ -4,6 +4,14 @@
 
     class SynchronizedStorage : Feature
     {
+        public SynchronizedStorage()
+        {
+            Defaults(s =>
+            {
+                s.EnableFeatureByDefault<SynchronizedStorageInstallerFeature>();
+            });
+        }
+
         protected override void Setup(FeatureConfigurationContext context)
         {
             // If a client has been registered in the container, it will added later in the configuration process and replace any client set here

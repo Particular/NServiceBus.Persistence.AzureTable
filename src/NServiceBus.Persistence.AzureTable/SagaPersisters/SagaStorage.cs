@@ -11,7 +11,6 @@
         {
             Defaults(s =>
             {
-                s.SetDefault(WellKnownConfigurationKeys.SagaStorageCreateSchema, AzureStorageSagaDefaults.CreateSchema);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, AzureStorageSagaDefaults.AssumeSecondaryIndicesExist);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey, AzureStorageSagaDefaults.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageCompatibilityMode, AzureStorageSagaDefaults.CompatibilityModeEnabled);
@@ -25,7 +24,6 @@
 
         protected override void Setup(FeatureConfigurationContext context)
         {
-            var updateSchema = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCreateSchema);
             var compatibilityModeEnabled = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCompatibilityMode);
             var assumeSecondaryIndicesExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist);
             var assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
@@ -47,7 +45,8 @@
                 new ProvidePartitionKeyFromSagaId(builder.Build<IProvideCloudTableClient>(),
                     builder.Build<TableHolderResolver>(), secondaryIndices, compatibilityModeEnabled), DependencyLifecycle.SingleInstance);
 
-            context.Container.ConfigureComponent<ISagaPersister>(builder => new AzureSagaPersister(builder.Build<IProvideCloudTableClient>(), updateSchema, compatibilityModeEnabled, secondaryIndices), DependencyLifecycle.SingleInstance);
+            var installerSettings = context.Settings.Get<SynchronizedStorageInstallerSettings>();
+            context.Container.ConfigureComponent<ISagaPersister>(builder => new AzureSagaPersister(builder.Build<IProvideCloudTableClient>(), installerSettings.Disabled, compatibilityModeEnabled, secondaryIndices), DependencyLifecycle.SingleInstance);
         }
 
         static readonly ILog Logger = LogManager.GetLogger<SagaStorage>();
