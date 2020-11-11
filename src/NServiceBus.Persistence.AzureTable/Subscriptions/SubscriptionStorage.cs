@@ -25,6 +25,16 @@ namespace NServiceBus.Persistence.AzureTable
 
             var subscriptionTableName = context.Settings.GetSubscriptionTableName();
             var cacheFor = context.Settings.GetOrDefault<TimeSpan>(WellKnownConfigurationKeys.SubscriptionStorageCacheFor);
+
+            context.Settings.AddStartupDiagnosticsSection(
+                "NServiceBus.Persistence.AzureTable.Subscriptions",
+                new
+                {
+                    ConnectionMechanism = cloudTableClientProvider is CloudTableClientForSubscriptionsFromConnectionString ? "ConnectionString" : "Custom",
+                    TableName = subscriptionTableName,
+                    CacheFor = cacheFor,
+                });
+           
             context.Container.ConfigureComponent<ISubscriptionStorage>(builder => new AzureSubscriptionStorage(builder.Build<IProvideCloudTableClientForSubscriptions>(), subscriptionTableName, cacheFor), DependencyLifecycle.SingleInstance);
         }
     }
