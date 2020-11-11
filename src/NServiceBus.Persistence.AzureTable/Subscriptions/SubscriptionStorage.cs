@@ -7,7 +7,6 @@ namespace NServiceBus.Persistence.AzureTable
 
     class SubscriptionStorage : Feature
     {
-
         internal SubscriptionStorage()
         {
 #pragma warning disable 618
@@ -29,6 +28,16 @@ namespace NServiceBus.Persistence.AzureTable
 
             var subscriptionTableName = context.Settings.GetSubscriptionTableName();
             var cacheFor = context.Settings.GetOrDefault<TimeSpan>(WellKnownConfigurationKeys.SubscriptionStorageCacheFor);
+
+            context.Settings.AddStartupDiagnosticsSection(
+                "NServiceBus.Persistence.AzureTable.Subscriptions",
+                new
+                {
+                    ConnectionMechanism = cloudTableClientProvider is CloudTableClientForSubscriptionsFromConnectionString ? "ConnectionString" : "Custom",
+                    TableName = subscriptionTableName,
+                    CacheFor = cacheFor,
+                });
+
             context.Services.AddSingleton<ISubscriptionStorage>(provider => new AzureSubscriptionStorage(provider.GetRequiredService<IProvideCloudTableClientForSubscriptions>(), subscriptionTableName, cacheFor));
         }
     }
