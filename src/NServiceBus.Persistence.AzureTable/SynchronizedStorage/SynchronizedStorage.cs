@@ -25,6 +25,14 @@
                 defaultTableInformation = info;
             }
 
+            context.Settings.AddStartupDiagnosticsSection(
+                "NServiceBus.Persistence.AzureTable.StorageSession",
+                new
+                {
+                    ConnectionMechanism = cloudTableClientProvider is CloudTableClientFromConnectionString ? "ConnectionString" : "CloudTableClient",
+                    DefaultTable = defaultTableInformation.HasValue ? defaultTableInformation.Value.TableName : "Not used",
+                });
+
             var currentSharedTransactionalBatchHolder = new CurrentSharedTransactionalBatchHolder();
 
             context.Services.AddTransient<IAzureTableStorageSession>(_ => currentSharedTransactionalBatchHolder.Current);
