@@ -10,7 +10,7 @@
   <ItemGroup>
     <PackageReference Include="Particular.CodeRules" Version="0.7.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
-    <PackageReference Include="NServiceBus" Version="8.0.0-alpha.631" />
+    <PackageReference Include="NServiceBus" Version="8.0.0-alpha.644" />
     <PackageReference Include="NServiceBus.Testing" Version="8.0.0-alpha.107" />
     <PackageReference Include="NUnit" Version="3.12.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
