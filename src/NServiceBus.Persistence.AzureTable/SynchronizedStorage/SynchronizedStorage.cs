@@ -29,7 +29,7 @@
                 "NServiceBus.Persistence.AzureTable.StorageSession",
                 new
                 {
-                    ConnectionMechanism = cloudTableClientProvider is CloudTableClientFromConnectionString ? "ConnectionString" : "Custom",
+                    ConnectionMechanism = cloudTableClientProvider is CloudTableClientFromConnectionString ? "ConnectionString" : "CloudTableClient",
                     DefaultTable = defaultTableInformation.HasValue ? defaultTableInformation.Value.TableName : "Not used",
                 });
 

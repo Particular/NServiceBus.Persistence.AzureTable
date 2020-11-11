@@ -33,7 +33,7 @@ namespace NServiceBus.Persistence.AzureTable
                 "NServiceBus.Persistence.AzureTable.Subscriptions",
                 new
                 {
-                    ConnectionMechanism = cloudTableClientProvider is CloudTableClientForSubscriptionsFromConnectionString ? "ConnectionString" : "Custom",
+                    ConnectionMechanism = cloudTableClientProvider is CloudTableClientForSubscriptionsFromConnectionString ? "ConnectionString" : "CloudTableClient",
                     TableName = subscriptionTableName,
                     CacheFor = cacheFor,
                 });
