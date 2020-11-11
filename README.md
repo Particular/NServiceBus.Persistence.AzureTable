@@ -13,6 +13,6 @@ After creating the Azure Storage account, locate the connection string for the a
 
 Copy the connection string into an environment variable called `AzureTable_StorageTable_ConnectionString`. 
 
-After creating the Azure Cosmos DB Table API, locate the connection string for the account. You can find it by selecting the Azure Cosmos DB instance, selecting "Connection String", then copy the primary or secondary connection string.
+After creating the Azure Cosmos DB Table API account, locate the connection string for the account. You can find it by selecting the Azure Cosmos DB instance, selecting "Connection String", then copy the primary or secondary connection string.
 
 Copy the connection string into an environment variable called `AzureTable_CosmosDB_ConnectionString`. 
