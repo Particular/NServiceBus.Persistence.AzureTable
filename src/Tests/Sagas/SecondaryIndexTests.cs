@@ -34,7 +34,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         [Test]
         public async Task When_empty_row_key_should_log_warn_and_assume_row_key_partition_key()
         {
-            var someId = new Guid("E57CF37C-1CBC-4B08-8C19-3FCE2FFC0451").ToString();
+            var someId = new Guid("E57CF37C-1CBC-4B08-8C19-3FCE2FFC0451");
 
             scope = LogManager.Use<TestingLoggerFactory>()
                 .BeginScope(new StringWriter(logStatements));
@@ -51,7 +51,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         [Test]
         public async Task When_opt_in_for_non_empty_row_key_should_not_log_warn()
         {
-            var someId = new Guid("E57CF37C-1CBC-4B08-8C19-3FCE2FFC0451").ToString();
+            var someId = new Guid("E57CF37C-1CBC-4B08-8C19-3FCE2FFC0451");
 
             scope = LogManager.Use<TestingLoggerFactory>()
                 .BeginScope(new StringWriter(logStatements));
@@ -71,7 +71,10 @@ namespace NServiceBus.Persistence.AzureTable.Tests
             scope.Dispose();
         }
 
-        class TestSagaData : ContainSagaData {}
+        class TestSagaData : ContainSagaData
+        {
+            public Guid SomeId { get; set; }
+        }
 
         StringBuilder logStatements;
         IDisposable scope;
