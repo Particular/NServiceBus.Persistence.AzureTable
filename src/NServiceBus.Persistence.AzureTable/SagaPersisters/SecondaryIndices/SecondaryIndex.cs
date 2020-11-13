@@ -52,7 +52,7 @@
                 return secondaryIndexEntry.SagaId;
             }
 
-            if (assumeSecondaryIndicesExist || exec.Result is null)
+            if (assumeSecondaryIndicesExist)
             {
                 return null;
             }
