@@ -32,7 +32,7 @@
             if (compatibilityModeEnabled)
             {
                 var addition = assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey? ", assuming the secondary index uses RowKey = PartitionKey," : string.Empty;
-                Logger.Info($"The version of {nameof(AzureTablePersistence)} uses the migration mode and will fallback to lookup correlated sages based on the secondary index{addition} if necessary.");
+                Logger.Info($"The version of {nameof(AzureTablePersistence)} uses the migration mode and will fallback to lookup correlated sagas based on the secondary index{addition} if necessary.");
             }
 
             if (assumeSecondaryIndicesExist == false)
