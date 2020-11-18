@@ -18,13 +18,10 @@ namespace NServiceBus.Persistence.AzureTable
                 return;
             }
 
-            if (!context.Settings.TryGet<TableInformation>(out var tableInformation))
+            if (context.Settings.TryGet<TableInformation>(out var tableInformation))
             {
-                settings.Disabled = true;
-                return;
+                settings.TableName = tableInformation.TableName;
             }
-
-            settings.TableName = tableInformation.TableName;
         }
     }
 }
