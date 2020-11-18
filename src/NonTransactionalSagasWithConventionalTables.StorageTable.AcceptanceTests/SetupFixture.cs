@@ -1,6 +1,5 @@
 ﻿namespace NServiceBus.AcceptanceTests
 {
-    using System.Linq;
     using System.Threading.Tasks;
     using NUnit.Framework;
     using Microsoft.Azure.Cosmos.Table;
@@ -10,21 +9,14 @@
     public class SetupFixture
     {
         [OneTimeSetUp]
-        public async Task OneTimeSetUp()
+        public Task OneTimeSetUp()
         {
             var connectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
 
             var account = CloudStorageAccount.Parse(connectionString);
             TableClient = account.CreateCloudTableClient();
 
-            allSagaDataTypeNames = GetType().Assembly.GetTypes().Where(x => x.GetInterfaces().Contains(typeof(IContainSagaData)))
-                .Select(x => x.Name).ToArray();
-
-            foreach (var dataTypeName in allSagaDataTypeNames)
-            {
-                var table = TableClient.GetTableReference(dataTypeName);
-                await table.CreateIfNotExistsAsync();
-            }
+            return Task.CompletedTask;
         }
 
         [OneTimeTearDown]
@@ -35,6 +27,5 @@
         }
 
         public static CloudTableClient TableClient;
-        private string[] allSagaDataTypeNames;
     }
 }
