@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.Persistence.AzureTable.Previous
+﻿namespace NServiceBus.Persistence.AzureTable.Release_2x
 {
     using System;
     using Microsoft.Azure.Cosmos.Table;
