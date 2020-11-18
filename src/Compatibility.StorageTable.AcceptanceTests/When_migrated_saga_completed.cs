@@ -7,7 +7,7 @@ namespace NServiceBus.AcceptanceTests
     using EndpointTemplates;
     using NUnit.Framework;
     using Extensibility;
-    using Persistence.AzureTable.Previous;
+    using Persistence.AzureTable.Release_2x;
     using Sagas;
 
     public class When_migrated_saga_completed : CompatibilityAcceptanceTest
