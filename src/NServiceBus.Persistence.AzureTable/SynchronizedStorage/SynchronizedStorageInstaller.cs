@@ -24,7 +24,7 @@ namespace NServiceBus.Persistence.AzureTable
             }
 
             var installerSettings = settings.Get<SynchronizedStorageInstallerSettings>();
-            if (installerSettings.Disabled)
+            if (installerSettings.Disabled || string.IsNullOrEmpty(installerSettings.TableName))
             {
                 return;
             }
