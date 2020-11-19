@@ -4,7 +4,7 @@ namespace NServiceBus.AcceptanceTests
     using System.Net;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.Table;
-    using Persistence.AzureTable.Previous;
+    using Persistence.AzureTable.Release_2x;
     using Testing;
 
     public class CompatibilityAcceptanceTest : NServiceBusAcceptanceTest
