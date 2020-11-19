@@ -9,7 +9,7 @@ namespace NServiceBus.AcceptanceTests
     using Extensibility;
     using Sagas;
     using Microsoft.Azure.Cosmos.Table;
-    using Persistence.AzureTable.Previous;
+    using Persistence.AzureTable.Release_2x;
     using Persistence.AzureTable;
     using Pipeline;
 
