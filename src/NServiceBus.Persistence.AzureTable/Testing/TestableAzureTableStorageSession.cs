@@ -8,12 +8,12 @@
     /// <summary>
     /// A fake implementation for <see cref="SynchronizedStorageSession"/> for testing purposes.
     /// </summary>
-    public class TestableAzureTableStorageStorageSession : SynchronizedStorageSession, IWorkWithSharedTransactionalBatch
+    public class TestableAzureTableStorageSession : SynchronizedStorageSession, IWorkWithSharedTransactionalBatch
     {
         /// <summary>
-        /// Initializes a new TestableCosmosSynchronizedStorageSession with a partition key.
+        /// Initializes a new TestableAzureTableStorageSession with a partition key.
         /// </summary>
-        public TestableAzureTableStorageStorageSession(TableEntityPartitionKey partitionKey)
+        public TestableAzureTableStorageSession(TableEntityPartitionKey partitionKey)
         {
             var contextBag = new ContextBag();
             contextBag.Set(partitionKey);
