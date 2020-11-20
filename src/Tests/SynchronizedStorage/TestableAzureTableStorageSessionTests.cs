@@ -7,14 +7,14 @@
     using Microsoft.Azure.Cosmos.Table;
 
     [TestFixture]
-    public class TestableAzureStorageStorageSessionTests
+    public class TestableAzureTableStorageSessionTests
     {
         [Test]
         public async Task CanBeUsed()
         {
             var transactionalBatch = new TableBatchOperation();
 
-            var testableSession = new TestableAzureTableStorageStorageSession(new TableEntityPartitionKey("mypartitionkey"))
+            var testableSession = new TestableAzureTableStorageSession(new TableEntityPartitionKey("mypartitionkey"))
             {
                 Batch = transactionalBatch
             };

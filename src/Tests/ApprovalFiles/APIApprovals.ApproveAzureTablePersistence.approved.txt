@@ -97,9 +97,9 @@ namespace NServiceBus.Persistence.AzureTable
 }
 namespace NServiceBus.Testing
 {
-    public class TestableAzureTableStorageStorageSession : NServiceBus.Persistence.AzureTable.IAzureTableStorageSession, NServiceBus.Persistence.SynchronizedStorageSession
+    public class TestableAzureTableStorageSession : NServiceBus.Persistence.AzureTable.IAzureTableStorageSession, NServiceBus.Persistence.SynchronizedStorageSession
     {
-        public TestableAzureTableStorageStorageSession(NServiceBus.TableEntityPartitionKey partitionKey) { }
+        public TestableAzureTableStorageSession(NServiceBus.TableEntityPartitionKey partitionKey) { }
         public Microsoft.Azure.Cosmos.Table.TableBatchOperation Batch { get; set; }
         public string PartitionKey { get; }
         public Microsoft.Azure.Cosmos.Table.CloudTable Table { get; set; }
