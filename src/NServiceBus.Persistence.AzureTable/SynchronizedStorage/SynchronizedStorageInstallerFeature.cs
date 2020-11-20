@@ -13,6 +13,12 @@ namespace NServiceBus.Persistence.AzureTable
         {
             var settings = context.Settings.Get<SynchronizedStorageInstallerSettings>();
 
+            // if it hasn't been explicitly disabled installer settings need to be considered
+            if (!settings.Disabled)
+            {
+                settings.Disabled = !context.Settings.GetOrDefault<bool>("Installers.Enable");
+            }
+
             if (settings.Disabled)
             {
                 return;
