@@ -10,7 +10,7 @@ namespace NServiceBus.AcceptanceTests
     using EndpointTemplates;
     using NUnit.Framework;
 
-    public partial class When_saga_table_doesnt_exist_and_schema_creation_off : NServiceBusAcceptanceTest
+    public partial class When_saga_table_doesnt_exist_and_table_creation_disabled : NServiceBusAcceptanceTest
     {
         [Test]
         public void Should_throw_not_supported()
