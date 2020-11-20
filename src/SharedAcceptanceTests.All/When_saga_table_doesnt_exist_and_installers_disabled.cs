@@ -5,12 +5,13 @@ namespace NServiceBus.AcceptanceTests
     using System.Threading.Tasks;
     using NServiceBus;
     using AcceptanceTesting;
+    using Configuration.AdvancedExtensibility;
     using NServiceBus.AcceptanceTesting.Support;
     using Testing;
     using EndpointTemplates;
     using NUnit.Framework;
 
-    public partial class When_saga_table_doesnt_exist_and_table_creation_disabled : NServiceBusAcceptanceTest
+    public partial class When_saga_table_doesnt_exist_and_installers_disabled : NServiceBusAcceptanceTest
     {
         private const string TableThatDoesntExist = "doesnotexist";
 
@@ -25,7 +26,7 @@ namespace NServiceBus.AcceptanceTests
         {
             var exception = Assert.ThrowsAsync<MessageFailedException>(async () =>
                 await Scenario.Define<Context>()
-                    .WithEndpoint<EndpointWithTableCreationDisabled>(b => b.When(session => session.SendLocal(new StartSagaMessage
+                    .WithEndpoint<EndpointWithInstallersOff>(b => b.When(session => session.SendLocal(new StartSagaMessage
                     {
                         SomeId = Guid.NewGuid()
                     })))
@@ -44,18 +45,19 @@ namespace NServiceBus.AcceptanceTests
         {
         }
 
-        public class EndpointWithTableCreationDisabled : EndpointConfigurationBuilder
+        public class EndpointWithInstallersOff : EndpointConfigurationBuilder
         {
-            public EndpointWithTableCreationDisabled()
+            public EndpointWithInstallersOff()
             {
                 EndpointSetup<DefaultServer>(c =>
                 {
+                    // so that we don't have to create a new endpoint template
+                    c.GetSettings().Set("Installers.Enable", false);
+
                     var sagaPersistence = c.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
                     sagaPersistence.DefaultTable(TableThatDoesntExist);
-                    sagaPersistence.DisableTableCreation();
 
                     var subscriptionStorage = c.UsePersistence<AzureTablePersistence, StorageType.Subscriptions>();
-                    subscriptionStorage.DisableTableCreation();
                 });
             }
 
