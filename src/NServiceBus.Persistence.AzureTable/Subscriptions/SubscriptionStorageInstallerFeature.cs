@@ -13,6 +13,13 @@ namespace NServiceBus.Persistence.AzureTable
         protected override void Setup(FeatureConfigurationContext context)
         {
             var settings = context.Settings.Get<SubscriptionStorageInstallerSettings>();
+
+            // if it hasn't been explicitly disabled installer settings need to be considered
+            if (!settings.Disabled)
+            {
+                settings.Disabled = !context.Settings.GetOrDefault<bool>("Installers.Enable");
+            }
+
             if (settings.Disabled)
             {
                 return;
