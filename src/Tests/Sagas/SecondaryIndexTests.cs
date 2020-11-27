@@ -26,7 +26,8 @@ namespace NServiceBus.Persistence.AzureTable.Tests
             var account = CloudStorageAccount.Parse(ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence(tableApiType));
 
             client = account.CreateCloudTableClient();
-            tableName = nameof(SecondaryIndexTests).ToLower();
+
+            tableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}{nameof(SecondaryIndexTests)}".ToLowerInvariant();
             cloudTable = client.GetTableReference(tableName);
             await cloudTable.CreateIfNotExistsAsync();
         }
@@ -66,9 +67,9 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         }
 
         [TearDown]
-        public void Teardown()
+        public async Task Teardown()
         {
-            scope.Dispose();
+            await cloudTable.DeleteIfExistsAsync();
         }
 
         class TestSagaData : ContainSagaData
