@@ -2,6 +2,7 @@
 {
     using System.Linq;
     using System;
+    using System.IO;
     using System.Threading.Tasks;
     using NUnit.Framework;
     using Microsoft.Azure.Cosmos.Table;
@@ -18,42 +19,30 @@
             var account = CloudStorageAccount.Parse(connectionString);
             TableClient = account.CreateCloudTableClient();
 
-            allSagaDataTypeNames = GetType().Assembly.GetTypes().Where(x => x.GetInterfaces().Contains(typeof(IContainSagaData)))
-                .Select(x => x.Name).ToArray();
+            TablePrefix = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();
 
-            foreach (var dataTypeName in allSagaDataTypeNames)
+            allConventionalSagaTableNamesWithPrefix = GetType().Assembly.GetTypes().Where(x => x.GetInterfaces().Contains(typeof(IContainSagaData)))
+                .Select(x => $"{TablePrefix}{x.Name}").ToArray();
+
+            foreach (var tableName in allConventionalSagaTableNamesWithPrefix)
             {
-                var table = TableClient.GetTableReference(dataTypeName);
+                var table = TableClient.GetTableReference(tableName);
                 await table.CreateIfNotExistsAsync();
             }
         }
 
         [OneTimeTearDown]
-        public Task OneTimeTearDown()
+        public async Task OneTimeTearDown()
         {
-            // we can't delete the tables due to conflicts when recreating
-            return Task.CompletedTask;
-        }
-
-        public static string GetEnvConfiguredConnectionStringForPersistence()
-        {
-            var environmentVartiableName = "AzureStoragePersistence_ConnectionString";
-            var connectionString = GetEnvironmentVariable(environmentVartiableName);
-            if (string.IsNullOrEmpty(connectionString))
+            foreach (var tableName in allConventionalSagaTableNamesWithPrefix)
             {
-                throw new Exception($"Oh no! We couldn't find an environment variable '{environmentVartiableName}' with Azure Storage connection string.");
+                var table = TableClient.GetTableReference(tableName);
+                await table.DeleteIfExistsAsync();
             }
-
-            return connectionString;
-        }
-
-        static string GetEnvironmentVariable(string variable)
-        {
-            var candidate = Environment.GetEnvironmentVariable(variable, EnvironmentVariableTarget.User);
-            return string.IsNullOrWhiteSpace(candidate) ? Environment.GetEnvironmentVariable(variable) : candidate;
         }
 
         public static CloudTableClient TableClient;
-        private string[] allSagaDataTypeNames;
+        public static string TablePrefix;
+        private string[] allConventionalSagaTableNamesWithPrefix;
     }
 }

@@ -1,5 +1,8 @@
 ﻿namespace NServiceBus.AcceptanceTests
 {
+    using System;
+    using System.IO;
+    using System.Linq;
     using System.Threading.Tasks;
     using NUnit.Framework;
     using Microsoft.Azure.Cosmos.Table;
@@ -16,16 +19,26 @@
             var account = CloudStorageAccount.Parse(connectionString);
             TableClient = account.CreateCloudTableClient();
 
+            TablePrefix = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();
+
+            allConventionalSagaTableNamesWithPrefix = GetType().Assembly.GetTypes().Where(x => x.GetInterfaces().Contains(typeof(IContainSagaData)))
+                .Select(x => $"{TablePrefix}{x.Name}").ToArray();
+
             return Task.CompletedTask;
         }
 
         [OneTimeTearDown]
-        public Task OneTimeTearDown()
+        public async Task OneTimeTearDown()
         {
-            // we can't delete the tables due to conflicts when recreating
-            return Task.CompletedTask;
+            foreach (var tableName in allConventionalSagaTableNamesWithPrefix)
+            {
+                var table = TableClient.GetTableReference(tableName);
+                await table.DeleteIfExistsAsync();
+            }
         }
 
         public static CloudTableClient TableClient;
+        public static string TablePrefix;
+        private string[] allConventionalSagaTableNamesWithPrefix;
     }
 }
