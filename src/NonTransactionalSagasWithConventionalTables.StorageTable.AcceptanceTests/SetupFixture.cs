@@ -28,13 +28,13 @@
         }
 
         [OneTimeTearDown]
-        public async Task OneTimeTearDown()
+        public Task OneTimeTearDown()
         {
-            foreach (var tableName in allConventionalSagaTableNamesWithPrefix)
+            return Task.WhenAll(allConventionalSagaTableNamesWithPrefix.Select(async tableName =>
             {
                 var table = TableClient.GetTableReference(tableName);
                 await table.DeleteIfExistsAsync();
-            }
+            }).ToArray());
         }
 
         public static CloudTableClient TableClient;

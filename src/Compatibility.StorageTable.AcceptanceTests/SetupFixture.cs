@@ -12,7 +12,7 @@
     public class SetupFixture
     {
         [OneTimeSetUp]
-        public async Task OneTimeSetUp()
+        public Task OneTimeSetUp()
         {
             var connectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
 
@@ -24,21 +24,21 @@
             allConventionalSagaTableNamesWithPrefix = GetType().Assembly.GetTypes().Where(x => x.GetInterfaces().Contains(typeof(IContainSagaData)))
                 .Select(x => $"{TablePrefix}{x.Name}").ToArray();
 
-            foreach (var tableName in allConventionalSagaTableNamesWithPrefix)
+            return Task.WhenAll(allConventionalSagaTableNamesWithPrefix.Select(async tableName =>
             {
                 var table = TableClient.GetTableReference(tableName);
                 await table.CreateIfNotExistsAsync();
-            }
+            }).ToArray());
         }
 
         [OneTimeTearDown]
-        public async Task OneTimeTearDown()
+        public Task OneTimeTearDown()
         {
-            foreach (var tableName in allConventionalSagaTableNamesWithPrefix)
+            return Task.WhenAll(allConventionalSagaTableNamesWithPrefix.Select(async tableName =>
             {
                 var table = TableClient.GetTableReference(tableName);
                 await table.DeleteIfExistsAsync();
-            }
+            }).ToArray());
         }
 
         public static CloudTableClient TableClient;
