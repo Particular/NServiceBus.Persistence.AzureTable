@@ -39,7 +39,7 @@
             SagaIdGenerator = new SagaIdGenerator();
             var resolver = new TableHolderResolver(this, new TableInformation(SetupFixture.TableName));
             var secondaryIndices = new SecondaryIndex();
-            SagaStorage = new AzureSagaPersister(this, true, false, secondaryIndices);
+            SagaStorage = new AzureSagaPersister(this, true, false, secondaryIndices, null);
             SynchronizedStorage = new StorageSessionFactory(resolver, null);
             SynchronizedStorageAdapter = new StorageSessionAdapter(null);
             OutboxStorage = new OutboxPersister(resolver);

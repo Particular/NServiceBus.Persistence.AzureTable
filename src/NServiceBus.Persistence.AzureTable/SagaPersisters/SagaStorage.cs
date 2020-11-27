@@ -15,6 +15,7 @@
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, AzureStorageSagaDefaults.AssumeSecondaryIndicesExist);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey, AzureStorageSagaDefaults.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageCompatibilityMode, AzureStorageSagaDefaults.CompatibilityModeEnabled);
+                s.SetDefault(WellKnownConfigurationKeys.SagaStorageConventionalTablePrefix, AzureStorageSagaDefaults.ConventionalTablePrefix);
 
                 s.EnableFeatureByDefault<SynchronizedStorage>();
                 s.SetDefault<ISagaIdGenerator>(new SagaIdGenerator());
@@ -28,6 +29,8 @@
             var compatibilityModeEnabled = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCompatibilityMode);
             var assumeSecondaryIndicesExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist);
             var assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
+            // backdoor for testing
+            var conventionalTablePrefix = context.Settings.Get<string>(WellKnownConfigurationKeys.SagaStorageConventionalTablePrefix);
 
             if (compatibilityModeEnabled)
             {
@@ -48,7 +51,7 @@
 
             var installerSettings = context.Settings.Get<SynchronizedStorageInstallerSettings>();
             context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideCloudTableClient>(),
-                installerSettings.Disabled, compatibilityModeEnabled, secondaryIndices));
+                installerSettings.Disabled, compatibilityModeEnabled, secondaryIndices, conventionalTablePrefix));
         }
 
         static readonly ILog Logger = LogManager.GetLogger<SagaStorage>();
