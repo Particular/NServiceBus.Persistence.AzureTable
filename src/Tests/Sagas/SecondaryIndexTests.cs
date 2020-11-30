@@ -19,7 +19,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         }
 
         [SetUp]
-        public async Task SetUp()
+        public Task SetUp()
         {
             logStatements = new StringBuilder();
 
@@ -29,7 +29,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             tableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}{nameof(SecondaryIndexTests)}".ToLowerInvariant();
             cloudTable = client.GetTableReference(tableName);
-            await cloudTable.CreateIfNotExistsAsync();
+            return cloudTable.CreateIfNotExistsAsync();
         }
 
         [Test]
@@ -67,9 +67,9 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         }
 
         [TearDown]
-        public async Task Teardown()
+        public Task Teardown()
         {
-            await cloudTable.DeleteIfExistsAsync();
+            return cloudTable.DeleteIfExistsAsync();
         }
 
         class TestSagaData : ContainSagaData

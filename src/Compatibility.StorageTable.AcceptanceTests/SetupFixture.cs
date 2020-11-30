@@ -24,20 +24,20 @@
             allConventionalSagaTableNamesWithPrefix = GetType().Assembly.GetTypes().Where(x => x.GetInterfaces().Contains(typeof(IContainSagaData)))
                 .Select(x => $"{TablePrefix}{x.Name}").ToArray();
 
-            return Task.WhenAll(allConventionalSagaTableNamesWithPrefix.Select(async tableName =>
+            return Task.WhenAll(allConventionalSagaTableNamesWithPrefix.Select(tableName =>
             {
                 var table = TableClient.GetTableReference(tableName);
-                await table.CreateIfNotExistsAsync();
+                return table.CreateIfNotExistsAsync();
             }).ToArray());
         }
 
         [OneTimeTearDown]
         public Task OneTimeTearDown()
         {
-            return Task.WhenAll(allConventionalSagaTableNamesWithPrefix.Select(async tableName =>
+            return Task.WhenAll(allConventionalSagaTableNamesWithPrefix.Select(tableName =>
             {
                 var table = TableClient.GetTableReference(tableName);
-                await table.DeleteIfExistsAsync();
+                return table.DeleteIfExistsAsync();
             }).ToArray());
         }
 

@@ -28,20 +28,20 @@
         }
 
         [SetUp]
-        public async Task SetUp()
+        public Task SetUp()
         {
             var account = CloudStorageAccount.Parse(ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence(tableApiType));
 
             client = account.CreateCloudTableClient();
             tableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}{nameof(LogicalOutboxBehavior)}".ToLowerInvariant();
             cloudTable = client.GetTableReference(tableName);
-            await cloudTable.CreateIfNotExistsAsync();
+            return cloudTable.CreateIfNotExistsAsync();
         }
 
         [TearDown]
-        public async Task Teardown()
+        public Task Teardown()
         {
-            await cloudTable.DeleteIfExistsAsync();
+            return cloudTable.DeleteIfExistsAsync();
         }
 
         [Test]
