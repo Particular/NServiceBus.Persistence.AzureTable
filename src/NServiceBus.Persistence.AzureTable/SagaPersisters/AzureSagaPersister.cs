@@ -141,7 +141,10 @@
             CloudTable tableToReadFrom;
             if (storageSession.Table == null)
             {
-                var sagaTableNameByConvention = $"{conventionalTablePrefix}{sagaDataType.Name}";
+                // to avoid string concat when nothing to do
+                var sagaDataTypeName = sagaDataType.Name;
+                var sagaTableNameByConvention = string.IsNullOrEmpty(conventionalTablePrefix) ?
+                    sagaDataTypeName : $"{conventionalTablePrefix}{sagaDataTypeName}";
                 var sagaTableByConvention = client.GetTableReference(sagaTableNameByConvention);
                 tableToReadFrom = sagaTableByConvention;
             }
