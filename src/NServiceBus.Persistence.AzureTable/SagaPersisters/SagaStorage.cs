@@ -47,7 +47,7 @@
 
             context.Services.AddSingleton<IProvidePartitionKeyFromSagaId>(provider =>
                 new ProvidePartitionKeyFromSagaId(provider.GetRequiredService<IProvideCloudTableClient>(),
-                    provider.GetRequiredService<TableHolderResolver>(), secondaryIndices, compatibilityModeEnabled));
+                    provider.GetRequiredService<TableHolderResolver>(), secondaryIndices, compatibilityModeEnabled, conventionalTablePrefix));
 
             var installerSettings = context.Settings.Get<SynchronizedStorageInstallerSettings>();
             context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideCloudTableClient>(),
