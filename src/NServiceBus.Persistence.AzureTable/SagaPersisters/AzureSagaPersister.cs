@@ -11,8 +11,9 @@
 
     class AzureSagaPersister : ISagaPersister
     {
-        public AzureSagaPersister(IProvideCloudTableClient tableClientProvider, bool disableTableCreation, bool compatibilityMode, SecondaryIndex secondaryIndex)
+        public AzureSagaPersister(IProvideCloudTableClient tableClientProvider, bool disableTableCreation, bool compatibilityMode, SecondaryIndex secondaryIndex, string conventionalTablePrefix)
         {
+            this.conventionalTablePrefix = conventionalTablePrefix;
             this.compatibilityMode = compatibilityMode;
             this.disableTableCreation = disableTableCreation;
             client = tableClientProvider.Client;
@@ -140,7 +141,10 @@
             CloudTable tableToReadFrom;
             if (storageSession.Table == null)
             {
-                var sagaTableNameByConvention = sagaDataType.Name;
+                // to avoid string concat when nothing to do
+                var sagaDataTypeName = sagaDataType.Name;
+                var sagaTableNameByConvention = string.IsNullOrEmpty(conventionalTablePrefix) ?
+                    sagaDataTypeName : $"{conventionalTablePrefix}{sagaDataTypeName}";
                 var sagaTableByConvention = client.GetTableReference(sagaTableNameByConvention);
                 tableToReadFrom = sagaTableByConvention;
             }
@@ -201,6 +205,7 @@
         const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
         static ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
         private readonly bool compatibilityMode;
+        private readonly string conventionalTablePrefix;
 
         /// <summary>
         /// Holds saga instance related metadata in a scope of a <see cref="ContextBag" />.

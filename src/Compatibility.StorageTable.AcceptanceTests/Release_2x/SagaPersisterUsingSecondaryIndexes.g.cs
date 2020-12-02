@@ -7,6 +7,7 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
     using System.Net;
     using System.Reflection;
     using System.Threading.Tasks;
+    using NServiceBus.AcceptanceTests;
     using Extensibility;
     using Logging;
     using Sagas;
@@ -14,6 +15,7 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
 
     /// <summary>
     /// This is a copy of the saga persister code 2.4.1
+    /// <remarks>Table name needs to include table prefix <code>var tableName = $"{SetupFixture.TablePrefix}{sagaType.Name}";</code>, see GetTable</remarks>
     /// </summary>
     public class SagaPersisterUsingSecondaryIndexes : ISagaPersister
     {
@@ -181,7 +183,7 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
 
         async Task<CloudTable> GetTable(Type sagaType)
         {
-            var tableName = sagaType.Name;
+            var tableName = $"{SetupFixture.TablePrefix}{sagaType.Name}";
             var table = client.GetTableReference(tableName);
             if (autoUpdateSchema && !tableCreated.ContainsKey(tableName))
             {
