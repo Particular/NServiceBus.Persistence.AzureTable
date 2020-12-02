@@ -2,9 +2,7 @@
 using NServiceBus;
 using NServiceBus.AcceptanceTesting.Support;
 using NServiceBus.AcceptanceTests;
-using NServiceBus.AcceptanceTests.Sagas;
 using NServiceBus.Configuration.AdvancedExtensibility;
-using Conventions = NServiceBus.AcceptanceTesting.Customization.Conventions;
 
 public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExecution
 {
@@ -17,13 +15,6 @@ public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExec
         persistence.UseCloudTableClient(SetupFixture.TableClient);
 
         persistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
-
-        var recoverabilitySettings = configuration.Recoverability();
-
-        if (endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))
-        {
-            recoverabilitySettings.Immediate(c => c.NumberOfRetries(1));
-        }
 
         return Task.FromResult(0);
     }
