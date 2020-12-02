@@ -23,6 +23,10 @@ public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExec
 
         if (endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))
         {
+            recoverabilitySettings.Immediate(c => c.NumberOfRetries(1));
+        }
+        else
+        {
             // due to races on the table creation with cosmos table API we need go through some delayed retries in addition
             // to the already configured immediate retries
             recoverabilitySettings.Delayed(c =>
