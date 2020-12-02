@@ -11,6 +11,8 @@
     public class When_subscribing_with_null_endpoint
     {
         private string tableApiType;
+        private AzureSubscriptionStorage persister;
+        private SubscriptionTestHelper.Scope scope;
 
         public When_subscribing_with_null_endpoint(string tableApiType)
         {
@@ -18,15 +20,21 @@
         }
 
         [SetUp]
-        public Task Setup()
+        public async Task Setup()
         {
-           return SubscriptionTestHelper.PerformStorageCleanup(tableApiType);
+            scope = await SubscriptionTestHelper.CreateAzureSubscriptionStorage(tableApiType);
+            persister = scope.Storage;
+        }
+
+        [TearDown]
+        public void Teardown()
+        {
+            scope.Dispose();
         }
 
         [Test]
         public async Task ensure_that_the_subscription_is_persisted()
         {
-            var persister = await SubscriptionTestHelper.CreateAzureSubscriptionStorage(tableApiType);
             var messageType = new MessageType(typeof(TestMessage));
             var messageTypes = new[]
             {

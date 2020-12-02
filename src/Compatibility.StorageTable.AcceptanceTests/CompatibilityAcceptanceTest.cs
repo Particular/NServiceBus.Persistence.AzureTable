@@ -18,7 +18,7 @@ namespace NServiceBus.AcceptanceTests
 
         protected static async Task ReplaceEntity<TSagaData>(DynamicTableEntity entity)
         {
-            var table = SetupFixture.TableClient.GetTableReference(typeof(TSagaData).Name);
+            var table = SetupFixture.TableClient.GetTableReference($"{SetupFixture.TablePrefix}{typeof(TSagaData).Name}");
 
             try
             {
@@ -37,7 +37,7 @@ namespace NServiceBus.AcceptanceTests
 
         protected static async Task DeleteEntity<TSagaData>(DynamicTableEntity entity)
         {
-            var table = SetupFixture.TableClient.GetTableReference(typeof(TSagaData).Name);
+            var table = SetupFixture.TableClient.GetTableReference($"{SetupFixture.TablePrefix}{typeof(TSagaData).Name}");
 
             try
             {
@@ -56,7 +56,7 @@ namespace NServiceBus.AcceptanceTests
 
         protected static DynamicTableEntity GetByPartitionKey<TSagaData>(string partitionKey)
         {
-            var table = SetupFixture.TableClient.GetTableReference(typeof(TSagaData).Name);
+            var table = SetupFixture.TableClient.GetTableReference($"{SetupFixture.TablePrefix}{typeof(TSagaData).Name}");
 
             // table scan but still probably the easiest way to do it, otherwise we would have to take the partition key into account which complicates things because this test is shared
             var query = new TableQuery<DynamicTableEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey));
@@ -79,7 +79,7 @@ namespace NServiceBus.AcceptanceTests
 
         protected static DynamicTableEntity GetByRowKey<TSagaData>(string rowKey)
         {
-            var table = SetupFixture.TableClient.GetTableReference(typeof(TSagaData).Name);
+            var table = SetupFixture.TableClient.GetTableReference($"{SetupFixture.TablePrefix}{typeof(TSagaData).Name}");
 
             // table scan but still probably the easiest way to do it, otherwise we would have to take the partition key into account which complicates things because this test is shared
             var query = new TableQuery<DynamicTableEntity>().Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, rowKey));

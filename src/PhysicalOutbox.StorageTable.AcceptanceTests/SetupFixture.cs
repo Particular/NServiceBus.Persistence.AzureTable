@@ -20,15 +20,7 @@
             var account = CloudStorageAccount.Parse(connectionString);
             TableClient = account.CreateCloudTableClient();
             Table = TableClient.GetTableReference(TableName);
-            try
-            {
-                await Table.CreateIfNotExistsAsync();
-            }
-            catch (StorageException e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            await Table.CreateIfNotExistsAsync();
 
             handler = new TransactionalBatchCounterHandler();
         }

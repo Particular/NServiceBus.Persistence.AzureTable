@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.Table;
@@ -27,14 +28,20 @@
         }
 
         [SetUp]
-        public async Task SetUp()
+        public Task SetUp()
         {
             var account = CloudStorageAccount.Parse(ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence(tableApiType));
 
             client = account.CreateCloudTableClient();
-            tableName = nameof(LogicalOutboxBehaviorTests).ToLower();
+            tableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}{nameof(LogicalOutboxBehavior)}".ToLowerInvariant();
             cloudTable = client.GetTableReference(tableName);
-            await cloudTable.CreateIfNotExistsAsync();
+            return cloudTable.CreateIfNotExistsAsync();
+        }
+
+        [TearDown]
+        public Task Teardown()
+        {
+            return cloudTable.DeleteIfExistsAsync();
         }
 
         [Test]

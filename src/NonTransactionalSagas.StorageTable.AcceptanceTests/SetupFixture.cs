@@ -11,7 +11,7 @@
     public class SetupFixture
     {
         [OneTimeSetUp]
-        public async Task OneTimeSetUp()
+        public Task OneTimeSetUp()
         {
             var connectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
 
@@ -20,15 +20,7 @@
             var account = CloudStorageAccount.Parse(connectionString);
             TableClient = account.CreateCloudTableClient();
             Table = TableClient.GetTableReference(TableName);
-            try
-            {
-                await Table.CreateIfNotExistsAsync();
-            }
-            catch (StorageException e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            return Table.CreateIfNotExistsAsync();
         }
 
         [OneTimeTearDown]
