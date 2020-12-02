@@ -14,6 +14,7 @@
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, AzureStorageSagaDefaults.AssumeSecondaryIndicesExist);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey, AzureStorageSagaDefaults.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageCompatibilityMode, AzureStorageSagaDefaults.CompatibilityModeEnabled);
+                s.SetDefault(WellKnownConfigurationKeys.SagaStorageConventionalTablePrefix, AzureStorageSagaDefaults.ConventionalTablePrefix);
 
                 s.EnableFeatureByDefault<SynchronizedStorage>();
                 s.SetDefault<ISagaIdGenerator>(new SagaIdGenerator());
@@ -27,6 +28,8 @@
             var compatibilityModeEnabled = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCompatibilityMode);
             var assumeSecondaryIndicesExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist);
             var assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
+            // backdoor for testing
+            var conventionalTablePrefix = context.Settings.Get<string>(WellKnownConfigurationKeys.SagaStorageConventionalTablePrefix);
 
             if (compatibilityModeEnabled)
             {
@@ -43,10 +46,10 @@
 
             context.Container.ConfigureComponent<IProvidePartitionKeyFromSagaId>(builder =>
                 new ProvidePartitionKeyFromSagaId(builder.Build<IProvideCloudTableClient>(),
-                    builder.Build<TableHolderResolver>(), secondaryIndices, compatibilityModeEnabled), DependencyLifecycle.SingleInstance);
+                    builder.Build<TableHolderResolver>(), secondaryIndices, compatibilityModeEnabled, conventionalTablePrefix), DependencyLifecycle.SingleInstance);
 
             var installerSettings = context.Settings.Get<SynchronizedStorageInstallerSettings>();
-            context.Container.ConfigureComponent<ISagaPersister>(builder => new AzureSagaPersister(builder.Build<IProvideCloudTableClient>(), installerSettings.Disabled, compatibilityModeEnabled, secondaryIndices), DependencyLifecycle.SingleInstance);
+            context.Container.ConfigureComponent<ISagaPersister>(builder => new AzureSagaPersister(builder.Build<IProvideCloudTableClient>(), installerSettings.Disabled, compatibilityModeEnabled, secondaryIndices, conventionalTablePrefix), DependencyLifecycle.SingleInstance);
         }
 
         static readonly ILog Logger = LogManager.GetLogger<SagaStorage>();

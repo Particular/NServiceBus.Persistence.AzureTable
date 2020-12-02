@@ -1,63 +1,46 @@
 ﻿namespace NServiceBus.Persistence.AzureTable.Tests
 {
     using System;
+    using System.IO;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.Table;
     using Testing;
 
-    public class SubscriptionTestHelper
+    public static class SubscriptionTestHelper
     {
-        internal static async Task<AzureSubscriptionStorage> CreateAzureSubscriptionStorage(string tableApiType)
+        internal static async Task<Scope> CreateAzureSubscriptionStorage(string tableApiType)
         {
             var connectionString = ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence(tableApiType);
             var account = CloudStorageAccount.Parse(connectionString);
 
-            var table = account.CreateCloudTableClient().GetTableReference(AzureSubscriptionStorageDefaults.TableName);
+            var subscriptionTableName = $"{$"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant()}{AzureSubscriptionStorageDefaults.TableName}";
+
+            var table = account.CreateCloudTableClient().GetTableReference(subscriptionTableName);
             await table.CreateIfNotExistsAsync();
 
-            return new AzureSubscriptionStorage(
+            return new Scope(new AzureSubscriptionStorage(
                 new CloudTableClientForSubscriptionsFromConnectionString(connectionString),
-                AzureSubscriptionStorageDefaults.TableName,
-                TimeSpan.FromSeconds(10));
+                subscriptionTableName,
+                TimeSpan.FromSeconds(10)),
+                table);
         }
 
-        internal static async Task PerformStorageCleanup(string tableApiType)
+        internal class Scope : IDisposable
         {
-            await RemoveAllRowsForTable(AzureSubscriptionStorageDefaults.TableName, tableApiType);
-        }
+            private readonly CloudTable cloudTable;
 
-        static async Task RemoveAllRowsForTable(string tableName, string tableApiType)
-        {
-            var cloudStorageAccount = CloudStorageAccount.Parse(ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence(tableApiType));
-            var table = cloudStorageAccount.CreateCloudTableClient().GetTableReference(tableName);
-
-            await table.CreateIfNotExistsAsync();
-
-            var projectionQuery = new TableQuery<DynamicTableEntity>().Select(new[]
+            public Scope(AzureSubscriptionStorage storage, CloudTable cloudTable)
             {
-                "Destination"
-            });
+                Storage = storage;
+                this.cloudTable = cloudTable;
+            }
 
-            // Define an entity resolver to work with the entity after retrieval.
-            EntityResolver<Tuple<string, string>> resolver = (pk, rk, ts, props, etag) => props.ContainsKey("Destination") ? new Tuple<string, string>(pk, rk) : null;
+            public AzureSubscriptionStorage Storage { get; }
 
-            foreach (var tuple in await table.ExecuteQuerySegmentedAsync(
-                query: projectionQuery,
-                resolver: resolver,
-                token: null))
+            public void Dispose()
             {
-                var tableEntity = new DynamicTableEntity(tuple.Item1, tuple.Item2)
-                {
-                    ETag = "*"
-                };
-
-                try
-                {
-                    await table.ExecuteAsync(TableOperation.Delete(tableEntity));
-                }
-                catch (StorageException)
-                {
-                }
+                // unfortunately we don't have IAsyncDisposable yet.
+                cloudTable.DeleteIfExists();
             }
         }
     }
