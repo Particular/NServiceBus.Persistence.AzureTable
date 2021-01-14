@@ -13,13 +13,13 @@ namespace NServiceBus.Persistence.AzureTable
     {
         /// <summary>
         /// Sets the partition key based on the
-        /// - SagaId header if present -or-
-        /// - The SagaId on the secondary index derived from the correlation property information when the migration mode is enabled -or-
-        /// - The deterministic SagaId precalculated by using the correlation property information
+        /// - The saga ID header if present -or-
+        /// - The saga ID on the secondary index derived from the specified <paramref name="correlationProperty"/> when compatibility mode is enabled -or-
+        /// - The saga ID calculated using the specified <paramref name="correlationProperty"/>.
         /// </summary>
         /// <param name="context">The logical message handler context.</param>
         /// <param name="correlationProperty">The correlation property information derived from the logical message.</param>
-        /// <exception cref="Exception">When the saga id could not be determined by the saga id header and <see cref="SagaCorrelationProperty.None"/> is passed.</exception>
+        /// <exception cref="Exception">When the specified <paramref name="correlationProperty"/> is <see cref="SagaCorrelationProperty.None"/> and the saga ID header is not present.</exception>
         Task SetPartitionKey<TSagaData>(IIncomingLogicalMessageContext context,
             SagaCorrelationProperty correlationProperty)
             where TSagaData : IContainSagaData;
