@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <Compile Include="..\$(TemplateProject)\*.cs" />
+	<Item Include="..\$(TemplateProject)\.editorconfig" />
   </ItemGroup>
 
 </Project>
