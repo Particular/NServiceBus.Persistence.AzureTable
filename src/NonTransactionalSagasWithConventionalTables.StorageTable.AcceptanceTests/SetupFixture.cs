@@ -39,6 +39,6 @@
 
         public static CloudTableClient TableClient;
         public static string TablePrefix;
-        private string[] allConventionalSagaTableNamesWithPrefix;
+        string[] allConventionalSagaTableNamesWithPrefix;
     }
 }

@@ -17,10 +17,10 @@
     [TestFixture("CosmosDB")]
     public class LogicalOutboxBehaviorTests
     {
-        private CloudTable cloudTable;
-        private CloudTableClient client;
-        private string tableName;
-        private string tableApiType;
+        CloudTable cloudTable;
+        CloudTableClient client;
+        string tableName;
+        string tableApiType;
 
         public LogicalOutboxBehaviorTests(string tableApiType)
         {
@@ -66,9 +66,9 @@
             await cloudTable.ExecuteAsync(TableOperation.Insert(record));
 
             var containerHolderHolderResolver = new TableHolderResolver(new Provider()
-                {
-                    Client = client
-                },
+            {
+                Client = client
+            },
                 new TableInformation(tableName));
 
             var behavior = new LogicalOutboxBehavior(containerHolderHolderResolver);

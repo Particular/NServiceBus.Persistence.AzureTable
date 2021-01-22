@@ -16,8 +16,8 @@
             return cloudTable;
         }
 
-        private readonly OutboxRecord outboxRow;
-        private readonly CloudTable cloudTable;
+        readonly OutboxRecord outboxRow;
+        readonly CloudTable cloudTable;
     }
 
     class OutboxDelete : Operation
@@ -34,7 +34,7 @@
             return cloudTable;
         }
 
-        private readonly OutboxRecord outboxRow;
-        private readonly CloudTable cloudTable;
+        readonly OutboxRecord outboxRow;
+        readonly CloudTable cloudTable;
     }
 }

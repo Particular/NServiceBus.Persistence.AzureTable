@@ -57,7 +57,7 @@ namespace NServiceBus.AcceptanceTests
             Assert.AreEqual(context.SagaId.ToString(), myEntity["Data"].StringValue);
         }
 
-        private static DynamicTableEntity GetByRowKey(Guid sagaId)
+        static DynamicTableEntity GetByRowKey(Guid sagaId)
         {
             var table = SetupFixture.Table;
 
@@ -119,7 +119,7 @@ namespace NServiceBus.AcceptanceTests
 
             class ProvidePartitionKeyBasedOnSagaIdBehavior : Behavior<IIncomingLogicalMessageContext>
             {
-                private IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId;
+                IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId;
 
                 public ProvidePartitionKeyBasedOnSagaIdBehavior(IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId)
                 {
@@ -194,7 +194,7 @@ namespace NServiceBus.AcceptanceTests
                         .ToSaga(s => s.SomeId);
                 }
 
-                private readonly Context testContext;
+                readonly Context testContext;
             }
 
             public class ContinueMessageHandler : IHandleMessages<ContinueSagaMessage>
@@ -219,7 +219,7 @@ namespace NServiceBus.AcceptanceTests
                     return Task.CompletedTask;
                 }
 
-                private Context testContext;
+                Context testContext;
             }
 
             public class MyTableEntity : TableEntity

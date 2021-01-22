@@ -35,6 +35,6 @@
         public static string TableName;
         public static CloudTableClient TableClient;
         public static CloudTable Table;
-        private TransactionalBatchCounterHandler handler;
+        TransactionalBatchCounterHandler handler;
     }
 }

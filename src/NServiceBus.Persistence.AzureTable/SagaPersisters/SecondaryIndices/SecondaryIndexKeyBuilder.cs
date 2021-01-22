@@ -1,6 +1,5 @@
 namespace NServiceBus.Persistence.AzureTable
 {
-    using System;
     using System.IO;
     using Newtonsoft.Json;
     using Sagas;

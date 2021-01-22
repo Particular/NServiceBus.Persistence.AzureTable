@@ -84,7 +84,7 @@
                 var operation = TableOperation.Delete(subscription);
                 await table.ExecuteAsync(operation).ConfigureAwait(false);
             }
-            catch (StorageException ex) when(ex.RequestInformation.HttpStatusCode == (int) HttpStatusCode.NotFound)
+            catch (StorageException ex) when (ex.RequestInformation.HttpStatusCode == (int)HttpStatusCode.NotFound)
             {
                 // intentionally ignored
             }

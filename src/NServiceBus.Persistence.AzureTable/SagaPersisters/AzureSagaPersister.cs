@@ -136,7 +136,7 @@
             return null;
         }
 
-        private async Task<CloudTable> GetTableAndCreateIfNotExists(StorageSession storageSession, Type sagaDataType)
+        async Task<CloudTable> GetTableAndCreateIfNotExists(StorageSession storageSession, Type sagaDataType)
         {
             CloudTable tableToReadFrom;
             if (storageSession.Table == null)
@@ -204,8 +204,8 @@
         SecondaryIndex secondaryIndex;
         const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
         static ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
-        private readonly bool compatibilityMode;
-        private readonly string conventionalTablePrefix;
+        readonly bool compatibilityMode;
+        readonly string conventionalTablePrefix;
 
         /// <summary>
         /// Holds saga instance related metadata in a scope of a <see cref="ContextBag" />.

@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <PackageReference Include="NServiceBus.AcceptanceTests.Sources" Version="8.0.0-alpha.644" />
-    <PackageReference Include="Particular.CodeRules" Version="0.8.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
     <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.2.0" />
     <PackageReference Include="NUnit" Version="3.13.0" />
@@ -16,7 +15,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
   </ItemGroup>
 
-  <!-- The template project is always the StorageTable project, if you need to deveate files for a specific table API copy 
+  <!-- The template project is always the StorageTable project, if you need to deveate files for a specific table API copy
       them accordingly and adjust the compile includes -->
   <PropertyGroup>
     <TemplateProject>$(MSBuildProjectName.Replace(`CosmosDB`, `StorageTable`))</TemplateProject>

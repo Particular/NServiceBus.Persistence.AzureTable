@@ -1,10 +1,6 @@
 <Project>
 
     <ItemGroup>
-        <Compile Include="..\TestSuppressions.cs" Link="TestSuppressions.cs" />
-    </ItemGroup>
-
-    <ItemGroup>
         <Compile Include="..\SharedAcceptanceTests.All\*.cs" />
         <Compile Remove="..\SharedAcceptanceTests.All\When_saga_with_complex_state.cs" />
         <Compile Remove="..\SharedAcceptanceTests.All\When_participating_in_saga_conversations.cs" />

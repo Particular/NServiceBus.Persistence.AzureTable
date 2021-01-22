@@ -17,7 +17,7 @@
         {
             var contextBag = new ContextBag();
             contextBag.Set(partitionKey);
-            ((IWorkWithSharedTransactionalBatch) this).CurrentContextBag = contextBag;
+            ((IWorkWithSharedTransactionalBatch)this).CurrentContextBag = contextBag;
             PartitionKey = partitionKey.PartitionKey;
         }
 

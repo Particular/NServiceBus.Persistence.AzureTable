@@ -7,7 +7,7 @@
 
     class SagaSave : Operation
     {
-        private readonly DictionaryTableEntity sagaRow;
+        readonly DictionaryTableEntity sagaRow;
 
         public SagaSave(TableEntityPartitionKey partitionKey, DictionaryTableEntity sagaRow) : base(partitionKey)
         {
@@ -23,7 +23,7 @@
 
     class SagaUpdate : Operation
     {
-        private readonly DictionaryTableEntity sagaRow;
+        readonly DictionaryTableEntity sagaRow;
 
         public SagaUpdate(TableEntityPartitionKey partitionKey, DictionaryTableEntity sagaRow) : base(partitionKey)
         {
@@ -39,7 +39,7 @@
 
     class SagaDelete : Operation
     {
-        private readonly DictionaryTableEntity sagaRow;
+        readonly DictionaryTableEntity sagaRow;
 
         public SagaDelete(TableEntityPartitionKey partitionKey, DictionaryTableEntity sagaRow) : base(partitionKey)
         {
@@ -55,8 +55,8 @@
 
     class SagaRemoveSecondaryIndex : Operation
     {
-        private readonly SecondaryIndex secondaryIndices;
-        private readonly CloudTable table;
+        readonly SecondaryIndex secondaryIndices;
+        readonly CloudTable table;
 
         public SagaRemoveSecondaryIndex(TableEntityPartitionKey partitionKey, Guid sagaId, SecondaryIndex secondaryIndices, PartitionRowKeyTuple partitionRowKeyTuple, CloudTable table) : base(partitionKey)
         {
@@ -85,8 +85,8 @@
             var webException = storageException.InnerException as WebException;
             if (webException?.Response != null)
             {
-                var response = (HttpWebResponse) webException.Response;
-                if ((int) response.StatusCode != 404)
+                var response = (HttpWebResponse)webException.Response;
+                if ((int)response.StatusCode != 404)
                 {
                     // Was not a previously deleted exception
                     Logger.Warn($"Removal of the secondary index entry for the following saga failed: '{sagaId}'");
@@ -96,7 +96,7 @@
         }
 
         readonly ILog Logger = LogManager.GetLogger<AzureSagaPersister>();
-        private PartitionRowKeyTuple partitionRowKeyTuple;
-        private readonly Guid sagaId;
+        PartitionRowKeyTuple partitionRowKeyTuple;
+        readonly Guid sagaId;
     }
 }

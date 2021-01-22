@@ -47,9 +47,9 @@ namespace NServiceBus.Persistence.AzureTable
             await cloudTable.CreateIfNotExistsAsync().ConfigureAwait(false);
         }
 
-        private IServiceProvider serviceProvider;
+        IServiceProvider serviceProvider;
 
         static readonly ILog Logger = LogManager.GetLogger<SynchronizedStorageInstaller>();
-        private ReadOnlySettings settings;
+        ReadOnlySettings settings;
     }
 }

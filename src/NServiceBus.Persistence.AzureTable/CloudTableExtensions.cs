@@ -8,7 +8,7 @@
 
     static class CloudTableExtensions
     {
-        public static async Task<IList<T>> ExecuteQueryAsync<T>(this CloudTable table, TableQuery<T> query, int take = int.MaxValue, CancellationToken ct = default(CancellationToken)) where T : ITableEntity, new()
+        public static async Task<IList<T>> ExecuteQueryAsync<T>(this CloudTable table, TableQuery<T> query, int take = int.MaxValue, CancellationToken ct = default) where T : ITableEntity, new()
         {
             var items = new List<T>();
             TableContinuationToken token = null;

@@ -87,7 +87,7 @@ namespace NServiceBus.AcceptanceTests
                     {
                         SomeId = correlationPropertyValue,
                         TableRowKey = myTableRowKey
-                    },options);
+                    }, options);
                 }))
                 .Done(c => c.SagaIsDone && c.HandlerIsDone)
                 .Run();
@@ -116,7 +116,7 @@ namespace NServiceBus.AcceptanceTests
 
             class PartitionKeyProviderBehavior : Behavior<IIncomingLogicalMessageContext>
             {
-                private IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId;
+                IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId;
 
                 public PartitionKeyProviderBehavior(IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId)
                 {
@@ -168,7 +168,7 @@ namespace NServiceBus.AcceptanceTests
                         .ToSaga(s => s.SomeId);
                 }
 
-                private readonly Context testContext;
+                readonly Context testContext;
             }
 
             public class ContinueMessageHandler : IHandleMessages<ContinueSagaMessage>
@@ -193,7 +193,7 @@ namespace NServiceBus.AcceptanceTests
                     return Task.CompletedTask;
                 }
 
-                private Context testContext;
+                Context testContext;
             }
 
             public class MyTableEntity : TableEntity

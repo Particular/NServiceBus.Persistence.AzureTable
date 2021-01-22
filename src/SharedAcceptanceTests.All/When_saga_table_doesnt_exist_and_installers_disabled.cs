@@ -13,7 +13,7 @@ namespace NServiceBus.AcceptanceTests
 
     public partial class When_saga_table_doesnt_exist_and_installers_disabled : NServiceBusAcceptanceTest
     {
-        private const string TableThatDoesntExist = "doesnotexist";
+        const string TableThatDoesntExist = "doesnotexist";
 
         [SetUp]
         public Task Setup()

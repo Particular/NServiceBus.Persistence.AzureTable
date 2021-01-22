@@ -10,9 +10,9 @@
     [TestFixture("CosmosDB")]
     public class When_updating_subscription
     {
-        private string tableApiType;
-        private AzureSubscriptionStorage persister;
-        private SubscriptionTestHelper.Scope scope;
+        string tableApiType;
+        AzureSubscriptionStorage persister;
+        SubscriptionTestHelper.Scope scope;
 
         public When_updating_subscription(string tableApiType)
         {

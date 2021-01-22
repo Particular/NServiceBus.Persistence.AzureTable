@@ -10,9 +10,9 @@
     [TestFixture("CosmosDB")]
     public class When_subscribing_with_null_endpoint
     {
-        private string tableApiType;
-        private AzureSubscriptionStorage persister;
-        private SubscriptionTestHelper.Scope scope;
+        string tableApiType;
+        AzureSubscriptionStorage persister;
+        SubscriptionTestHelper.Scope scope;
 
         public When_subscribing_with_null_endpoint(string tableApiType)
         {
@@ -33,7 +33,7 @@
         }
 
         [Test]
-        public async Task ensure_that_the_subscription_is_persisted()
+        public async Task Ensure_that_the_subscription_is_persisted()
         {
             var messageType = new MessageType(typeof(TestMessage));
             var messageTypes = new[]

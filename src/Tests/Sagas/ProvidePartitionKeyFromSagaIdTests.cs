@@ -11,9 +11,9 @@ namespace NServiceBus.Persistence.AzureTable.Tests
     [TestFixture]
     public class ProvidePartitionKeyFromSagaIdTests
     {
-        private CloudTable cloudTable;
-        private CloudTableClient client;
-        private string tableName;
+        CloudTable cloudTable;
+        CloudTableClient client;
+        string tableName;
 
         [SetUp]
         public void SetUp()

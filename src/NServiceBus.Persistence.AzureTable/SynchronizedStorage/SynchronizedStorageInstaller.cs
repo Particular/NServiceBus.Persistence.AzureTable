@@ -48,7 +48,7 @@ namespace NServiceBus.Persistence.AzureTable
         }
 
         static ILog log = LogManager.GetLogger<SynchronizedStorageInstaller>();
-        private IServiceProvider serviceProvider;
-        private ReadOnlySettings settings;
+        IServiceProvider serviceProvider;
+        ReadOnlySettings settings;
     }
 }

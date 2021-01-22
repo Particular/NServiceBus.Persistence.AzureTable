@@ -5,7 +5,7 @@
     using Extensibility;
     using Outbox;
 
-    class OutboxPersister  : IOutboxStorage
+    class OutboxPersister : IOutboxStorage
     {
         public OutboxPersister(TableHolderResolver tableHolderResolver)
         {

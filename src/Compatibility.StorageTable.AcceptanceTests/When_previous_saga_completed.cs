@@ -86,7 +86,7 @@ namespace NServiceBus.AcceptanceTests
                         .ToSaga(s => s.SomeId);
                 }
 
-                private readonly Context testContext;
+                readonly Context testContext;
             }
 
             public class MigratedSagaData : IContainSagaData
