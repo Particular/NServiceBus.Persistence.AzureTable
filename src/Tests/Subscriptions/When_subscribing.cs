@@ -12,9 +12,9 @@
     [TestFixture("CosmosDB")]
     public class When_subscribing
     {
-        private string tableApiType;
-        private AzureSubscriptionStorage persister;
-        private SubscriptionTestHelper.Scope scope;
+        string tableApiType;
+        AzureSubscriptionStorage persister;
+        SubscriptionTestHelper.Scope scope;
 
         public When_subscribing(string tableApiType)
         {
@@ -35,7 +35,7 @@
         }
 
         [Test]
-        public async Task ensure_that_the_subscription_is_persisted()
+        public async Task Ensure_that_the_subscription_is_persisted()
         {
             var messageType = new MessageType(typeof(TestMessage));
             await persister.Subscribe(new Subscriber("address://test-queue", "endpointName"), messageType, null).ConfigureAwait(false);
@@ -50,7 +50,7 @@
         }
 
         [Test]
-        public async Task ensure_that_the_subscription_is_version_ignorant()
+        public async Task Ensure_that_the_subscription_is_version_ignorant()
         {
             var name = typeof(TestMessage).FullName;
 
@@ -75,7 +75,7 @@
         }
 
         [Test]
-        public async Task ensure_that_the_subscription_selects_proper_message_types()
+        public async Task Ensure_that_the_subscription_selects_proper_message_types()
         {
             await persister.Subscribe(new Subscriber("address://test-queue", "endpointName"), new MessageType(typeof(TestMessage)), new ContextBag()).ConfigureAwait(false);
             await persister.Subscribe(new Subscriber("address://test-queue2", "endpointName"), new MessageType(typeof(TestMessagea)), new ContextBag()).ConfigureAwait(false);

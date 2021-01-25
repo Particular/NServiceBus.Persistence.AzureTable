@@ -6,7 +6,6 @@ namespace NServiceBus.AcceptanceTests
     using NServiceBus;
     using NServiceBus.AcceptanceTesting;
     using NServiceBus.AcceptanceTesting.Support;
-    using NServiceBus.AcceptanceTests;
     using NServiceBus.AcceptanceTests.EndpointTemplates;
     using NUnit.Framework;
 

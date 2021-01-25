@@ -62,10 +62,10 @@ namespace NServiceBus.Persistence.AzureTable.Migration
             context.Extensions.Set(new TableEntityPartitionKey(deterministicSagaId.ToString()));
         }
 
-        private readonly SecondaryIndex secondaryIndex;
-        private CloudTableClient client;
-        private readonly TableHolderResolver resolver;
-        private readonly bool compatibilityMode;
-        private readonly string conventionalTablePrefix;
+        readonly SecondaryIndex secondaryIndex;
+        CloudTableClient client;
+        readonly TableHolderResolver resolver;
+        readonly bool compatibilityMode;
+        readonly string conventionalTablePrefix;
     }
 }

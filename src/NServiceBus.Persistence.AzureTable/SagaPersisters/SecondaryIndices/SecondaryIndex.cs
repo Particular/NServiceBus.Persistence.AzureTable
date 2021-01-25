@@ -37,7 +37,7 @@
                     .ConfigureAwait(false);
             }
             catch (StorageException storageException)
-                when(!assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey && storageException.RequestInformation.HttpStatusCode == (int)HttpStatusCode.PreconditionFailed)
+                when (!assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey && storageException.RequestInformation.HttpStatusCode == (int)HttpStatusCode.PreconditionFailed)
             {
                 Logger.Warn(
                     $"Trying to retrieve the secondary index entry with PartitionKey = '{key.PartitionKey}' and RowKey = 'string.Empty' failed. When using the compatibility mode on Azure Cosmos DB it is strongly recommended to enable `sagaPersistence.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey()` to avoid additional lookup costs or disable the compatibility mode entirely if not needed by calling `persistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties(). Falling back to query secondary index entry with PartitionKey = '{key.PartitionKey}' and RowKey = '{key.PartitionKey}'",
@@ -104,16 +104,10 @@
             cache.Remove(key);
         }
 
-        static PartitionRowKeyTuple? TryBuildKey<TSagaData>(SagaCorrelationProperty correlationProperty)
-            where TSagaData : IContainSagaData
-        {
-            return SecondaryIndexKeyBuilder.BuildTableKey<TSagaData>(correlationProperty);
-        }
-
         LRUCache<PartitionRowKeyTuple, Guid> cache = new LRUCache<PartitionRowKeyTuple, Guid>(LRUCapacity);
-        private readonly bool assumeSecondaryIndicesExist;
-        private readonly bool assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey;
+        readonly bool assumeSecondaryIndicesExist;
+        readonly bool assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey;
         const int LRUCapacity = 1000;
-        private static readonly ILog Logger = LogManager.GetLogger<SecondaryIndex>();
+        static readonly ILog Logger = LogManager.GetLogger<SecondaryIndex>();
     }
 }

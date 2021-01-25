@@ -14,9 +14,9 @@ namespace NServiceBus.Persistence.AzureTable.Tests
     [TestFixture("CosmosDB")]
     public class When_caching
     {
-        private string tableApiType;
-        private AzureSubscriptionStorage persister;
-        private SubscriptionTestHelper.Scope scope;
+        string tableApiType;
+        AzureSubscriptionStorage persister;
+        SubscriptionTestHelper.Scope scope;
 
         public When_caching(string tableApiType)
         {

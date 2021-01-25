@@ -27,9 +27,9 @@ namespace NServiceBus.AcceptanceTests
                 OriginalMessageId = "",
                 Originator = "",
                 SomeId = correlationPropertyValue,
-                IntArray = new[] {1, 2, 3, 4},
+                IntArray = new[] { 1, 2, 3, 4 },
                 NullableDouble = 4.5d,
-                ByteArray = new byte[] {1},
+                ByteArray = new byte[] { 1 },
                 NullableBool = true,
                 NullableGuid = new Guid("3C623C1F-80AB-4036-86CA-C2020FAE2EFE"),
                 NullableLong = 10,
@@ -113,9 +113,9 @@ namespace NServiceBus.AcceptanceTests
                 public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
                     // would have been called this way on older persistence
-                    Data.IntArray = new[] {1, 2, 3, 4};
+                    Data.IntArray = new[] { 1, 2, 3, 4 };
                     Data.NullableDouble = 4.5d;
-                    Data.ByteArray = new byte[] {1};
+                    Data.ByteArray = new byte[] { 1 };
                     Data.NullableBool = true;
                     Data.NullableGuid = new Guid("3C623C1F-80AB-4036-86CA-C2020FAE2EFE");
                     Data.NullableLong = 10;
@@ -143,7 +143,7 @@ namespace NServiceBus.AcceptanceTests
                         .ToSaga(s => s.SomeId);
                 }
 
-                private readonly Context testContext;
+                readonly Context testContext;
             }
 
             public class ComplexStateSagaData : IContainSagaData

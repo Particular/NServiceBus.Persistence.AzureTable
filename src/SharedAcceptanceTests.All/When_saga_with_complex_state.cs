@@ -62,7 +62,7 @@ namespace NServiceBus.AcceptanceTests
             Assert.IsFalse(sagaEntity.Properties.ContainsKey("NServiceBus_2ndIndexKey"), "Entity should not contain secondary index property");
         }
 
-        private static DynamicTableEntity GetEntity(Guid sagaId)
+        static DynamicTableEntity GetEntity(Guid sagaId)
         {
             var table = SetupFixture.Table;
 
@@ -107,9 +107,9 @@ namespace NServiceBus.AcceptanceTests
 
                 public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
-                    Data.IntArray = new[] {1, 2, 3, 4};
+                    Data.IntArray = new[] { 1, 2, 3, 4 };
                     Data.NullableDouble = 4.5d;
-                    Data.ByteArray = new byte[] {1};
+                    Data.ByteArray = new byte[] { 1 };
                     Data.NullableBool = true;
                     Data.NullableGuid = new Guid("3C623C1F-80AB-4036-86CA-C2020FAE2EFE");
                     Data.NullableLong = 10;
@@ -137,7 +137,7 @@ namespace NServiceBus.AcceptanceTests
                         .ToSaga(s => s.SomeId);
                 }
 
-                private readonly Context testContext;
+                readonly Context testContext;
             }
 
             public class ComplexStateSagaData : IContainSagaData

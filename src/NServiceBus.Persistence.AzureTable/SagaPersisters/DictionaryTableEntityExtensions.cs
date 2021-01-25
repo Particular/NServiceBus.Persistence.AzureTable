@@ -1,7 +1,6 @@
-using NServiceBus.Sagas;
-
 namespace NServiceBus.Persistence.AzureTable
 {
+    using NServiceBus.Sagas;
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -20,7 +19,7 @@ namespace NServiceBus.Persistence.AzureTable
             return (TEntity)ToSagaData(typeof(TEntity), entity);
         }
 
-        private static object ToSagaData(Type sagaDataType, DictionaryTableEntity entity)
+        static object ToSagaData(Type sagaDataType, DictionaryTableEntity entity)
         {
             var toCreate = Activator.CreateInstance(sagaDataType);
             foreach (var accessor in GetPropertyAccessors(sagaDataType))
@@ -135,7 +134,7 @@ namespace NServiceBus.Persistence.AzureTable
             return toPersist;
         }
 
-        private static IReadOnlyCollection<PropertyAccessor> GetPropertyAccessors(Type sagaDataType)
+        static IReadOnlyCollection<PropertyAccessor> GetPropertyAccessors(Type sagaDataType)
         {
             var accessors = propertyAccessorCache.GetOrAdd(sagaDataType, dataType =>
             {
@@ -260,7 +259,7 @@ namespace NServiceBus.Persistence.AzureTable
             ContractResolver = new NonAbstractDefaultContractResolver(),
         };
 
-        private static readonly DateTime StorageTableMinDateTime = new DateTime(1601, 1, 1);
+        static readonly DateTime StorageTableMinDateTime = new DateTime(1601, 1, 1);
 
         sealed class PropertyAccessor
         {
@@ -272,7 +271,7 @@ namespace NServiceBus.Persistence.AzureTable
                 PropertyType = propertyInfo.PropertyType;
             }
 
-            private static Func<object, object> GenerateGetter(PropertyInfo propertyInfo)
+            static Func<object, object> GenerateGetter(PropertyInfo propertyInfo)
             {
                 var instance = Expression.Parameter(typeof(object), "instance");
                 var instanceCast = !propertyInfo.DeclaringType.IsValueType
@@ -285,7 +284,7 @@ namespace NServiceBus.Persistence.AzureTable
                 return getter;
             }
 
-            private static Action<object, object> GenerateSetter(PropertyInfo propertyInfo)
+            static Action<object, object> GenerateSetter(PropertyInfo propertyInfo)
             {
                 var instance = Expression.Parameter(typeof(object), "instance");
                 var value = Expression.Parameter(typeof(object), "value");

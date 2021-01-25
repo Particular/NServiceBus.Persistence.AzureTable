@@ -27,7 +27,7 @@
 
         internal class Scope : IDisposable
         {
-            private readonly CloudTable cloudTable;
+            readonly CloudTable cloudTable;
 
             public Scope(AzureSubscriptionStorage storage, CloudTable cloudTable)
             {

@@ -41,8 +41,8 @@ public class ConfigureAzureTablePersistence : IConfigureEndpointTestExecution
 
     class PartitionKeyProviderBehavior : Behavior<ITransportReceiveContext>
     {
-        private readonly ScenarioContext scenarioContext;
-        private readonly ReadOnlySettings settings;
+        readonly ScenarioContext scenarioContext;
+        readonly ReadOnlySettings settings;
 
         public PartitionKeyProviderBehavior(ScenarioContext scenarioContext, ReadOnlySettings settings)
         {

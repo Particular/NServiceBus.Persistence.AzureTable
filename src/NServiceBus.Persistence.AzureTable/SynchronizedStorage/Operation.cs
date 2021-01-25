@@ -1,6 +1,5 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
-    using System;
     using Microsoft.Azure.Cosmos.Table;
 
     abstract class Operation
@@ -31,7 +30,7 @@
 
     class ThrowOnConflictOperation : Operation
     {
-        private ThrowOnConflictOperation() : base(default)
+        ThrowOnConflictOperation() : base(default)
         {
         }
 

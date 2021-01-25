@@ -79,9 +79,9 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
         StringBuilder logStatements;
         IDisposable scope;
-        private CloudTable cloudTable;
-        private CloudTableClient client;
-        private string tableName;
-        private string tableApiType;
+        CloudTable cloudTable;
+        CloudTableClient client;
+        string tableName;
+        string tableApiType;
     }
 }

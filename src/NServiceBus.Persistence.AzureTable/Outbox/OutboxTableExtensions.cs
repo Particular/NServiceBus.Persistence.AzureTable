@@ -9,6 +9,8 @@
     {
         public static async Task<OutboxRecord> ReadOutboxRecord(this CloudTable table, string messageId, TableEntityPartitionKey partitionKey, ContextBag context)
         {
+            _ = context;
+
             var retrieveResult = await table.ExecuteAsync(TableOperation.Retrieve<OutboxRecord>(partitionKey.PartitionKey, messageId))
                 .ConfigureAwait(false);
 
@@ -17,7 +19,7 @@
                 return default;
             }
 
-            return (OutboxRecord) retrieveResult.Result;
+            return (OutboxRecord)retrieveResult.Result;
         }
     }
 }

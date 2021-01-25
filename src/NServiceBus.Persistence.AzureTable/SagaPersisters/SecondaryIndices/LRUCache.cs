@@ -32,7 +32,7 @@ namespace NServiceBus.Persistence.AzureTable
                     return true;
                 }
 
-                value = default(TValue);
+                value = default;
                 return false;
             }
         }

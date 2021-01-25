@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Net.Http.Headers;
 using Microsoft.Azure.Cosmos.Table;
 
 sealed class TransactionalBatchCounterHandler : IDisposable
@@ -15,7 +14,7 @@ sealed class TransactionalBatchCounterHandler : IDisposable
         OperationContext.GlobalSendingRequest += OnSendingRequest;
     }
 
-    private void OnSendingRequest(object sender, RequestEventArgs e)
+    void OnSendingRequest(object sender, RequestEventArgs e)
     {
         var contentTypeHeader = e.Request?.Content?.Headers?.ContentType;
 

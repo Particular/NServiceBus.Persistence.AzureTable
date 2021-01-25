@@ -55,7 +55,7 @@
         /// <summary>
         /// Disables the table creation for Saga, Outbox and Subscription storage.
         /// </summary>
-        public static PersistenceExtensions<AzureTablePersistence>  DisableTableCreation(this PersistenceExtensions<AzureTablePersistence> config)
+        public static PersistenceExtensions<AzureTablePersistence> DisableTableCreation(this PersistenceExtensions<AzureTablePersistence> config)
         {
             Guard.AgainstNull(nameof(config), config);
 

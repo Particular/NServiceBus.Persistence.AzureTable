@@ -9,7 +9,7 @@ namespace NServiceBus.Testing
         public static string GetEnvConfiguredConnectionStringByCallerConvention(this object caller)
         {
             // [Prefix.]{TableApiType}.ProjectType --> ProjectType (skipped) TableApiType (taken) [Prefix] --> TableApiType
-            var tableApiType = caller.GetType().Assembly.GetName().Name.Split(new[] {"."}, StringSplitOptions.RemoveEmptyEntries)
+            var tableApiType = caller.GetType().Assembly.GetName().Name.Split(new[] { "." }, StringSplitOptions.RemoveEmptyEntries)
                 .Reverse().Skip(1).Take(1).SingleOrDefault();
 
             return GetEnvConfiguredConnectionStringForPersistence(tableApiType);
@@ -43,7 +43,7 @@ namespace NServiceBus.Testing
         public static bool IsPremiumEndpoint(CloudTableClient cloudTableClient)
         {
             var lowerInvariant = cloudTableClient.StorageUri.PrimaryUri.OriginalString.ToLowerInvariant();
-            return lowerInvariant.Contains("https://localhost") && cloudTableClient.StorageUri.PrimaryUri.Port != 10002 || lowerInvariant.Contains(".table.cosmosdb.") || lowerInvariant.Contains(".table.cosmos.");
+            return (lowerInvariant.Contains("https://localhost") && cloudTableClient.StorageUri.PrimaryUri.Port != 10002) || lowerInvariant.Contains(".table.cosmosdb.") || lowerInvariant.Contains(".table.cosmos.");
         }
     }
 }

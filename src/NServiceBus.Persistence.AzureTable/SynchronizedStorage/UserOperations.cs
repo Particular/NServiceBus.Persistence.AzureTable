@@ -16,7 +16,7 @@ namespace NServiceBus.Persistence.AzureTable
             return table;
         }
 
-        private CloudTable table;
-        private readonly TableOperation tableOperation;
+        CloudTable table;
+        readonly TableOperation tableOperation;
     }
 }
