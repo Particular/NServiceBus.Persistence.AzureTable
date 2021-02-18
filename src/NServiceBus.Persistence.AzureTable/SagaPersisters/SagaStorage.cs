@@ -1,9 +1,12 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
+    using System;
+    using System.IO;
     using Features;
     using Logging;
     using Sagas;
     using Migration;
+    using Newtonsoft.Json;
 
     class SagaStorage : Feature
     {
@@ -15,6 +18,9 @@
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey, AzureStorageSagaDefaults.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageCompatibilityMode, AzureStorageSagaDefaults.CompatibilityModeEnabled);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageConventionalTablePrefix, AzureStorageSagaDefaults.ConventionalTablePrefix);
+                s.SetDefault(WellKnownConfigurationKeys.SagaJsonSerializer, JsonSerializer.Create());
+                s.SetDefault(WellKnownConfigurationKeys.SagaReaderCreator, (Func<TextReader, JsonReader>)(reader => new JsonTextReader(reader)));
+                s.SetDefault(WellKnownConfigurationKeys.SagaWriterCreator, (Func<TextWriter, JsonWriter>)(writer => new JsonTextWriter(writer)));
 
                 s.EnableFeatureByDefault<SynchronizedStorage>();
                 s.SetDefault<ISagaIdGenerator>(new SagaIdGenerator());
@@ -49,7 +55,20 @@
                     builder.Build<TableHolderResolver>(), secondaryIndices, compatibilityModeEnabled, conventionalTablePrefix), DependencyLifecycle.SingleInstance);
 
             var installerSettings = context.Settings.Get<SynchronizedStorageInstallerSettings>();
-            context.Container.ConfigureComponent<ISagaPersister>(builder => new AzureSagaPersister(builder.Build<IProvideCloudTableClient>(), installerSettings.Disabled, compatibilityModeEnabled, secondaryIndices, conventionalTablePrefix), DependencyLifecycle.SingleInstance);
+            var jsonSerializer = context.Settings.Get<JsonSerializer>(WellKnownConfigurationKeys.SagaJsonSerializer);
+            var readerCreator = context.Settings.Get<Func<TextReader, JsonReader>>(WellKnownConfigurationKeys.SagaReaderCreator);
+            var writerCreator = context.Settings.Get<Func<TextWriter, JsonWriter>>(WellKnownConfigurationKeys.SagaWriterCreator);
+
+            context.Container.ConfigureComponent<ISagaPersister>(builder =>
+                new AzureSagaPersister(builder.Build<IProvideCloudTableClient>(),
+                    installerSettings.Disabled,
+                    compatibilityModeEnabled,
+                    secondaryIndices,
+                    conventionalTablePrefix,
+                    jsonSerializer,
+                    readerCreator,
+                    writerCreator),
+                DependencyLifecycle.SingleInstance);
         }
 
         static readonly ILog Logger = LogManager.GetLogger<SagaStorage>();

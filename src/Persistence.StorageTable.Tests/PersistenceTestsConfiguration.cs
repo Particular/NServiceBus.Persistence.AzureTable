@@ -8,6 +8,8 @@
     using Persistence.AzureTable;
     using Microsoft.Azure.Cosmos.Table;
     using Extensibility;
+    using Newtonsoft.Json;
+    using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
     public partial class PersistenceTestsConfiguration : IProvideCloudTableClient
     {
@@ -39,7 +41,15 @@
             SagaIdGenerator = new SagaIdGenerator();
             var resolver = new TableHolderResolver(this, new TableInformation(SetupFixture.TableName));
             var secondaryIndices = new SecondaryIndex();
-            SagaStorage = new AzureSagaPersister(this, true, false, secondaryIndices, null);
+            SagaStorage = new AzureSagaPersister(
+                this,
+                true,
+                false,
+                secondaryIndices,
+                null,
+                JsonSerializer.Create(),
+                reader => new JsonTextReader(reader),
+                writer => new JsonTextWriter(writer));
             SynchronizedStorage = new StorageSessionFactory(resolver, null);
             SynchronizedStorageAdapter = new StorageSessionAdapter(null);
             OutboxStorage = new OutboxPersister(resolver);
