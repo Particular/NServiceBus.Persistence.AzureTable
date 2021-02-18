@@ -1,7 +1,10 @@
 ﻿namespace NServiceBus
 {
+    using System;
+    using System.IO;
     using Configuration.AdvancedExtensibility;
     using Microsoft.Azure.Cosmos.Table;
+    using Newtonsoft.Json;
     using Persistence.AzureTable;
 
     /// <summary>
@@ -42,6 +45,50 @@
 
             var settings = config.GetSettings();
             settings.GetOrCreate<SynchronizedStorageInstallerSettings>().Disabled = true;
+
+            return config;
+        }
+
+        /// <summary>
+        /// Overrides the default settings used by the saga property serializer applicable for complex property types that are not supported by default with tables.
+        /// </summary>
+        public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> JsonSettings(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config, JsonSerializerSettings jsonSerializerSettings)
+        {
+            Guard.AgainstNull(nameof(config), config);
+            Guard.AgainstNull(nameof(jsonSerializerSettings), jsonSerializerSettings);
+
+            var settings = config.GetSettings();
+            settings.Set(WellKnownConfigurationKeys.SagaJsonSerializer, JsonSerializer.Create(jsonSerializerSettings));
+
+            return config;
+        }
+
+        /// <summary>
+        /// Overrides the reader creator to influence custom data reading scenarios.
+        /// </summary>
+        public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> ReaderCreator(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config, Func<TextReader, JsonReader> readerCreator)
+        {
+            Guard.AgainstNull(nameof(config), config);
+            Guard.AgainstNull(nameof(readerCreator), readerCreator);
+
+            var settings = config.GetSettings();
+
+            settings.Set(WellKnownConfigurationKeys.SagaReaderCreator, readerCreator);
+
+            return config;
+        }
+
+        /// <summary>
+        /// Overrides the writer creator to influence custom data writing scenarios.
+        /// </summary>
+        public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> WriterCreator(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config, Func<StringWriter, JsonWriter> writerCreator)
+        {
+            Guard.AgainstNull(nameof(config), config);
+            Guard.AgainstNull(nameof(writerCreator), writerCreator);
+
+            var settings = config.GetSettings();
+
+            settings.Set(WellKnownConfigurationKeys.SagaWriterCreator, writerCreator);
 
             return config;
         }
