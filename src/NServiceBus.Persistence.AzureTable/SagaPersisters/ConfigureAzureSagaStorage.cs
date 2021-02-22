@@ -50,7 +50,7 @@
         }
 
         /// <summary>
-        /// Overrides the default settings used by the saga property serializer applicable for complex property types that are not supported by default with tables.
+        /// Overrides the default settings used by the saga property serializer used for complex property types serialization that is not supported by default with tables.
         /// </summary>
         public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> JsonSettings(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config, JsonSerializerSettings jsonSerializerSettings)
         {
@@ -64,7 +64,7 @@
         }
 
         /// <summary>
-        /// Overrides the reader creator to influence custom data reading scenarios.
+        /// Overrides the reader creator to customize data deserialization.
         /// </summary>
         public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> ReaderCreator(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config, Func<TextReader, JsonReader> readerCreator)
         {
@@ -79,7 +79,7 @@
         }
 
         /// <summary>
-        /// Overrides the writer creator to influence custom data writing scenarios.
+        /// Overrides the writer creator to customize data serialization.
         /// </summary>
         public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> WriterCreator(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config, Func<StringWriter, JsonWriter> writerCreator)
         {
