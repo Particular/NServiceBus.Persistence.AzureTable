@@ -9,17 +9,14 @@ namespace NServiceBus.Persistence.AzureTable
     using System.Collections.Concurrent;
     using System.Linq.Expressions;
     using Newtonsoft.Json;
-    using Newtonsoft.Json.Serialization;
 
     static class DictionaryTableEntityExtensions
     {
-        public static TEntity ToSagaData<TEntity>(DictionaryTableEntity entity)
-            where TEntity : IContainSagaData
-        {
-            return (TEntity)ToSagaData(typeof(TEntity), entity);
-        }
+        public static TEntity ToSagaData<TEntity>(DictionaryTableEntity entity, JsonSerializer jsonSerializer, Func<TextReader, JsonReader> readerCreator)
+            where TEntity : IContainSagaData =>
+            (TEntity)ToSagaData(typeof(TEntity), entity, jsonSerializer, readerCreator);
 
-        static object ToSagaData(Type sagaDataType, DictionaryTableEntity entity)
+        static object ToSagaData(Type sagaDataType, DictionaryTableEntity entity, JsonSerializer jsonSerializer, Func<TextReader, JsonReader> readerCreator)
         {
             var toCreate = Activator.CreateInstance(sagaDataType);
             foreach (var accessor in GetPropertyAccessors(sagaDataType))
@@ -50,9 +47,10 @@ namespace NServiceBus.Persistence.AzureTable
                         // possibly serialized JSON.NET value
                         try
                         {
-                            using (var stringReader = new StringReader(value.StringValue))
+                            using (var reader = new StringReader(value.StringValue))
+                            using (var jsonReader = readerCreator(reader))
                             {
-                                var deserialized = jsonSerializer.Deserialize(stringReader, type);
+                                var deserialized = jsonSerializer.Deserialize(jsonReader, type);
                                 accessor.Setter(toCreate, deserialized);
                             }
                         }
@@ -70,7 +68,7 @@ namespace NServiceBus.Persistence.AzureTable
             return toCreate;
         }
 
-        public static DictionaryTableEntity ToDictionaryTableEntity(object sagaData, DictionaryTableEntity toPersist)
+        public static DictionaryTableEntity ToDictionaryTableEntity(object sagaData, DictionaryTableEntity toPersist, JsonSerializer jsonSerializer, Func<TextWriter, JsonWriter> writerCreator)
         {
             foreach (var accessor in GetPropertyAccessors(sagaData.GetType()))
             {
@@ -117,17 +115,18 @@ namespace NServiceBus.Persistence.AzureTable
                 }
                 else
                 {
-                    using (var sw = new StringWriter())
+                    using (var stringWriter = new StringWriter())
+                    using (var writer = writerCreator(stringWriter))
                     {
                         try
                         {
-                            jsonSerializerWithNonAbstractDefaultContractResolver.Serialize(sw, value, type);
+                            jsonSerializer.Serialize(writer, value, type);
                         }
                         catch (Exception)
                         {
                             throw new NotSupportedException($"The property type '{type.Name}' is not supported in Azure Table Storage and it cannot be serialized with JSON.NET.");
                         }
-                        toPersist[name] = new EntityProperty(sw.ToString());
+                        toPersist[name] = new EntityProperty(stringWriter.ToString());
                     }
                 }
             }
@@ -253,12 +252,6 @@ namespace NServiceBus.Persistence.AzureTable
 
         static readonly ConcurrentDictionary<Type, IReadOnlyCollection<PropertyAccessor>> propertyAccessorCache = new ConcurrentDictionary<Type, IReadOnlyCollection<PropertyAccessor>>();
 
-        static readonly JsonSerializer jsonSerializer = JsonSerializer.Create();
-        static readonly JsonSerializer jsonSerializerWithNonAbstractDefaultContractResolver = new JsonSerializer
-        {
-            ContractResolver = new NonAbstractDefaultContractResolver(),
-        };
-
         static readonly DateTime StorageTableMinDateTime = new DateTime(1601, 1, 1);
 
         sealed class PropertyAccessor
@@ -305,18 +298,6 @@ namespace NServiceBus.Persistence.AzureTable
             public Func<object, object> Getter { get; }
             public string Name { get; }
             public Type PropertyType { get; }
-        }
-
-        class NonAbstractDefaultContractResolver : DefaultContractResolver
-        {
-            protected override JsonObjectContract CreateObjectContract(Type objectType)
-            {
-                if (objectType.IsAbstract || objectType.IsInterface)
-                {
-                    throw new ArgumentException("Cannot serialize an abstract class/interface", nameof(objectType));
-                }
-                return base.CreateObjectContract(objectType);
-            }
         }
     }
 }
