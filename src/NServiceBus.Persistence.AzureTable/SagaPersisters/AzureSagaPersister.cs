@@ -39,7 +39,7 @@
             sagaDataEntityToSave.Table = table;
 
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            meta.Entities[sagaData] = sagaDataEntityToSave;
+            meta.Entities[sagaData.Id] = sagaDataEntityToSave;
 
             storageSession.Add(new SagaSave(partitionKey, sagaDataEntityToSave));
         }
@@ -50,7 +50,7 @@
             var partitionKey = GetPartitionKey(context, sagaData.Id);
 
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            var sagaDataEntityToUpdate = meta.Entities[sagaData];
+            var sagaDataEntityToUpdate = meta.Entities[sagaData.Id];
 
             var sagaAsDictionaryTableEntity = DictionaryTableEntityExtensions.ToDictionaryTableEntity(sagaData, sagaDataEntityToUpdate);
 
@@ -86,7 +86,7 @@
 
             var sagaData = DictionaryTableEntityExtensions.ToSagaData<TSagaData>(readSagaDataEntity);
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            meta.Entities[sagaData] = readSagaDataEntity;
+            meta.Entities[sagaData.Id] = readSagaDataEntity;
             return sagaData;
         }
 
@@ -168,7 +168,7 @@
         {
             var storageSession = (StorageSession)session;
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            var sagaDataEntityToDelete = meta.Entities[sagaData];
+            var sagaDataEntityToDelete = meta.Entities[sagaData.Id];
             var partitionKey = GetPartitionKey(context, sagaData.Id);
 
             storageSession.Add(new SagaDelete(partitionKey, sagaDataEntityToDelete));
@@ -212,7 +212,7 @@
         /// </summary>
         class SagaInstanceMetadata
         {
-            public Dictionary<object, DictionaryTableEntity> Entities { get; } = new Dictionary<object, DictionaryTableEntity>();
+            public Dictionary<Guid, DictionaryTableEntity> Entities { get; } = new Dictionary<Guid, DictionaryTableEntity>();
         }
     }
 
