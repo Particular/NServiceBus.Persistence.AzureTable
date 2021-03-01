@@ -3,6 +3,8 @@ namespace NServiceBus.AcceptanceTests
     using System;
     using System.Linq;
     using System.Threading.Tasks;
+    using global::Newtonsoft.Json;
+    using global::Newtonsoft.Json.Serialization;
     using NServiceBus;
     using NServiceBus.AcceptanceTesting;
     using NServiceBus.AcceptanceTesting.Support;
@@ -38,7 +40,24 @@ namespace NServiceBus.AcceptanceTests
         {
             public EndpointWithNonSerializableSaga()
             {
-                EndpointSetup<DefaultServer>();
+                EndpointSetup<DefaultServer>(b =>
+                {
+                    var sagaPersistence = b.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
+                    var customSettings = new JsonSerializerSettings { ContractResolver = new NonAbstractDefaultContractResolver() };
+                    sagaPersistence.JsonSettings(customSettings);
+                });
+            }
+
+            class NonAbstractDefaultContractResolver : DefaultContractResolver
+            {
+                protected override JsonObjectContract CreateObjectContract(Type objectType)
+                {
+                    if (objectType.IsAbstract || objectType.IsInterface)
+                    {
+                        throw new ArgumentException("Cannot serialize an abstract class/interface", nameof(objectType));
+                    }
+                    return base.CreateObjectContract(objectType);
+                }
             }
 
             public class NonSerializableSaga : Saga<NonSerializableSagaData>, IAmStartedByMessages<StartSagaMessage>

@@ -3,16 +3,29 @@
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.IO;
     using System.Net;
     using System.Threading.Tasks;
     using Extensibility;
     using Microsoft.Azure.Cosmos.Table;
+    using Newtonsoft.Json;
     using Sagas;
 
     class AzureSagaPersister : ISagaPersister
     {
-        public AzureSagaPersister(IProvideCloudTableClient tableClientProvider, bool disableTableCreation, bool compatibilityMode, SecondaryIndex secondaryIndex, string conventionalTablePrefix)
+        public AzureSagaPersister(
+            IProvideCloudTableClient tableClientProvider,
+            bool disableTableCreation,
+            bool compatibilityMode,
+            SecondaryIndex secondaryIndex,
+            string conventionalTablePrefix,
+            JsonSerializer jsonSerializer,
+            Func<TextReader, JsonReader> readerCreator,
+            Func<TextWriter, JsonWriter> writerCreator)
         {
+            this.writerCreator = writerCreator;
+            this.readerCreator = readerCreator;
+            this.jsonSerializer = jsonSerializer;
             this.conventionalTablePrefix = conventionalTablePrefix;
             this.compatibilityMode = compatibilityMode;
             this.disableTableCreation = disableTableCreation;
@@ -31,7 +44,7 @@
             {
                 PartitionKey = partitionKey.PartitionKey,
                 RowKey = sagaData.Id.ToString(),
-            });
+            }, jsonSerializer, writerCreator);
 
             var table = await GetTableAndCreateIfNotExists(storageSession, sagaDataType)
                 .ConfigureAwait(false);
@@ -39,7 +52,7 @@
             sagaDataEntityToSave.Table = table;
 
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            meta.Entities[sagaData] = sagaDataEntityToSave;
+            meta.Entities[sagaData.Id] = sagaDataEntityToSave;
 
             storageSession.Add(new SagaSave(partitionKey, sagaDataEntityToSave));
         }
@@ -50,9 +63,9 @@
             var partitionKey = GetPartitionKey(context, sagaData.Id);
 
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            var sagaDataEntityToUpdate = meta.Entities[sagaData];
+            var sagaDataEntityToUpdate = meta.Entities[sagaData.Id];
 
-            var sagaAsDictionaryTableEntity = DictionaryTableEntityExtensions.ToDictionaryTableEntity(sagaData, sagaDataEntityToUpdate);
+            var sagaAsDictionaryTableEntity = DictionaryTableEntityExtensions.ToDictionaryTableEntity(sagaData, sagaDataEntityToUpdate, jsonSerializer, writerCreator);
 
             storageSession.Add(new SagaUpdate(partitionKey, sagaAsDictionaryTableEntity));
 
@@ -84,9 +97,9 @@
 
             readSagaDataEntity.Table = tableToReadFrom;
 
-            var sagaData = DictionaryTableEntityExtensions.ToSagaData<TSagaData>(readSagaDataEntity);
+            var sagaData = DictionaryTableEntityExtensions.ToSagaData<TSagaData>(readSagaDataEntity, jsonSerializer, readerCreator);
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            meta.Entities[sagaData] = readSagaDataEntity;
+            meta.Entities[sagaData.Id] = readSagaDataEntity;
             return sagaData;
         }
 
@@ -168,7 +181,7 @@
         {
             var storageSession = (StorageSession)session;
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            var sagaDataEntityToDelete = meta.Entities[sagaData];
+            var sagaDataEntityToDelete = meta.Entities[sagaData.Id];
             var partitionKey = GetPartitionKey(context, sagaData.Id);
 
             storageSession.Add(new SagaDelete(partitionKey, sagaDataEntityToDelete));
@@ -199,20 +212,23 @@
             return partitionKey;
         }
 
-        bool disableTableCreation;
-        CloudTableClient client;
-        SecondaryIndex secondaryIndex;
+        readonly bool disableTableCreation;
+        readonly CloudTableClient client;
+        readonly SecondaryIndex secondaryIndex;
         const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
-        static ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
+        static readonly ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
         private readonly bool compatibilityMode;
         private readonly string conventionalTablePrefix;
+        readonly JsonSerializer jsonSerializer;
+        readonly Func<TextReader, JsonReader> readerCreator;
+        readonly Func<TextWriter, JsonWriter> writerCreator;
 
         /// <summary>
         /// Holds saga instance related metadata in a scope of a <see cref="ContextBag" />.
         /// </summary>
         class SagaInstanceMetadata
         {
-            public Dictionary<object, DictionaryTableEntity> Entities { get; } = new Dictionary<object, DictionaryTableEntity>();
+            public Dictionary<Guid, DictionaryTableEntity> Entities { get; } = new Dictionary<Guid, DictionaryTableEntity>();
         }
     }
 
