@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
-    <PackageReference Include="NServiceBus" Version="8.0.0-alpha.644" />
+    <PackageReference Include="NServiceBus" Version="8.0.0-alpha.910" />
     <PackageReference Include="NServiceBus.Testing" Version="8.0.0-alpha.98" />
     <PackageReference Include="NUnit" Version="3.13.1" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
