@@ -1,14 +1,15 @@
 ﻿namespace NServiceBus.PersistenceTesting
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
+    using Extensibility;
+    using Microsoft.Azure.Cosmos.Table;
+    using Newtonsoft.Json;
     using NServiceBus.Outbox;
     using NServiceBus.Sagas;
     using Persistence;
     using Persistence.AzureTable;
-    using Microsoft.Azure.Cosmos.Table;
-    using Extensibility;
-    using Newtonsoft.Json;
     using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
     public partial class PersistenceTestsConfiguration : IProvideCloudTableClient
@@ -33,7 +34,7 @@
 
         public CloudTableClient Client => SetupFixture.TableClient;
 
-        public Task Configure()
+        public Task Configure(CancellationToken cancellationToken)
         {
             // with this we have a partition key per run which makes things naturally isolated
             partitionKey = Guid.NewGuid().ToString();
@@ -83,7 +84,7 @@
             return Task.CompletedTask;
         }
 
-        public Task Cleanup()
+        public Task Cleanup(CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }

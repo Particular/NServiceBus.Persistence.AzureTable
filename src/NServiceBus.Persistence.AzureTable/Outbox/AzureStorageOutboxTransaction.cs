@@ -1,5 +1,6 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
+    using System.Threading;
     using System.Threading.Tasks;
     using Extensibility;
     using Outbox;
@@ -17,9 +18,9 @@
             StorageSession = new StorageSession(resolver, context, false);
         }
 
-        public Task Commit()
+        public Task Commit(CancellationToken cancellationToken = default)
         {
-            return SuppressStoreAndCommit ? Task.CompletedTask : StorageSession.Commit();
+            return SuppressStoreAndCommit ? Task.CompletedTask : StorageSession.Commit(cancellationToken);
         }
 
         public void Dispose()

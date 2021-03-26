@@ -1,5 +1,6 @@
 ﻿namespace NServiceBus.PersistenceTesting
 {
+    using System.Threading;
     using System.Threading.Tasks;
     using Extensibility;
     using NServiceBus.Outbox;
@@ -8,7 +9,7 @@
 
     class NoOpSynchronizedStorage : ISynchronizedStorage
     {
-        public Task<CompletableSynchronizedStorageSession> OpenSession(ContextBag contextBag)
+        public Task<CompletableSynchronizedStorageSession> OpenSession(ContextBag contextBag, CancellationToken cancellationToken = default)
         {
             return NoOpSynchronizedStorageAdapter.EmptyResult;
         }
@@ -16,12 +17,12 @@
 
     class NoOpSynchronizedStorageAdapter : ISynchronizedStorageAdapter
     {
-        public Task<CompletableSynchronizedStorageSession> TryAdapt(OutboxTransaction transaction, ContextBag context)
+        public Task<CompletableSynchronizedStorageSession> TryAdapt(OutboxTransaction transaction, ContextBag context, CancellationToken cancellationToken = default)
         {
             return EmptyResult;
         }
 
-        public Task<CompletableSynchronizedStorageSession> TryAdapt(TransportTransaction transportTransaction, ContextBag context)
+        public Task<CompletableSynchronizedStorageSession> TryAdapt(TransportTransaction transportTransaction, ContextBag context, CancellationToken cancellationToken = default)
         {
             return EmptyResult;
         }
@@ -31,7 +32,7 @@
 
     class NoOpCompletableSynchronizedStorageSession : CompletableSynchronizedStorageSession
     {
-        public Task CompleteAsync()
+        public Task CompleteAsync(CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
         }

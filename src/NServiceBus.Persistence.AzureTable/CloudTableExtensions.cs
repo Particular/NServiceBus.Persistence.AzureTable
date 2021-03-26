@@ -8,7 +8,7 @@
 
     static class CloudTableExtensions
     {
-        public static async Task<IList<T>> ExecuteQueryAsync<T>(this CloudTable table, TableQuery<T> query, int take = int.MaxValue, CancellationToken ct = default) where T : ITableEntity, new()
+        public static async Task<IList<T>> ExecuteQueryAsync<T>(this CloudTable table, TableQuery<T> query, int take = int.MaxValue, CancellationToken cancellationToken = default) where T : ITableEntity, new()
         {
             var items = new List<T>();
             TableContinuationToken token = null;
@@ -20,7 +20,7 @@
                         token: token,
                         requestOptions: null,
                         operationContext: null,
-                        cancellationToken: ct)
+                        cancellationToken: cancellationToken)
                     .ConfigureAwait(false);
                 token = seg.ContinuationToken;
 
@@ -34,7 +34,7 @@
                     items.AddRange(seg);
                 }
             }
-            while (token != null && !ct.IsCancellationRequested && items.Count < take);
+            while (token != null && !cancellationToken.IsCancellationRequested && items.Count < take);
 
             return items;
         }

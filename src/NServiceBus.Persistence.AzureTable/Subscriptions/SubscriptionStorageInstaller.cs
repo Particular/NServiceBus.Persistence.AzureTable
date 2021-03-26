@@ -1,12 +1,13 @@
 namespace NServiceBus.Persistence.AzureTable
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
+    using Features;
     using Installation;
     using Logging;
     using Microsoft.Extensions.DependencyInjection;
     using Settings;
-    using Features;
 
     class SubscriptionStorageInstaller : INeedToInstallSomething
     {
@@ -16,7 +17,7 @@ namespace NServiceBus.Persistence.AzureTable
             this.serviceProvider = serviceProvider;
         }
 
-        public async Task Install(string identity)
+        public async Task Install(string identity, CancellationToken cancellationToken = default)
         {
             if (!settings.IsFeatureActive(typeof(SubscriptionStorage)))
             {
@@ -32,7 +33,7 @@ namespace NServiceBus.Persistence.AzureTable
             try
             {
                 Logger.Info("Creating Subscription Table");
-                await CreateTableIfNotExists(installerSettings, serviceProvider.GetRequiredService<IProvideCloudTableClientForSubscriptions>()).ConfigureAwait(false);
+                await CreateTableIfNotExists(installerSettings, serviceProvider.GetRequiredService<IProvideCloudTableClientForSubscriptions>(), cancellationToken).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -41,10 +42,10 @@ namespace NServiceBus.Persistence.AzureTable
             }
         }
 
-        async Task CreateTableIfNotExists(SubscriptionStorageInstallerSettings installerSettings, IProvideCloudTableClientForSubscriptions clientProvider)
+        async Task CreateTableIfNotExists(SubscriptionStorageInstallerSettings installerSettings, IProvideCloudTableClientForSubscriptions clientProvider, CancellationToken cancellationToken)
         {
             var cloudTable = clientProvider.Client.GetTableReference(installerSettings.TableName);
-            await cloudTable.CreateIfNotExistsAsync().ConfigureAwait(false);
+            await cloudTable.CreateIfNotExistsAsync(cancellationToken).ConfigureAwait(false);
         }
 
         IServiceProvider serviceProvider;

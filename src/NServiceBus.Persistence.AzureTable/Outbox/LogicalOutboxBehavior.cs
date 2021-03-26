@@ -7,7 +7,6 @@
     using System.Reflection;
     using System.Threading.Tasks;
     using DelayedDelivery;
-    using DeliveryConstraints;
     using Outbox;
     using Performance.TimeToBeReceived;
     using Pipeline;
@@ -97,33 +96,33 @@
                     new TransportOperation(
                         message,
                         DeserializeRoutingStrategy(operation.Options),
-                        DispatchConsistency.Isolated,
-                        DeserializeConstraints(operation.Options)));
+                        DeserializeConstraints(operation.Options),
+                        DispatchConsistency.Isolated));
             }
         }
 
-        static List<DeliveryConstraint> DeserializeConstraints(Dictionary<string, string> options)
+        static DispatchProperties DeserializeConstraints(Dictionary<string, string> options)
         {
-            var constraints = new List<DeliveryConstraint>(4);
+            var constraints = new DispatchProperties();
             // TODO: Will need to be supported for branches targeting v7
             // if (options.ContainsKey("NonDurable"))
             // {
             //     constraints.Add(new NonDurableDelivery());
             // }
+
             if (options.TryGetValue("DeliverAt", out var deliverAt))
             {
-                // TODO: Will need to be changed for branches targeting v7
-                constraints.Add(new DoNotDeliverBefore(DateTimeOffsetHelper.ToDateTimeOffset(deliverAt)));
+                constraints.DoNotDeliverBefore = new DoNotDeliverBefore(DateTimeOffsetHelper.ToDateTimeOffset(deliverAt));
             }
 
             if (options.TryGetValue("DelayDeliveryFor", out var delay))
             {
-                constraints.Add(new DelayDeliveryWith(TimeSpan.Parse(delay)));
+                constraints.DelayDeliveryWith = new DelayDeliveryWith(TimeSpan.Parse(delay));
             }
 
             if (options.TryGetValue("TimeToBeReceived", out var ttbr))
             {
-                constraints.Add(new DiscardIfNotReceivedBefore(TimeSpan.Parse(ttbr)));
+                constraints.DiscardIfNotReceivedBefore = new DiscardIfNotReceivedBefore(TimeSpan.Parse(ttbr));
             }
 
             return constraints;

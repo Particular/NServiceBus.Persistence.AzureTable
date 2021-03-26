@@ -2,17 +2,18 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.Table;
 
     static class TableBatchResultExtensions
     {
-        internal static async Task ExecuteOperationAsync(this TableBatchOperation transactionalBatch, Operation operation)
+        internal static async Task ExecuteOperationAsync(this TableBatchOperation transactionalBatch, Operation operation, CancellationToken cancellationToken = default)
         {
             var table = operation.Apply(transactionalBatch);
             try
             {
-                var batchResult = await table.ExecuteBatchAsync(transactionalBatch).ConfigureAwait(false);
+                var batchResult = await table.ExecuteBatchAsync(transactionalBatch, cancellationToken).ConfigureAwait(false);
 
                 if (batchResult.Count > 1)
                 {
@@ -39,7 +40,7 @@
             }
         }
 
-        internal static async Task ExecuteOperationsAsync(this TableBatchOperation transactionalBatch, Dictionary<int, Operation> operationMappings)
+        internal static async Task ExecuteOperationsAsync(this TableBatchOperation transactionalBatch, Dictionary<int, Operation> operationMappings, CancellationToken cancellationToken = default)
         {
             CloudTable previousTable, currentTable = null;
             foreach (var operation in operationMappings.Values)
@@ -61,7 +62,7 @@
 
             try
             {
-                var batchResult = await currentTable.ExecuteBatchAsync(transactionalBatch).ConfigureAwait(false);
+                var batchResult = await currentTable.ExecuteBatchAsync(transactionalBatch, cancellationToken).ConfigureAwait(false);
                 for (var i = 0; i < batchResult.Count; i++)
                 {
                     var result = batchResult[i];

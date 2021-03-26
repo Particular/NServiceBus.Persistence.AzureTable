@@ -1,11 +1,12 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
-    using System.Net;
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using Extensibility;
     using Microsoft.Azure.Cosmos.Table;
@@ -42,7 +43,7 @@
             return Encoding.ASCII.GetString(Convert.FromBase64String(encodedData));
         }
 
-        public async Task Subscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
+        public async Task Subscribe(Subscriber subscriber, MessageType messageType, ContextBag context, CancellationToken cancellationToken = default)
         {
             var table = client.GetTableReference(subscriptionTableName);
 
@@ -57,7 +58,7 @@
             try
             {
                 var operation = TableOperation.InsertOrReplace(subscription);
-                await table.ExecuteAsync(operation).ConfigureAwait(false);
+                await table.ExecuteAsync(operation, cancellationToken).ConfigureAwait(false);
             }
             catch (StorageException ex)
             {
@@ -69,7 +70,7 @@
             ClearForMessageType(messageType);
         }
 
-        public async Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
+        public async Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context, CancellationToken cancellationToken = default)
         {
             var table = client.GetTableReference(subscriptionTableName);
             try
@@ -82,7 +83,7 @@
                     ETag = "*"
                 };
                 var operation = TableOperation.Delete(subscription);
-                await table.ExecuteAsync(operation).ConfigureAwait(false);
+                await table.ExecuteAsync(operation, cancellationToken).ConfigureAwait(false);
             }
             catch (StorageException ex) when (ex.RequestInformation.HttpStatusCode == (int)HttpStatusCode.NotFound)
             {
@@ -118,13 +119,13 @@
             }
         }
 
-        public Task<IEnumerable<Subscriber>> GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes, ContextBag context)
+        public Task<IEnumerable<Subscriber>> GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes, ContextBag context, CancellationToken cancellationToken = default)
         {
             var types = messageTypes.ToList();
 
             if (cacheFor == null)
             {
-                return GetSubscriptions(types);
+                return GetSubscriptions(types, cancellationToken);
             }
 
             var key = GetKey(types);
@@ -134,7 +135,7 @@
                 var age = DateTime.UtcNow - cacheItem.Stored;
                 if (age >= cacheFor)
                 {
-                    var subscriptions = GetSubscriptions(types);
+                    var subscriptions = GetSubscriptions(types, cancellationToken);
                     Cache[key] = new CacheItem
                     {
                         Stored = DateTime.UtcNow,
@@ -146,7 +147,7 @@
             }
             else
             {
-                var subscriptions = GetSubscriptions(types);
+                var subscriptions = GetSubscriptions(types, cancellationToken);
                 Cache[key] = new CacheItem
                 {
                     Stored = DateTime.UtcNow,
@@ -156,7 +157,7 @@
             }
         }
 
-        async Task<IEnumerable<Subscriber>> GetSubscriptions(IEnumerable<MessageType> messageTypes)
+        async Task<IEnumerable<Subscriber>> GetSubscriptions(IEnumerable<MessageType> messageTypes, CancellationToken cancellationToken)
         {
             var subscribers = new HashSet<Subscriber>(SubscriberComparer.Instance);
             var table = client.GetTableReference(subscriptionTableName);
@@ -168,7 +169,7 @@
                 var upperBound = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThan, GetUpperBound(name));
                 var query = new TableQuery<Subscription>().Where(TableQuery.CombineFilters(lowerBound, "and", upperBound));
 
-                var subscriptions = await table.ExecuteQueryAsync(query).ConfigureAwait(false);
+                var subscriptions = await table.ExecuteQueryAsync(query, cancellationToken: cancellationToken).ConfigureAwait(false);
                 var results = subscriptions.Select(s => new Subscriber(DecodeFrom64(s.RowKey), s.EndpointName));
 
                 foreach (var subscriber in results)
