@@ -53,6 +53,7 @@
             {
                 DelayDeliveryWith = new DelayedDelivery.DelayDeliveryWith(TimeSpan.FromMinutes(5))
             };
+            dispatchProperties["Destination"] = "DestinationQueue";
 
             var record = new OutboxRecord
             {
