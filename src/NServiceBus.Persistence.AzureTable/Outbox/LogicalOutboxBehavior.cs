@@ -6,9 +6,7 @@
     using System.Linq.Expressions;
     using System.Reflection;
     using System.Threading.Tasks;
-    using DelayedDelivery;
     using Outbox;
-    using Performance.TimeToBeReceived;
     using Pipeline;
     using Routing;
     using Transport;
@@ -96,36 +94,9 @@
                     new TransportOperation(
                         message,
                         DeserializeRoutingStrategy(operation.Options),
-                        DeserializeConstraints(operation.Options),
+                        operation.Options,
                         DispatchConsistency.Isolated));
             }
-        }
-
-        static DispatchProperties DeserializeConstraints(Dictionary<string, string> options)
-        {
-            var constraints = new DispatchProperties();
-            // TODO: Will need to be supported for branches targeting v7
-            // if (options.ContainsKey("NonDurable"))
-            // {
-            //     constraints.Add(new NonDurableDelivery());
-            // }
-
-            if (options.TryGetValue("DeliverAt", out var deliverAt))
-            {
-                constraints.DoNotDeliverBefore = new DoNotDeliverBefore(DateTimeOffsetHelper.ToDateTimeOffset(deliverAt));
-            }
-
-            if (options.TryGetValue("DelayDeliveryFor", out var delay))
-            {
-                constraints.DelayDeliveryWith = new DelayDeliveryWith(TimeSpan.Parse(delay));
-            }
-
-            if (options.TryGetValue("TimeToBeReceived", out var ttbr))
-            {
-                constraints.DiscardIfNotReceivedBefore = new DiscardIfNotReceivedBefore(TimeSpan.Parse(ttbr));
-            }
-
-            return constraints;
         }
 
         static AddressTag DeserializeRoutingStrategy(Dictionary<string, string> options)

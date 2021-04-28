@@ -2,9 +2,10 @@
 {
     using System;
     using System.Collections.Generic;
-    using Outbox;
-    using Newtonsoft.Json;
+    using System.Linq;
     using Microsoft.Azure.Cosmos.Table;
+    using Newtonsoft.Json;
+    using Outbox;
 
     class OutboxRecord : TableEntity
     {
@@ -35,7 +36,8 @@
         public override void ReadEntity(IDictionary<string, EntityProperty> properties, OperationContext operationContext)
         {
             base.ReadEntity(properties, operationContext);
-            Operations = JsonConvert.DeserializeObject<TransportOperation[]>(TransportOperations);
+            var storageOperations = JsonConvert.DeserializeObject<StorageTransportOperation[]>(TransportOperations);
+            Operations = storageOperations.Select(op => new TransportOperation(op.MessageId, new Transport.DispatchProperties(op.Options), op.Body, op.Headers)).ToArray();
         }
 
         public void SetAsDispatched()
@@ -43,6 +45,14 @@
             Dispatched = true;
             Operations = Array.Empty<TransportOperation>();
             DispatchedAt = DateTimeOffsetHelper.ToWireFormattedString(DateTimeOffset.UtcNow);
+        }
+
+        class StorageTransportOperation
+        {
+            public string MessageId { get; set; }
+            public Dictionary<string, string> Options { get; set; }
+            public byte[] Body { get; set; }
+            public Dictionary<string, string> Headers { get; set; }
         }
     }
 }
