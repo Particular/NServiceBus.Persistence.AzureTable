@@ -34,7 +34,7 @@
 
         public CloudTableClient Client => SetupFixture.TableClient;
 
-        public Task Configure(CancellationToken cancellationToken)
+        public Task Configure(CancellationToken cancellationToken = default)
         {
             // with this we have a partition key per run which makes things naturally isolated
             partitionKey = Guid.NewGuid().ToString();
@@ -84,7 +84,7 @@
             return Task.CompletedTask;
         }
 
-        public Task Cleanup(CancellationToken cancellationToken)
+        public Task Cleanup(CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
         }
