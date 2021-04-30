@@ -5,11 +5,11 @@
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Cosmos.Table;
     using AzureTable;
-    using Testing;
-    using Outbox;
+    using Microsoft.Azure.Cosmos.Table;
     using NUnit.Framework;
+    using Outbox;
+    using Testing;
     using Transport;
     using TransportOperation = Outbox.TransportOperation;
 
@@ -49,6 +49,12 @@
         {
             var messageId = Guid.NewGuid().ToString();
 
+            var dispatchProperties = new DispatchProperties
+            {
+                DelayDeliveryWith = new DelayedDelivery.DelayDeliveryWith(TimeSpan.FromMinutes(5))
+            };
+            dispatchProperties["Destination"] = "DestinationQueue";
+
             var record = new OutboxRecord
             {
                 PartitionKey = messageId,
@@ -56,10 +62,7 @@
                 Id = messageId,
                 Operations = new[]
                 {
-                    new TransportOperation("42", new Dictionary<string, string>
-                    {
-                        {"Destination", "somewhere"}
-                    }, Array.Empty<byte>(), new Dictionary<string, string>()),
+                    new TransportOperation("42", dispatchProperties, Array.Empty<byte>(), new Dictionary<string, string>()),
                 }
             };
 

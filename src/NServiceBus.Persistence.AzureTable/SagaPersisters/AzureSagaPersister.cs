@@ -5,6 +5,7 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Net;
+    using System.Threading;
     using System.Threading.Tasks;
     using Extensibility;
     using Microsoft.Azure.Cosmos.Table;
@@ -33,7 +34,7 @@
             this.secondaryIndex = secondaryIndex;
         }
 
-        public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context)
+        public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
         {
             var storageSession = (StorageSession)session;
 
@@ -46,7 +47,7 @@
                 RowKey = sagaData.Id.ToString(),
             }, jsonSerializer, writerCreator);
 
-            var table = await GetTableAndCreateIfNotExists(storageSession, sagaDataType)
+            var table = await GetTableAndCreateIfNotExists(storageSession, sagaDataType, cancellationToken)
                 .ConfigureAwait(false);
 
             sagaDataEntityToSave.Table = table;
@@ -57,7 +58,7 @@
             storageSession.Add(new SagaSave(partitionKey, sagaDataEntityToSave));
         }
 
-        public Task Update(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
+        public Task Update(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
         {
             var storageSession = (StorageSession)session;
             var partitionKey = GetPartitionKey(context, sagaData.Id);
@@ -72,19 +73,18 @@
             return Task.CompletedTask;
         }
 
-        public async Task<TSagaData> Get<TSagaData>(Guid sagaId, SynchronizedStorageSession session, ContextBag context)
+        public async Task<TSagaData> Get<TSagaData>(Guid sagaId, SynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
             where TSagaData : class, IContainSagaData
         {
             var storageSession = (StorageSession)session;
 
-            var tableToReadFrom = await GetTableAndCreateIfNotExists(storageSession, typeof(TSagaData))
+            var tableToReadFrom = await GetTableAndCreateIfNotExists(storageSession, typeof(TSagaData), cancellationToken)
                 .ConfigureAwait(false);
 
             // reads need to go directly
             var partitionKey = GetPartitionKey(context, sagaId);
 
-            var retrieveResult = await tableToReadFrom.ExecuteAsync(
-                    TableOperation.Retrieve<DictionaryTableEntity>(partitionKey.PartitionKey, sagaId.ToString()))
+            var retrieveResult = await tableToReadFrom.ExecuteAsync(TableOperation.Retrieve<DictionaryTableEntity>(partitionKey.PartitionKey, sagaId.ToString()), cancellationToken)
                 .ConfigureAwait(false);
 
             var readSagaDataEntity = retrieveResult.Result as DictionaryTableEntity;
@@ -103,38 +103,38 @@
             return sagaData;
         }
 
-        public async Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context)
+        public async Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
             where TSagaData : class, IContainSagaData
         {
             // Derive the saga id from the property name and value
             var sagaCorrelationProperty = new SagaCorrelationProperty(propertyName, propertyValue);
             var sagaId = SagaIdGenerator.Generate<TSagaData>(sagaCorrelationProperty);
-            var sagaData = await Get<TSagaData>(sagaId, session, context).ConfigureAwait(false);
+            var sagaData = await Get<TSagaData>(sagaId, session, context, cancellationToken).ConfigureAwait(false);
 
             if (sagaData == null && compatibilityMode)
             {
-                sagaData = await GetByCorrelationProperty<TSagaData>(sagaCorrelationProperty, session, context, false)
+                sagaData = await GetByCorrelationProperty<TSagaData>(sagaCorrelationProperty, session, context, false, cancellationToken)
                     .ConfigureAwait(false);
             }
 
             return sagaData;
         }
 
-        async Task<TSagaData> GetByCorrelationProperty<TSagaData>(SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce)
+        async Task<TSagaData> GetByCorrelationProperty<TSagaData>(SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce, CancellationToken cancellationToken)
             where TSagaData : class, IContainSagaData
         {
             var storageSession = (StorageSession)session;
 
-            var tableToReadFrom = await GetTableAndCreateIfNotExists(storageSession, typeof(TSagaData))
+            var tableToReadFrom = await GetTableAndCreateIfNotExists(storageSession, typeof(TSagaData), cancellationToken)
                 .ConfigureAwait(false);
 
-            var sagaId = await secondaryIndex.FindSagaId<TSagaData>(tableToReadFrom, correlationProperty).ConfigureAwait(false);
+            var sagaId = await secondaryIndex.FindSagaId<TSagaData>(tableToReadFrom, correlationProperty, cancellationToken).ConfigureAwait(false);
             if (sagaId == null)
             {
                 return null;
             }
 
-            var sagaData = await Get<TSagaData>(sagaId.Value, session, context).ConfigureAwait(false);
+            var sagaData = await Get<TSagaData>(sagaId.Value, session, context, cancellationToken).ConfigureAwait(false);
             if (sagaData != null)
             {
                 return sagaData;
@@ -143,13 +143,13 @@
             secondaryIndex.InvalidateCacheIfAny<TSagaData>(correlationProperty);
             if (triedAlreadyOnce == false)
             {
-                return await GetByCorrelationProperty<TSagaData>(correlationProperty, session, context, true).ConfigureAwait(false);
+                return await GetByCorrelationProperty<TSagaData>(correlationProperty, session, context, true, cancellationToken).ConfigureAwait(false);
             }
 
             return null;
         }
 
-        async Task<CloudTable> GetTableAndCreateIfNotExists(StorageSession storageSession, Type sagaDataType)
+        async Task<CloudTable> GetTableAndCreateIfNotExists(StorageSession storageSession, Type sagaDataType, CancellationToken cancellationToken)
         {
             CloudTable tableToReadFrom;
             if (storageSession.Table == null)
@@ -172,12 +172,12 @@
                 return tableToReadFrom;
             }
 
-            await tableToReadFrom.CreateIfNotExistsAsync().ConfigureAwait(false);
+            await tableToReadFrom.CreateIfNotExistsAsync(cancellationToken).ConfigureAwait(false);
             tableCreated[tableToReadFrom.Name] = true;
             return tableToReadFrom;
         }
 
-        public Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
+        public Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
         {
             var storageSession = (StorageSession)session;
             var meta = context.GetOrCreate<SagaInstanceMetadata>();

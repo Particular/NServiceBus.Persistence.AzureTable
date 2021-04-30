@@ -2,9 +2,9 @@ namespace NServiceBus.Persistence.AzureTable.Migration
 {
     using System;
     using System.Threading.Tasks;
+    using Microsoft.Azure.Cosmos.Table;
     using Pipeline;
     using Sagas;
-    using Microsoft.Azure.Cosmos.Table;
 
     class ProvidePartitionKeyFromSagaId : IProvidePartitionKeyFromSagaId
     {
@@ -48,7 +48,7 @@ namespace NServiceBus.Persistence.AzureTable.Migration
 
             if (compatibilityMode)
             {
-                var nullableSagaId = await secondaryIndex.FindSagaId<TSagaData>(sagaTable, correlationProperty)
+                var nullableSagaId = await secondaryIndex.FindSagaId<TSagaData>(sagaTable, correlationProperty, context.CancellationToken)
                     .ConfigureAwait(false);
 
                 if (nullableSagaId.HasValue)

@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Net;
+    using System.Threading;
     using System.Threading.Tasks;
     using Logging;
     using Microsoft.Azure.Cosmos.Table;
@@ -17,7 +18,7 @@
             this.assumeSecondaryIndicesExist = assumeSecondaryIndicesExist;
         }
 
-        public virtual async Task<Guid?> FindSagaId<TSagaData>(CloudTable table, SagaCorrelationProperty correlationProperty)
+        public virtual async Task<Guid?> FindSagaId<TSagaData>(CloudTable table, SagaCorrelationProperty correlationProperty, CancellationToken cancellationToken = default)
             where TSagaData : IContainSagaData
         {
             var sagaType = typeof(TSagaData);
@@ -33,7 +34,7 @@
             TableResult exec;
             try
             {
-                exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, rowKey))
+                exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, rowKey), cancellationToken)
                     .ConfigureAwait(false);
             }
             catch (StorageException storageException)
@@ -43,7 +44,7 @@
                     $"Trying to retrieve the secondary index entry with PartitionKey = '{key.PartitionKey}' and RowKey = 'string.Empty' failed. When using the compatibility mode on Azure Cosmos DB it is strongly recommended to enable `sagaPersistence.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey()` to avoid additional lookup costs or disable the compatibility mode entirely if not needed by calling `persistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties(). Falling back to query secondary index entry with PartitionKey = '{key.PartitionKey}' and RowKey = '{key.PartitionKey}'",
                     storageException);
 
-                exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.PartitionKey))
+                exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.PartitionKey), cancellationToken)
                     .ConfigureAwait(false);
             }
             if (exec.Result is SecondaryIndexTableEntity secondaryIndexEntry)
@@ -57,7 +58,7 @@
                 return null;
             }
 
-            var ids = await ScanForSaga<TSagaData>(table, correlationProperty)
+            var ids = await ScanForSaga<TSagaData>(table, correlationProperty, cancellationToken)
                 .ConfigureAwait(false);
             if (ids == null || ids.Length == 0)
             {
@@ -75,7 +76,7 @@
             return id;
         }
 
-        static async Task<Guid[]> ScanForSaga<TSagaData>(CloudTable table, SagaCorrelationProperty correlationProperty)
+        static async Task<Guid[]> ScanForSaga<TSagaData>(CloudTable table, SagaCorrelationProperty correlationProperty, CancellationToken cancellationToken)
             where TSagaData : IContainSagaData
         {
             var query = DictionaryTableEntityExtensions.BuildWherePropertyQuery<TSagaData>(correlationProperty);
@@ -85,7 +86,7 @@
                 "RowKey"
             };
 
-            var entities = await table.ExecuteQueryAsync(query).ConfigureAwait(false);
+            var entities = await table.ExecuteQueryAsync(query, cancellationToken: cancellationToken).ConfigureAwait(false);
             return entities.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray();
         }
 

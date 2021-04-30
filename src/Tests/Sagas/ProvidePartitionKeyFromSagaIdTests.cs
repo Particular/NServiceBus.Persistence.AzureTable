@@ -1,12 +1,13 @@
 namespace NServiceBus.Persistence.AzureTable.Tests
 {
-    using NUnit.Framework;
     using System;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.Table;
     using Migration;
-    using Testing;
+    using NUnit.Framework;
     using Sagas;
-    using System.Threading.Tasks;
+    using Testing;
 
     [TestFixture]
     public class ProvidePartitionKeyFromSagaIdTests
@@ -188,7 +189,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             public bool FindSagaIdCalled { get; private set; }
 
-            public override Task<Guid?> FindSagaId<TSagaData>(CloudTable table, SagaCorrelationProperty correlationProperty)
+            public override Task<Guid?> FindSagaId<TSagaData>(CloudTable table, SagaCorrelationProperty correlationProperty, CancellationToken cancellationToken = default)
             {
                 FindSagaIdCalled = true;
                 return Task.FromResult(Result);

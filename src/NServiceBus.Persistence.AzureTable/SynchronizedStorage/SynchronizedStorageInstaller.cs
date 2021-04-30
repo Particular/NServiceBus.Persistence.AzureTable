@@ -1,12 +1,13 @@
 namespace NServiceBus.Persistence.AzureTable
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
+    using Features;
     using Installation;
     using Logging;
-    using Features;
-    using Settings;
     using Microsoft.Extensions.DependencyInjection;
+    using Settings;
 
     class SynchronizedStorageInstaller : INeedToInstallSomething
     {
@@ -16,7 +17,7 @@ namespace NServiceBus.Persistence.AzureTable
             this.serviceProvider = serviceProvider;
         }
 
-        public async Task Install(string identity)
+        public async Task Install(string identity, CancellationToken cancellationToken = default)
         {
             if (!settings.IsFeatureActive(typeof(SynchronizedStorage)))
             {
@@ -32,7 +33,7 @@ namespace NServiceBus.Persistence.AzureTable
             try
             {
                 log.Info("Creating default Saga and/or Outbox Table");
-                await CreateTableIfNotExists(installerSettings, serviceProvider.GetRequiredService<IProvideCloudTableClient>()).ConfigureAwait(false);
+                await CreateTableIfNotExists(installerSettings, serviceProvider.GetRequiredService<IProvideCloudTableClient>(), cancellationToken).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -41,10 +42,10 @@ namespace NServiceBus.Persistence.AzureTable
             }
         }
 
-        async Task CreateTableIfNotExists(SynchronizedStorageInstallerSettings installerSettings, IProvideCloudTableClient clientProvider)
+        async Task CreateTableIfNotExists(SynchronizedStorageInstallerSettings installerSettings, IProvideCloudTableClient clientProvider, CancellationToken cancellationToken)
         {
             var cloudTable = clientProvider.Client.GetTableReference(installerSettings.TableName);
-            await cloudTable.CreateIfNotExistsAsync().ConfigureAwait(false);
+            await cloudTable.CreateIfNotExistsAsync(cancellationToken).ConfigureAwait(false);
         }
 
         static ILog log = LogManager.GetLogger<SynchronizedStorageInstaller>();

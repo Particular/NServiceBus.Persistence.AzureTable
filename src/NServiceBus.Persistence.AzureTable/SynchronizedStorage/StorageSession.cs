@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
     using Extensibility;
     using Microsoft.Azure.Cosmos.Table;
@@ -16,9 +17,9 @@
             Batch = new TableBatchOperation();
         }
 
-        Task CompletableSynchronizedStorageSession.CompleteAsync()
+        Task CompletableSynchronizedStorageSession.CompleteAsync(CancellationToken cancellationToken)
         {
-            return commitOnComplete ? Commit() : Task.CompletedTask;
+            return commitOnComplete ? Commit(cancellationToken) : Task.CompletedTask;
         }
 
         void IDisposable.Dispose()
@@ -50,7 +51,7 @@
             operations[operationPartitionKey].Add(index, operation);
         }
 
-        public async Task Commit()
+        public async Task Commit(CancellationToken cancellationToken = default)
         {
             foreach (var operation in Batch)
             {
@@ -66,7 +67,7 @@
             foreach (var batchOfOperations in operations)
             {
                 var transactionalBatch = new TableBatchOperation();
-                await transactionalBatch.ExecuteOperationsAsync(batchOfOperations.Value)
+                await transactionalBatch.ExecuteOperationsAsync(batchOfOperations.Value, cancellationToken: cancellationToken)
                     .ConfigureAwait(false);
             }
         }

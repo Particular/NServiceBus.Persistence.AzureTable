@@ -4,11 +4,12 @@
 
     public partial class TestSuiteConstraints
     {
-        public bool SupportsDtc { get; } = false;
-        public bool SupportsCrossQueueTransactions { get; } = true;
-        public bool SupportsNativePubSub { get; } = false;
-        public bool SupportsDelayedDelivery { get; } = true;
-        public bool SupportsOutbox { get; } = false;
+        public bool SupportsDtc => false;
+        public bool SupportsCrossQueueTransactions => true;
+        public bool SupportsNativePubSub => false;
+        public bool SupportsDelayedDelivery => true;
+        public bool SupportsOutbox => false;
+        public bool SupportsPurgeOnStartup => true;
         public IConfigureEndpointTestExecution CreateTransportConfiguration() => new ConfigureEndpointAcceptanceTestingTransport(SupportsNativePubSub, SupportsDelayedDelivery);
         public IConfigureEndpointTestExecution CreatePersistenceConfiguration() => new ConfigureEndpointAzureTablePersistence();
     }
