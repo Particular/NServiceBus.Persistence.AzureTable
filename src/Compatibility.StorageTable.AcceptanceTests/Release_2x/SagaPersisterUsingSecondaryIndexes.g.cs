@@ -12,12 +12,12 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
     using Logging;
     using Sagas;
     using System.Linq;
-using System.Threading;
+    using System.Threading;
 
-/// <summary>
-/// This is a copy of the saga persister code 2.4.1
-/// <remarks>Table name needs to include table prefix <code>var tableName = $"{SetupFixture.TablePrefix}{sagaType.Name}";</code>, see GetTable</remarks>
-/// </summary>
+    /// <summary>
+    /// This is a copy of the saga persister code 2.4.1
+    /// <remarks>Table name needs to include table prefix <code>var tableName = $"{SetupFixture.TablePrefix}{sagaType.Name}";</code>, see GetTable</remarks>
+    /// </summary>
     public class SagaPersisterUsingSecondaryIndexes : ISagaPersister
     {
         public SagaPersisterUsingSecondaryIndexes(string connectionString, bool autoUpdateSchema, bool assumeSecondaryIndicesExist = false)
@@ -97,7 +97,7 @@ using System.Threading;
             {
                 await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
             }
-            catch (StorageException e) when (e.RequestInformation.HttpStatusCode == (int) HttpStatusCode.NotFound)
+            catch (StorageException e) when (e.RequestInformation.HttpStatusCode == (int)HttpStatusCode.NotFound)
             {
                 // should not try to delete saga data that does not exist, this situation can occur on retry or parallel execution
             }
@@ -162,7 +162,7 @@ using System.Threading;
                 var tableEntity = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).SafeFirstOrDefault();
                 return tableEntity;
             }
-            catch (StorageException e) when(e.RequestInformation.HttpStatusCode == (int) HttpStatusCode.NotFound)
+            catch (StorageException e) when (e.RequestInformation.HttpStatusCode == (int)HttpStatusCode.NotFound)
             {
                 return null;
             }
