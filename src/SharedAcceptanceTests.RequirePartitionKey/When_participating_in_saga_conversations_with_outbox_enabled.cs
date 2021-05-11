@@ -1,17 +1,17 @@
 namespace NServiceBus.AcceptanceTests
 {
     using System;
-    using System.Threading.Tasks;
-    using NServiceBus;
-    using AcceptanceTesting;
-    using EndpointTemplates;
-    using NUnit.Framework;
-    using Microsoft.Azure.Cosmos.Table;
-    using Persistence.AzureTable;
-    using Pipeline;
     using System.Linq;
     using System.Net;
+    using System.Threading.Tasks;
+    using AcceptanceTesting;
+    using EndpointTemplates;
+    using Microsoft.Azure.Cosmos.Table;
+    using NServiceBus;
+    using NServiceBus.Pipeline;
     using NServiceBus.Sagas;
+    using NUnit.Framework;
+    using Persistence.AzureTable;
 
     public class When_participating_in_saga_conversations_with_outbox_enabled : NServiceBusAcceptanceTest
     {

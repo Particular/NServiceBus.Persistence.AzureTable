@@ -1,10 +1,10 @@
 ﻿namespace NServiceBus.AcceptanceTests
 {
-    using System.Threading.Tasks;
     using System;
-    using Pipeline;
+    using System.Threading.Tasks;
     using AcceptanceTesting;
     using EndpointTemplates;
+    using NServiceBus.Pipeline;
     using NUnit.Framework;
     using Persistence.AzureTable;
 
