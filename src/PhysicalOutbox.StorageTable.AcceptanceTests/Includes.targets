@@ -10,29 +10,29 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Remove="\**\ConfigureEndpointInMemoryPersistence.cs" />
-        <Compile Remove="\**\ConfigureEndpointLearningPersistence.cs" />
-        <Compile Remove="\**\ConventionEnforcementTests.cs" />
-        <Compile Remove="\**\DeterministicGuid.cs" />
-        <Compile Remove="\**\Audit\*.*" />
-        <Compile Remove="\**\Correlation\*.*" />
-        <Compile Remove="\**\DataBus\*.*" />
-        <Compile Remove="\**\DelayedDelivery\*.*" />
-        <Compile Remove="\**\Forwarding\*.*" />
-        <Compile Remove="\**\MessageId\*.*" />
-        <Compile Remove="\**\Pipeline\*.*" />
-        <Compile Remove="\**\Recoverability\*.*" />
-        <Compile Remove="\**\Routing\**\*.*" />
-        <Compile Remove="\**\Satellites\*.*" />
-        <Compile Remove="\**\Scheduling\*.*" />
-        <Compile Remove="\**\SelfVerification\*.*" />
-        <Compile Remove="\**\Serialization\*.*" />
-        <Compile Remove="\**\Timeout\*.*" />
-        <Compile Remove="\**\TimeToBeReceived\*.*" />
-        <Compile Remove="\**\Tx\**\*.*" />
-        <Compile Remove="\**\Versioning\*.*" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\ConfigureEndpointInMemoryPersistence.cs" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\ConfigureEndpointLearningPersistence.cs" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\ConventionEnforcementTests.cs" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\DeterministicGuid.cs" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Audit\*.*" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Correlation\*.*" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\DataBus\*.*" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\DelayedDelivery\*.*" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Forwarding\*.*" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\MessageId\*.*" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Pipeline\*.*" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Recoverability\*.*" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Routing\**\*.*" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Satellites\*.*" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Scheduling\*.*" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\SelfVerification\*.*" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Serialization\*.*" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Timeout\*.*" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\TimeToBeReceived\*.*" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Tx\**\*.*" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Versioning\*.*" />
         <!-- Can be removed once https://github.com/Particular/NServiceBus/pull/5825 is fixed and released -->
-        <Compile Remove="\**\Outbox\When_blowing_up_just_after_dispatch.cs" />
+        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Outbox\When_blowing_up_just_after_dispatch.cs" />
     </ItemGroup>
 
     <ItemGroup>
