@@ -11,13 +11,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NServiceBus.AcceptanceTests.Sources" Version="7.4.4" />
+    <PackageReference Include="GitHubActionsTestLogger" Version="1.2.0" />
+    <PackageReference Include="NServiceBus.AcceptanceTests.Sources" Version="7.4.4" GeneratePathProperty="true" />
     <PackageReference Include="Particular.CodeRules" Version="0.7.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
     <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.2.0" />
-    <PackageReference Include="NUnit" Version="3.12.0" />
+    <PackageReference Include="NUnit" Version="3.13.2" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,25 +26,25 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="\**\Audit\*.*" />
-    <Compile Remove="\**\Correlation\*.*" />
-    <Compile Remove="\**\DataBus\*.*" />
-    <Compile Remove="\**\DelayedDelivery\*.*" />
-    <Compile Remove="\**\Forwarding\*.*" />
-    <Compile Remove="\**\MessageId\*.*" />
-    <Compile Remove="\**\Pipeline\*.*" />
-    <Compile Remove="\**\Recoverability\*.*" />
-    <Compile Remove="\**\Routing\**" />
-    <Compile Remove="\**\Satellites\*.*" />
-    <Compile Remove="\**\Scheduling\*.*" />
-    <Compile Remove="\**\SelfVerification\*.*" />
-    <Compile Remove="\**\Serialization\*.*" />
-    <Compile Remove="\**\Timeout\*.*" />
-    <Compile Remove="\**\TimeToBeReceived\*.*" />
-    <Compile Remove="\**\Tx\**\*.*" />
-    <Compile Remove="\**\Versioning\*.*" />
-    <Compile Remove="\**\Outbox\*.*" />
-    <Compile Remove="\**\Sagas\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Audit\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Correlation\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\DataBus\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\DelayedDelivery\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Forwarding\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\MessageId\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Pipeline\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Recoverability\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Routing\**" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Satellites\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Scheduling\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\SelfVerification\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Serialization\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Timeout\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\TimeToBeReceived\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Tx\**\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Versioning\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Outbox\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Sagas\*.*" />
   </ItemGroup>
 
   <ItemGroup>
