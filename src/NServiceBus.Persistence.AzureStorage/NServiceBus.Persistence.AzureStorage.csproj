@@ -5,7 +5,7 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(SolutionDir)NServiceBus.snk</AssemblyOriginatorKeyFile>
     <Description>NServiceBus Azure Storage Persistence</Description>
-    <GitVersion_ToolArgments>$(GitVersion_ToolArgments) -l gitversion.log</GitVersion_ToolArgments>
+    <GitVersion_ToolArgments>$(GitVersion_ToolArgments) -l gitversion.log -nonormalize</GitVersion_ToolArgments>
   </PropertyGroup>
 
   <ItemGroup>
