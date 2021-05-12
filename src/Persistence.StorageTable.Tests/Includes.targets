@@ -6,7 +6,7 @@
 
     <ItemGroup>
         <!-- Remove once https://github.com/Particular/NServiceBus/pull/5808 is merged and new alpha released -->
-        <Compile Remove="\**\Outbox\*.cs" />
+        <Compile Remove="$(PkgNServiceBus_PersistenceTests_Sources)\**\Outbox\*.cs" />
     </ItemGroup>
 
     <ItemGroup>
