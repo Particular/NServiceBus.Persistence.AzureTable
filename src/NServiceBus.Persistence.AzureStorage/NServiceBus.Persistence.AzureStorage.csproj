@@ -5,6 +5,7 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(SolutionDir)NServiceBus.snk</AssemblyOriginatorKeyFile>
     <Description>NServiceBus Azure Storage Persistence</Description>
+    <GitVersion_ToolArgments>$(GitVersion_ToolArgments) -nonormalize</GitVersion_ToolArgments>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +14,7 @@
     <PackageReference Include="Fody" Version="6.1.1" PrivateAssets="All" />
     <PackageReference Include="Obsolete.Fody" Version="5.2.0" PrivateAssets="All" />
     <PackageReference Include="Particular.CodeRules" Version="0.2.1" PrivateAssets="All" />
-    <PackageReference Include="Particular.Packaging" Version="0.5.0" PrivateAssets="All" />
+    <PackageReference Include="Particular.Packaging" Version="1.2.1" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>
