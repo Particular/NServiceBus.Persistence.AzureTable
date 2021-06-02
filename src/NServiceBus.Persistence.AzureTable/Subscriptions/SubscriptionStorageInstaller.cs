@@ -35,9 +35,9 @@ namespace NServiceBus.Persistence.AzureTable
                 Logger.Info("Creating Subscription Table");
                 await CreateTableIfNotExists(installerSettings, serviceProvider.GetRequiredService<IProvideCloudTableClientForSubscriptions>(), cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception e)
+            catch (Exception ex) when (!ex.IsCausedBy(cancellationToken))
             {
-                Logger.Error("Could not complete the installation. ", e);
+                Logger.Error("Could not complete the installation. ", ex);
                 throw;
             }
         }

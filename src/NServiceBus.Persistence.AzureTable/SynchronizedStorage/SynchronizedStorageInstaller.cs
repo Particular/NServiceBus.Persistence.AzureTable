@@ -35,9 +35,9 @@ namespace NServiceBus.Persistence.AzureTable
                 log.Info("Creating default Saga and/or Outbox Table");
                 await CreateTableIfNotExists(installerSettings, serviceProvider.GetRequiredService<IProvideCloudTableClient>(), cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception e)
+            catch (Exception ex) when (!ex.IsCausedBy(cancellationToken))
             {
-                log.Error("Could not complete the installation. ", e);
+                log.Error("Could not complete the installation. ", ex);
                 throw;
             }
         }
