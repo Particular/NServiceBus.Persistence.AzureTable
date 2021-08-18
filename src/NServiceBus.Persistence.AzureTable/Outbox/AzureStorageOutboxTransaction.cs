@@ -5,7 +5,7 @@
     using Extensibility;
     using Outbox;
 
-    class AzureStorageOutboxTransaction : OutboxTransaction
+    class AzureStorageOutboxTransaction : IOutboxTransaction
     {
         public StorageSession StorageSession { get; }
 

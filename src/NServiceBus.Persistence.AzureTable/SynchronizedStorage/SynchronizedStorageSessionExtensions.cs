@@ -11,7 +11,7 @@
         /// Retrieves the shared <see cref="IAzureTableStorageSession"/> from the <see cref="SynchronizedStorageSession"/>.
         /// </summary>
         public static IAzureTableStorageSession AzureTablePersistenceSession(
-            this SynchronizedStorageSession session)
+            this ISynchronizedStorageSession session)
         {
             Guard.AgainstNull(nameof(session), session);
 

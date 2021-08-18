@@ -220,7 +220,7 @@ namespace NServiceBus.Persistence.AzureTable
             }
             else if (propertyInfo.PropertyType == typeof(DateTime))
             {
-                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForDate(correlationProperty.Name, QueryComparisons.Equal, (DateTime)correlationProperty.Value));
+                query = new TableQuery<DictionaryTableEntity>().Where(TableQuery.GenerateFilterConditionForDate(correlationProperty.Name, QueryComparisons.Equal, (DateTimeOffset)correlationProperty.Value));
             }
             else if (propertyInfo.PropertyType == typeof(Guid))
             {

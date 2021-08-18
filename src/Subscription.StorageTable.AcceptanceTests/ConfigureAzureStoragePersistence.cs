@@ -16,9 +16,9 @@ public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExec
 
         var recoverabilitySettings = configuration.Recoverability();
 
-        if (endpointName != Conventions.EndpointNamingConvention(typeof(When_multi_subscribing_to_a_polymorphic_event.Publisher1))
-            || endpointName != Conventions.EndpointNamingConvention(typeof(When_multi_subscribing_to_a_polymorphic_event.Publisher2))
-            || endpointName != Conventions.EndpointNamingConvention(typeof(When_multi_subscribing_to_a_polymorphic_event.Publisher2)))
+        if (endpointName != Conventions.EndpointNamingConvention(typeof(MultiSubscribeToPolymorphicEvent.Publisher1))
+            || endpointName != Conventions.EndpointNamingConvention(typeof(MultiSubscribeToPolymorphicEvent.Publisher2))
+            || endpointName != Conventions.EndpointNamingConvention(typeof(MultiSubscribeToPolymorphicEvent.Publisher2)))
         {
             recoverabilitySettings.Immediate(c => c.NumberOfRetries(1));
         }

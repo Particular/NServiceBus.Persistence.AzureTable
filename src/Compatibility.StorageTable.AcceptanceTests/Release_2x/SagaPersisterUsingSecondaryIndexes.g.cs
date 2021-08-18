@@ -29,7 +29,7 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
             secondaryIndices = new SecondaryIndexPersister(GetTable, ScanForSaga, Persist, assumeSecondaryIndicesExist);
         }
 
-        public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
+        public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
         {
             // The following operations have to be executed sequentially:
             // 1) insert the 2nd index, containing the primary saga data (just in case of a failure)
@@ -40,12 +40,12 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
             await secondaryIndices.MarkAsHavingPrimaryPersisted(sagaData, correlationProperty).ConfigureAwait(false);
         }
 
-        public Task Update(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
+        public Task Update(IContainSagaData sagaData, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
         {
             return Persist(sagaData, null, context);
         }
 
-        public async Task<TSagaData> Get<TSagaData>(Guid sagaId, SynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
+        public async Task<TSagaData> Get<TSagaData>(Guid sagaId, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
             where TSagaData : class, IContainSagaData
         {
             var id = sagaId.ToString();
@@ -70,13 +70,13 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
             return entity;
         }
 
-        public Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
+        public Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
             where TSagaData : class, IContainSagaData
         {
             return GetByCorrelationProperty<TSagaData>(propertyName, propertyValue, session, context, false);
         }
 
-        public async Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
+        public async Task Complete(IContainSagaData sagaData, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
         {
             var table = await GetTable(sagaData.GetType()).ConfigureAwait(false);
 
@@ -112,7 +112,7 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
             }
         }
 
-        async Task<TSagaData> GetByCorrelationProperty<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce)
+        async Task<TSagaData> GetByCorrelationProperty<TSagaData>(string propertyName, object propertyValue, ISynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce)
             where TSagaData : class, IContainSagaData
         {
             var sagaId = await secondaryIndices.FindSagaIdAndCreateIndexEntryIfNotFound<TSagaData>(propertyName, propertyValue).ConfigureAwait(false);

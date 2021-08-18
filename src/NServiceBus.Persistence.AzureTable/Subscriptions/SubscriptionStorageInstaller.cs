@@ -11,7 +11,7 @@ namespace NServiceBus.Persistence.AzureTable
 
     class SubscriptionStorageInstaller : INeedToInstallSomething
     {
-        public SubscriptionStorageInstaller(IServiceProvider serviceProvider, ReadOnlySettings settings)
+        public SubscriptionStorageInstaller(IServiceProvider serviceProvider, IReadOnlySettings settings)
         {
             this.settings = settings;
             this.serviceProvider = serviceProvider;
@@ -51,6 +51,6 @@ namespace NServiceBus.Persistence.AzureTable
         IServiceProvider serviceProvider;
 
         static readonly ILog Logger = LogManager.GetLogger<SynchronizedStorageInstaller>();
-        ReadOnlySettings settings;
+        IReadOnlySettings settings;
     }
 }

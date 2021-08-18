@@ -13,7 +13,7 @@
             this.tableHolderResolver = tableHolderResolver;
         }
 
-        public Task<OutboxTransaction> BeginTransaction(ContextBag context, CancellationToken cancellationToken = default)
+        public Task<IOutboxTransaction> BeginTransaction(ContextBag context, CancellationToken cancellationToken = default)
         {
             var azureStorageOutboxTransaction = new AzureStorageOutboxTransaction(tableHolderResolver, context);
 
@@ -21,7 +21,7 @@
             {
                 azureStorageOutboxTransaction.PartitionKey = partitionKey;
             }
-            return Task.FromResult((OutboxTransaction)azureStorageOutboxTransaction);
+            return Task.FromResult((IOutboxTransaction)azureStorageOutboxTransaction);
         }
 
         public async Task<OutboxMessage> Get(string messageId, ContextBag context, CancellationToken cancellationToken = default)
@@ -48,7 +48,7 @@
             return outboxRecord != null ? new OutboxMessage(outboxRecord.Id, outboxRecord.Operations) : null;
         }
 
-        public Task Store(OutboxMessage message, OutboxTransaction transaction, ContextBag context, CancellationToken cancellationToken = default)
+        public Task Store(OutboxMessage message, IOutboxTransaction transaction, ContextBag context, CancellationToken cancellationToken = default)
         {
             var azureStorageOutboxTransaction = (AzureStorageOutboxTransaction)transaction;
 

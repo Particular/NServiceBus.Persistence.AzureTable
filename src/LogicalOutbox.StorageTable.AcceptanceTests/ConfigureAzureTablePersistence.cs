@@ -42,9 +42,9 @@ public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExec
     class PartitionKeyProviderBehavior : Behavior<IIncomingLogicalMessageContext>
     {
         readonly ScenarioContext scenarioContext;
-        readonly ReadOnlySettings settings;
+        readonly IReadOnlySettings settings;
 
-        public PartitionKeyProviderBehavior(ScenarioContext scenarioContext, ReadOnlySettings settings)
+        public PartitionKeyProviderBehavior(ScenarioContext scenarioContext, IReadOnlySettings settings)
         {
             this.settings = settings;
             this.scenarioContext = scenarioContext;
@@ -69,7 +69,7 @@ public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExec
             public PartitionKeyProviderBehaviorRegisterStep() : base(nameof(PartitionKeyProviderBehavior),
                 typeof(PartitionKeyProviderBehavior),
                 "Populates the partition key",
-                provider => new PartitionKeyProviderBehavior(provider.GetRequiredService<ScenarioContext>(), provider.GetRequiredService<ReadOnlySettings>()))
+                provider => new PartitionKeyProviderBehavior(provider.GetRequiredService<ScenarioContext>(), provider.GetRequiredService<IReadOnlySettings>()))
             {
                 InsertBeforeIfExists(nameof(LogicalOutboxBehavior));
             }

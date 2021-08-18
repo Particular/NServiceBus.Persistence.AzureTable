@@ -8,7 +8,7 @@
     /// <summary>
     /// A fake implementation for <see cref="SynchronizedStorageSession"/> for testing purposes.
     /// </summary>
-    public class TestableAzureTableStorageSession : SynchronizedStorageSession, IWorkWithSharedTransactionalBatch
+    public class TestableAzureTableStorageSession : ISynchronizedStorageSession, IWorkWithSharedTransactionalBatch
     {
         /// <summary>
         /// Initializes a new TestableAzureTableStorageSession with a partition key.

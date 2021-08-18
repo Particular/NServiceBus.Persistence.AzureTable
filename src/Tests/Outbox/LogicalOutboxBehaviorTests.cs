@@ -84,7 +84,7 @@
             testableContext.Extensions.Set(new TableEntityPartitionKey(messageId));
             testableContext.Extensions.Set(new SetAsDispatchedHolder());
 
-            testableContext.Extensions.Set<OutboxTransaction>(new AzureStorageOutboxTransaction(containerHolderHolderResolver, testableContext.Extensions));
+            testableContext.Extensions.Set<IOutboxTransaction>(new AzureStorageOutboxTransaction(containerHolderHolderResolver, testableContext.Extensions));
 
             var pendingTransportOperations = new PendingTransportOperations();
             pendingTransportOperations.Add(new Transport.TransportOperation(new OutgoingMessage(null, null, null), null));

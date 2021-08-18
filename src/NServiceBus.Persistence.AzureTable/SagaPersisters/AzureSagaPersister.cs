@@ -34,7 +34,7 @@
             this.secondaryIndex = secondaryIndex;
         }
 
-        public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
+        public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
         {
             var storageSession = (StorageSession)session;
 
@@ -58,7 +58,7 @@
             storageSession.Add(new SagaSave(partitionKey, sagaDataEntityToSave));
         }
 
-        public Task Update(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
+        public Task Update(IContainSagaData sagaData, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
         {
             var storageSession = (StorageSession)session;
             var partitionKey = GetPartitionKey(context, sagaData.Id);
@@ -73,7 +73,7 @@
             return Task.CompletedTask;
         }
 
-        public async Task<TSagaData> Get<TSagaData>(Guid sagaId, SynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
+        public async Task<TSagaData> Get<TSagaData>(Guid sagaId, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
             where TSagaData : class, IContainSagaData
         {
             var storageSession = (StorageSession)session;
@@ -103,7 +103,7 @@
             return sagaData;
         }
 
-        public async Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
+        public async Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
             where TSagaData : class, IContainSagaData
         {
             // Derive the saga id from the property name and value
@@ -120,7 +120,7 @@
             return sagaData;
         }
 
-        async Task<TSagaData> GetByCorrelationProperty<TSagaData>(SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce, CancellationToken cancellationToken)
+        async Task<TSagaData> GetByCorrelationProperty<TSagaData>(SagaCorrelationProperty correlationProperty, ISynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce, CancellationToken cancellationToken)
             where TSagaData : class, IContainSagaData
         {
             var storageSession = (StorageSession)session;
@@ -177,7 +177,7 @@
             return tableToReadFrom;
         }
 
-        public Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
+        public Task Complete(IContainSagaData sagaData, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
         {
             var storageSession = (StorageSession)session;
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
