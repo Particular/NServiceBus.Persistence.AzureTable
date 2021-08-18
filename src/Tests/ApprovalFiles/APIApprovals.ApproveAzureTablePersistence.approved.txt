@@ -90,7 +90,7 @@ namespace NServiceBus.Persistence.AzureTable
     }
     public static class SynchronizedStorageSessionExtensions
     {
-        public static NServiceBus.Persistence.AzureTable.IAzureTableStorageSession AzureTablePersistenceSession(this NServiceBus.Persistence.SynchronizedStorageSession session) { }
+        public static NServiceBus.Persistence.AzureTable.IAzureTableStorageSession AzureTablePersistenceSession(this NServiceBus.Persistence.ISynchronizedStorageSession session) { }
     }
     public sealed class TableBatchOperationException : System.Exception
     {
@@ -100,7 +100,7 @@ namespace NServiceBus.Persistence.AzureTable
 }
 namespace NServiceBus.Testing
 {
-    public class TestableAzureTableStorageSession : NServiceBus.Persistence.AzureTable.IAzureTableStorageSession, NServiceBus.Persistence.SynchronizedStorageSession
+    public class TestableAzureTableStorageSession : NServiceBus.Persistence.AzureTable.IAzureTableStorageSession, NServiceBus.Persistence.ISynchronizedStorageSession
     {
         public TestableAzureTableStorageSession(NServiceBus.TableEntityPartitionKey partitionKey) { }
         public Microsoft.Azure.Cosmos.Table.TableBatchOperation Batch { get; set; }

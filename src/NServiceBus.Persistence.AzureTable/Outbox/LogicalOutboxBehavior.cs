@@ -35,20 +35,20 @@
         /// <inheritdoc />
         public async Task Invoke(IIncomingLogicalMessageContext context, Func<IIncomingLogicalMessageContext, Task> next)
         {
-            if (!context.Extensions.TryGet<OutboxTransaction>(out var transaction))
+            if (!context.Extensions.TryGet<IOutboxTransaction>(out var transaction))
             {
                 await next(context).ConfigureAwait(false);
                 return;
             }
 
-            if (!(transaction is AzureStorageOutboxTransaction outboxTransaction))
+            if (!(transaction is AzureStorageOutboxTransaction IOutboxTransaction))
             {
                 await next(context).ConfigureAwait(false);
                 return;
             }
 
             // Normal outbox operating at the physical stage
-            if (outboxTransaction.PartitionKey.HasValue)
+            if (IOutboxTransaction.PartitionKey.HasValue)
             {
                 await next(context).ConfigureAwait(false);
                 return;
@@ -66,10 +66,10 @@
             setAsDispatchedHolder.PartitionKey = partitionKey;
             setAsDispatchedHolder.TableHolder = tableHolder;
 
-            outboxTransaction.PartitionKey = partitionKey;
-            outboxTransaction.StorageSession.TableHolder = tableHolder;
+            IOutboxTransaction.PartitionKey = partitionKey;
+            IOutboxTransaction.StorageSession.TableHolder = tableHolder;
 
-            var outboxRecord = await tableHolder.Table.ReadOutboxRecord(context.MessageId, outboxTransaction.PartitionKey.Value, context.Extensions, context.CancellationToken)
+            var outboxRecord = await tableHolder.Table.ReadOutboxRecord(context.MessageId, IOutboxTransaction.PartitionKey.Value, context.Extensions, context.CancellationToken)
                 .ConfigureAwait(false);
 
             if (outboxRecord is null)
@@ -81,7 +81,7 @@
             setAsDispatchedHolder.Record = outboxRecord;
 
             // Signals that Outbox persister Store and Commit should be no-ops
-            outboxTransaction.SuppressStoreAndCommit = true;
+            IOutboxTransaction.SuppressStoreAndCommit = true;
 
             var pendingTransportOperations = context.Extensions.Get<PendingTransportOperations>();
             setter(pendingTransportOperations);

@@ -11,7 +11,7 @@ namespace NServiceBus.Persistence.AzureTable
 
     class SynchronizedStorageInstaller : INeedToInstallSomething
     {
-        public SynchronizedStorageInstaller(IServiceProvider serviceProvider, ReadOnlySettings settings)
+        public SynchronizedStorageInstaller(IServiceProvider serviceProvider, IReadOnlySettings settings)
         {
             this.settings = settings;
             this.serviceProvider = serviceProvider;
@@ -50,6 +50,6 @@ namespace NServiceBus.Persistence.AzureTable
 
         static ILog log = LogManager.GetLogger<SynchronizedStorageInstaller>();
         IServiceProvider serviceProvider;
-        ReadOnlySettings settings;
+        IReadOnlySettings settings;
     }
 }

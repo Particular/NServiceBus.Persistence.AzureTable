@@ -4,7 +4,7 @@ namespace NServiceBus.Persistence.AzureTable
 
     static class SubscriptionSettingsExtensions
     {
-        public static string GetSubscriptionTableName(this ReadOnlySettings readOnlySettings)
+        public static string GetSubscriptionTableName(this IReadOnlySettings readOnlySettings)
         {
             // the subscription storage specific override takes precedence for backward compatibility
             string subscriptionTableName;

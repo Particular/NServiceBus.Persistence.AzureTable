@@ -12,7 +12,7 @@
             this.currentSharedTransactionalBatchHolder = currentSharedTransactionalBatchHolder;
         }
 
-        public Task<CompletableSynchronizedStorageSession> OpenSession(ContextBag contextBag, CancellationToken cancellationToken = default)
+        public Task<ICompletableSynchronizedStorageSession> OpenSession(ContextBag contextBag, CancellationToken cancellationToken = default)
         {
             var storageSession = new StorageSession(tableHolderResolver, contextBag, true);
 
@@ -20,7 +20,7 @@
             //CurrentSharedTransactionalBatchBehavior.Invoke calls CreateScope which is needed for SetCurrent to work.
             //This is a workaround since PersistenceTests do not execute behaviors.
             currentSharedTransactionalBatchHolder?.SetCurrent(storageSession);
-            return Task.FromResult<CompletableSynchronizedStorageSession>(storageSession);
+            return Task.FromResult<ICompletableSynchronizedStorageSession>(storageSession);
         }
 
         readonly CurrentSharedTransactionalBatchHolder currentSharedTransactionalBatchHolder;

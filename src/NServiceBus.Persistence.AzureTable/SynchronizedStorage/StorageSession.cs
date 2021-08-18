@@ -7,7 +7,7 @@
     using Extensibility;
     using Microsoft.Azure.Cosmos.Table;
 
-    class StorageSession : CompletableSynchronizedStorageSession, IWorkWithSharedTransactionalBatch
+    class StorageSession : ICompletableSynchronizedStorageSession, IWorkWithSharedTransactionalBatch
     {
         public StorageSession(TableHolderResolver resolver, ContextBag context, bool commitOnComplete)
         {
@@ -17,7 +17,7 @@
             Batch = new TableBatchOperation();
         }
 
-        Task CompletableSynchronizedStorageSession.CompleteAsync(CancellationToken cancellationToken)
+        Task ICompletableSynchronizedStorageSession.CompleteAsync(CancellationToken cancellationToken)
         {
             return commitOnComplete ? Commit(cancellationToken) : Task.CompletedTask;
         }
