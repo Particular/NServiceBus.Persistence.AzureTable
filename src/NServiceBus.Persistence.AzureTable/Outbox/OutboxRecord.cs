@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using Microsoft.Azure.Cosmos.Table;
     using Newtonsoft.Json;
     using Outbox;
@@ -30,12 +31,24 @@
         public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
         {
             TransportOperations = JsonConvert.SerializeObject(
-                Operations.Select(transportOperation => new StorageTransportOperation()
+                Operations.Select(transportOperation =>
                 {
-                    MessageId = transportOperation.MessageId,
-                    Body = transportOperation.Body.ToArray(),
-                    Options = transportOperation.Options,
-                    Headers = transportOperation.Headers
+                    byte[] body = null;
+                    if (MemoryMarshal.TryGetArray(transportOperation.Body, out var bodySegment)) //if true this does not make an allocation
+                    {
+                        body = bodySegment.Array;
+                    }
+                    else
+                    {
+                        body = transportOperation.Body.ToArray();
+                    }
+                    return new StorageTransportOperation()
+                    {
+                        MessageId = transportOperation.MessageId,
+                        Body = body,
+                        Options = transportOperation.Options,
+                        Headers = transportOperation.Headers
+                    };
                 }), Formatting.Indented);
             return base.WriteEntity(operationContext);
         }
