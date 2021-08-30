@@ -29,7 +29,14 @@
 
         public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
         {
-            TransportOperations = JsonConvert.SerializeObject(Operations, Formatting.Indented);
+            TransportOperations = JsonConvert.SerializeObject(
+                Operations.Select(transportOperation => new StorageTransportOperation()
+                {
+                    MessageId = transportOperation.MessageId,
+                    Body = transportOperation.Body.ToArray(),
+                    Options = transportOperation.Options,
+                    Headers = transportOperation.Headers
+                }), Formatting.Indented);
             return base.WriteEntity(operationContext);
         }
 
