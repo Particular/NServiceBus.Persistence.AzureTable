@@ -71,6 +71,20 @@ jobs:
         id: infra
         shell: pwsh
         run: |
+          # Retrieve the Azure region in which this workflow is running. This region should be used to create addtional resources.
+          $hostInfo = curl -H Metadata:true "169.254.169.254/metadata/instance?api-version=2017-08-01" | ConvertFrom-Json
+          $region = $hostInfo.compute.location
+          echo "Actions agent running in Azure region $region"
+          
+          $allowedRegions = "${{ secrets.COSMOS_ALLOWED_REGIONS }}".split(',')
+          if (!$allowedRegions.contains($region))
+          {
+            echo "Region '$region' not currently allowed for Cosmos DB."
+            $randomIndex = Get-Random -Minimum 0 -Maximum $allowedRegions.length
+            $region = $allowedRegions[$randomIndex]
+            echo "Region randomly reset to $region"
+          }
+        
           $rand = Get-Random
           $cosmosname = "psw-cosmosdb-$($rand)"
           $storagename = "pswtables$($rand)"
@@ -80,7 +94,7 @@ jobs:
 
           echo "Creating CosmosDB database account $cosmosname (This can take awhile.)"
           # Note: Attempting to use capability 'EnableServerless' results in Microsoft.Azure.Cosmos.Table.StorageException: Reading or replacing offers is not supported for serverless accounts
-          $acctDetails = az cosmosdb create --name $cosmosname --resource-group GitHubActions-RG --capabilities EnableTable --tags Package=AzureStorage RunnerOS=${{ runner.os }} $dateTag | ConvertFrom-Json
+          $acctDetails = az cosmosdb create --name $cosmosname --location regionName=$region failoverPriority=0 isZoneRedundant=False --resource-group GitHubActions-RG --capabilities EnableTable --tags Package=AzureStorage RunnerOS=${{ runner.os }} $dateTag | ConvertFrom-Json
 
           echo "Creating CosmosDB Table API Table"
           $tblDetails = az cosmosdb table create --account-name $cosmosname --resource-group GitHubActions-RG --name TablesDB | ConvertFrom-JSON
@@ -123,7 +137,10 @@ jobs:
         continue-on-error: true
         shell: pwsh
         run: |
+          echo "Deleting storage account ${{ steps.infra.outputs.storagename }}"
           $ignore = az storage account delete --resource-group GitHubActions-RG --name ${{ steps.infra.outputs.storagename }} --yes
+
+          echo "Deleting Cosmos DB account ${{ steps.infra.outputs.cosmosname }}"
 
           # Use this once cosmosdb delete offers --no-wait argument, until then, it takes too long (~7m) and we use curl instead
           #$ignore = az cosmosdb delete --resource-group GitHubActions-RG --name ${{ steps.infra.outputs.cosmosname }} --yes
@@ -132,5 +149,5 @@ jobs:
           $credentials = '${{ secrets.AZURE_ACI_CREDENTIALS }}' | ConvertFrom-Json
           $token = curl -X POST -d "grant_type=client_credentials&client_id=$($credentials.clientId)&client_secret=$($credentials.clientSecret)&resource=https%3A%2F%2Fmanagement.azure.com%2F" https://login.microsoftonline.com/$($credentials.tenantId)/oauth2/token | ConvertFrom-Json
           $authHeader = "Authorization: Bearer $($token.access_token)"
-          $resourceUrl = "https://management.azure.com${{ steps.infra.outputs.comsosAccountId }}?api-version=2021-04-15"
+          $resourceUrl = "https://management.azure.com/subscriptions/${{ secrets.AZURE_AUTOMATEDTESTING_SUBSCRIPTION_ID }}/resourceGroups/GitHubActions-RG/providers/Microsoft.DocumentDB/databaseAccounts/${{ steps.infra.outputs.cosmosname }}?api-version=2021-04-15"
           curl -X DELETE $resourceUrl -H $authHeader -H "Content-Type: application/json" --silent
