@@ -49,7 +49,7 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v1.8.2
         with:
-          dotnet-version: 5.0.x
+          dotnet-version: 6.0.x
       - name: Setup .NET Core 3.1 runtime
         uses: actions/setup-dotnet@v1.8.2
         with:
@@ -122,16 +122,8 @@ jobs:
           # Extra details for teardown
           echo "::add-mask::$($acctDetails.id)"
           echo "::set-output name=comsosAccountId::$($acctDetails.id)"
-      - name: Run Windows tests
-        if: runner.os == 'Windows'
-        # -m:1 parameter prevents test projects from being run in parallel - there are some tests shared amongst multiple projects
-        run: dotnet test src --configuration Release --no-build --logger "GitHubActions;report-warnings=false" -m:1
-      - name: Run Linux tests
-        if: runner.os == 'Linux'
-        # -m:1 parameter prevents test projects from being run in parallel - there are some tests shared amongst multiple projects
-        run: |
-          dotnet test src --configuration Release --no-build --framework netcoreapp3.1 --logger "GitHubActions;report-warnings=false" -m:1
-          dotnet test src --configuration Release --no-build --framework net5.0 --logger "GitHubActions;report-warnings=false" -m:1
+      - name: Run tests
+        uses: Particular/run-tests-action@v1.0.0
       - name: Teardown infrastructure
         if: ${{ always() }}
         continue-on-error: true
