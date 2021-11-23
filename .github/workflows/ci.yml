@@ -74,43 +74,10 @@ jobs:
           azure-credentials: ${{ secrets.AZURE_ACI_CREDENTIALS }}
           tag: AzureStoragePersistence
           api: Table
-      - name: Setup storage account
-        id: infra
-        shell: pwsh
-        run: |
-          # Retrieve the Azure region in which this workflow is running. This region should be used to create addtional resources.
-          $hostInfo = curl -H Metadata:true "169.254.169.254/metadata/instance?api-version=2017-08-01" | ConvertFrom-Json
-          $region = $hostInfo.compute.location
-          echo "Actions agent running in Azure region $region"
-
-          $rand = Get-Random
-          $storagename = "pswtables$($rand)"
-          echo "::set-output name=storagename::$storagename"
-          $dateTag = "Created=$(Get-Date -Format "yyyy-MM-dd")"
-
-          echo "Creating storage account (This can take awhile.)"
-          $storageDetails = az storage account create --name $storagename --resource-group GitHubActions-RG --sku Standard_LRS | ConvertFrom-Json
-
-          echo "Getting storage account keys"
-          $storageKeyDetails = az storage account keys list --account-name $storagename --resource-group GitHubActions-RG | ConvertFrom-Json
-          $storageKey = $storageKeyDetails[0].value
-          echo "::add-mask::$storageKey"
-          $storageConnectString = "DefaultEndpointsProtocol=https;AccountName=$storagename;AccountKey=$storageKey"
-
-          echo "Tagging storage account"
-          $ignore = az tag create --resource-id $storageDetails.id --tags Package=AzureStorage RunnerOS=${{ runner.os }} $dateTag
-
-          echo "AzureTable_StorageTable_ConnectionString=$storageConnectString" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
-
-          # Extra details for teardown
-          echo "::add-mask::$($acctDetails.id)"
-          echo "::set-output name=comsosAccountId::$($acctDetails.id)"
+      - name: Setup Azure Storage
+        uses: Particular/setup-azurestorage-action@v1.0.0
+        with:
+          connection-string-name: AzureTable_StorageTable_ConnectionString
+          tag: AzureStorage
       - name: Run tests
         uses: Particular/run-tests-action@v1.0.0
-      - name: Teardown infrastructure
-        if: ${{ always() }}
-        continue-on-error: true
-        shell: pwsh
-        run: |
-          echo "Deleting storage account ${{ steps.infra.outputs.storagename }}"
-          $ignore = az storage account delete --resource-group GitHubActions-RG --name ${{ steps.infra.outputs.storagename }} --yes
