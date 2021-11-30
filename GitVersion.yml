@@ -1,5 +1,4 @@
 assembly-versioning-scheme: Major
-next-version: 1.0
 branches:
   master:
     mode: ContinuousDeployment
@@ -9,6 +8,3 @@ branches:
   release:
     increment: Patch
     tag: ''
-ignore:
-  sha:
-    - 08d1bf613c808f60aa7c5c7bd3ba9ef3764bf0c6
