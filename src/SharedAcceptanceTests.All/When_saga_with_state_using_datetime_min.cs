@@ -55,11 +55,8 @@ namespace NServiceBus.AcceptanceTests
                 }
             }
 
-            public class SagaDataWithDateTimeMin : IContainSagaData
+            public class SagaDataWithDateTimeMin : ContainSagaData
             {
-                public Guid Id { get; set; }
-                public string Originator { get; set; }
-                public string OriginalMessageId { get; set; }
                 public Guid SomeId { get; set; }
                 public DateTime DateTime { get; set; }
             }
