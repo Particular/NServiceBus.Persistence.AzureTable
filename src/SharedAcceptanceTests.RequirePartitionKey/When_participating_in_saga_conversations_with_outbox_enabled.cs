@@ -189,10 +189,9 @@ namespace NServiceBus.AcceptanceTests
 
                 protected override void ConfigureHowToFindSaga(SagaPropertyMapper<CustomSagaData> mapper)
                 {
-                    mapper.ConfigureMapping<StartSagaMessage>(m => m.SomeId)
-                        .ToSaga(s => s.SomeId);
-                    mapper.ConfigureMapping<ContinueSagaMessage>(m => m.SomeId)
-                        .ToSaga(s => s.SomeId);
+                    mapper.MapSaga(s => s.SomeId)
+                        .ToMessage<StartSagaMessage>(m => m.SomeId)
+                        .ToMessage<ContinueSagaMessage>(m => m.SomeId);
                 }
 
                 readonly Context testContext;
@@ -228,11 +227,8 @@ namespace NServiceBus.AcceptanceTests
                 public string Data { get; set; }
             }
 
-            public class CustomSagaData : IContainSagaData
+            public class CustomSagaData : ContainSagaData
             {
-                public Guid Id { get; set; }
-                public string Originator { get; set; }
-                public string OriginalMessageId { get; set; }
                 public Guid SomeId { get; set; }
             }
         }

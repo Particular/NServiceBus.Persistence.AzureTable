@@ -13,6 +13,9 @@
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
+            // ensure the persistence assembly is loaded into the AppDomain because it needs its features to be scanned to work properly.
+            typeof(AzureTablePersistence).ToString();
+
             var connectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
 
             TableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();

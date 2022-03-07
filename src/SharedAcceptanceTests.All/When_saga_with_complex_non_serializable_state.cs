@@ -74,11 +74,8 @@ namespace NServiceBus.AcceptanceTests
                 }
             }
 
-            public class NonSerializableSagaData : IContainSagaData
+            public class NonSerializableSagaData : ContainSagaData
             {
-                public Guid Id { get; set; }
-                public string Originator { get; set; }
-                public string OriginalMessageId { get; set; }
                 public Guid SomeId { get; set; }
                 public SomethingComplex NonserializableValue { get; set; }
             }
