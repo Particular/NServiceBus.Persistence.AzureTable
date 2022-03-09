@@ -76,11 +76,8 @@ namespace NServiceBus.AcceptanceTests
                 }
             }
 
-            public class SomeSagaData : IContainSagaData
+            public class SomeSagaData : ContainSagaData
             {
-                public Guid Id { get; set; }
-                public string Originator { get; set; }
-                public string OriginalMessageId { get; set; }
                 public Guid SomeId { get; set; }
             }
         }

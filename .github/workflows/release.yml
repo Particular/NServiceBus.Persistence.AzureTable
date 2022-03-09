@@ -11,7 +11,7 @@ jobs:
     runs-on: windows-2019 # Code signing requirement https://github.com/NuGet/Home/issues/7939
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Parse repo name
@@ -21,7 +21,7 @@ jobs:
           echo "PARTICULAR_REPO_NAME=$RepoName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         shell: pwsh
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v1.9.0
+        uses: actions/setup-dotnet@v2
         with:
           dotnet-version: 6.0.x
       - name: Build
@@ -41,7 +41,7 @@ jobs:
           --azure-key-vault-certificate ${{ secrets.AZURE_KEY_VAULT_CERTIFICATE_NAME }}
         shell: pwsh
       - name: Publish artifacts
-        uses: actions/upload-artifact@v2.3.1
+        uses: actions/upload-artifact@v3
         with:
           name: nugets
           path: nugets/*
@@ -75,7 +75,7 @@ jobs:
           octo pack --id="${{env.PARTICULAR_REPO_NAME}}.Deploy" --version="${{env.GitVersion_SemVer}}" --format="nupkg" --basePath="packaging" --outFolder="octopus-package"
         shell: pwsh
       - name: Publish Octopus Package Artifacts
-        uses: actions/upload-artifact@v2.3.1
+        uses: actions/upload-artifact@v3
         with:
           name: octopus-package
           path: octopus-package/*
@@ -87,7 +87,7 @@ jobs:
           api_key: ${{ secrets.OCTOPUS_DEPLOY_API_KEY }}
           packages: octopus-package/${{env.PARTICULAR_REPO_NAME}}.Deploy.${{env.GitVersion_SemVer}}.nupkg
       - name: Create Octopus Deploy release
-        uses: OctopusDeploy/create-release-action@v1.1.1
+        uses: OctopusDeploy/create-release-action@v1.1.2
         with:
           server: https://deploy.particular.net
           api_key: ${{ secrets.OCTOPUS_DEPLOY_API_KEY }}
