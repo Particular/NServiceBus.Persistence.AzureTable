@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.0
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32407.343
 MinimumVisualStudioVersion = 15.0.26430.13
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NServiceBus.Persistence.AzureTable", "NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj", "{12F1D9F1-0A2C-4442-8D18-67DD096C6300}"
 EndProject
@@ -11,33 +11,32 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NonTransactionalSagas.Stora
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{98E63ED0-83D3-475E-89AF-95D5659F2C40}"
 	ProjectSection(SolutionItems) = preProject
-		Directory.Build.props = Directory.Build.props
-		..\GitVersion.yml = ..\GitVersion.yml
+		Custom.Build.props = Custom.Build.props
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Persistence.StorageTable.Tests", "Persistence.StorageTable.Tests\Persistence.StorageTable.Tests.csproj", "{25876184-D0C6-4049-AE23-8345A8D5097D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Persistence.StorageTable.Tests", "Persistence.StorageTable.Tests\Persistence.StorageTable.Tests.csproj", "{25876184-D0C6-4049-AE23-8345A8D5097D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicalOutbox.StorageTable.AcceptanceTests", "PhysicalOutbox.StorageTable.AcceptanceTests\PhysicalOutbox.StorageTable.AcceptanceTests.csproj", "{DD21A669-2627-4BC0-9197-69FA75E03959}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhysicalOutbox.StorageTable.AcceptanceTests", "PhysicalOutbox.StorageTable.AcceptanceTests\PhysicalOutbox.StorageTable.AcceptanceTests.csproj", "{DD21A669-2627-4BC0-9197-69FA75E03959}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogicalOutbox.StorageTable.AcceptanceTests", "LogicalOutbox.StorageTable.AcceptanceTests\LogicalOutbox.StorageTable.AcceptanceTests.csproj", "{8D2A3F43-F947-45A8-85E1-BD683613FB0E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogicalOutbox.StorageTable.AcceptanceTests", "LogicalOutbox.StorageTable.AcceptanceTests\LogicalOutbox.StorageTable.AcceptanceTests.csproj", "{8D2A3F43-F947-45A8-85E1-BD683613FB0E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NonTransactionalSagasWithConventionalTables.StorageTable.AcceptanceTests", "NonTransactionalSagasWithConventionalTables.StorageTable.AcceptanceTests\NonTransactionalSagasWithConventionalTables.StorageTable.AcceptanceTests.csproj", "{7E310A40-8736-4EF5-989A-7AA0B5805C2C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NonTransactionalSagasWithConventionalTables.StorageTable.AcceptanceTests", "NonTransactionalSagasWithConventionalTables.StorageTable.AcceptanceTests\NonTransactionalSagasWithConventionalTables.StorageTable.AcceptanceTests.csproj", "{7E310A40-8736-4EF5-989A-7AA0B5805C2C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Subscription.StorageTable.AcceptanceTests", "Subscription.StorageTable.AcceptanceTests\Subscription.StorageTable.AcceptanceTests.csproj", "{EB5496F1-5B2C-4E4A-8B10-32F487233AD2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Subscription.StorageTable.AcceptanceTests", "Subscription.StorageTable.AcceptanceTests\Subscription.StorageTable.AcceptanceTests.csproj", "{EB5496F1-5B2C-4E4A-8B10-32F487233AD2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Compatibility.StorageTable.AcceptanceTests", "Compatibility.StorageTable.AcceptanceTests\Compatibility.StorageTable.AcceptanceTests.csproj", "{2EFA7EE6-1ADA-4DD6-8DBB-1310FEB7D3CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Compatibility.StorageTable.AcceptanceTests", "Compatibility.StorageTable.AcceptanceTests\Compatibility.StorageTable.AcceptanceTests.csproj", "{2EFA7EE6-1ADA-4DD6-8DBB-1310FEB7D3CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicalOutbox.CosmosDB.AcceptanceTests", "PhysicalOutbox.CosmosDB.AcceptanceTests\PhysicalOutbox.CosmosDB.AcceptanceTests.csproj", "{F190D825-B92E-4C0C-BA05-CC9B9B9BDA76}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhysicalOutbox.CosmosDB.AcceptanceTests", "PhysicalOutbox.CosmosDB.AcceptanceTests\PhysicalOutbox.CosmosDB.AcceptanceTests.csproj", "{F190D825-B92E-4C0C-BA05-CC9B9B9BDA76}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Subscription.CosmosDB.AcceptanceTests", "Subscription.CosmosDB.AcceptanceTests\Subscription.CosmosDB.AcceptanceTests.csproj", "{8D80AF00-E205-4493-834E-B23F23E960EC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Subscription.CosmosDB.AcceptanceTests", "Subscription.CosmosDB.AcceptanceTests\Subscription.CosmosDB.AcceptanceTests.csproj", "{8D80AF00-E205-4493-834E-B23F23E960EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Persistence.CosmosDB.Tests", "Persistence.CosmosDB.Tests\Persistence.CosmosDB.Tests.csproj", "{2F277EC3-89B3-46D7-A77E-F3D8227ECC89}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Persistence.CosmosDB.Tests", "Persistence.CosmosDB.Tests\Persistence.CosmosDB.Tests.csproj", "{2F277EC3-89B3-46D7-A77E-F3D8227ECC89}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogicalOutbox.CosmosDB.AcceptanceTests", "LogicalOutbox.CosmosDB.AcceptanceTests\LogicalOutbox.CosmosDB.AcceptanceTests.csproj", "{3605A895-4EF8-4CF9-8022-F1CC7F4882E7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogicalOutbox.CosmosDB.AcceptanceTests", "LogicalOutbox.CosmosDB.AcceptanceTests\LogicalOutbox.CosmosDB.AcceptanceTests.csproj", "{3605A895-4EF8-4CF9-8022-F1CC7F4882E7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NonTransactionalSagas.CosmosDB.AcceptanceTests", "NonTransactionalSagas.CosmosDB.AcceptanceTests\NonTransactionalSagas.CosmosDB.AcceptanceTests.csproj", "{BD61C647-E303-4684-BF42-DFADF70BDFC3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NonTransactionalSagas.CosmosDB.AcceptanceTests", "NonTransactionalSagas.CosmosDB.AcceptanceTests\NonTransactionalSagas.CosmosDB.AcceptanceTests.csproj", "{BD61C647-E303-4684-BF42-DFADF70BDFC3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NonTransactionalSagasWithConventionalTables.CosmosDB.AcceptanceTests", "NonTransactionalSagasWithConventionalTables.CosmosDB.AcceptanceTests\NonTransactionalSagasWithConventionalTables.CosmosDB.AcceptanceTests.csproj", "{540E1137-EFD3-4A14-A6C6-0DB1F3D03D4C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NonTransactionalSagasWithConventionalTables.CosmosDB.AcceptanceTests", "NonTransactionalSagasWithConventionalTables.CosmosDB.AcceptanceTests\NonTransactionalSagasWithConventionalTables.CosmosDB.AcceptanceTests.csproj", "{540E1137-EFD3-4A14-A6C6-0DB1F3D03D4C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
