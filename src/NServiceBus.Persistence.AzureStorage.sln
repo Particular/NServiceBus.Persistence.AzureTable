@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31515.178
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32407.343
 MinimumVisualStudioVersion = 15.0.26430.13
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NServiceBus.Persistence.AzureTable", "NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj", "{12F1D9F1-0A2C-4442-8D18-67DD096C6300}"
 EndProject
@@ -11,8 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NonTransactionalSagas.Stora
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{98E63ED0-83D3-475E-89AF-95D5659F2C40}"
 	ProjectSection(SolutionItems) = preProject
-		Directory.Build.props = Directory.Build.props
-		..\GitVersion.yml = ..\GitVersion.yml
+		Custom.Build.props = Custom.Build.props
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Persistence.StorageTable.Tests", "Persistence.StorageTable.Tests\Persistence.StorageTable.Tests.csproj", "{25876184-D0C6-4049-AE23-8345A8D5097D}"
