@@ -27,7 +27,7 @@ namespace NServiceBus.Testing
             var connectionString = GetEnvironmentVariable(environmentVariableName);
             if (string.IsNullOrEmpty(connectionString))
             {
-                throw new Exception($"Oh no! We couldn't find an environment variable '{environmentVariableName}' with Azure Storage connection string.");
+                return "UseDevelopmentStorage=true";
             }
 
             return connectionString;

@@ -37,8 +37,12 @@
 
             context.Services.AddTransient<IAzureTableStorageSession>(_ => currentSharedTransactionalBatchHolder.Current);
             context.Services.AddSingleton(provider => new TableHolderResolver(provider.GetRequiredService<IProvideCloudTableClient>(), defaultTableInformation));
-            context.Services.AddSingleton<ISynchronizedStorage>(provider => new StorageSessionFactory(provider.GetRequiredService<TableHolderResolver>(), currentSharedTransactionalBatchHolder));
-            context.Services.AddSingleton<ISynchronizedStorageAdapter>(provider => new StorageSessionAdapter(currentSharedTransactionalBatchHolder));
+
+            context.Services.AddScoped<ICompletableSynchronizedStorageSession, SynchronizedStorageSession>(provider =>
+                new SynchronizedStorageSession(provider.GetRequiredService<TableHolderResolver>(),
+                    currentSharedTransactionalBatchHolder));
+            context.Services.AddScoped(provider => provider.GetRequiredService<ICompletableSynchronizedStorageSession>().AzureTablePersistenceSession());
+
             context.Pipeline.Register(new CurrentSharedTransactionalBatchBehavior(currentSharedTransactionalBatchHolder), "Manages the lifecycle of the current storage session.");
         }
     }

@@ -36,7 +36,7 @@
 
         public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
         {
-            var storageSession = (StorageSession)session;
+            var storageSession = (StorageSession)session.AzureTablePersistenceSession();
 
             var partitionKey = GetPartitionKey(context, sagaData.Id);
             var sagaDataType = sagaData.GetType();
@@ -76,7 +76,7 @@
         public async Task<TSagaData> Get<TSagaData>(Guid sagaId, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
             where TSagaData : class, IContainSagaData
         {
-            var storageSession = (StorageSession)session;
+            var storageSession = (StorageSession)session.AzureTablePersistenceSession();
 
             var tableToReadFrom = await GetTableAndCreateIfNotExists(storageSession, typeof(TSagaData), cancellationToken)
                 .ConfigureAwait(false);
@@ -149,7 +149,7 @@
             return null;
         }
 
-        async Task<CloudTable> GetTableAndCreateIfNotExists(StorageSession storageSession, Type sagaDataType, CancellationToken cancellationToken)
+        async Task<CloudTable> GetTableAndCreateIfNotExists(IAzureTableStorageSession storageSession, Type sagaDataType, CancellationToken cancellationToken)
         {
             CloudTable tableToReadFrom;
             if (storageSession.Table == null)
@@ -179,7 +179,7 @@
 
         public Task Complete(IContainSagaData sagaData, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
         {
-            var storageSession = (StorageSession)session;
+            var storageSession = ((SynchronizedStorageSession)session).Session;
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
             var sagaDataEntityToDelete = meta.Entities[sagaData.Id];
             var partitionKey = GetPartitionKey(context, sagaData.Id);
