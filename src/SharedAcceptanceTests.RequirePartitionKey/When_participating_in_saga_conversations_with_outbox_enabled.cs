@@ -94,6 +94,7 @@ namespace NServiceBus.AcceptanceTests
                 EndpointSetup<DefaultServer>(c =>
                 {
                     c.EnableOutbox();
+                    c.ConfigureTransport().TransportTransactionMode = TransportTransactionMode.ReceiveOnly;
                     c.Pipeline.Register(typeof(PartitionPartionKeyCleanerBehavior),
                         "Cleans partition keys out");
                     c.Pipeline.Register(new ProvidePartitionKeyBasedOnSagaIdBehavior.Registration());

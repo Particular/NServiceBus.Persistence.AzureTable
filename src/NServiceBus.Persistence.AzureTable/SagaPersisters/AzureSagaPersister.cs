@@ -60,7 +60,7 @@
 
         public Task Update(IContainSagaData sagaData, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
         {
-            var storageSession = (StorageSession)session;
+            var storageSession = (StorageSession)session.AzureTablePersistenceSession();
             var partitionKey = GetPartitionKey(context, sagaData.Id);
 
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
@@ -123,7 +123,7 @@
         async Task<TSagaData> GetByCorrelationProperty<TSagaData>(SagaCorrelationProperty correlationProperty, ISynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce, CancellationToken cancellationToken)
             where TSagaData : class, IContainSagaData
         {
-            var storageSession = (StorageSession)session;
+            var storageSession = (StorageSession)session.AzureTablePersistenceSession();
 
             var tableToReadFrom = await GetTableAndCreateIfNotExists(storageSession, typeof(TSagaData), cancellationToken)
                 .ConfigureAwait(false);

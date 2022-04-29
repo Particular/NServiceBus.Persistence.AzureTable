@@ -38,7 +38,7 @@
         {
             foreach (var operation in Batch)
             {
-                Add(new UserOperation(CurrentContextBag.Get<TableEntityPartitionKey>(), Table, operation));
+                Add(new UserOperation(TableEntityPartitionKey, Table, operation));
             }
 
             // in case there is nothing to do don't even bother checking the rest
@@ -66,11 +66,19 @@
         public TableBatchOperation Batch { get; }
 
         // for the user path only
-        public string PartitionKey => !CurrentContextBag.TryGet<TableEntityPartitionKey>(out var partitionKey)
-            ? null
-            : partitionKey.PartitionKey;
+        // public string PartitionKey => !CurrentContextBag.TryGet<TableEntityPartitionKey>(out var partitionKey)
+        //     ? null
+        //     : partitionKey.PartitionKey;
+
+        public string PartitionKey => TableEntityPartitionKey.PartitionKey;
+        TableEntityPartitionKey TableEntityPartitionKey { get; set; }
 
         readonly Dictionary<TableEntityPartitionKey, Dictionary<int, Operation>> operations =
             new Dictionary<TableEntityPartitionKey, Dictionary<int, Operation>>();
+
+        public void SetPartitionKey(TableEntityPartitionKey tableEntityPartitionKey)
+        {
+            TableEntityPartitionKey = tableEntityPartitionKey;
+        }
     }
 }

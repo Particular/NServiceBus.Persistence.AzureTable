@@ -16,7 +16,7 @@
 
         public void Dispose()
         {
-            if (!disposed)
+            if (!disposed && !ownsTransaction)
             {
                 Session.Dispose();
                 disposed = true;
@@ -28,6 +28,7 @@
             if (transaction is AzureStorageOutboxTransaction azureStorageOutboxTransaction)
             {
                 Session = azureStorageOutboxTransaction.StorageSession;
+                Session.CurrentContextBag = context;
                 ownsTransaction = false;
                 return new ValueTask<bool>(true);
             }
