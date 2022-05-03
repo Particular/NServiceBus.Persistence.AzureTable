@@ -1,0 +1,4 @@
+exclusions:
+# Release branch is not set up for code style analyzers
+- src/.editorconfig
+- src/.globalconfig
