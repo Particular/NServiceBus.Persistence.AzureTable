@@ -3,7 +3,6 @@ namespace NServiceBus.Persistence.AzureTable.Migration
     using System;
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.Table;
-    using Microsoft.Extensions.DependencyInjection;
     using Pipeline;
     using Sagas;
 
@@ -40,9 +39,6 @@ namespace NServiceBus.Persistence.AzureTable.Migration
             {
                 var tableEntityPartitionKey = new TableEntityPartitionKey(sagaId);
                 context.Extensions.Set(tableEntityPartitionKey);
-                var session = context.Builder.GetRequiredService<ICompletableSynchronizedStorageSession>();
-                var azureStorageSession = (StorageSession)session.AzureTablePersistenceSession();
-                azureStorageSession.SetPartitionKey(tableEntityPartitionKey);
                 return;
             }
 
