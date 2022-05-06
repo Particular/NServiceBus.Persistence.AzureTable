@@ -16,7 +16,7 @@
 
         public void Dispose()
         {
-            if (!disposed && !ownsTransaction)
+            if (!disposed && ownsTransaction)
             {
                 Session.Dispose();
                 disposed = true;
