@@ -6,9 +6,9 @@
     using Outbox;
     using Transport;
 
-    class SynchronizedStorageSession : ICompletableSynchronizedStorageSession
+    class AzureStorageSynchronizedStorageSession : ICompletableSynchronizedStorageSession
     {
-        public SynchronizedStorageSession(TableHolderResolver tableHolderResolver)
+        public AzureStorageSynchronizedStorageSession(TableHolderResolver tableHolderResolver)
         {
             this.tableHolderResolver = tableHolderResolver;
         }

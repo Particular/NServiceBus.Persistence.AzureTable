@@ -179,7 +179,7 @@
 
         public Task Complete(IContainSagaData sagaData, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
         {
-            var storageSession = ((SynchronizedStorageSession)session).Session;
+            var storageSession = ((AzureStorageSynchronizedStorageSession)session).Session;
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
             var sagaDataEntityToDelete = meta.Entities[sagaData.Id];
             var partitionKey = GetPartitionKey(context, sagaData.Id);

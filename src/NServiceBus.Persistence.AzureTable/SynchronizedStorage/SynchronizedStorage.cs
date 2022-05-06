@@ -11,6 +11,7 @@
             {
                 s.EnableFeatureByDefault<SynchronizedStorageInstallerFeature>();
             });
+            DependsOn<Features.SynchronizedStorage>();
         }
 
         protected override void Setup(FeatureConfigurationContext context)
@@ -35,8 +36,8 @@
 
             context.Services.AddSingleton(provider => new TableHolderResolver(provider.GetRequiredService<IProvideCloudTableClient>(), defaultTableInformation));
 
-            context.Services.AddScoped<ICompletableSynchronizedStorageSession, SynchronizedStorageSession>(provider =>
-                new SynchronizedStorageSession(provider.GetRequiredService<TableHolderResolver>()));
+            context.Services.AddScoped<ICompletableSynchronizedStorageSession>(provider =>
+                new AzureStorageSynchronizedStorageSession(provider.GetRequiredService<TableHolderResolver>()));
             context.Services.AddScoped(provider => provider.GetRequiredService<ICompletableSynchronizedStorageSession>().AzureTablePersistenceSession());
 
         }

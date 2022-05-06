@@ -11,7 +11,6 @@
     using Persistence;
     using Persistence.AzureTable;
     using JsonSerializer = Newtonsoft.Json.JsonSerializer;
-    using SynchronizedStorageSession = Persistence.AzureTable.SynchronizedStorageSession;
 
     public partial class PersistenceTestsConfiguration : IProvideCloudTableClient
     {
@@ -76,7 +75,7 @@
                 contextBag.Set(new TableEntityPartitionKey(partitionKey));
                 return contextBag;
             };
-            CreateStorageSession = () => new SynchronizedStorageSession(resolver);
+            CreateStorageSession = () => new AzureStorageSynchronizedStorageSession(resolver);
 
             return Task.CompletedTask;
         }

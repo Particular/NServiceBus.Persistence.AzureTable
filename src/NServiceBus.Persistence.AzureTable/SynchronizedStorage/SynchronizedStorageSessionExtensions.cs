@@ -3,19 +3,19 @@
     using System;
 
     /// <summary>
-    /// Extensions for the <see cref="SynchronizedStorageSession"/>.
+    /// Extensions for the <see cref="AzureStorageSynchronizedStorageSession"/>.
     /// </summary>
     public static class SynchronizedStorageSessionExtensions
     {
         /// <summary>
-        /// Retrieves the shared <see cref="IAzureTableStorageSession"/> from the <see cref="SynchronizedStorageSession"/>.
+        /// Retrieves the shared <see cref="IAzureTableStorageSession"/> from the <see cref="AzureStorageSynchronizedStorageSession"/>.
         /// </summary>
         public static IAzureTableStorageSession AzureTablePersistenceSession(
             this ISynchronizedStorageSession session)
         {
             Guard.AgainstNull(nameof(session), session);
 
-            if (!(session is SynchronizedStorageSession completableSession))
+            if (!(session is AzureStorageSynchronizedStorageSession completableSession))
             {
                 throw new Exception($"Cannot access the synchronized storage session. Ensure that 'EndpointConfiguration.UsePersistence<{nameof(AzureTablePersistence)}>()' has been called.");
             }
