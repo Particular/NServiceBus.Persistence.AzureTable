@@ -33,17 +33,12 @@
                     DefaultTable = defaultTableInformation.HasValue ? defaultTableInformation.Value.TableName : "Not used",
                 });
 
-            var currentSharedTransactionalBatchHolder = new CurrentSharedTransactionalBatchHolder();
-
-            context.Services.AddTransient<IAzureTableStorageSession>(_ => currentSharedTransactionalBatchHolder.Current);
             context.Services.AddSingleton(provider => new TableHolderResolver(provider.GetRequiredService<IProvideCloudTableClient>(), defaultTableInformation));
 
             context.Services.AddScoped<ICompletableSynchronizedStorageSession, SynchronizedStorageSession>(provider =>
-                new SynchronizedStorageSession(provider.GetRequiredService<TableHolderResolver>(),
-                    currentSharedTransactionalBatchHolder));
+                new SynchronizedStorageSession(provider.GetRequiredService<TableHolderResolver>()));
             context.Services.AddScoped(provider => provider.GetRequiredService<ICompletableSynchronizedStorageSession>().AzureTablePersistenceSession());
 
-            context.Pipeline.Register(new CurrentSharedTransactionalBatchBehavior(currentSharedTransactionalBatchHolder), "Manages the lifecycle of the current storage session.");
         }
     }
 }

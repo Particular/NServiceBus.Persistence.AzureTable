@@ -8,10 +8,9 @@
 
     class SynchronizedStorageSession : ICompletableSynchronizedStorageSession
     {
-        public SynchronizedStorageSession(TableHolderResolver tableHolderResolver, CurrentSharedTransactionalBatchHolder currentSharedTransactionalBatchHolder)
+        public SynchronizedStorageSession(TableHolderResolver tableHolderResolver)
         {
             this.tableHolderResolver = tableHolderResolver;
-            this.currentSharedTransactionalBatchHolder = currentSharedTransactionalBatchHolder;
         }
 
         public void Dispose()
@@ -43,7 +42,6 @@
         {
             ownsTransaction = true;
             Session = new StorageSession(tableHolderResolver, contextBag);
-            currentSharedTransactionalBatchHolder.SetCurrent(Session);
             return Task.CompletedTask;
         }
 
@@ -57,7 +55,6 @@
         }
 
         readonly TableHolderResolver tableHolderResolver;
-        readonly CurrentSharedTransactionalBatchHolder currentSharedTransactionalBatchHolder;
         bool disposed;
         public StorageSession Session { get; private set; }
         bool ownsTransaction;

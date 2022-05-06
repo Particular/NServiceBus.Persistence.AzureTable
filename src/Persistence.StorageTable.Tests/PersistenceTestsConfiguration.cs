@@ -11,6 +11,7 @@
     using Persistence;
     using Persistence.AzureTable;
     using JsonSerializer = Newtonsoft.Json.JsonSerializer;
+    using SynchronizedStorageSession = Persistence.AzureTable.SynchronizedStorageSession;
 
     public partial class PersistenceTestsConfiguration : IProvideCloudTableClient
     {
@@ -25,10 +26,6 @@
         public ISagaIdGenerator SagaIdGenerator { get; private set; }
 
         public ISagaPersister SagaStorage { get; private set; }
-
-        public ISynchronizedStorage SynchronizedStorage { get; private set; }
-
-        public ISynchronizedStorageAdapter SynchronizedStorageAdapter { get; private set; }
 
         public IOutboxStorage OutboxStorage { get; private set; }
 
@@ -51,8 +48,7 @@
                 JsonSerializer.Create(),
                 reader => new JsonTextReader(reader),
                 writer => new JsonTextWriter(writer));
-            SynchronizedStorage = new StorageSessionFactory(resolver, null);
-            SynchronizedStorageAdapter = new StorageSessionAdapter(null);
+
             OutboxStorage = new OutboxPersister(resolver);
 
             GetContextBagForSagaStorage = () =>
@@ -80,6 +76,7 @@
                 contextBag.Set(new TableEntityPartitionKey(partitionKey));
                 return contextBag;
             };
+            CreateStorageSession = () => new SynchronizedStorageSession(resolver);
 
             return Task.CompletedTask;
         }
@@ -88,6 +85,8 @@
         {
             return Task.CompletedTask;
         }
+
+        public Func<ICompletableSynchronizedStorageSession> CreateStorageSession { get; private set; }
 
         string partitionKey;
     }
