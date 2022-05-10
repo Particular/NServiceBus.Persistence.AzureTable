@@ -3,10 +3,11 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Extensibility;
+    using Microsoft.Azure.Cosmos.Table;
     using Outbox;
     using Transport;
 
-    class AzureStorageSynchronizedStorageSession : ICompletableSynchronizedStorageSession
+    class AzureStorageSynchronizedStorageSession : ICompletableSynchronizedStorageSession, IWorkWithSharedTransactionalBatch
     {
         public AzureStorageSynchronizedStorageSession(TableHolderResolver tableHolderResolver)
         {
@@ -17,7 +18,7 @@
         {
             if (!disposed && ownsTransaction)
             {
-                Session.Dispose();
+                session.Dispose();
                 disposed = true;
             }
         }
@@ -26,8 +27,8 @@
         {
             if (transaction is AzureStorageOutboxTransaction azureStorageOutboxTransaction)
             {
-                Session = azureStorageOutboxTransaction.StorageSession;
-                Session.CurrentContextBag = context;
+                session = azureStorageOutboxTransaction.StorageSession;
+                session.CurrentContextBag = context;
                 ownsTransaction = false;
                 return new ValueTask<bool>(true);
             }
@@ -41,7 +42,7 @@
         public Task Open(ContextBag contextBag, CancellationToken cancellationToken = default)
         {
             ownsTransaction = true;
-            Session = new StorageSession(tableHolderResolver, contextBag);
+            session = new StorageSession(tableHolderResolver, contextBag);
             return Task.CompletedTask;
         }
 
@@ -49,14 +50,24 @@
         {
             if (ownsTransaction)
             {
-                return Session.Commit(cancellationToken);
+                return session.Commit(cancellationToken);
             }
             return Task.CompletedTask;
         }
 
         readonly TableHolderResolver tableHolderResolver;
         bool disposed;
-        public StorageSession Session { get; private set; }
+        StorageSession session;
         bool ownsTransaction;
+        public CloudTable Table => session.Table;
+        public TableBatchOperation Batch => session.Batch;
+        public string PartitionKey => session.PartitionKey;
+        public ContextBag CurrentContextBag
+        {
+            get => session.CurrentContextBag;
+            set => session.CurrentContextBag = value;
+        }
+
+        public void Add(Operation operation) => session.Add(operation);
     }
 }

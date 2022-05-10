@@ -59,6 +59,7 @@
         public TableHolder TableHolder { get; set; }
         public ContextBag CurrentContextBag { get; set; }
 
+
         // for the user path only
         public CloudTable Table => TableHolder?.Table;
 
