@@ -23,10 +23,7 @@
 
         ContextBag IWorkWithSharedTransactionalBatch.CurrentContextBag { get; set; }
 
-        void IWorkWithSharedTransactionalBatch.Add(Operation operation)
-        {
-
-        }
+        void IWorkWithSharedTransactionalBatch.Add(Operation operation) => operation.Apply(Batch);
 
         /// <summary>
         /// The cloud table to be used.
