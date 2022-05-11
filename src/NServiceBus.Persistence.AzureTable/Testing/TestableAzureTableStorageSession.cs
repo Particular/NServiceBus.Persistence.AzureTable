@@ -26,7 +26,9 @@
         void IWorkWithSharedTransactionalBatch.Add(Operation operation)
         {
             if (Batch == null)
+            {
                 return;
+            }
 
             operation.Apply(Batch);
         }
