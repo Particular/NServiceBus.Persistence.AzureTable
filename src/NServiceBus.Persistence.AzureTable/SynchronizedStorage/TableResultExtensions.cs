@@ -6,7 +6,7 @@
     {
         public static bool IsSuccessStatusCode(this TableResult result)
         {
-            return result.HttpStatusCode >= 200 && result.HttpStatusCode <= 299;
+            return result.HttpStatusCode is >= 200 and <= 299;
         }
     }
 }

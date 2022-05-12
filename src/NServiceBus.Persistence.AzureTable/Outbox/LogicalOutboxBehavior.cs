@@ -41,7 +41,7 @@
                 return;
             }
 
-            if (!(transaction is AzureStorageOutboxTransaction IOutboxTransaction))
+            if (transaction is not AzureStorageOutboxTransaction IOutboxTransaction)
             {
                 await next(context).ConfigureAwait(false);
                 return;
