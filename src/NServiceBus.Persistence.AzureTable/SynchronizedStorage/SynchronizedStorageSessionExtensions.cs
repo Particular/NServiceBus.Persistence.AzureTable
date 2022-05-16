@@ -15,7 +15,7 @@
         {
             Guard.AgainstNull(nameof(session), session);
 
-            if (!(session is IWorkWithSharedTransactionalBatch workWith))
+            if (session is not IWorkWithSharedTransactionalBatch workWith)
             {
                 throw new Exception($"Cannot access the synchronized storage session. Ensure that 'EndpointConfiguration.UsePersistence<{nameof(AzureTablePersistence)}>()' has been called.");
             }
