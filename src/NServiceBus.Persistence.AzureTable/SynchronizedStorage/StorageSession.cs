@@ -1,35 +1,18 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
-    using System;
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
     using Extensibility;
     using Microsoft.Azure.Cosmos.Table;
 
-    class StorageSession : ICompletableSynchronizedStorageSession, IWorkWithSharedTransactionalBatch
+    class StorageSession : IWorkWithSharedTransactionalBatch
     {
-        public StorageSession(TableHolderResolver resolver, ContextBag context, bool commitOnComplete)
+        public StorageSession(TableHolderResolver resolver, ContextBag context)
         {
-            this.commitOnComplete = commitOnComplete;
             CurrentContextBag = context;
             TableHolder = resolver.ResolveAndSetIfAvailable(context);
             Batch = new TableBatchOperation();
-        }
-
-        Task ICompletableSynchronizedStorageSession.CompleteAsync(CancellationToken cancellationToken)
-        {
-            return commitOnComplete ? Commit(cancellationToken) : Task.CompletedTask;
-        }
-
-        void IDisposable.Dispose()
-        {
-            if (!commitOnComplete)
-            {
-                return;
-            }
-
-            Dispose();
         }
 
         public void Dispose()
@@ -67,13 +50,15 @@
             foreach (var batchOfOperations in operations)
             {
                 var transactionalBatch = new TableBatchOperation();
-                await transactionalBatch.ExecuteOperationsAsync(batchOfOperations.Value, cancellationToken: cancellationToken)
-                    .ConfigureAwait(false);
+                await transactionalBatch
+                      .ExecuteOperationsAsync(batchOfOperations.Value, cancellationToken: cancellationToken)
+                      .ConfigureAwait(false);
             }
         }
 
         public TableHolder TableHolder { get; set; }
         public ContextBag CurrentContextBag { get; set; }
+
 
         // for the user path only
         public CloudTable Table => TableHolder?.Table;
@@ -82,10 +67,11 @@
         public TableBatchOperation Batch { get; }
 
         // for the user path only
-        public string PartitionKey => !CurrentContextBag.TryGet<TableEntityPartitionKey>(out var partitionKey) ? null : partitionKey.PartitionKey;
+        public string PartitionKey => !CurrentContextBag.TryGet<TableEntityPartitionKey>(out var partitionKey)
+            ? null
+            : partitionKey.PartitionKey;
 
-        readonly bool commitOnComplete;
-
-        readonly Dictionary<TableEntityPartitionKey, Dictionary<int, Operation>> operations = new Dictionary<TableEntityPartitionKey, Dictionary<int, Operation>>();
+        readonly Dictionary<TableEntityPartitionKey, Dictionary<int, Operation>> operations =
+            new Dictionary<TableEntityPartitionKey, Dictionary<int, Operation>>();
     }
 }

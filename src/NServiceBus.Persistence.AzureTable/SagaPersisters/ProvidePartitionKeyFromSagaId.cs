@@ -37,7 +37,8 @@ namespace NServiceBus.Persistence.AzureTable.Migration
 
             if (context.Headers.TryGetValue(Headers.SagaId, out var sagaId))
             {
-                context.Extensions.Set(new TableEntityPartitionKey(sagaId));
+                var tableEntityPartitionKey = new TableEntityPartitionKey(sagaId);
+                context.Extensions.Set(tableEntityPartitionKey);
                 return;
             }
 

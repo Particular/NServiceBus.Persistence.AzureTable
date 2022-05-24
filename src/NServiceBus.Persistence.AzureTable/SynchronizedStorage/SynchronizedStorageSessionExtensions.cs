@@ -3,12 +3,12 @@
     using System;
 
     /// <summary>
-    /// Extensions for the <see cref="SynchronizedStorageSession"/>.
+    /// Extensions for the <see cref="AzureStorageSynchronizedStorageSession"/>.
     /// </summary>
     public static class SynchronizedStorageSessionExtensions
     {
         /// <summary>
-        /// Retrieves the shared <see cref="IAzureTableStorageSession"/> from the <see cref="SynchronizedStorageSession"/>.
+        /// Retrieves the shared <see cref="IAzureTableStorageSession"/> from the <see cref="AzureStorageSynchronizedStorageSession"/>.
         /// </summary>
         public static IAzureTableStorageSession AzureTablePersistenceSession(
             this ISynchronizedStorageSession session)

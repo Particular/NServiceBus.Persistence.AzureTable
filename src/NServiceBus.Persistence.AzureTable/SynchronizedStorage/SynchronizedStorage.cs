@@ -11,6 +11,7 @@
             {
                 s.EnableFeatureByDefault<SynchronizedStorageInstallerFeature>();
             });
+            DependsOn<Features.SynchronizedStorage>();
         }
 
         protected override void Setup(FeatureConfigurationContext context)
@@ -33,13 +34,12 @@
                     DefaultTable = defaultTableInformation.HasValue ? defaultTableInformation.Value.TableName : "Not used",
                 });
 
-            var currentSharedTransactionalBatchHolder = new CurrentSharedTransactionalBatchHolder();
-
-            context.Services.AddTransient<IAzureTableStorageSession>(_ => currentSharedTransactionalBatchHolder.Current);
             context.Services.AddSingleton(provider => new TableHolderResolver(provider.GetRequiredService<IProvideCloudTableClient>(), defaultTableInformation));
-            context.Services.AddSingleton<ISynchronizedStorage>(provider => new StorageSessionFactory(provider.GetRequiredService<TableHolderResolver>(), currentSharedTransactionalBatchHolder));
-            context.Services.AddSingleton<ISynchronizedStorageAdapter>(provider => new StorageSessionAdapter(currentSharedTransactionalBatchHolder));
-            context.Pipeline.Register(new CurrentSharedTransactionalBatchBehavior(currentSharedTransactionalBatchHolder), "Manages the lifecycle of the current storage session.");
+
+            context.Services.AddScoped<ICompletableSynchronizedStorageSession>(provider =>
+                new AzureStorageSynchronizedStorageSession(provider.GetRequiredService<TableHolderResolver>()));
+            context.Services.AddScoped(provider => provider.GetRequiredService<ICompletableSynchronizedStorageSession>().AzureTablePersistenceSession());
+
         }
     }
 }
