@@ -1,7 +1,8 @@
-# NServiceBus.Persistence.AzureStorage
+# NServiceBus.Persistence.AzureTable
+
 The official [NServiceBus](https://github.com/Particular/NServiceBus) persistence implementation for [Azure Table Storage](https://azure.microsoft.com/en-us/services/storage/tables/) and [Azure Cosmos DB Table API](https://docs.microsoft.com/en-us/azure/cosmos-db/table-support/).
 
-Learn more about NServiceBus.Persistence.AzureStorage through our [documentation](http://docs.particular.net/nservicebus/azure-storage-persistence/).
+Learn more about NServiceBus.Persistence.AzureTable through our [documentation](http://docs.particular.net/nservicebus/azure-storage-persistence/).
 
 If you are interested in contributing, please follow the instructions [here](https://github.com/Particular/NServiceBus/blob/develop/CONTRIBUTING.md).
 
