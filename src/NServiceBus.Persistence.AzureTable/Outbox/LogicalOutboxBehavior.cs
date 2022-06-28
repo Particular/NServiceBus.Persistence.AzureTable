@@ -1,10 +1,7 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
-    using System.Linq.Expressions;
-    using System.Reflection;
     using System.Threading.Tasks;
     using DelayedDelivery;
     using DeliveryConstraints;
@@ -20,20 +17,8 @@
     /// </summary>
     public sealed class LogicalOutboxBehavior : IBehavior<IIncomingLogicalMessageContext, IIncomingLogicalMessageContext>
     {
-        static LogicalOutboxBehavior()
-        {
-            var field = typeof(PendingTransportOperations).GetField("operations", BindingFlags.NonPublic | BindingFlags.Instance);
-            var targetExp = Expression.Parameter(typeof(PendingTransportOperations), "target");
-            var fieldExp = Expression.Field(targetExp, field);
-            var assignExp = Expression.Assign(fieldExp, Expression.Constant(new ConcurrentStack<TransportOperation>()));
-
-            setter = Expression.Lambda<Action<PendingTransportOperations>>(assignExp, targetExp).Compile();
-        }
-
-        internal LogicalOutboxBehavior(TableHolderResolver tableHolderResolver)
-        {
+        internal LogicalOutboxBehavior(TableHolderResolver tableHolderResolver) =>
             this.tableHolderResolver = tableHolderResolver;
-        }
 
         /// <inheritdoc />
         public async Task Invoke(IIncomingLogicalMessageContext context, Func<IIncomingLogicalMessageContext, Task> next)
@@ -87,7 +72,7 @@
             outboxTransaction.SuppressStoreAndCommit = true;
 
             var pendingTransportOperations = context.Extensions.Get<PendingTransportOperations>();
-            setter(pendingTransportOperations);
+            pendingTransportOperations.Clear();
 
             foreach (var operation in outboxRecord.Operations)
             {
@@ -142,7 +127,6 @@
             throw new Exception("Could not find routing strategy to deserialize.");
         }
 
-        static Action<PendingTransportOperations> setter;
         readonly TableHolderResolver tableHolderResolver;
     }
 }
