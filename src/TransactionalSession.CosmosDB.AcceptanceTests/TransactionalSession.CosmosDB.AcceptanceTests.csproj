@@ -3,21 +3,23 @@
   <PropertyGroup>
     <TargetFrameworks>net472;net6.0</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(SolutionDir)NServiceBusTests.snk</AssemblyOriginatorKeyFile>
-    <RootNamespace>PersistenceTests</RootNamespace>
+    <AssemblyOriginatorKeyFile>..\NServiceBusTests.snk</AssemblyOriginatorKeyFile>
+    <LangVersion>10.0</LangVersion>
+    <!-- We want the root namespace to match the transactional session one -->
+    <RootNamespace>NServiceBus.TransactionalSession.AcceptanceTests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="GitHubActionsTestLogger" Version="2.0.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.1" />
-    <PackageReference Include="NServiceBus.PersistenceTests.Sources" Version="8.0.0-rc.1" />
     <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
-    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.1" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
+    <PackageReference Include="Nunit" Version="3.13.3" />
+    <PackageReference Include="NServiceBus.AcceptanceTests.Sources" Version="8.0.0-rc.1" GeneratePathProperty="true" />
   </ItemGroup>
 
   <!-- The template project is always the StorageTable project, if you need to deveate files for a specific table API copy
-       them accordingly and adjust the compile includes -->
+     them accordingly and adjust the compile includes -->
   <PropertyGroup>
     <TemplateProject>$(MSBuildProjectName.Replace(`CosmosDB`, `StorageTable`))</TemplateProject>
   </PropertyGroup>
