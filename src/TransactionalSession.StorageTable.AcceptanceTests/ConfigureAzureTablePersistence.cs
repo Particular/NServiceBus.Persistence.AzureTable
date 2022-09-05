@@ -5,6 +5,7 @@ using NServiceBus.AcceptanceTesting;
 using NServiceBus.AcceptanceTesting.Support;
 using NServiceBus.Pipeline;
 using NServiceBus.Settings;
+using NServiceBus.TransactionalSession;
 using NServiceBus.TransactionalSession.AcceptanceTests;
 
 public class ConfigureAzureTablePersistence : IConfigureEndpointTestExecution
@@ -17,7 +18,8 @@ public class ConfigureAzureTablePersistence : IConfigureEndpointTestExecution
 
         sagaPersistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
 
-        configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
+        var outboxPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
+        outboxPersistence.EnableTransactionalSession();
 
         // This populates the partition key at the physical stage to test the conventional outbox use-case
         configuration.Pipeline.Register(typeof(PartitionKeyProviderBehavior), "Populates the partition key");

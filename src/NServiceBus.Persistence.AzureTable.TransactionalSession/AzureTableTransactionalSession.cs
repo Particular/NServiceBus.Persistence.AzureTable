@@ -8,9 +8,10 @@ namespace NServiceBus.TransactionalSession
     {
         public AzureTableTransactionalSession()
         {
-            EnableByDefault();
+            Defaults(s => s.EnableFeatureByDefault<TransactionalSession>());
+
             DependsOn<SynchronizedStorage>();
-            DependsOn<TransactionalSessionFeature>();
+            DependsOn<TransactionalSession>();
         }
 
         protected override void Setup(FeatureConfigurationContext context)

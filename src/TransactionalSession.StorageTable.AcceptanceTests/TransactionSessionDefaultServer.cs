@@ -15,7 +15,6 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
                 // Explicitly enforcing the type to be scanned. Otherwise the scanner would not pick it up in the acceptance tests
                 endpointConfiguration.TypesToInclude.Add(typeof(AzureTableTransactionalSession));
 
-                configuration.EnableTransactionalSession();
                 configuration.RegisterStartupTask(provider =>
                     new CaptureServiceProviderStartupTask(provider, runDescriptor.ScenarioContext));
 
