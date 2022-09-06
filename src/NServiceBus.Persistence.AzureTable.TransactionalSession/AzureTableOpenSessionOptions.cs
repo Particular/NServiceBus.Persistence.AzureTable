@@ -8,7 +8,7 @@ namespace NServiceBus.TransactionalSession
     public sealed class AzureTableOpenSessionOptions : OpenSessionOptions
     {
         /// <summary>
-        /// Creates a new instance of the CosmosOpenSessionOptions.
+        /// Creates a new instance of the AzureTableSessionOptions.
         /// </summary>
         /// <param name="partitionKey">The partition key.</param>
         /// <param name="tableInformation">The optional container information.</param>
