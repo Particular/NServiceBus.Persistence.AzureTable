@@ -21,20 +21,13 @@
             TableClient = account.CreateCloudTableClient();
             Table = TableClient.GetTableReference(TableName);
             await Table.CreateIfNotExistsAsync();
-
-            handler = new TransactionalBatchCounterHandler();
         }
 
         [OneTimeTearDown]
-        public Task OneTimeTearDown()
-        {
-            handler.Dispose();
-            return Table.DeleteIfExistsAsync();
-        }
+        public Task OneTimeTearDown() => Table.DeleteIfExistsAsync();
 
         public static string TableName;
         public static CloudTableClient TableClient;
         public static CloudTable Table;
-        TransactionalBatchCounterHandler handler;
     }
 }

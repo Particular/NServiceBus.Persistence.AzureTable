@@ -9,7 +9,6 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
     using NUnit.Framework;
     using Persistence.AzureTable;
     using System.Linq;
-    using NServiceBus.AcceptanceTests;
 
     public class When_using_transactional_session : NServiceBusAcceptanceTest
     {

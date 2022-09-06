@@ -15,7 +15,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.1" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
     <PackageReference Include="Nunit" Version="3.13.3" />
-    <PackageReference Include="NServiceBus.AcceptanceTests.Sources" Version="8.0.0-rc.1" GeneratePathProperty="true" />
+    <PackageReference Include="NServiceBus.AcceptanceTesting" Version="8.0.0-rc.1" />
   </ItemGroup>
 
   <!-- The template project is always the StorageTable project, if you need to deveate files for a specific table API copy
@@ -27,7 +27,7 @@
   <Import Project="..\$(TemplateProject)\Includes.targets" />
 
   <ItemGroup>
-    <Compile Include="..\$(TemplateProject)\*.cs" />
+    <Compile Include="..\$(TemplateProject)\**\*.cs" Exclude="\**\obj\**\*.*;"/>
   </ItemGroup>
 
 </Project>
