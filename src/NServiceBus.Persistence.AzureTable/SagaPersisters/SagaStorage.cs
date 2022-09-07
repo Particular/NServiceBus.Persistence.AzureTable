@@ -26,8 +26,9 @@
                 s.EnableFeatureByDefault<SynchronizedStorage>();
                 s.SetDefault<ISagaIdGenerator>(new SagaIdGenerator());
             });
+
+            DependsOn<Sagas>();
             DependsOn<SynchronizedStorage>();
-            DependsOn<Features.Sagas>();
         }
 
         protected override void Setup(FeatureConfigurationContext context)

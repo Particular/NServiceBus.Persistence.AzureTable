@@ -38,6 +38,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NonTransactionalSagas.Cosmo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NonTxSagasWithConventionalTables.CosmosDB.AcceptanceTests", "NonTxSagasWithConventionalTables.CosmosDB.AcceptanceTests\NonTxSagasWithConventionalTables.CosmosDB.AcceptanceTests.csproj", "{540E1137-EFD3-4A14-A6C6-0DB1F3D03D4C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBus.Persistence.AzureTable.TransactionalSession", "NServiceBus.Persistence.AzureTable.TransactionalSession\NServiceBus.Persistence.AzureTable.TransactionalSession.csproj", "{05B8ED96-DF14-453B-B9F0-CFD59CE1F95B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransactionalSession.StorageTable.AcceptanceTests", "TransactionalSession.StorageTable.AcceptanceTests\TransactionalSession.StorageTable.AcceptanceTests.csproj", "{839BE397-D6CA-4332-AE57-2F5200E3BDE7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransactionalSession.CosmosDB.AcceptanceTests", "TransactionalSession.CosmosDB.AcceptanceTests\TransactionalSession.CosmosDB.AcceptanceTests.csproj", "{49250576-12F2-4A4F-9D9E-7F709A07A719}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransactionalSession.Tests", "TransactionalSession.Tests\TransactionalSession.Tests.csproj", "{A0A05D8F-91D1-45AC-A3F9-E74077C81DD0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -104,6 +112,22 @@ Global
 		{540E1137-EFD3-4A14-A6C6-0DB1F3D03D4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{540E1137-EFD3-4A14-A6C6-0DB1F3D03D4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{540E1137-EFD3-4A14-A6C6-0DB1F3D03D4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05B8ED96-DF14-453B-B9F0-CFD59CE1F95B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05B8ED96-DF14-453B-B9F0-CFD59CE1F95B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05B8ED96-DF14-453B-B9F0-CFD59CE1F95B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05B8ED96-DF14-453B-B9F0-CFD59CE1F95B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{839BE397-D6CA-4332-AE57-2F5200E3BDE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{839BE397-D6CA-4332-AE57-2F5200E3BDE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{839BE397-D6CA-4332-AE57-2F5200E3BDE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{839BE397-D6CA-4332-AE57-2F5200E3BDE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49250576-12F2-4A4F-9D9E-7F709A07A719}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49250576-12F2-4A4F-9D9E-7F709A07A719}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49250576-12F2-4A4F-9D9E-7F709A07A719}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49250576-12F2-4A4F-9D9E-7F709A07A719}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0A05D8F-91D1-45AC-A3F9-E74077C81DD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0A05D8F-91D1-45AC-A3F9-E74077C81DD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0A05D8F-91D1-45AC-A3F9-E74077C81DD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0A05D8F-91D1-45AC-A3F9-E74077C81DD0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
