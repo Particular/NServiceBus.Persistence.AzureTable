@@ -8,7 +8,9 @@ namespace NServiceBus.Persistence.AzureTable
     {
         internal SubscriptionStorage()
         {
+#pragma warning disable CS0618
             DependsOn<MessageDrivenSubscriptions>();
+#pragma warning restore CS0618
 
             Defaults(s =>
             {

@@ -1,0 +1,6 @@
+[*.cs]
+
+# Persistence library doesn't need saga analyzers
+dotnet_diagnostic.NSB0004.severity = none
+dotnet_diagnostic.NSB0006.severity = none
+dotnet_diagnostic.NSB0012.severity = none
