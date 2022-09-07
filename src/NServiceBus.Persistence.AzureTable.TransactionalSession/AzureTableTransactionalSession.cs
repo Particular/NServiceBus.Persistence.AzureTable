@@ -12,6 +12,8 @@ namespace NServiceBus.TransactionalSession
                 .AddSingleton<IOpenSessionOptionsCustomization, SetAsDispatchedHolderOpenSessionOptionCustomization>();
             context.Pipeline.Register(new AzureTableControlMessageBehavior(),
                 "Propagates control message header values to TableEntityPartitionKeys and TableInformation when necessary.");
+
+            base.Setup(context);
         }
     }
 }
