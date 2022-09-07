@@ -2,16 +2,9 @@ namespace NServiceBus.TransactionalSession
 {
     using Features;
     using Microsoft.Extensions.DependencyInjection;
-    using SynchronizedStorage = Persistence.AzureTable.SynchronizedStorage;
 
-    sealed class AzureTableTransactionalSession : Feature
+    sealed class AzureTableTransactionalSession : TransactionalSession
     {
-        public AzureTableTransactionalSession()
-        {
-            DependsOn<SynchronizedStorage>();
-            DependsOn<TransactionalSession>();
-        }
-
         protected override void Setup(FeatureConfigurationContext context)
         {
             // can be a singleton

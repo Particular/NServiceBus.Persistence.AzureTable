@@ -14,7 +14,6 @@ namespace NServiceBus.TransactionalSession
         public static PersistenceExtensions<AzureTablePersistence> EnableTransactionalSession(
             this PersistenceExtensions<AzureTablePersistence> persistenceExtensions)
         {
-            persistenceExtensions.GetSettings().EnableFeatureByDefault<TransactionalSession>();
             persistenceExtensions.GetSettings().EnableFeatureByDefault<AzureTableTransactionalSession>();
             return persistenceExtensions;
         }
