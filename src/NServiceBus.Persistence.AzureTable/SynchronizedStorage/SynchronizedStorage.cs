@@ -32,14 +32,10 @@
                     DefaultTable = defaultTableInformation.HasValue ? defaultTableInformation.Value.TableName : "Not used",
                 });
 
-            var currentSharedTransactionalBatchHolder = new CurrentSharedTransactionalBatchHolder();
-
-            context.Container.ConfigureComponent<IAzureTableStorageSession>(_ => currentSharedTransactionalBatchHolder.Current, DependencyLifecycle.InstancePerCall);
+            context.Container.ConfigureComponent(b => b.Build<CompletableSynchronizedStorageSessionAdapter>().AdaptedSession.AzureTablePersistenceSession(), DependencyLifecycle.InstancePerUnitOfWork);
             context.Container.ConfigureComponent(builder => new TableHolderResolver(builder.Build<IProvideCloudTableClient>(), defaultTableInformation), DependencyLifecycle.SingleInstance);
-            context.Container.ConfigureComponent<ISynchronizedStorage>(builder => new StorageSessionFactory(builder.Build<TableHolderResolver>(), currentSharedTransactionalBatchHolder), DependencyLifecycle.SingleInstance);
-            context.Container.ConfigureComponent<ISynchronizedStorageAdapter>(provider => new StorageSessionAdapter(currentSharedTransactionalBatchHolder), DependencyLifecycle.SingleInstance);
-
-            context.Pipeline.Register(new CurrentSharedTransactionalBatchBehavior(currentSharedTransactionalBatchHolder), "Manages the lifecycle of the current storage session.");
+            context.Container.ConfigureComponent<ISynchronizedStorage>(builder => new StorageSessionFactory(builder.Build<TableHolderResolver>()), DependencyLifecycle.SingleInstance);
+            context.Container.ConfigureComponent<ISynchronizedStorageAdapter>(provider => new StorageSessionAdapter(), DependencyLifecycle.SingleInstance);
         }
     }
 }
