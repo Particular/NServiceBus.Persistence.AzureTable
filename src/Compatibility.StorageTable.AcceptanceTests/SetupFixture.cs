@@ -12,7 +12,7 @@
     public class SetupFixture
     {
         [OneTimeSetUp]
-        public Task OneTimeSetUp()
+        public async Task OneTimeSetUp()
         {
             var connectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
 
@@ -24,11 +24,14 @@
             allConventionalSagaTableNamesWithPrefix = GetType().Assembly.GetTypes().Where(x => x.GetInterfaces().Contains(typeof(IContainSagaData)))
                 .Select(x => $"{TablePrefix}{x.Name}").ToArray();
 
-            return Task.WhenAll(allConventionalSagaTableNamesWithPrefix.Select(tableName =>
+            await Task.WhenAll(allConventionalSagaTableNamesWithPrefix.Select(tableName =>
             {
                 var table = TableClient.GetTableReference(tableName);
                 return table.CreateIfNotExistsAsync();
             }).ToArray());
+            
+            // ensure the persistence assembly is loaded into the AppDomain because it needs its features to be scanned to work properly.
+            typeof(AzureTablePersistence).ToString();
         }
 
         [OneTimeTearDown]

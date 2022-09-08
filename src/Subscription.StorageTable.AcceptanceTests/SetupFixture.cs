@@ -21,6 +21,9 @@
             TableClient = account.CreateCloudTableClient();
             Table = TableClient.GetTableReference(TableName);
             await Table.CreateIfNotExistsAsync();
+            
+            // ensure the persistence assembly is loaded into the AppDomain because it needs its features to be scanned to work properly.
+            typeof(AzureTablePersistence).ToString();
         }
 
         [OneTimeTearDown]
