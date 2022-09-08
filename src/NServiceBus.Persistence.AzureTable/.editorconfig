@@ -1,0 +1,6 @@
+[*.cs]
+
+# Disable cancellationtoken parameter warning
+dotnet_diagnostic.PS0018.severity = none
+dotnet_diagnostic.PS0013.severity = none
+dotnet_diagnostic.PS0022.severity = none
