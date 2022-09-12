@@ -8,22 +8,16 @@
 
   <ItemGroup>
     <PackageReference Include="GitHubActionsTestLogger" Version="2.0.1" />
-    <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
-    <PackageReference Include="NServiceBus" Version="8.0.0-rc.3" />
-    <PackageReference Include="NServiceBus.Testing" Version="8.0.0-rc.2" />
     <PackageReference Include="NUnit" Version="3.13.3" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.1" />
     <PackageReference Include="Particular.Approvals" Version="0.3.0" />
     <PackageReference Include="PublicApiGenerator" Version="10.3.0" />
+    <PackageReference Include="NServiceBus.TransactionalSession" Version="2.0.0-rc.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\SharedAcceptanceTests.All\ConnectionStringHelper.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj" />
+    <ProjectReference Include="..\NServiceBus.Persistence.AzureTable.TransactionalSession\NServiceBus.Persistence.AzureTable.TransactionalSession.csproj" />
   </ItemGroup>
 
 </Project>
