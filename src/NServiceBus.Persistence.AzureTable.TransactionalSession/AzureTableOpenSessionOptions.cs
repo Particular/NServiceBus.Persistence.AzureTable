@@ -17,8 +17,6 @@ namespace NServiceBus.TransactionalSession
             Extensions.Set(partitionKey);
             Metadata.Add(AzureTableControlMessageBehavior.PartitionKeyStringHeaderKey, partitionKey.PartitionKey);
 
-            Extensions.Set(partitionKey);
-
             SetTableInformationIfRequired(tableInformation);
         }
 
