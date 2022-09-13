@@ -24,6 +24,9 @@
             allConventionalSagaTableNamesWithPrefix = GetType().Assembly.GetTypes().Where(x => x.GetInterfaces().Contains(typeof(IContainSagaData)))
                 .Select(x => $"{TablePrefix}{x.Name}").ToArray();
 
+            // ensure the persistence assembly is loaded into the AppDomain because it needs its features to be scanned to work properly.
+            typeof(AzureTablePersistence).ToString();
+            
             return Task.CompletedTask;
         }
 

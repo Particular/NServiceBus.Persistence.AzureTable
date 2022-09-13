@@ -9,11 +9,7 @@
         <Compile Remove="$(PkgNServiceBus_PersistenceTests_Sources)\**\Outbox\*.cs" />
     </ItemGroup>
 
-    <ItemGroup>
-        <Compile Include="..\TestSuppressions.cs" Link="TestSuppressions.cs" />
-    </ItemGroup>
-
-    <ItemGroup>
+	<ItemGroup>
         <ProjectReference Include="..\NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj" />
     </ItemGroup>
 

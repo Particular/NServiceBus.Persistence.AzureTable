@@ -1,10 +1,6 @@
 <Project>
 
-    <ItemGroup>
-        <Compile Include="..\TestSuppressions.cs" Link="TestSuppressions.cs" />
-    </ItemGroup>
-
-    <ItemGroup>
+	<ItemGroup>
         <Compile Include="..\SharedAcceptanceTests.All\ConnectionStringHelper.cs" />
     </ItemGroup>
 
@@ -12,7 +8,6 @@
         <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Audit\*.*" />
         <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Correlation\*.*" />
         <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\DataBus\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\DelayedDelivery\*.*" />
         <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Forwarding\*.*" />
         <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\MessageId\*.*" />
         <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Pipeline\*.*" />

@@ -11,7 +11,7 @@
     public class SetupFixture
     {
         [OneTimeSetUp]
-        public Task OneTimeSetUp()
+        public async Task OneTimeSetUp()
         {
             var connectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
 
@@ -20,7 +20,10 @@
             var account = CloudStorageAccount.Parse(connectionString);
             TableClient = account.CreateCloudTableClient();
             Table = TableClient.GetTableReference(TableName);
-            return Table.CreateIfNotExistsAsync();
+            await Table.CreateIfNotExistsAsync();
+            
+            // ensure the persistence assembly is loaded into the AppDomain because it needs its features to be scanned to work properly.
+            typeof(AzureTablePersistence).ToString();
         }
 
         [OneTimeTearDown]

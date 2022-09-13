@@ -1,10 +1,5 @@
 <Project>
-
-    <ItemGroup>
-        <Compile Include="..\TestSuppressions.cs" Link="TestSuppressions.cs" />
-    </ItemGroup>
-
-    <ItemGroup>
+	<ItemGroup>
         <Compile Include="..\SharedAcceptanceTests.All\*.cs" />
     </ItemGroup>
 

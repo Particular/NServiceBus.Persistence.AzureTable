@@ -50,8 +50,8 @@
                 JsonSerializer.Create(),
                 reader => new JsonTextReader(reader),
                 writer => new JsonTextWriter(writer));
-            SynchronizedStorage = new StorageSessionFactory(resolver, null);
-            SynchronizedStorageAdapter = new StorageSessionAdapter(null);
+            SynchronizedStorage = new StorageSessionFactory(resolver);
+            SynchronizedStorageAdapter = new StorageSessionAdapter();
             OutboxStorage = new OutboxPersister(resolver);
 
             GetContextBagForSagaStorage = () =>
