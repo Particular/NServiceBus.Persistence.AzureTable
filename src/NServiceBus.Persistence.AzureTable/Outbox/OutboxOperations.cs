@@ -1,6 +1,6 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
-    using Microsoft.Azure.Cosmos.Table;
+    using Azure.Data.Tables;
 
     class OutboxStore : Operation
     {
@@ -10,7 +10,7 @@
             this.outboxRow = outboxRow;
         }
 
-        public override CloudTable Apply(TableBatchOperation transactionalBatch)
+        public override TableClient Apply(TableBatchOperation transactionalBatch)
         {
             transactionalBatch.Add(TableOperation.Insert(outboxRow));
             return cloudTable;

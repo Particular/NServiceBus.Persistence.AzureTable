@@ -2,10 +2,11 @@
 {
     using System;
     using System.IO;
+    using Azure.Data.Tables;
     using Configuration.AdvancedExtensibility;
-    using Microsoft.Azure.Cosmos.Table;
     using Newtonsoft.Json;
     using Persistence.AzureTable;
+    using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
     /// <summary>
     /// Configuration extensions for the sagas storage
@@ -26,7 +27,7 @@
         /// <summary>
         /// Cloud Table Client to use for the saga storage.
         /// </summary>
-        public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> UseCloudTableClient(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config, CloudTableClient client)
+        public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> UseCloudTableClient(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config, TableServiceClient client)
         {
             Guard.AgainstNull(nameof(client), client);
 

@@ -3,9 +3,11 @@
     using System;
     using System.Net;
     using System.Threading.Tasks;
+    using Azure.Data.Tables;
     using Extensibility;
     using Sagas;
     using Microsoft.Azure.Cosmos.Table;
+    using TableEntity = Microsoft.Azure.Cosmos.Table.TableEntity;
 
     /// <summary>
     /// This is a copy of the saga persister code 2.4.1
@@ -14,7 +16,7 @@
     {
         public delegate Task<Guid[]> ScanForSagas(Type sagaType, string propertyName, object propertyValue);
 
-        public SecondaryIndexPersister(Func<Type, Task<CloudTable>> getTableForSaga, ScanForSagas scanner, Func<IContainSagaData, PartitionRowKeyTuple?, ContextBag, Task> persist, bool assumeSecondaryIndicesExist)
+        public SecondaryIndexPersister(Func<Type, Task<TableClient>> getTableForSaga, ScanForSagas scanner, Func<IContainSagaData, PartitionRowKeyTuple?, ContextBag, Task> persist, bool assumeSecondaryIndicesExist)
         {
             this.getTableForSaga = getTableForSaga;
             this.scanner = scanner;
@@ -243,7 +245,7 @@
         }
 
         LRUCache<PartitionRowKeyTuple, Guid> cache = new LRUCache<PartitionRowKeyTuple, Guid>(LRUCapacity);
-        Func<Type, Task<CloudTable>> getTableForSaga;
+        Func<Type, Task<TableClient>> getTableForSaga;
         Func<IContainSagaData, PartitionRowKeyTuple?, ContextBag, Task> persist;
         bool assumeSecondaryIndicesExist;
         ScanForSagas scanner;

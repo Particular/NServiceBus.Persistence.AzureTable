@@ -1,14 +1,14 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
-    using Microsoft.Azure.Cosmos.Table;
+    using Azure.Data.Tables;
 
     class CloudTableClientFromConfiguration : IProvideCloudTableClient
     {
-        public CloudTableClientFromConfiguration(CloudTableClient client)
+        public CloudTableClientFromConfiguration(TableServiceClient client)
         {
             Client = client;
         }
 
-        public CloudTableClient Client { get; }
+        public TableServiceClient Client { get; }
     }
 }

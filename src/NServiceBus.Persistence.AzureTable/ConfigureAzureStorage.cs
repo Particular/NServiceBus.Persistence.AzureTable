@@ -1,7 +1,7 @@
 ﻿namespace NServiceBus
 {
+    using Azure.Data.Tables;
     using Configuration.AdvancedExtensibility;
-    using Microsoft.Azure.Cosmos.Table;
     using Persistence.AzureTable;
 
     /// <summary>
@@ -28,7 +28,7 @@
         /// <summary>
         /// Cloud Table Client to use for Saga, Outbox and Subscription storage.
         /// </summary>
-        public static PersistenceExtensions<AzureTablePersistence> UseCloudTableClient(this PersistenceExtensions<AzureTablePersistence> config, CloudTableClient client)
+        public static PersistenceExtensions<AzureTablePersistence> UseCloudTableClient(this PersistenceExtensions<AzureTablePersistence> config, TableServiceClient client)
         {
             Guard.AgainstNull(nameof(client), client);
 

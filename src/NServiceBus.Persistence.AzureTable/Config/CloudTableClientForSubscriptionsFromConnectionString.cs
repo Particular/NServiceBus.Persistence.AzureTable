@@ -1,19 +1,20 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
-    using Microsoft.Azure.Cosmos.Table;
+    using Azure.Core;
+    using Azure.Data.Tables;
 
     class CloudTableClientForSubscriptionsFromConnectionString : IProvideCloudTableClientForSubscriptions
     {
         public CloudTableClientForSubscriptionsFromConnectionString(string subscriptionConnectionString)
         {
-            var subscriptionAccount = CloudStorageAccount.Parse(subscriptionConnectionString);
-            Client = subscriptionAccount.CreateCloudTableClient();
-            Client.DefaultRequestOptions = new TableRequestOptions
+            // TODO: should we set additional options here?
+            var tableClientOptions = new TableClientOptions
             {
-                RetryPolicy = new ExponentialRetry()
+                Retry = { Mode = RetryMode.Exponential }
             };
+            Client = new TableServiceClient(subscriptionConnectionString, tableClientOptions);
         }
 
-        public CloudTableClient Client { get; }
+        public TableServiceClient Client { get; }
     }
 }

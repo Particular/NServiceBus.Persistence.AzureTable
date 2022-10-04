@@ -1,15 +1,14 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
-    using Microsoft.Azure.Cosmos.Table;
+    using Azure.Data.Tables;
 
     class CloudTableClientFromConnectionString : IProvideCloudTableClient
     {
         public CloudTableClientFromConnectionString(string sagaConnectionString)
         {
-            var sagaAccount = CloudStorageAccount.Parse(sagaConnectionString);
-            Client = sagaAccount.CreateCloudTableClient();
+            Client = new TableServiceClient(sagaConnectionString);
         }
 
-        public CloudTableClient Client { get; }
+        public TableServiceClient Client { get; }
     }
 }

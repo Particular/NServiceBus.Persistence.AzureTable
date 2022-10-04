@@ -1,6 +1,6 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
-    using Microsoft.Azure.Cosmos.Table;
+    using Azure.Data.Tables;
 
     /// <summary>
     /// Provides a CloudTableClient for the saga and outbox storage type via dependency injection. A custom implementation can be registered on the container and will be picked up by the persistence.
@@ -10,6 +10,6 @@
         /// <summary>
         /// The CloudTableClient to use.
         /// </summary>
-        CloudTableClient Client { get; }
+        TableServiceClient Client { get; }
     }
 }
