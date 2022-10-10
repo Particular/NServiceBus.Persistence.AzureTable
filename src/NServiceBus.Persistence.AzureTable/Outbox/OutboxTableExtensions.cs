@@ -3,24 +3,26 @@
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure;
+    using Azure.Data.Tables;
     using Extensibility;
-    using Microsoft.Azure.Cosmos.Table;
 
     static class OutboxTableExtensions
     {
-        public static async Task<OutboxRecord> ReadOutboxRecord(this CloudTable table, string messageId, TableEntityPartitionKey partitionKey, ContextBag context, CancellationToken cancellationToken = default)
+        public static async Task<OutboxRecord> ReadOutboxRecord(this TableClient table, string messageId, TableEntityPartitionKey partitionKey, ContextBag context, CancellationToken cancellationToken = default)
         {
             _ = context;
 
-            var retrieveResult = await table.ExecuteAsync(TableOperation.Retrieve<OutboxRecord>(partitionKey.PartitionKey, messageId), cancellationToken)
-                .ConfigureAwait(false);
-
-            if (retrieveResult.HttpStatusCode == (int)HttpStatusCode.NotFound || retrieveResult.Result == null)
+            try
+            {
+                var retrieveResult = await table.GetEntityAsync<OutboxRecord>(partitionKey.PartitionKey, messageId, null, cancellationToken)
+                                                .ConfigureAwait(false);
+                return retrieveResult.Value;
+            }
+            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
             {
                 return default;
             }
-
-            return (OutboxRecord)retrieveResult.Result;
         }
     }
 }

@@ -2,7 +2,7 @@ namespace NServiceBus.Persistence.AzureTable.Migration
 {
     using System;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Cosmos.Table;
+    using Azure.Data.Tables;
     using Pipeline;
     using Sagas;
 
@@ -28,7 +28,7 @@ namespace NServiceBus.Persistence.AzureTable.Migration
             var tableHolder = resolver.ResolveAndSetIfAvailable(context.Extensions);
             // slight duplication between saga persister and here when it comes to conventional tables
             // assuming the table will be created by the saga persister
-            var sagaTable = tableHolder == null ? client.GetTableReference($"{conventionalTablePrefix}{typeof(TSagaData).Name}") : tableHolder.Table;
+            var sagaTable = tableHolder == null ? client.GetTableClient($"{conventionalTablePrefix}{typeof(TSagaData).Name}") : tableHolder.Table;
 
             if (!context.Extensions.TryGet<TableInformation>(out _))
             {
@@ -64,7 +64,7 @@ namespace NServiceBus.Persistence.AzureTable.Migration
         }
 
         readonly SecondaryIndex secondaryIndex;
-        CloudTableClient client;
+        TableServiceClient client;
         readonly TableHolderResolver resolver;
         readonly bool compatibilityMode;
         readonly string conventionalTablePrefix;

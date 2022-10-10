@@ -2,7 +2,8 @@ namespace NServiceBus.Persistence.AzureTable
 {
     using System.Collections.Generic;
     using System.Linq;
-    using Microsoft.Azure.Cosmos.Table;
+    using System.Net;
+    using Azure;
 
     static class SafeLinqExtensions
     {
@@ -17,14 +18,9 @@ namespace NServiceBus.Persistence.AzureTable
             {
                 return source.FirstOrDefault();
             }
-            catch (StorageException ex)
+            catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
             {
-                if (ex.RequestInformation.HttpStatusCode == 404)
-                {
-                    return default;
-                }
-
-                throw;
+                return default;
             }
         }
     }

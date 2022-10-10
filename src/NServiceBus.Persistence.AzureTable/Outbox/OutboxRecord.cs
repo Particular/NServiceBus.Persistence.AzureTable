@@ -3,35 +3,63 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Microsoft.Azure.Cosmos.Table;
+    using Azure;
+    using Azure.Data.Tables;
     using Newtonsoft.Json;
     using Outbox;
 
-    class OutboxRecord : TableEntity
+    class OutboxRecord : ITableEntity
     {
-        static ReadOnlyMemoryConverter ReadOnlyMemoryConverter = new ReadOnlyMemoryConverter();
+        static ReadOnlyMemoryConverter ReadOnlyMemoryConverter = new();
 
         // ignoring this property to avoid double storing and clashing with Cosmos Id property.
-        [IgnoreProperty]
         public string Id
         {
             get => RowKey;
             set => RowKey = value;
         }
 
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
+
         public bool Dispatched { get; set; }
 
-        public string TransportOperations { get; set; }
+        public string TransportOperations
+        {
+            get => GetSerializedTransportOperations();
+        }
 
         public string DispatchedAt { get; set; }
 
-        // ignoring this property because we are custom serializing the operations into TransportOperations and deserializing it back
-        [IgnoreProperty] public TransportOperation[] Operations { get; set; } = Array.Empty<TransportOperation>();
+        public TransportOperation[] Operations { get; set; } = Array.Empty<TransportOperation>();
 
-        public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
+        public void SetAsDispatched()
+        {
+            Dispatched = true;
+            Operations = Array.Empty<TransportOperation>();
+            DispatchedAt = DateTimeOffsetHelper.ToWireFormattedString(DateTimeOffset.UtcNow);
+        }
+
+        public void ReadEntity()
+        {
+            // TODO: initialize table entity
+            Dispatched = tableEntity.GetBoolean(nameof(Dispatched)).GetValueOrDefault(false);
+            DispatchedAt = tableEntity.GetString(nameof(DispatchedAt));
+            var storageOperations = DeserializeTransportOperations(tableEntity.GetString(nameof(TransportOperations)));
+            Operations = storageOperations.Select(op =>
+                                              new TransportOperation(op.MessageId, new Transport.DispatchProperties(op.Options), op.Body,
+                                                  op.Headers))
+                                          .ToArray();
+        }
+        public void WriteEntity()
         {
             TransportOperations = SerializeTransportOperations(Operations);
-            return base.WriteEntity(operationContext);
+
+            tableEntity.Add(nameof(Dispatched), Dispatched);
+            tableEntity.Add(nameof(DispatchedAt), DispatchedAt);
+            tableEntity.Add(nameof(TransportOperations), TransportOperations);
         }
 
         internal static StorageTransportOperation[] DeserializeTransportOperations(string transportOperations)
@@ -49,24 +77,6 @@
                     Options = transportOperation.Options,
                     Headers = transportOperation.Headers
                 }), Formatting.Indented, ReadOnlyMemoryConverter);
-        }
-
-        public override void ReadEntity(IDictionary<string, EntityProperty> properties,
-            OperationContext operationContext)
-        {
-            base.ReadEntity(properties, operationContext);
-            var storageOperations = DeserializeTransportOperations(TransportOperations);
-            Operations = storageOperations.Select(op =>
-                    new TransportOperation(op.MessageId, new Transport.DispatchProperties(op.Options), op.Body,
-                        op.Headers))
-                .ToArray();
-        }
-
-        public void SetAsDispatched()
-        {
-            Dispatched = true;
-            Operations = Array.Empty<TransportOperation>();
-            DispatchedAt = DateTimeOffsetHelper.ToWireFormattedString(DateTimeOffset.UtcNow);
         }
 
         internal class StorageTransportOperation

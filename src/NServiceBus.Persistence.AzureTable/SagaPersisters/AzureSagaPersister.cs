@@ -7,8 +7,8 @@
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure.Data.Tables;
     using Extensibility;
-    using Microsoft.Azure.Cosmos.Table;
     using Newtonsoft.Json;
     using Sagas;
 
@@ -41,11 +41,7 @@
             var partitionKey = GetPartitionKey(context, sagaData.Id);
             var sagaDataType = sagaData.GetType();
 
-            var sagaDataEntityToSave = DictionaryTableEntityExtensions.ToDictionaryTableEntity(sagaData, new DictionaryTableEntity
-            {
-                PartitionKey = partitionKey.PartitionKey,
-                RowKey = sagaData.Id.ToString(),
-            }, jsonSerializer, writerCreator);
+            var sagaDataEntityToSave = new TableEntity(partitionKey.PartitionKey, sagaData.Id.ToString());
 
             var table = await GetTableAndCreateIfNotExists(storageSession, sagaDataType, cancellationToken)
                 .ConfigureAwait(false);
@@ -149,9 +145,9 @@
             return null;
         }
 
-        async Task<CloudTable> GetTableAndCreateIfNotExists(IAzureTableStorageSession storageSession, Type sagaDataType, CancellationToken cancellationToken)
+        async Task<TableClient> GetTableAndCreateIfNotExists(IAzureTableStorageSession storageSession, Type sagaDataType, CancellationToken cancellationToken)
         {
-            CloudTable tableToReadFrom;
+            TableClient tableToReadFrom;
             if (storageSession.Table == null)
             {
                 // to avoid string concat when nothing to do
@@ -213,7 +209,7 @@
         }
 
         readonly bool disableTableCreation;
-        readonly CloudTableClient client;
+        readonly TableServiceClient client;
         readonly SecondaryIndex secondaryIndex;
         const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
         static readonly ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
@@ -228,7 +224,7 @@
         /// </summary>
         class SagaInstanceMetadata
         {
-            public Dictionary<Guid, DictionaryTableEntity> Entities { get; } = new Dictionary<Guid, DictionaryTableEntity>();
+            public Dictionary<Guid, TableEntity> Entities { get; } = new Dictionary<Guid, TableEntity>();
         }
     }
 

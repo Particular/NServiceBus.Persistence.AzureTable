@@ -2,12 +2,11 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure.Data.Tables;
     using Logging;
-    using Microsoft.Azure.Cosmos.Table;
     using Sagas;
 
     class SecondaryIndex
@@ -18,7 +17,7 @@
             this.assumeSecondaryIndicesExist = assumeSecondaryIndicesExist;
         }
 
-        public virtual async Task<Guid?> FindSagaId<TSagaData>(CloudTable table, SagaCorrelationProperty correlationProperty, CancellationToken cancellationToken = default)
+        public virtual async Task<Guid?> FindSagaId<TSagaData>(TableClient table, SagaCorrelationProperty correlationProperty, CancellationToken cancellationToken = default)
             where TSagaData : IContainSagaData
         {
             var sagaType = typeof(TSagaData);
@@ -76,7 +75,7 @@
             return id;
         }
 
-        static async Task<Guid[]> ScanForSaga<TSagaData>(CloudTable table, SagaCorrelationProperty correlationProperty, CancellationToken cancellationToken)
+        static async Task<Guid[]> ScanForSaga<TSagaData>(TableClient table, SagaCorrelationProperty correlationProperty, CancellationToken cancellationToken)
             where TSagaData : IContainSagaData
         {
             var query = DictionaryTableEntityExtensions.BuildWherePropertyQuery<TSagaData>(correlationProperty);

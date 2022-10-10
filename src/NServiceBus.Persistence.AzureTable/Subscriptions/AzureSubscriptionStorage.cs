@@ -8,8 +8,9 @@
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure;
+    using Azure.Data.Tables;
     using Extensibility;
-    using Microsoft.Azure.Cosmos.Table;
     using Unicast.Subscriptions;
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
 
@@ -18,7 +19,7 @@
     {
         string subscriptionTableName;
         TimeSpan? cacheFor;
-        CloudTableClient client;
+        TableServiceClient client;
         public ConcurrentDictionary<string, CacheItem> Cache;
 
         public AzureSubscriptionStorage(IProvideCloudTableClientForSubscriptions tableClientProvider, string subscriptionTableName, TimeSpan? cacheFor)
@@ -45,47 +46,39 @@
 
         public async Task Subscribe(Subscriber subscriber, MessageType messageType, ContextBag context, CancellationToken cancellationToken = default)
         {
-            var table = client.GetTableReference(subscriptionTableName);
+            var table = client.GetTableClient(subscriptionTableName);
 
             var subscription = new Subscription
             {
                 RowKey = EncodeTo64(subscriber.TransportAddress),
                 PartitionKey = messageType.ToString(),
                 EndpointName = subscriber.Endpoint,
-                ETag = "*"
+                ETag = ETag.All
             };
+
+            // TODO: StorageException is not an expected exception type, replaced by RequestFailedException
+            // https://learn.microsoft.com/en-us/dotnet/api/azure.data.tables.tableclient.upsertentityasync?view=azure-dotnet
 
             try
             {
-                var operation = TableOperation.InsertOrReplace(subscription);
-                await table.ExecuteAsync(operation, cancellationToken).ConfigureAwait(false);
+                await table.UpsertEntityAsync(subscription, TableUpdateMode.Replace, cancellationToken).ConfigureAwait(false);
             }
-            catch (StorageException ex)
+            catch (RequestFailedException ex) when (ex.Status == 409)
             {
-                if (ex.RequestInformation.HttpStatusCode != 409)
-                {
-                    throw;
-                }
+                throw;
             }
             ClearForMessageType(messageType);
         }
 
         public async Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context, CancellationToken cancellationToken = default)
         {
-            var table = client.GetTableReference(subscriptionTableName);
+            var table = client.GetTableClient(subscriptionTableName);
             try
             {
-                var subscription = new Subscription
-                {
-                    RowKey = EncodeTo64(subscriber.TransportAddress),
-                    PartitionKey = messageType.ToString(),
-                    EndpointName = subscriber.Endpoint,
-                    ETag = "*"
-                };
-                var operation = TableOperation.Delete(subscription);
-                await table.ExecuteAsync(operation, cancellationToken).ConfigureAwait(false);
+                await table.DeleteEntityAsync(messageType.ToString(), EncodeTo64(subscriber.TransportAddress),
+                    ETag.All, cancellationToken).ConfigureAwait(false);
             }
-            catch (StorageException ex) when (ex.RequestInformation.HttpStatusCode == (int)HttpStatusCode.NotFound)
+            catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
             {
                 // intentionally ignored
             }
@@ -160,17 +153,23 @@
         async Task<IEnumerable<Subscriber>> GetSubscriptions(IEnumerable<MessageType> messageTypes, CancellationToken cancellationToken)
         {
             var subscribers = new HashSet<Subscriber>(SubscriberComparer.Instance);
-            var table = client.GetTableReference(subscriptionTableName);
+            var table = client.GetTableClient(subscriptionTableName);
 
             foreach (var messageType in messageTypes)
             {
+                //Pageable<OfficeSupplyEntity> queryResults = tableClient.Query<OfficeSupplyEntity>(e => e.PartitionKey == partitionKey && e.RowKey == rowKey);
                 var name = messageType.TypeName;
-                var lowerBound = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.GreaterThanOrEqual, name);
-                var upperBound = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThan, GetUpperBound(name));
-                var query = new TableQuery<Subscription>().Where(TableQuery.CombineFilters(lowerBound, "and", upperBound));
+                var results = table.Query<Subscription>(e => e.PartitionKey == name, cancellationToken: cancellationToken)
+                                   .Select(s => new Subscriber(DecodeFrom64(s.RowKey), s.EndpointName));
 
-                var subscriptions = await table.ExecuteQueryAsync(query, cancellationToken: cancellationToken).ConfigureAwait(false);
-                var results = subscriptions.Select(s => new Subscriber(DecodeFrom64(s.RowKey), s.EndpointName));
+                // TODO: fix query for versioning here!
+
+                // var lowerBound = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.GreaterThanOrEqual, name);
+                // var upperBound = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThan, GetUpperBound(name));
+                // var query = new TableQuery<Subscription>().Where(TableQuery.CombineFilters(lowerBound, "and", upperBound));
+
+                // var subscriptions = await table.ExecuteQueryAsync(query, cancellationToken: cancellationToken).ConfigureAwait(false);
+                // var results = subscriptions.Select(s => new Subscriber(DecodeFrom64(s.RowKey), s.EndpointName));
 
                 foreach (var subscriber in results)
                 {

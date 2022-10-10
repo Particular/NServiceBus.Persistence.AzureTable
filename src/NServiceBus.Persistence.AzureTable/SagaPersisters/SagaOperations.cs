@@ -1,54 +1,56 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
     using System;
+    using System.Collections.Generic;
     using System.Net;
-    using Microsoft.Azure.Cosmos.Table;
+    using Azure;
+    using Azure.Data.Tables;
     using Logging;
 
     class SagaSave : Operation
     {
-        readonly DictionaryTableEntity sagaRow;
+        readonly TableEntity sagaRow;
 
-        public SagaSave(TableEntityPartitionKey partitionKey, DictionaryTableEntity sagaRow) : base(partitionKey)
+        public SagaSave(TableEntityPartitionKey partitionKey, TableEntity sagaRow) : base(partitionKey)
         {
             this.sagaRow = sagaRow;
         }
 
-        public override CloudTable Apply(TableBatchOperation transactionalBatch)
+        public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
         {
-            transactionalBatch.Add(TableOperation.Insert(sagaRow));
+            transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.Add, sagaRow));
             return sagaRow.Table;
         }
     }
 
     class SagaUpdate : Operation
     {
-        readonly DictionaryTableEntity sagaRow;
+        readonly TableEntity sagaRow;
 
-        public SagaUpdate(TableEntityPartitionKey partitionKey, DictionaryTableEntity sagaRow) : base(partitionKey)
+        public SagaUpdate(TableEntityPartitionKey partitionKey, TableEntity sagaRow) : base(partitionKey)
         {
             this.sagaRow = sagaRow;
         }
 
-        public override CloudTable Apply(TableBatchOperation transactionalBatch)
+        public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
         {
-            transactionalBatch.Add(TableOperation.Replace(sagaRow));
+            transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.UpdateReplace, sagaRow));
             return sagaRow.Table;
         }
     }
 
     class SagaDelete : Operation
     {
-        readonly DictionaryTableEntity sagaRow;
+        readonly TableEntity sagaRow;
 
-        public SagaDelete(TableEntityPartitionKey partitionKey, DictionaryTableEntity sagaRow) : base(partitionKey)
+        public SagaDelete(TableEntityPartitionKey partitionKey, TableEntity sagaRow) : base(partitionKey)
         {
             this.sagaRow = sagaRow;
         }
 
-        public override CloudTable Apply(TableBatchOperation transactionalBatch)
+        public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
         {
-            transactionalBatch.Add(TableOperation.Delete(sagaRow));
+            transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.Delete, sagaRow));
             return sagaRow.Table;
         }
     }
@@ -56,9 +58,9 @@
     class SagaRemoveSecondaryIndex : Operation
     {
         readonly SecondaryIndex secondaryIndices;
-        readonly CloudTable table;
+        readonly TableClient table;
 
-        public SagaRemoveSecondaryIndex(TableEntityPartitionKey partitionKey, Guid sagaId, SecondaryIndex secondaryIndices, PartitionRowKeyTuple partitionRowKeyTuple, CloudTable table) : base(partitionKey)
+        public SagaRemoveSecondaryIndex(TableEntityPartitionKey partitionKey, Guid sagaId, SecondaryIndex secondaryIndices, PartitionRowKeyTuple partitionRowKeyTuple, TableClient table) : base(partitionKey)
         {
             this.sagaId = sagaId;
             this.partitionRowKeyTuple = partitionRowKeyTuple;
@@ -66,20 +68,20 @@
             this.secondaryIndices = secondaryIndices;
         }
 
-        public override CloudTable Apply(TableBatchOperation transactionalBatch)
+        public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
         {
             var e = new TableEntity
             {
-                ETag = "*"
+                ETag = ETag.All
             };
 
             partitionRowKeyTuple.Apply(e);
             secondaryIndices.InvalidateCache(partitionRowKeyTuple);
-            transactionalBatch.Add(TableOperation.Delete(e));
+            transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.Delete, e));
             return table;
         }
 
-        public override bool Handle(StorageException storageException)
+        public override bool Handle(RequestFailedException storageException)
         {
             // Horrible logic to check if item has already been deleted or not
             var webException = storageException.InnerException as WebException;

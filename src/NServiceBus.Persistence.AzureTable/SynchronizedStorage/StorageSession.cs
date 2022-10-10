@@ -3,8 +3,8 @@
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure.Data.Tables;
     using Extensibility;
-    using Microsoft.Azure.Cosmos.Table;
 
     class StorageSession : IWorkWithSharedTransactionalBatch
     {
@@ -12,7 +12,7 @@
         {
             CurrentContextBag = context;
             TableHolder = resolver.ResolveAndSetIfAvailable(context);
-            Batch = new TableBatchOperation();
+            Batch = new List<TableTransactionAction>();
         }
 
         public void Dispose()
@@ -49,7 +49,8 @@
 
             foreach (var batchOfOperations in operations)
             {
-                var transactionalBatch = new TableBatchOperation();
+                var transactionalBatch = new List<TableTransactionAction>();
+                await Table.SubmitTransactionAsync(transactionalBatch, cancellationToken);
                 await transactionalBatch
                       .ExecuteOperationsAsync(batchOfOperations.Value, cancellationToken: cancellationToken)
                       .ConfigureAwait(false);
@@ -61,17 +62,16 @@
 
 
         // for the user path only
-        public CloudTable Table => TableHolder?.Table;
+        public TableClient Table => TableHolder?.Table;
 
         // for the user path only
-        public TableBatchOperation Batch { get; }
+        public List<TableTransactionAction> Batch { get; }
 
         // for the user path only
         public string PartitionKey => !CurrentContextBag.TryGet<TableEntityPartitionKey>(out var partitionKey)
             ? null
             : partitionKey.PartitionKey;
 
-        readonly Dictionary<TableEntityPartitionKey, Dictionary<int, Operation>> operations =
-            new Dictionary<TableEntityPartitionKey, Dictionary<int, Operation>>();
+        readonly Dictionary<TableEntityPartitionKey, Dictionary<int, Operation>> operations = new();
     }
 }

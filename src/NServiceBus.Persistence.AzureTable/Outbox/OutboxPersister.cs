@@ -1,9 +1,10 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure.Data.Tables;
     using Extensibility;
-    using Microsoft.Azure.Cosmos.Table;
     using Outbox;
 
     class OutboxPersister : IOutboxStorage
@@ -83,8 +84,9 @@
             record.SetAsDispatched();
 
             var operation = new OutboxDelete(setAsDispatchedHolder.PartitionKey, record, tableHolder.Table);
-            var transactionalBatch = new TableBatchOperation();
-            return transactionalBatch.ExecuteOperationAsync(operation, cancellationToken: cancellationToken);
+            var transactionalBatch = new List<TableTransactionAction>();
+            transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.Delete, record.Entity));
+            return tableHolder.Table.SubmitTransactionAsync(transactionalBatch, cancellationToken);
         }
 
         readonly TableHolderResolver tableHolderResolver;

@@ -1,9 +1,10 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure.Data.Tables;
     using Extensibility;
-    using Microsoft.Azure.Cosmos.Table;
     using Outbox;
     using Transport;
 
@@ -59,8 +60,8 @@
         bool disposed;
         StorageSession session;
         bool ownsTransaction;
-        public CloudTable Table => session.Table;
-        public TableBatchOperation Batch => session.Batch;
+        public TableClient Table => session.Table;
+        public List<TableTransactionAction> Batch => session.Batch;
         public string PartitionKey => session.PartitionKey;
         public ContextBag CurrentContextBag
         {

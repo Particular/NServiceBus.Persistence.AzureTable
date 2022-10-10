@@ -1,14 +1,14 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
-    using Microsoft.Azure.Cosmos.Table;
+    using Azure.Data.Tables;
 
     class TableHolder
     {
-        public TableHolder(CloudTable table)
+        public TableHolder(TableClient table)
         {
             Table = table;
         }
 
-        public CloudTable Table { get; set; }
+        public TableClient Table { get; set; }
     }
 }

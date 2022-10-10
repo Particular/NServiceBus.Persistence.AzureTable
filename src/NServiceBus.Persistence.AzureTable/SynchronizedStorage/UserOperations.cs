@@ -1,22 +1,23 @@
 namespace NServiceBus.Persistence.AzureTable
 {
-    using Microsoft.Azure.Cosmos.Table;
+    using System.Collections.Generic;
+    using Azure.Data.Tables;
 
     class UserOperation : Operation
     {
-        public UserOperation(TableEntityPartitionKey partitionKey, CloudTable table, TableOperation tableOperation) : base(partitionKey)
+        public UserOperation(TableEntityPartitionKey partitionKey, TableClient table, TableTransactionAction tableOperation) : base(partitionKey)
         {
             this.tableOperation = tableOperation;
             this.table = table;
         }
 
-        public override CloudTable Apply(TableBatchOperation transactionalBatch)
+        public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
         {
             transactionalBatch.Add(tableOperation);
             return table;
         }
 
-        CloudTable table;
-        readonly TableOperation tableOperation;
+        TableClient table;
+        readonly TableTransactionAction tableOperation;
     }
 }

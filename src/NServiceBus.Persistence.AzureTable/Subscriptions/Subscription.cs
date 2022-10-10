@@ -1,8 +1,10 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
-    using Microsoft.Azure.Cosmos.Table;
+    using System;
+    using Azure;
+    using Azure.Data.Tables;
 
-    class Subscription : TableEntity
+    class Subscription : ITableEntity
     {
         public string EndpointName { get; set; }
 
@@ -48,5 +50,10 @@
                 return ((RowKey != null ? RowKey.GetHashCode() : 0) * 397) ^ (PartitionKey != null ? PartitionKey.GetHashCode() : 0);
             }
         }
+
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
     }
 }
