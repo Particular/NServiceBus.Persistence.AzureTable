@@ -2,7 +2,7 @@ namespace NServiceBus.Testing
 {
     using System;
     using System.Linq;
-    using Microsoft.Azure.Cosmos.Table;
+    using Azure.Data.Tables;
 
     public static class ConnectionStringHelper
     {
@@ -40,10 +40,12 @@ namespace NServiceBus.Testing
         }
 
         // the SDK uses exactly this method of changing the underlying executor
-        public static bool IsPremiumEndpoint(CloudTableClient cloudTableClient)
+        public static bool IsPremiumEndpoint(TableServiceClient cloudTableClient)
         {
-            var lowerInvariant = cloudTableClient.StorageUri.PrimaryUri.OriginalString.ToLowerInvariant();
-            return (lowerInvariant.Contains("https://localhost") && cloudTableClient.StorageUri.PrimaryUri.Port != 10002) || lowerInvariant.Contains(".table.cosmosdb.") || lowerInvariant.Contains(".table.cosmos.");
+            // TODO: figure out how to verify whether it's a premium endpoint or not
+            return true;
+            // var lowerInvariant = cloudTableClient.StorageUri.PrimaryUri.OriginalString.ToLowerInvariant();
+            // return (lowerInvariant.Contains("https://localhost") && cloudTableClient.StorageUri.PrimaryUri.Port != 10002) || lowerInvariant.Contains(".table.cosmosdb.") || lowerInvariant.Contains(".table.cosmos.");
         }
     }
 }

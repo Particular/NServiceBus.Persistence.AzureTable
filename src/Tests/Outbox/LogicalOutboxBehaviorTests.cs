@@ -4,9 +4,11 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Net;
     using System.Threading.Tasks;
+    using Azure;
+    using Azure.Data.Tables;
     using AzureTable;
-    using Microsoft.Azure.Cosmos.Table;
     using NUnit.Framework;
     using Outbox;
     using Testing;
@@ -17,8 +19,8 @@
     [TestFixture("CosmosDB")]
     public class LogicalOutboxBehaviorTests
     {
-        CloudTable cloudTable;
-        CloudTableClient client;
+        TableClient cloudTable;
+        TableServiceClient client;
         string tableName;
         string tableApiType;
 
@@ -30,18 +32,24 @@
         [SetUp]
         public Task SetUp()
         {
-            var account = CloudStorageAccount.Parse(ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence(tableApiType));
-
-            client = account.CreateCloudTableClient();
+            var connectionString = ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence(tableApiType);
+            client = new TableServiceClient(connectionString);
             tableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}{nameof(LogicalOutboxBehavior)}".ToLowerInvariant();
-            cloudTable = client.GetTableReference(tableName);
+            cloudTable = client.GetTableClient(tableName);
             return cloudTable.CreateIfNotExistsAsync();
         }
 
         [TearDown]
         public Task Teardown()
         {
-            return cloudTable.DeleteIfExistsAsync();
+            try
+            {
+                return client.DeleteTableAsync(tableName);
+            }
+            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
+            {
+                return Task.CompletedTask;
+            }
         }
 
         [Test]
@@ -66,7 +74,7 @@
                 }
             };
 
-            await cloudTable.ExecuteAsync(TableOperation.Insert(record));
+            await cloudTable.AddEntityAsync(record);
 
             var containerHolderHolderResolver = new TableHolderResolver(new Provider()
             {
@@ -99,6 +107,6 @@
 
     class Provider : IProvideCloudTableClient
     {
-        public CloudTableClient Client { get; set; }
+        public TableServiceClient Client { get; set; }
     }
 }

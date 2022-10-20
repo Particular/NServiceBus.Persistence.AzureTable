@@ -3,9 +3,11 @@
     using System;
     using System.IO;
     using System.Linq;
+    using System.Net;
     using System.Threading.Tasks;
+    using Azure;
+    using Azure.Data.Tables;
     using NUnit.Framework;
-    using Microsoft.Azure.Cosmos.Table;
     using Testing;
 
     [SetUpFixture]
@@ -16,8 +18,7 @@
         {
             var connectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
 
-            var account = CloudStorageAccount.Parse(connectionString);
-            TableClient = account.CreateCloudTableClient();
+            TableClient = new TableServiceClient(connectionString);
 
             TablePrefix = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();
 
@@ -32,12 +33,19 @@
         {
             return Task.WhenAll(allConventionalSagaTableNamesWithPrefix.Select(tableName =>
             {
-                var table = TableClient.GetTableReference(tableName);
-                return table.DeleteIfExistsAsync();
+                var table = TableClient.GetTableClient(tableName);
+                try
+                {
+                    return TableClient.DeleteTableAsync(tableName);
+                }
+                catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
+                {
+                    return Task.CompletedTask;
+                }
             }).ToArray());
         }
 
-        public static CloudTableClient TableClient;
+        public static TableServiceClient TableClient;
         public static string TablePrefix;
         string[] allConventionalSagaTableNamesWithPrefix;
     }

@@ -11,7 +11,7 @@ public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExec
     {
         var subscriptionPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Subscriptions>();
         subscriptionPersistence.DisableTableCreation();
-        subscriptionPersistence.UseCloudTableClient(SetupFixture.TableClient);
+        subscriptionPersistence.UseTableServiceClient(SetupFixture.TableClient);
         subscriptionPersistence.DefaultTable(SetupFixture.TableName);
 
         var recoverabilitySettings = configuration.Recoverability();

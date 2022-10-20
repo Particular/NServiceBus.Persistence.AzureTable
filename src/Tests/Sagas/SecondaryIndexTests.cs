@@ -3,10 +3,12 @@ namespace NServiceBus.Persistence.AzureTable.Tests
     using NUnit.Framework;
     using System;
     using System.IO;
+    using System.Net;
     using System.Text;
     using System.Threading.Tasks;
+    using Azure;
+    using Azure.Data.Tables;
     using Logging;
-    using Microsoft.Azure.Cosmos.Table;
     using Sagas;
     using Testing;
 
@@ -23,12 +25,11 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         {
             logStatements = new StringBuilder();
 
-            var account = CloudStorageAccount.Parse(ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence(tableApiType));
-
-            client = account.CreateCloudTableClient();
+            string connectionString = ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence(tableApiType);
+            client = new TableServiceClient(connectionString);
 
             tableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}{nameof(SecondaryIndexTests)}".ToLowerInvariant();
-            cloudTable = client.GetTableReference(tableName);
+            cloudTable = client.GetTableClient(tableName);
             return cloudTable.CreateIfNotExistsAsync();
         }
 
@@ -69,7 +70,14 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         [TearDown]
         public Task Teardown()
         {
-            return cloudTable.DeleteIfExistsAsync();
+            try
+            {
+                return client.DeleteTableAsync(tableName);
+            }
+            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
+            {
+                return Task.CompletedTask;
+            }
         }
 
         class TestSagaData : ContainSagaData
@@ -79,8 +87,8 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
         StringBuilder logStatements;
         IDisposable scope;
-        CloudTable cloudTable;
-        CloudTableClient client;
+        TableClient cloudTable;
+        TableServiceClient client;
         string tableName;
         string tableApiType;
     }

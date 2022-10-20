@@ -5,10 +5,11 @@ namespace NServiceBus.AcceptanceTests
     using System.Net;
     using System.Threading.Tasks;
     using AcceptanceTesting;
+    using Azure;
+    using Azure.Data.Tables;
     using EndpointTemplates;
-    using Microsoft.Azure.Cosmos.Table;
     using NServiceBus;
-    using NServiceBus.Pipeline;
+    using Pipeline;
     using NServiceBus.Sagas;
     using NUnit.Framework;
     using Persistence.AzureTable;
@@ -33,7 +34,8 @@ namespace NServiceBus.AcceptanceTests
             var myEntity = GetByRowKey(myTableRowKey);
 
             Assert.IsNotNull(myEntity);
-            Assert.AreEqual(context.SagaId.ToString(), myEntity["Data"].StringValue);
+            Assert.IsTrue(myEntity.TryGetValue("Data", out var entityValue));
+            Assert.AreEqual(context.SagaId.ToString(), entityValue);
         }
 
         [Test]
@@ -54,29 +56,25 @@ namespace NServiceBus.AcceptanceTests
             var myEntity = GetByRowKey(myTableRowKey);
 
             Assert.IsNotNull(myEntity);
-            Assert.AreEqual(context.SagaId.ToString(), myEntity["Data"].StringValue);
+            Assert.IsTrue(myEntity.TryGetValue("Data", out var entityValue));
+            Assert.AreEqual(context.SagaId.ToString(), entityValue);
         }
 
-        static DynamicTableEntity GetByRowKey(Guid sagaId)
+        static TableEntity GetByRowKey(Guid sagaId)
         {
             var table = SetupFixture.Table;
 
             // table scan but still probably the easiest way to do it, otherwise we would have to take the partition key into account which complicates things because this test is shared
-            var query = new TableQuery<DynamicTableEntity>().Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, sagaId.ToString()));
+            //var query = new TableQuery<DynamicTableEntity>().Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, sagaId.ToString()));
 
             try
             {
-                var tableEntity = table.ExecuteQuery(query).FirstOrDefault();
+                var tableEntity = table.Query<TableEntity>(entity => entity.RowKey == sagaId.ToString()).FirstOrDefault();
                 return tableEntity;
             }
-            catch (StorageException e)
+            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
             {
-                if (e.RequestInformation.HttpStatusCode == (int)HttpStatusCode.NotFound)
-                {
-                    return null;
-                }
-
-                throw;
+                return null;
             }
         }
 
@@ -213,7 +211,7 @@ namespace NServiceBus.AcceptanceTests
                         PartitionKey = session.PartitionKey,
                         Data = session.PartitionKey
                     };
-                    session.Batch.Add(TableOperation.Insert(entity));
+                    session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
                     testContext.HandlerIsDone = true;
                     return Task.CompletedTask;
                 }
@@ -221,9 +219,13 @@ namespace NServiceBus.AcceptanceTests
                 Context testContext;
             }
 
-            public class MyTableEntity : TableEntity
+            public class MyTableEntity : ITableEntity
             {
                 public string Data { get; set; }
+                public string PartitionKey { get; set; }
+                public string RowKey { get; set; }
+                public DateTimeOffset? Timestamp { get; set; }
+                public ETag ETag { get; set; }
             }
 
             public class CustomSagaData : ContainSagaData

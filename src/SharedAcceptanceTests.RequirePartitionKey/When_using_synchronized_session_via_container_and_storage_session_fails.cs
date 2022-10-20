@@ -1,12 +1,15 @@
 ﻿namespace NServiceBus.AcceptanceTests
 {
+    using System;
     using System.Linq;
     using System.Threading.Tasks;
     using AcceptanceTesting;
+    using Azure;
+    using Azure.Data.Tables;
     using EndpointTemplates;
     using NUnit.Framework;
-    using Microsoft.Azure.Cosmos.Table;
     using Persistence.AzureTable;
+    using ITableEntity = Azure.Data.Tables.ITableEntity;
 
     [TestFixture]
     public class When_using_synchronized_session_via_container_and_storage_session_fails : NServiceBusAcceptanceTest
@@ -63,7 +66,7 @@
                         PartitionKey = context.TestRunId.ToString(),
                         Data = "MyCustomData"
                     };
-                    session.Batch.Add(TableOperation.Insert(entity));
+                    session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
                     context.FirstHandlerIsDone = true;
 
                     return Task.CompletedTask;
@@ -85,15 +88,19 @@
                         PartitionKey = session.PartitionKey,
                         Data = "MyCustomData"
                     };
-                    session.Batch.Add(TableOperation.Insert(entity));
+                    session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
                     throw new SimulatedException();
                 }
             }
         }
 
-        public class MyTableEntity : TableEntity
+        public class MyTableEntity : ITableEntity
         {
             public string Data { get; set; }
+            public string PartitionKey { get; set; }
+            public string RowKey { get; set; }
+            public DateTimeOffset? Timestamp { get; set; }
+            public ETag ETag { get; set; }
         }
 
         public class MyMessage : IMessage

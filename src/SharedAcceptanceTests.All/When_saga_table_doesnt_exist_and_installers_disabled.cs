@@ -2,9 +2,11 @@ namespace NServiceBus.AcceptanceTests
 {
     using System;
     using System.Linq;
+    using System.Net;
     using System.Threading.Tasks;
     using NServiceBus;
     using AcceptanceTesting;
+    using Azure;
     using Configuration.AdvancedExtensibility;
     using NServiceBus.AcceptanceTesting.Support;
     using Testing;
@@ -18,7 +20,14 @@ namespace NServiceBus.AcceptanceTests
         [SetUp]
         public Task Setup()
         {
-            return SetupFixture.TableClient.GetTableReference(TableThatDoesntExist).DeleteIfExistsAsync();
+            try
+            {
+                return SetupFixture.TableClient.DeleteTableAsync(TableThatDoesntExist);
+            }
+            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
+            {
+                return Task.CompletedTask;
+            }
         }
 
         [Test]

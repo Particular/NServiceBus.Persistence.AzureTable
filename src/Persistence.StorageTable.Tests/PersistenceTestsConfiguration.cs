@@ -3,8 +3,8 @@
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure.Data.Tables;
     using Extensibility;
-    using Microsoft.Azure.Cosmos.Table;
     using Newtonsoft.Json;
     using NServiceBus.Outbox;
     using NServiceBus.Sagas;
@@ -28,7 +28,7 @@
 
         public IOutboxStorage OutboxStorage { get; private set; }
 
-        public CloudTableClient Client => SetupFixture.TableClient;
+        public TableServiceClient Client => SetupFixture.TableClient;
 
         public Task Configure(CancellationToken cancellationToken = default)
         {

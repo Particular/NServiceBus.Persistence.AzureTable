@@ -8,7 +8,8 @@ namespace NServiceBus.AcceptanceTests
     using EndpointTemplates;
     using NUnit.Framework;
     using System.Net;
-    using Microsoft.Azure.Cosmos.Table;
+    using Azure;
+    using Azure.Data.Tables;
 
     public partial class When_saga_with_complex_state : NServiceBusAcceptanceTest
     {
@@ -26,57 +27,48 @@ namespace NServiceBus.AcceptanceTests
 
             var sagaEntity = GetEntity(context.SagaId);
 
-            var nullableDoubleProp = sagaEntity[nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableDouble)];
-            var intArrayProp = sagaEntity[nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.IntArray)];
-            var complexObjectProp = sagaEntity[nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.ComplexData)];
-            var nullableBoolProp = sagaEntity[nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableBool)];
-            var nullableGuidProp = sagaEntity[nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableGuid)];
-            var nullableLongProp = sagaEntity[nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableLong)];
-            var nullableIntProp = sagaEntity[nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableInt)];
-            var byteArrayProp = sagaEntity[nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.ByteArray)];
+            Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableDouble), out var nullableDouble));
+            Assert.AreEqual(4.5d, nullableDouble);
 
-            Assert.AreEqual(EdmType.Double, nullableDoubleProp.PropertyType);
-            Assert.AreEqual(4.5d, nullableDoubleProp.DoubleValue);
+            Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.IntArray), out var intArray));
+            Assert.AreEqual("[1,2,3,4]", intArray);
 
-            Assert.AreEqual(EdmType.String, intArrayProp.PropertyType);
-            Assert.AreEqual("[1,2,3,4]", intArrayProp.StringValue);
+            Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.ComplexData), out var complexData));
+            Assert.AreEqual("{\"Data\":\"SomeData\"}", complexData);
 
-            Assert.AreEqual(EdmType.String, complexObjectProp.PropertyType);
-            Assert.AreEqual("{\"Data\":\"SomeData\"}", complexObjectProp.StringValue);
+            Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableBool), out var nullableBool));
+            Assert.AreEqual(true, nullableBool);
 
-            Assert.AreEqual(EdmType.Boolean, nullableBoolProp.PropertyType);
-            Assert.AreEqual(true, nullableBoolProp.BooleanValue);
+            Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableGuid), out var nullableGuid));
+            Assert.AreEqual(new Guid("3C623C1F-80AB-4036-86CA-C2020FAE2EFE"), nullableGuid);
 
-            Assert.AreEqual(EdmType.Guid, nullableGuidProp.PropertyType);
-            Assert.AreEqual(new Guid("3C623C1F-80AB-4036-86CA-C2020FAE2EFE"), nullableGuidProp.GuidValue);
+            Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableLong), out var nullableLong));
+            Assert.AreEqual(10, nullableLong);
 
-            Assert.AreEqual(EdmType.Int64, nullableLongProp.PropertyType);
-            Assert.AreEqual(10, nullableLongProp.Int64Value);
+            Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableInt), out var nullableInt));
+            Assert.AreEqual(10, nullableInt);
 
-            Assert.AreEqual(EdmType.Int32, nullableIntProp.PropertyType);
-            Assert.AreEqual(10, nullableIntProp.Int32Value);
+            Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.ByteArray), out var byteArray));
+            Assert.AreEqual(new byte[] { 1 }, byteArray);
 
-            Assert.AreEqual(EdmType.Binary, byteArrayProp.PropertyType);
-            CollectionAssert.AreEqual(new byte[] { 1 }, byteArrayProp.BinaryValue);
-
-            Assert.IsFalse(sagaEntity.Properties.ContainsKey("NServiceBus_2ndIndexKey"), "Entity should not contain secondary index property");
+            Assert.IsFalse(sagaEntity.ContainsKey("NServiceBus_2ndIndexKey"), "Entity should not contain secondary index property");
         }
 
-        static DynamicTableEntity GetEntity(Guid sagaId)
+        static TableEntity GetEntity(Guid sagaId)
         {
             var table = SetupFixture.Table;
 
             // table scan but still probably the easiest way to do it, otherwise we would have to take the partition key into account which complicates things because this test is shared
-            var query = new TableQuery<DynamicTableEntity>().Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, sagaId.ToString()));
+            //var query = new TableQuery<DynamicTableEntity>().Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, sagaId.ToString()));
 
             try
             {
-                var tableEntity = table.ExecuteQuery(query).FirstOrDefault();
+                var tableEntity = table.Query<Azure.Data.Tables.TableEntity>(entity => entity.RowKey == sagaId.ToString()).FirstOrDefault();
                 return tableEntity;
             }
-            catch (StorageException e)
+            catch (RequestFailedException e)
             {
-                if (e.RequestInformation.HttpStatusCode == (int)HttpStatusCode.NotFound)
+                if (e.Status == (int)HttpStatusCode.NotFound)
                 {
                     return null;
                 }

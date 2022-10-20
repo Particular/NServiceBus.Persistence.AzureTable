@@ -2,9 +2,11 @@
 {
     using System;
     using System.IO;
+    using System.Net;
     using System.Threading.Tasks;
+    using Azure;
+    using Azure.Data.Tables;
     using NUnit.Framework;
-    using Microsoft.Azure.Cosmos.Table;
     using Testing;
 
     [SetUpFixture]
@@ -17,20 +19,26 @@
 
             TableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();
 
-            var account = CloudStorageAccount.Parse(connectionString);
-            TableClient = account.CreateCloudTableClient();
-            Table = TableClient.GetTableReference(TableName);
+            TableClient = new TableServiceClient(connectionString);
+            Table = TableClient.GetTableClient(TableName);
             return Table.CreateIfNotExistsAsync();
         }
 
         [OneTimeTearDown]
         public Task OneTimeTearDown()
         {
-            return Table.DeleteIfExistsAsync();
+            try
+            {
+                return TableClient.DeleteTableAsync(TableName);
+            }
+            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
+            {
+                return Task.CompletedTask;
+            }
         }
 
         public static string TableName;
-        public static CloudTableClient TableClient;
-        public static CloudTable Table;
+        public static TableServiceClient TableClient;
+        public static TableClient Table;
     }
 }

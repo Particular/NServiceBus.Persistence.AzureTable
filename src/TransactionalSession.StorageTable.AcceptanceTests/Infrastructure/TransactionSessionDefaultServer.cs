@@ -32,7 +32,7 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
 
             var persistence = builder.UsePersistence<AzureTablePersistence>();
             persistence.EnableTransactionalSession();
-            persistence.UseCloudTableClient(SetupFixture.TableClient);
+            persistence.UseTableServiceClient(SetupFixture.TableClient);
             persistence.DefaultTable(SetupFixture.TableName);
 
             // This populates the partition key at the physical stage to test the conventional outbox use-case

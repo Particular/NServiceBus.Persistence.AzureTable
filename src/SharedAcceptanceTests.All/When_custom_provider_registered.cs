@@ -3,8 +3,8 @@
     using System;
     using System.Threading.Tasks;
     using AcceptanceTesting;
+    using Azure.Data.Tables;
     using EndpointTemplates;
-    using Microsoft.Azure.Cosmos.Table;
     using Microsoft.Extensions.DependencyInjection;
     using NUnit.Framework;
     using Persistence.AzureTable;
@@ -72,7 +72,7 @@
                     this.testContext = testContext;
                 }
 
-                public CloudTableClient Client
+                public TableServiceClient Client
                 {
                     get
                     {

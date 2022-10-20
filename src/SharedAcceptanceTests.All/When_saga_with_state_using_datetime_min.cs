@@ -4,9 +4,9 @@ namespace NServiceBus.AcceptanceTests
     using System.Linq;
     using System.Threading.Tasks;
     using NServiceBus;
-    using NServiceBus.AcceptanceTesting;
+    using AcceptanceTesting;
     using NServiceBus.AcceptanceTesting.Support;
-    using NServiceBus.AcceptanceTests.EndpointTemplates;
+    using EndpointTemplates;
     using NUnit.Framework;
 
     public partial class When_saga_with_state_using_datetime_min : NServiceBusAcceptanceTest

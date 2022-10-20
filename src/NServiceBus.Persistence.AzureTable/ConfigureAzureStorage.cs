@@ -26,9 +26,9 @@
         }
 
         /// <summary>
-        /// Cloud Table Client to use for Saga, Outbox and Subscription storage.
+        /// TableServiceClient to use for Saga, Outbox and Subscription storage.
         /// </summary>
-        public static PersistenceExtensions<AzureTablePersistence> UseCloudTableClient(this PersistenceExtensions<AzureTablePersistence> config, TableServiceClient client)
+        public static PersistenceExtensions<AzureTablePersistence> UseTableServiceClient(this PersistenceExtensions<AzureTablePersistence> config, TableServiceClient client)
         {
             Guard.AgainstNull(nameof(client), client);
 

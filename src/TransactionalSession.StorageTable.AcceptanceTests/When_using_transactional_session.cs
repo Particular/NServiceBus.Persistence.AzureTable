@@ -5,10 +5,12 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using AcceptanceTesting;
-    using Microsoft.Azure.Cosmos.Table;
     using NUnit.Framework;
     using Persistence.AzureTable;
-    using System.Linq;
+    using System.Net;
+    using Azure;
+    using Azure.Data.Tables;
+    using ITableEntity = Azure.Data.Tables.ITableEntity;
 
     public class When_using_transactional_session : NServiceBusAcceptanceTest
     {
@@ -36,21 +38,23 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
                         Data = "MyCustomData"
                     };
 
-                    storageSession.Batch.Add(TableOperation.Insert(entity));
+                    storageSession.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
 
                     await transactionalSession.Commit().ConfigureAwait(false);
                 }))
                 .Done(c => c.MessageReceived)
                 .Run();
 
-            var query = new TableQuery<DynamicTableEntity>()
-                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, context.TestRunId.ToString()))
-                .Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, entityRowId));
-
-            var tableEntity = SetupFixture.Table.ExecuteQuery(query).FirstOrDefault();
-
-            Assert.IsNotNull(tableEntity);
-            Assert.AreEqual(tableEntity.Properties["Data"].StringValue, "MyCustomData");
+            try
+            {
+                var entity = SetupFixture.Table.GetEntity<Azure.Data.Tables.TableEntity>(context.TestRunId.ToString(), entityRowId).Value;
+                Assert.IsTrue(entity.TryGetValue("Data", out var entityValue));
+                Assert.AreEqual("MyCustomData", entityValue);
+            }
+            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
+            {
+                Assert.Fail("TableEntity does not exist");
+            }
         }
 
         [TestCase(true)]
@@ -77,21 +81,23 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
                         Data = "MyCustomData"
                     };
 
-                    storageSession.Batch.Add(TableOperation.Insert(entity));
+                    storageSession.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
 
                     await transactionalSession.Commit(CancellationToken.None).ConfigureAwait(false);
                 }))
                 .Done(c => c.MessageReceived)
                 .Run();
 
-            var query = new TableQuery<DynamicTableEntity>()
-                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, context.TestRunId.ToString()))
-                .Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, entityRowId));
-
-            var tableEntity = SetupFixture.Table.ExecuteQuery(query).FirstOrDefault();
-
-            Assert.IsNotNull(tableEntity);
-            Assert.AreEqual(tableEntity.Properties["Data"].StringValue, "MyCustomData");
+            try
+            {
+                var entity = SetupFixture.Table.GetEntity<Azure.Data.Tables.TableEntity>(context.TestRunId.ToString(), entityRowId).Value;
+                Assert.IsTrue(entity.TryGetValue("Data", out var entityValue));
+                Assert.AreEqual("MyCustomData", entityValue);
+            }
+            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
+            {
+                Assert.Fail("TableEntity does not exist");
+            }
         }
 
         [TestCase(true)]
@@ -119,7 +125,7 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
                             Data = "MyCustomData"
                         };
 
-                        storageSession.Batch.Add(TableOperation.Insert(entity));
+                        storageSession.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
                     }
 
                     //Send immediately dispatched message to finish the test
@@ -131,10 +137,11 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
             Assert.True(context.CompleteMessageReceived);
             Assert.False(context.MessageReceived);
 
-            var query = new TableQuery<DynamicTableEntity>()
-                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, context.TestRunId.ToString()))
-                .Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, entityRowId));
-            Assert.IsEmpty(SetupFixture.Table.ExecuteQuery(query));
+            RequestFailedException requestFailedException = Assert.Throws<RequestFailedException>(() =>
+            {
+                SetupFixture.Table.GetEntity<Azure.Data.Tables.TableEntity>(context.TestRunId.ToString(), entityRowId);
+            });
+            Assert.AreEqual((int)HttpStatusCode.NotFound, requestFailedException.Status);
         }
 
         [TestCase(true)]
@@ -218,9 +225,13 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
         {
         }
 
-        public class MyTableEntity : TableEntity
+        public class MyTableEntity : ITableEntity
         {
             public string Data { get; set; }
+            public string PartitionKey { get; set; }
+            public string RowKey { get; set; }
+            public DateTimeOffset? Timestamp { get; set; }
+            public ETag ETag { get; set; }
         }
     }
 }

@@ -3,7 +3,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Cosmos.Table;
+    using Azure.Data.Tables;
     using Migration;
     using NUnit.Framework;
     using Sagas;
@@ -12,19 +12,18 @@ namespace NServiceBus.Persistence.AzureTable.Tests
     [TestFixture]
     public class ProvidePartitionKeyFromSagaIdTests
     {
-        CloudTable cloudTable;
-        CloudTableClient client;
+        TableClient cloudTable;
+        TableServiceClient client;
         string tableName;
 
         [SetUp]
         public void SetUp()
         {
-            var account = CloudStorageAccount.Parse(ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence("StorageTable"));
+            client = new TableServiceClient(ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence("StorageTable"));
 
-            client = account.CreateCloudTableClient();
             // we don't really need this table to exist but this is easier than faking away cloud tables
             tableName = nameof(ProvidePartitionKeyFromSagaIdTests).ToLower();
-            cloudTable = client.GetTableReference(tableName);
+            cloudTable = client.GetTableClient(tableName);
         }
 
         [Test]
@@ -189,7 +188,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             public bool FindSagaIdCalled { get; private set; }
 
-            public override Task<Guid?> FindSagaId<TSagaData>(CloudTable table, SagaCorrelationProperty correlationProperty, CancellationToken cancellationToken = default)
+            public override Task<Guid?> FindSagaId<TSagaData>(TableClient table, SagaCorrelationProperty correlationProperty, CancellationToken cancellationToken = default)
             {
                 FindSagaIdCalled = true;
                 return Task.FromResult(Result);
@@ -198,7 +197,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
         class Provider : IProvideCloudTableClient
         {
-            public CloudTableClient Client { get; set; }
+            public TableServiceClient Client { get; set; }
         }
     }
 }
