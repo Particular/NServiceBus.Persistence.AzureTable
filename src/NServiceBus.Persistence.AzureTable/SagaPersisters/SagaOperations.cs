@@ -10,48 +10,54 @@
     class SagaSave : Operation
     {
         readonly TableEntity sagaRow;
+        readonly TableClient tableClient;
 
-        public SagaSave(TableEntityPartitionKey partitionKey, TableEntity sagaRow) : base(partitionKey)
+        public SagaSave(TableEntityPartitionKey partitionKey, TableEntity sagaRow, TableClient tableClient) : base(partitionKey)
         {
             this.sagaRow = sagaRow;
+            this.tableClient = tableClient;
         }
 
         public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
         {
             transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.Add, sagaRow));
-            return sagaRow.Table;
+            return tableClient;
         }
     }
 
     class SagaUpdate : Operation
     {
         readonly TableEntity sagaRow;
+        readonly TableClient tableClient;
 
-        public SagaUpdate(TableEntityPartitionKey partitionKey, TableEntity sagaRow) : base(partitionKey)
+        public SagaUpdate(TableEntityPartitionKey partitionKey, TableEntity sagaRow, TableClient tableClient) : base(partitionKey)
         {
             this.sagaRow = sagaRow;
+            this.tableClient = tableClient;
         }
 
         public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
         {
             transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.UpdateReplace, sagaRow));
-            return sagaRow.Table;
+            return tableClient;
         }
     }
 
     class SagaDelete : Operation
     {
         readonly TableEntity sagaRow;
+        readonly TableClient tableClient;
 
-        public SagaDelete(TableEntityPartitionKey partitionKey, TableEntity sagaRow) : base(partitionKey)
+        public SagaDelete(TableEntityPartitionKey partitionKey, TableEntity sagaRow, TableClient tableClient) : base(partitionKey)
         {
             this.sagaRow = sagaRow;
+            this.tableClient = tableClient;
         }
 
         public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
         {
             transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.Delete, sagaRow));
-            return sagaRow.Table;
+            return tableClient;
         }
     }
 

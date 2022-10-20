@@ -50,7 +50,7 @@
             foreach (var batchOfOperations in operations)
             {
                 var transactionalBatch = new List<TableTransactionAction>();
-                await Table.SubmitTransactionAsync(transactionalBatch, cancellationToken);
+                await Table.SubmitTransactionAsync(transactionalBatch, cancellationToken).ConfigureAwait(false);
                 await transactionalBatch
                       .ExecuteOperationsAsync(batchOfOperations.Value, cancellationToken: cancellationToken)
                       .ConfigureAwait(false);

@@ -7,6 +7,7 @@
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure;
     using Azure.Data.Tables;
     using Extensibility;
     using Newtonsoft.Json;
@@ -46,12 +47,10 @@
             var table = await GetTableAndCreateIfNotExists(storageSession, sagaDataType, cancellationToken)
                 .ConfigureAwait(false);
 
-            sagaDataEntityToSave.Table = table;
-
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            meta.Entities[sagaData.Id] = sagaDataEntityToSave;
+            meta.Entities[sagaData.Id] = (table, sagaDataEntityToSave);
 
-            storageSession.Add(new SagaSave(partitionKey, sagaDataEntityToSave));
+            storageSession.Add(new SagaSave(partitionKey, sagaDataEntityToSave, table));
         }
 
         public Task Update(IContainSagaData sagaData, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
@@ -60,11 +59,12 @@
             var partitionKey = GetPartitionKey(context, sagaData.Id);
 
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            var sagaDataEntityToUpdate = meta.Entities[sagaData.Id];
+            (TableClient, TableEntity) metaEntity = meta.Entities[sagaData.Id];
+            var sagaDataEntityToUpdate = metaEntity.Item2;
 
-            var sagaAsDictionaryTableEntity = DictionaryTableEntityExtensions.ToDictionaryTableEntity(sagaData, sagaDataEntityToUpdate, jsonSerializer, writerCreator);
+            var sagaAsTableEntity = TableEntityExtensions.ToTableEntity(sagaData, sagaDataEntityToUpdate, jsonSerializer, writerCreator);
 
-            storageSession.Add(new SagaUpdate(partitionKey, sagaAsDictionaryTableEntity));
+            storageSession.Add(new SagaUpdate(partitionKey, sagaAsTableEntity, metaEntity.Item1));
 
             return Task.CompletedTask;
         }
@@ -80,23 +80,19 @@
             // reads need to go directly
             var partitionKey = GetPartitionKey(context, sagaId);
 
-            var retrieveResult = await tableToReadFrom.ExecuteAsync(TableOperation.Retrieve<DictionaryTableEntity>(partitionKey.PartitionKey, sagaId.ToString()), cancellationToken)
-                .ConfigureAwait(false);
-
-            var readSagaDataEntity = retrieveResult.Result as DictionaryTableEntity;
-            var sagaNotFound = retrieveResult.HttpStatusCode == (int)HttpStatusCode.NotFound || readSagaDataEntity == null;
-
-            if (sagaNotFound)
+            try
+            {
+                var readSagaDataEntity = await tableToReadFrom.GetEntityAsync<TableEntity>(partitionKey.PartitionKey, sagaId.ToString(), null, cancellationToken).ConfigureAwait(false);
+                var sagaData = TableEntityExtensions.ToSagaData<TSagaData>(readSagaDataEntity.Value, jsonSerializer, readerCreator);
+                var meta = context.GetOrCreate<SagaInstanceMetadata>();
+                var entityId = sagaData.Id;
+                meta.Entities[entityId] = new(tableToReadFrom, readSagaDataEntity.Value);
+                return sagaData;
+            }
+            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
             {
                 return default;
             }
-
-            readSagaDataEntity.Table = tableToReadFrom;
-
-            var sagaData = DictionaryTableEntityExtensions.ToSagaData<TSagaData>(readSagaDataEntity, jsonSerializer, readerCreator);
-            var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            meta.Entities[sagaData.Id] = readSagaDataEntity;
-            return sagaData;
         }
 
         public async Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
@@ -154,7 +150,7 @@
                 var sagaDataTypeName = sagaDataType.Name;
                 var sagaTableNameByConvention = string.IsNullOrEmpty(conventionalTablePrefix) ?
                     sagaDataTypeName : $"{conventionalTablePrefix}{sagaDataTypeName}";
-                var sagaTableByConvention = client.GetTableReference(sagaTableNameByConvention);
+                var sagaTableByConvention = client.GetTableClient(sagaTableNameByConvention);
                 tableToReadFrom = sagaTableByConvention;
             }
             else
@@ -177,10 +173,11 @@
         {
             var storageSession = (IWorkWithSharedTransactionalBatch)session;
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            var sagaDataEntityToDelete = meta.Entities[sagaData.Id];
+            var sagaDataEntityToDeleteTuple = meta.Entities[sagaData.Id];
+            var sagaDataEntityToDelete = sagaDataEntityToDeleteTuple.Item2;
             var partitionKey = GetPartitionKey(context, sagaData.Id);
 
-            storageSession.Add(new SagaDelete(partitionKey, sagaDataEntityToDelete));
+            storageSession.Add(new SagaDelete(partitionKey, sagaDataEntityToDelete, sagaDataEntityToDeleteTuple.Item1));
 
             //  if it is not an old saga just go ahead
             if (!sagaDataEntityToDelete.TryGetValue(SecondaryIndexIndicatorProperty, out var secondaryIndexKey))
@@ -188,12 +185,12 @@
                 return Task.CompletedTask;
             }
 
-            var partitionRowKeyTuple = PartitionRowKeyTuple.Parse(secondaryIndexKey.StringValue);
+            var partitionRowKeyTuple = PartitionRowKeyTuple.Parse(secondaryIndexKey.ToString());
             if (partitionRowKeyTuple.HasValue)
             {
                 // fake partition key to make sure we get a dedicated batch for this operation
                 var tableEntityPartitionKey = new TableEntityPartitionKey(Guid.NewGuid().ToString());
-                storageSession.Add(new SagaRemoveSecondaryIndex(tableEntityPartitionKey, sagaData.Id, secondaryIndex, partitionRowKeyTuple.Value, sagaDataEntityToDelete.Table));
+                storageSession.Add(new SagaRemoveSecondaryIndex(tableEntityPartitionKey, sagaData.Id, secondaryIndex, partitionRowKeyTuple.Value, sagaDataEntityToDeleteTuple.Item1));
             }
             return Task.CompletedTask;
         }
@@ -202,7 +199,7 @@
         {
             if (!context.TryGet<TableEntityPartitionKey>(out var partitionKey))
             {
-                partitionKey = new TableEntityPartitionKey(sagaDataId.ToString());
+                return new TableEntityPartitionKey(sagaDataId.ToString());
             }
 
             return partitionKey;
@@ -212,7 +209,7 @@
         readonly TableServiceClient client;
         readonly SecondaryIndex secondaryIndex;
         const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
-        static readonly ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
+        static readonly ConcurrentDictionary<string, bool> tableCreated = new();
         readonly bool compatibilityMode;
         readonly string conventionalTablePrefix;
         readonly JsonSerializer jsonSerializer;
@@ -224,7 +221,7 @@
         /// </summary>
         class SagaInstanceMetadata
         {
-            public Dictionary<Guid, TableEntity> Entities { get; } = new Dictionary<Guid, TableEntity>();
+            public Dictionary<Guid, (TableClient, TableEntity)> Entities { get; } = new();
         }
     }
 

@@ -2,9 +2,11 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure;
     using Azure.Data.Tables;
     using Logging;
     using Sagas;
@@ -30,26 +32,25 @@
 
             var rowKey = assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey ? key.PartitionKey : key.RowKey;
 
-            TableResult exec;
+            Response<SecondaryIndexTableEntity> exec;
             try
             {
-                exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, rowKey), cancellationToken)
-                    .ConfigureAwait(false);
+                exec = await table.GetEntityAsync<SecondaryIndexTableEntity>(key.PartitionKey, rowKey, null, cancellationToken).ConfigureAwait(false);
             }
-            catch (StorageException storageException)
-                when (!assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey && storageException.RequestInformation.HttpStatusCode == (int)HttpStatusCode.PreconditionFailed)
+            catch (RequestFailedException requestFailedException) // TODO: verify if this holds up
+                when (!assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey && requestFailedException.Status == (int)HttpStatusCode.PreconditionFailed)
             {
                 Logger.Warn(
                     $"Trying to retrieve the secondary index entry with PartitionKey = '{key.PartitionKey}' and RowKey = 'string.Empty' failed. When using the compatibility mode on Azure Cosmos DB it is strongly recommended to enable `sagaPersistence.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey()` to avoid additional lookup costs or disable the compatibility mode entirely if not needed by calling `persistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties(). Falling back to query secondary index entry with PartitionKey = '{key.PartitionKey}' and RowKey = '{key.PartitionKey}'",
-                    storageException);
+                    requestFailedException);
 
-                exec = await table.ExecuteAsync(TableOperation.Retrieve<SecondaryIndexTableEntity>(key.PartitionKey, key.PartitionKey), cancellationToken)
-                    .ConfigureAwait(false);
+                exec = await table.GetEntityAsync<SecondaryIndexTableEntity>(key.PartitionKey, key.PartitionKey, null, cancellationToken).ConfigureAwait(false);
             }
-            if (exec.Result is SecondaryIndexTableEntity secondaryIndexEntry)
+
+            if (exec.Value != null)
             {
-                cache.Put(key, secondaryIndexEntry.SagaId);
-                return secondaryIndexEntry.SagaId;
+                cache.Put(key, exec.Value.SagaId);
+                return exec.Value.SagaId;
             }
 
             if (assumeSecondaryIndicesExist)
@@ -78,15 +79,20 @@
         static async Task<Guid[]> ScanForSaga<TSagaData>(TableClient table, SagaCorrelationProperty correlationProperty, CancellationToken cancellationToken)
             where TSagaData : IContainSagaData
         {
-            var query = DictionaryTableEntityExtensions.BuildWherePropertyQuery<TSagaData>(correlationProperty);
-            query.SelectColumns = new List<string>
+            var query = TableEntityExtensions.BuildWherePropertyQuery<TSagaData>(correlationProperty);
+            var selectColumns = new List<string>
             {
                 "PartitionKey",
                 "RowKey"
             };
 
-            var entities = await table.ExecuteQueryAsync(query, cancellationToken: cancellationToken).ConfigureAwait(false);
-            return entities.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray();
+            var items = new List<TableEntity>();
+            var result = table.QueryAsync<TableEntity>(query, int.MaxValue, selectColumns, cancellationToken: cancellationToken);
+            await foreach (var page in result.AsPages().WithCancellation(cancellationToken))
+            {
+                items.AddRange(page.Values);
+            }
+            return items.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray();
         }
 
         public void InvalidateCache(PartitionRowKeyTuple secondaryIndexKey)

@@ -44,7 +44,7 @@ namespace NServiceBus.Persistence.AzureTable
 
         async Task CreateTableIfNotExists(SubscriptionStorageInstallerSettings installerSettings, IProvideCloudTableClientForSubscriptions clientProvider, CancellationToken cancellationToken)
         {
-            var cloudTable = clientProvider.Client.GetTableReference(installerSettings.TableName);
+            var cloudTable = clientProvider.Client.GetTableClient(installerSettings.TableName);
             await cloudTable.CreateIfNotExistsAsync(cancellationToken).ConfigureAwait(false);
         }
 

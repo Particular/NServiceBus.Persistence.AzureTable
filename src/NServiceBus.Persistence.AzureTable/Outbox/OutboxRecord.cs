@@ -28,7 +28,8 @@
 
         public string TransportOperations
         {
-            get => GetSerializedTransportOperations();
+            get => SerializeTransportOperations(Operations);
+            set => DeserializeAndSetTransportOperations(value);
         }
 
         public string DispatchedAt { get; set; }
@@ -42,29 +43,13 @@
             DispatchedAt = DateTimeOffsetHelper.ToWireFormattedString(DateTimeOffset.UtcNow);
         }
 
-        public void ReadEntity()
+        internal void DeserializeAndSetTransportOperations(string transportOperations)
         {
-            // TODO: initialize table entity
-            Dispatched = tableEntity.GetBoolean(nameof(Dispatched)).GetValueOrDefault(false);
-            DispatchedAt = tableEntity.GetString(nameof(DispatchedAt));
-            var storageOperations = DeserializeTransportOperations(tableEntity.GetString(nameof(TransportOperations)));
+            var storageOperations = JsonConvert.DeserializeObject<StorageTransportOperation[]>(transportOperations, ReadOnlyMemoryConverter);
             Operations = storageOperations.Select(op =>
                                               new TransportOperation(op.MessageId, new Transport.DispatchProperties(op.Options), op.Body,
                                                   op.Headers))
                                           .ToArray();
-        }
-        public void WriteEntity()
-        {
-            TransportOperations = SerializeTransportOperations(Operations);
-
-            tableEntity.Add(nameof(Dispatched), Dispatched);
-            tableEntity.Add(nameof(DispatchedAt), DispatchedAt);
-            tableEntity.Add(nameof(TransportOperations), TransportOperations);
-        }
-
-        internal static StorageTransportOperation[] DeserializeTransportOperations(string transportOperations)
-        {
-            return JsonConvert.DeserializeObject<StorageTransportOperation[]>(transportOperations, ReadOnlyMemoryConverter);
         }
 
         internal static string SerializeTransportOperations(TransportOperation[] transportOperations)

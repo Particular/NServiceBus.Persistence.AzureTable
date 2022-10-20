@@ -28,7 +28,7 @@
             }
 
             var informationValue = information.Value;
-            tableHolder = new TableHolder(provideCloudTableClient.Client.GetTableReference(informationValue.TableName));
+            tableHolder = new TableHolder(provideCloudTableClient.Client.GetTableClient(informationValue.TableName));
             context.Set(tableHolder);
             return tableHolder;
         }

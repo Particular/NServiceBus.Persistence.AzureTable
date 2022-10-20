@@ -24,14 +24,14 @@
 
         ContextBag IWorkWithSharedTransactionalBatch.CurrentContextBag { get; set; }
 
-        void IWorkWithSharedTransactionalBatch.Add(TableTransactionAction operation)
+        void IWorkWithSharedTransactionalBatch.Add(Operation operation)
         {
             if (Batch == null)
             {
                 return;
             }
 
-            Batch.Add(operation);
+            operation.Apply(Batch);
         }
 
         /// <summary>

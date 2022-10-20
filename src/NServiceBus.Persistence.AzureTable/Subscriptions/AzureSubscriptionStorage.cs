@@ -157,19 +157,19 @@
 
             foreach (var messageType in messageTypes)
             {
-                //Pageable<OfficeSupplyEntity> queryResults = tableClient.Query<OfficeSupplyEntity>(e => e.PartitionKey == partitionKey && e.RowKey == rowKey);
+                var subscriptionsForMessageType = new List<Subscription>();
                 var name = messageType.TypeName;
-                var results = table.Query<Subscription>(e => e.PartitionKey == name, cancellationToken: cancellationToken)
-                                   .Select(s => new Subscriber(DecodeFrom64(s.RowKey), s.EndpointName));
 
-                // TODO: fix query for versioning here!
+                var lowerBound = $"PartitionKey ge {name}";
+                var upperBound = $"PartitionKey lt {GetUpperBound(name)}";
+                var query = $"{lowerBound} and {upperBound}";
 
-                // var lowerBound = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.GreaterThanOrEqual, name);
-                // var upperBound = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThan, GetUpperBound(name));
-                // var query = new TableQuery<Subscription>().Where(TableQuery.CombineFilters(lowerBound, "and", upperBound));
-
-                // var subscriptions = await table.ExecuteQueryAsync(query, cancellationToken: cancellationToken).ConfigureAwait(false);
-                // var results = subscriptions.Select(s => new Subscriber(DecodeFrom64(s.RowKey), s.EndpointName));
+                var queryResults = table.QueryAsync<Subscription>(query, int.MaxValue, cancellationToken: cancellationToken);
+                await foreach (Page<Subscription> page in queryResults.AsPages().WithCancellation(cancellationToken))
+                {
+                    subscriptionsForMessageType.AddRange(page.Values);
+                }
+                var results = subscriptionsForMessageType.Select(s => new Subscriber(DecodeFrom64(s.RowKey), s.EndpointName));
 
                 foreach (var subscriber in results)
                 {
@@ -187,7 +187,7 @@
 
         class SubscriberComparer : IEqualityComparer<Subscriber>
         {
-            public static readonly SubscriberComparer Instance = new SubscriberComparer();
+            public static readonly SubscriberComparer Instance = new();
 
             public bool Equals(Subscriber x, Subscriber y)
             {

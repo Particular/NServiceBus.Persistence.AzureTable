@@ -8,6 +8,7 @@ namespace NServiceBus.Persistence.AzureTable
     using System.Linq.Expressions;
     using Azure.Data.Tables;
     using Newtonsoft.Json;
+    using Sagas;
 
     static class TableEntityExtensions
     {
@@ -190,7 +191,35 @@ namespace NServiceBus.Persistence.AzureTable
             return false;
         }
 
-        static readonly ConcurrentDictionary<Type, IReadOnlyCollection<PropertyAccessor>> propertyAccessorCache = new ConcurrentDictionary<Type, IReadOnlyCollection<PropertyAccessor>>();
+        public static string BuildWherePropertyQuery<TSagaData>(SagaCorrelationProperty correlationProperty)
+            where TSagaData : IContainSagaData
+        {
+            var propertyInfo = typeof(TSagaData).GetProperty(correlationProperty.Name);
+            if (propertyInfo == null)
+            {
+                return null;
+            }
+
+            if (!IsSupportedPropertyType(propertyInfo.PropertyType))
+            {
+                throw new NotSupportedException($"The property type '{propertyInfo.PropertyType.Name}' is not supported in Azure Table Storage");
+
+            }
+
+            return $"{propertyInfo.Name} eq {correlationProperty.Value}";
+        }
+
+        static bool IsSupportedPropertyType(Type propertyType) =>
+            propertyType == typeof(byte[]) ||
+            propertyType == typeof(bool) ||
+            propertyType == typeof(DateTime) ||
+            propertyType == typeof(Guid) ||
+            propertyType == typeof(int) ||
+            propertyType == typeof(long) ||
+            propertyType == typeof(double) ||
+            propertyType == typeof(string);
+
+        static readonly ConcurrentDictionary<Type, IReadOnlyCollection<PropertyAccessor>> propertyAccessorCache = new();
 
         static readonly DateTime StorageTableMinDateTime = new DateTime(1601, 1, 1);
 

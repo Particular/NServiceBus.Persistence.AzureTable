@@ -85,7 +85,8 @@
 
             var operation = new OutboxDelete(setAsDispatchedHolder.PartitionKey, record, tableHolder.Table);
             var transactionalBatch = new List<TableTransactionAction>();
-            transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.Delete, record.Entity));
+            operation.Apply(transactionalBatch);
+
             return tableHolder.Table.SubmitTransactionAsync(transactionalBatch, cancellationToken);
         }
 
