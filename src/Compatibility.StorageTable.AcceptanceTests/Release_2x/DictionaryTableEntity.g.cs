@@ -3,8 +3,7 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
     using System;
     using System.Collections;
     using System.Collections.Generic;
-    using Azure.Data.Tables;
-
+    using Microsoft.Azure.Cosmos.Table;
 
     /// <summary>
     /// This is a copy of the saga persister code 2.4.1
@@ -14,7 +13,6 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
         public DictionaryTableEntity()
         {
             properties = new Dictionary<string, EntityProperty>();
-            TableEntity.
         }
 
         public void Add(string key, EntityProperty value)
@@ -86,20 +84,15 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
             return properties.GetEnumerator();
         }
 
-        public void ReadEntity(IDictionary<string, EntityProperty> entityProperties, OperationContext operationContext)
+        public override void ReadEntity(IDictionary<string, EntityProperty> entityProperties, OperationContext operationContext)
         {
             properties = entityProperties;
         }
 
-        public IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
+        public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
         {
             return properties;
         }
-
-        public string PartitionKey { get; set; }
-        public string RowKey { get; set; }
-        public DateTimeOffset Timestamp { get; set; }
-        public string ETag { get; set; }
 
         public void Add(string key, bool value)
         {
