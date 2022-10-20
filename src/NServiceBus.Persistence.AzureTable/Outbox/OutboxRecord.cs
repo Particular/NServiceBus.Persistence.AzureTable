@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.Serialization;
     using Azure;
     using Azure.Data.Tables;
     using Newtonsoft.Json;
@@ -13,6 +14,7 @@
         static ReadOnlyMemoryConverter ReadOnlyMemoryConverter = new();
 
         // ignoring this property to avoid double storing and clashing with Cosmos Id property.
+        [IgnoreDataMember]
         public string Id
         {
             get => RowKey;
@@ -34,6 +36,7 @@
 
         public string DispatchedAt { get; set; }
 
+        [IgnoreDataMember]
         public TransportOperation[] Operations { get; set; } = Array.Empty<TransportOperation>();
 
         public void SetAsDispatched()
@@ -45,11 +48,16 @@
 
         internal void DeserializeAndSetTransportOperations(string transportOperations)
         {
-            var storageOperations = JsonConvert.DeserializeObject<StorageTransportOperation[]>(transportOperations, ReadOnlyMemoryConverter);
+            var storageOperations = DeserializeTransportOperations(transportOperations);
             Operations = storageOperations.Select(op =>
                                               new TransportOperation(op.MessageId, new Transport.DispatchProperties(op.Options), op.Body,
                                                   op.Headers))
                                           .ToArray();
+        }
+
+        public static StorageTransportOperation[] DeserializeTransportOperations(string operations)
+        {
+            return JsonConvert.DeserializeObject<StorageTransportOperation[]>(operations, ReadOnlyMemoryConverter);
         }
 
         internal static string SerializeTransportOperations(TransportOperation[] transportOperations)
@@ -71,5 +79,6 @@
             public ReadOnlyMemory<byte> Body { get; set; }
             public Dictionary<string, string> Headers { get; set; }
         }
+
     }
 }
