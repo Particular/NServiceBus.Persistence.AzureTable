@@ -15,28 +15,29 @@
         [OneTimeSetUp]
         public Task OneTimeSetUp()
         {
-            var connectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
+            ConnectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
 
             TableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();
 
-            TableClient = new TableServiceClient(connectionString);
+            TableClient = new TableServiceClient(ConnectionString);
             Table = TableClient.GetTableClient(TableName);
             return Table.CreateIfNotExistsAsync();
         }
 
         [OneTimeTearDown]
-        public Task OneTimeTearDown()
+        public async Task OneTimeTearDown()
         {
+            ConnectionString = null;
             try
             {
-                return TableClient.DeleteTableAsync(TableName);
+                await TableClient.DeleteTableAsync(TableName);
             }
             catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
             {
-                return Task.CompletedTask;
             }
         }
 
+        public static string ConnectionString { get; private set; }
         public static string TableName;
         public static TableServiceClient TableClient;
         public static TableClient Table;

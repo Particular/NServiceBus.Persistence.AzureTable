@@ -33,7 +33,7 @@ namespace NServiceBus.Persistence.AzureTable
             try
             {
                 log.Info("Creating default Saga and/or Outbox Table");
-                await CreateTableIfNotExists(installerSettings, serviceProvider.GetRequiredService<IProvideCloudTableClient>(), cancellationToken).ConfigureAwait(false);
+                await CreateTableIfNotExists(installerSettings, serviceProvider.GetRequiredService<IProvideTableServiceClient>(), cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex) when (!ex.IsCausedBy(cancellationToken))
             {
@@ -42,10 +42,10 @@ namespace NServiceBus.Persistence.AzureTable
             }
         }
 
-        async Task CreateTableIfNotExists(SynchronizedStorageInstallerSettings installerSettings, IProvideCloudTableClient clientProvider, CancellationToken cancellationToken)
+        async Task CreateTableIfNotExists(SynchronizedStorageInstallerSettings installerSettings, IProvideTableServiceClient serviceClientProvider, CancellationToken cancellationToken)
         {
-            var cloudTable = clientProvider.Client.GetTableClient(installerSettings.TableName);
-            await cloudTable.CreateIfNotExistsAsync(cancellationToken).ConfigureAwait(false);
+            var tableClient = serviceClientProvider.Client.GetTableClient(installerSettings.TableName);
+            await tableClient.CreateIfNotExistsAsync(cancellationToken).ConfigureAwait(false);
         }
 
         static ILog log = LogManager.GetLogger<SynchronizedStorageInstaller>();

@@ -38,7 +38,7 @@
                 EndpointSetup<DefaultServer>(config =>
                 {
                     config.RegisterComponents(c =>
-                        c.AddSingleton<IProvideCloudTableClient>(provider => new CustomProvider(provider.GetRequiredService<Context>())));
+                        c.AddSingleton<IProvideTableServiceClient>(provider => new CustomProvider(provider.GetRequiredService<Context>())));
                 });
             }
 
@@ -65,7 +65,7 @@
                 readonly Context testContext;
             }
 
-            public class CustomProvider : IProvideCloudTableClient
+            public class CustomProvider : IProvideTableServiceClient
             {
                 public CustomProvider(Context testContext)
                 {

@@ -16,7 +16,7 @@
     class AzureSagaPersister : ISagaPersister
     {
         public AzureSagaPersister(
-            IProvideCloudTableClient tableClientProvider,
+            IProvideTableServiceClient tableServiceClientProvider,
             bool disableTableCreation,
             bool compatibilityMode,
             SecondaryIndex secondaryIndex,
@@ -31,7 +31,7 @@
             this.conventionalTablePrefix = conventionalTablePrefix;
             this.compatibilityMode = compatibilityMode;
             this.disableTableCreation = disableTableCreation;
-            client = tableClientProvider.Client;
+            client = tableServiceClientProvider.Client;
             this.secondaryIndex = secondaryIndex;
         }
 

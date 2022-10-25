@@ -4,13 +4,13 @@
 
     class TableHolderResolver
     {
-        readonly IProvideCloudTableClient provideCloudTableClient;
+        readonly IProvideTableServiceClient provideTableServiceClient;
         readonly TableInformation? defaultTableInformation;
 
-        public TableHolderResolver(IProvideCloudTableClient provideCloudTableClient, TableInformation? defaultTableInformation)
+        public TableHolderResolver(IProvideTableServiceClient provideTableServiceClient, TableInformation? defaultTableInformation)
         {
             this.defaultTableInformation = defaultTableInformation;
-            this.provideCloudTableClient = provideCloudTableClient;
+            this.provideTableServiceClient = provideTableServiceClient;
         }
 
         public TableHolder ResolveAndSetIfAvailable(ContextBag context)
@@ -28,7 +28,7 @@
             }
 
             var informationValue = information.Value;
-            tableHolder = new TableHolder(provideCloudTableClient.Client.GetTableClient(informationValue.TableName));
+            tableHolder = new TableHolder(provideTableServiceClient.Client.GetTableClient(informationValue.TableName));
             context.Set(tableHolder);
             return tableHolder;
         }

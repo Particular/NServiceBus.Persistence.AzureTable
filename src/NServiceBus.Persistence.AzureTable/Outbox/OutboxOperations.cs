@@ -5,37 +5,37 @@
 
     class OutboxStore : Operation
     {
-        public OutboxStore(TableEntityPartitionKey partitionKey, OutboxRecord outboxRow, TableClient cloudTable) : base(partitionKey)
+        public OutboxStore(TableEntityPartitionKey partitionKey, OutboxRecord outboxRow, TableClient tableClient) : base(partitionKey)
         {
-            this.cloudTable = cloudTable;
+            this.tableClient = tableClient;
             this.outboxRow = outboxRow;
         }
 
         public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
         {
             transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.Add, outboxRow));
-            return cloudTable;
+            return tableClient;
         }
 
         readonly OutboxRecord outboxRow;
-        readonly TableClient cloudTable;
+        readonly TableClient tableClient;
     }
 
     class OutboxDelete : Operation
     {
-        public OutboxDelete(TableEntityPartitionKey partitionKey, OutboxRecord outboxRow, TableClient cloudTable) : base(partitionKey)
+        public OutboxDelete(TableEntityPartitionKey partitionKey, OutboxRecord outboxRow, TableClient tableClient) : base(partitionKey)
         {
-            this.cloudTable = cloudTable;
+            this.tableClient = tableClient;
             this.outboxRow = outboxRow;
         }
 
         public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
         {
-            transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.UpdateReplace, outboxRow));
-            return cloudTable;
+            transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.UpdateReplace, outboxRow, outboxRow.ETag));
+            return tableClient;
         }
 
         readonly OutboxRecord outboxRow;
-        readonly TableClient cloudTable;
+        readonly TableClient tableClient;
     }
 }

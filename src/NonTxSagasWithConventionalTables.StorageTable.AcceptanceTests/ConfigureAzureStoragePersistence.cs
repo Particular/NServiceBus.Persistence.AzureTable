@@ -15,7 +15,7 @@ public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExec
         // backdoor for testing
         persistence.GetSettings().Set("AzureSagaStorage.ConventionalTablePrefix", SetupFixture.TablePrefix);
 
-        persistence.UseCloudTableClient(SetupFixture.TableClient);
+        persistence.UseTableServiceClient(SetupFixture.TableClient);
 
         persistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
 

@@ -53,7 +53,7 @@
             var secondaryIndices = new SecondaryIndex(assumeSecondaryIndicesExist, assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
 
             context.Services.AddSingleton<IProvidePartitionKeyFromSagaId>(provider =>
-                new ProvidePartitionKeyFromSagaId(provider.GetRequiredService<IProvideCloudTableClient>(),
+                new ProvidePartitionKeyFromSagaId(provider.GetRequiredService<IProvideTableServiceClient>(),
                     provider.GetRequiredService<TableHolderResolver>(), secondaryIndices, compatibilityModeEnabled, conventionalTablePrefix));
 
             var installerSettings = context.Settings.Get<SynchronizedStorageInstallerSettings>();
@@ -61,7 +61,7 @@
             var readerCreator = context.Settings.Get<Func<TextReader, JsonReader>>(WellKnownConfigurationKeys.SagaReaderCreator);
             var writerCreator = context.Settings.Get<Func<TextWriter, JsonWriter>>(WellKnownConfigurationKeys.SagaWriterCreator);
 
-            context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideCloudTableClient>(),
+            context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideTableServiceClient>(),
                 installerSettings.Disabled, compatibilityModeEnabled, secondaryIndices, conventionalTablePrefix, jsonSerializer, readerCreator, writerCreator));
         }
 

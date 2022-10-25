@@ -8,13 +8,13 @@ namespace NServiceBus.Persistence.AzureTable.Migration
 
     class ProvidePartitionKeyFromSagaId : IProvidePartitionKeyFromSagaId
     {
-        public ProvidePartitionKeyFromSagaId(IProvideCloudTableClient tableClientProvider, TableHolderResolver resolver, SecondaryIndex secondaryIndex, bool compatibilityMode, string conventionalTablePrefix)
+        public ProvidePartitionKeyFromSagaId(IProvideTableServiceClient tableServiceClientProvider, TableHolderResolver resolver, SecondaryIndex secondaryIndex, bool compatibilityMode, string conventionalTablePrefix)
         {
             this.conventionalTablePrefix = conventionalTablePrefix;
             this.compatibilityMode = compatibilityMode;
             this.resolver = resolver;
             this.secondaryIndex = secondaryIndex;
-            client = tableClientProvider.Client;
+            client = tableServiceClientProvider.Client;
         }
 
         public async Task SetPartitionKey<TSagaData>(IIncomingLogicalMessageContext context,

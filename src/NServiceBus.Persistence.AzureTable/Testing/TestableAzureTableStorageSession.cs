@@ -35,7 +35,7 @@
         }
 
         /// <summary>
-        /// The cloud table to be used.
+        /// The table client to be used.
         /// </summary>
         public TableClient Table { get; set; }
 

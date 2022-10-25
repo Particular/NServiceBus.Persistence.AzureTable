@@ -19,8 +19,8 @@
     [TestFixture("CosmosDB")]
     public class LogicalOutboxBehaviorTests
     {
-        TableClient cloudTable;
-        TableServiceClient client;
+        TableClient tableClient;
+        TableServiceClient tableServiceClient;
         string tableName;
         string tableApiType;
 
@@ -33,10 +33,10 @@
         public Task SetUp()
         {
             var connectionString = ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence(tableApiType);
-            client = new TableServiceClient(connectionString);
+            tableServiceClient = new TableServiceClient(connectionString);
             tableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}{nameof(LogicalOutboxBehavior)}".ToLowerInvariant();
-            cloudTable = client.GetTableClient(tableName);
-            return cloudTable.CreateIfNotExistsAsync();
+            tableClient = tableServiceClient.GetTableClient(tableName);
+            return tableClient.CreateIfNotExistsAsync();
         }
 
         [TearDown]
@@ -44,7 +44,7 @@
         {
             try
             {
-                return client.DeleteTableAsync(tableName);
+                return tableServiceClient.DeleteTableAsync(tableName);
             }
             catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
             {
@@ -74,11 +74,11 @@
                 }
             };
 
-            await cloudTable.AddEntityAsync(record);
+            await tableClient.AddEntityAsync(record);
 
             var containerHolderHolderResolver = new TableHolderResolver(new Provider()
             {
-                Client = client
+                Client = tableServiceClient
             },
                 new TableInformation(tableName));
 
@@ -105,7 +105,7 @@
         }
     }
 
-    class Provider : IProvideCloudTableClient
+    class Provider : IProvideTableServiceClient
     {
         public TableServiceClient Client { get; set; }
     }

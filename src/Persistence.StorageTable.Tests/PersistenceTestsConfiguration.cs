@@ -12,7 +12,7 @@
     using Persistence.AzureTable;
     using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
-    public partial class PersistenceTestsConfiguration : IProvideCloudTableClient
+    public partial class PersistenceTestsConfiguration : IProvideTableServiceClient
     {
         public bool SupportsDtc => false;
 

@@ -15,7 +15,7 @@ public class ConfigureAzureTablePersistence : IConfigureEndpointTestExecution
     {
         var sagaPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
         sagaPersistence.DisableTableCreation();
-        sagaPersistence.UseCloudTableClient(SetupFixture.TableClient);
+        sagaPersistence.UseTableServiceClient(SetupFixture.TableClient);
 
         sagaPersistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
 

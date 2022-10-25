@@ -8,7 +8,7 @@
     /// <summary>
     /// Configuration extensions for the subscription storage
     /// </summary>
-    public static class ConfigureAzureSubscriptionStorage
+    public static partial class ConfigureAzureSubscriptionStorage
     {
         /// <summary>
         /// Connection string to use for subscriptions storage.
@@ -17,19 +17,19 @@
         {
             AzureSubscriptionStorageGuard.CheckConnectionString(connectionString);
 
-            config.GetSettings().Set<IProvideCloudTableClientForSubscriptions>(new CloudTableClientForSubscriptionsFromConnectionString(connectionString));
+            config.GetSettings().Set<IProvideTableServiceClientForSubscriptions>(new TableServiceClientForSubscriptionsFromConnectionString(connectionString));
             return config;
         }
 
         /// <summary>
-        /// Cloud Table Client to use for the Subscription storage.
+        /// TableServiceClient to use for the Subscription storage.
         /// </summary>
-        public static PersistenceExtensions<AzureTablePersistence, StorageType.Subscriptions> UseCloudTableClient(this PersistenceExtensions<AzureTablePersistence, StorageType.Subscriptions> config, TableServiceClient client)
+        public static PersistenceExtensions<AzureTablePersistence, StorageType.Subscriptions> UseTableServiceClient(this PersistenceExtensions<AzureTablePersistence, StorageType.Subscriptions> config, TableServiceClient client)
         {
             Guard.AgainstNull(nameof(client), client);
 
             var settings = config.GetSettings();
-            settings.Set<IProvideCloudTableClientForSubscriptions>(new CloudTableClientForSubscriptionsFromConfiguration(client));
+            settings.Set<IProvideTableServiceClientForSubscriptions>(new TableServiceServiceClientForSubscriptionsFromConfiguration(client));
 
             return config;
         }

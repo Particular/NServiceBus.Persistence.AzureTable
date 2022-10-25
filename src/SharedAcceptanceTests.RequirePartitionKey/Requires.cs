@@ -7,7 +7,7 @@ namespace NServiceBus.AcceptanceTests
     {
         public static void AzureStorageTable()
         {
-            if (ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.TableClient))
+            if (ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.ConnectionString))
             {
                 Assert.Ignore("Ignoring because it requires Azure Tables.");
             }
@@ -15,7 +15,7 @@ namespace NServiceBus.AcceptanceTests
 
         public static void AzureCosmosTable()
         {
-            if (!ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.TableClient))
+            if (!ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.ConnectionString))
             {
                 Assert.Ignore("Ignoring because it requires Azure Tables.");
             }

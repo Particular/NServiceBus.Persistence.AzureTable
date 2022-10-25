@@ -14,7 +14,6 @@
     using Unicast.Subscriptions;
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
 
-
     class AzureSubscriptionStorage : ISubscriptionStorage
     {
         string subscriptionTableName;
@@ -22,11 +21,11 @@
         TableServiceClient client;
         public ConcurrentDictionary<string, CacheItem> Cache;
 
-        public AzureSubscriptionStorage(IProvideCloudTableClientForSubscriptions tableClientProvider, string subscriptionTableName, TimeSpan? cacheFor)
+        public AzureSubscriptionStorage(IProvideTableServiceClientForSubscriptions tableServiceClientProvider, string subscriptionTableName, TimeSpan? cacheFor)
         {
             this.subscriptionTableName = subscriptionTableName;
             this.cacheFor = cacheFor;
-            client = tableClientProvider.Client;
+            client = tableServiceClientProvider.Client;
 
             if (cacheFor != null)
             {

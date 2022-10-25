@@ -16,9 +16,9 @@
         [OneTimeSetUp]
         public Task OneTimeSetUp()
         {
-            var connectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
+            ConnectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
 
-            TableClient = new TableServiceClient(connectionString);
+            TableClient = new TableServiceClient(ConnectionString);
 
             TablePrefix = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();
 
@@ -31,19 +31,20 @@
         [OneTimeTearDown]
         public Task OneTimeTearDown()
         {
-            return Task.WhenAll(allConventionalSagaTableNamesWithPrefix.Select(tableName =>
+            ConnectionString = null;
+            return Task.WhenAll(allConventionalSagaTableNamesWithPrefix.Select(async tableName =>
             {
-                var table = TableClient.GetTableClient(tableName);
                 try
                 {
-                    return TableClient.DeleteTableAsync(tableName);
+                    await TableClient.DeleteTableAsync(tableName);
                 }
                 catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
                 {
-                    return Task.CompletedTask;
                 }
             }).ToArray());
         }
+
+        public static string ConnectionString { get; private set; }
 
         public static TableServiceClient TableClient;
         public static string TablePrefix;

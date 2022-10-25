@@ -17,8 +17,8 @@
 
             var settings = persistence.GetSettings();
 
-            Assert.IsNotAssignableFrom<CloudTableClientFromConfiguration>(settings.Get<IProvideCloudTableClient>());
-            Assert.IsNotAssignableFrom<CloudTableClientForSubscriptionsFromConfiguration>(settings.Get<IProvideCloudTableClient>());
+            Assert.IsNotAssignableFrom<TableServiceClientFromConfiguration>(settings.Get<IProvideTableServiceClient>());
+            Assert.IsNotAssignableFrom<TableServiceServiceClientForSubscriptionsFromConfiguration>(settings.Get<IProvideTableServiceClient>());
         }
     }
 }

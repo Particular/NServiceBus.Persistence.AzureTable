@@ -19,8 +19,8 @@
             AzureStorageSagaGuard.CheckConnectionString(connectionString);
 
             var settings = config.GetSettings();
-            settings.Set<IProvideCloudTableClient>(new CloudTableClientFromConnectionString(connectionString));
-            settings.Set<IProvideCloudTableClientForSubscriptions>(new CloudTableClientForSubscriptionsFromConnectionString(connectionString));
+            settings.Set<IProvideTableServiceClient>(new TableServiceClientFromConnectionString(connectionString));
+            settings.Set<IProvideTableServiceClientForSubscriptions>(new TableServiceClientForSubscriptionsFromConnectionString(connectionString));
 
             return config;
         }
@@ -33,8 +33,8 @@
             Guard.AgainstNull(nameof(client), client);
 
             var settings = config.GetSettings();
-            settings.Set<IProvideCloudTableClient>(new CloudTableClientFromConfiguration(client));
-            settings.Set<IProvideCloudTableClientForSubscriptions>(new CloudTableClientForSubscriptionsFromConfiguration(client));
+            settings.Set<IProvideTableServiceClient>(new TableServiceClientFromConfiguration(client));
+            settings.Set<IProvideTableServiceClientForSubscriptions>(new TableServiceServiceClientForSubscriptionsFromConfiguration(client));
 
             return config;
         }

@@ -17,8 +17,8 @@
         protected override void Setup(FeatureConfigurationContext context)
         {
             // If a client has been registered in the container, it will added later in the configuration process and replace any client set here
-            context.Settings.TryGet(out IProvideCloudTableClient cloudTableClientProvider);
-            context.Services.AddSingleton(cloudTableClientProvider ?? new ThrowIfNoCloudTableClientProvider());
+            context.Settings.TryGet(out IProvideTableServiceClient tableServiceClientProvider);
+            context.Services.AddSingleton(tableServiceClientProvider ?? new ThrowIfNoTableServiceClientProvider());
 
             TableInformation? defaultTableInformation = null;
             if (context.Settings.TryGet<TableInformation>(out var info))
@@ -30,11 +30,11 @@
                 "NServiceBus.Persistence.AzureTable.StorageSession",
                 new
                 {
-                    ConnectionMechanism = cloudTableClientProvider is CloudTableClientFromConnectionString ? "ConnectionString" : "CloudTableClient",
+                    ConnectionMechanism = tableServiceClientProvider is TableServiceClientFromConnectionString ? "ConnectionString" : "TableServiceClient",
                     DefaultTable = defaultTableInformation.HasValue ? defaultTableInformation.Value.TableName : "Not used",
                 });
 
-            context.Services.AddSingleton(provider => new TableHolderResolver(provider.GetRequiredService<IProvideCloudTableClient>(), defaultTableInformation));
+            context.Services.AddSingleton(provider => new TableHolderResolver(provider.GetRequiredService<IProvideTableServiceClient>(), defaultTableInformation));
 
             context.Services.AddScoped<ICompletableSynchronizedStorageSession>(provider =>
                 new AzureStorageSynchronizedStorageSession(provider.GetRequiredService<TableHolderResolver>()));

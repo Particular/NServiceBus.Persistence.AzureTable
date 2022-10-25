@@ -29,8 +29,8 @@ namespace NServiceBus.Persistence.AzureTable.Tests
             client = new TableServiceClient(connectionString);
 
             tableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}{nameof(SecondaryIndexTests)}".ToLowerInvariant();
-            cloudTable = client.GetTableClient(tableName);
-            return cloudTable.CreateIfNotExistsAsync();
+            tableClient = client.GetTableClient(tableName);
+            return tableClient.CreateIfNotExistsAsync();
         }
 
         [Test]
@@ -43,7 +43,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             var secondaryIndex = new SecondaryIndex();
 
-            var result = await secondaryIndex.FindSagaId<TestSagaData>(cloudTable,
+            var result = await secondaryIndex.FindSagaId<TestSagaData>(tableClient,
                 new SagaCorrelationProperty("SomeId", someId));
 
             Assert.IsNull(result);
@@ -60,7 +60,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             var secondaryIndex = new SecondaryIndex(assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey: true);
 
-            var result = await secondaryIndex.FindSagaId<TestSagaData>(cloudTable,
+            var result = await secondaryIndex.FindSagaId<TestSagaData>(tableClient,
                 new SagaCorrelationProperty("SomeId", someId));
 
             Assert.IsNull(result);
@@ -87,7 +87,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
         StringBuilder logStatements;
         IDisposable scope;
-        TableClient cloudTable;
+        TableClient tableClient;
         TableServiceClient client;
         string tableName;
         string tableApiType;

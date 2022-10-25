@@ -43,7 +43,7 @@ namespace NServiceBus.AcceptanceTests
 
             Assert.AreEqual(1, exception.ScenarioContext.FailedMessages.Count);
             StringAssert.Contains(
-                ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.TableClient)
+                ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.ConnectionString)
                     ? "The specified resource does not exist."
                     : "Element 0 in the batch returned an unexpected response code.",
                 exception.FailedMessage.Exception.Message);
