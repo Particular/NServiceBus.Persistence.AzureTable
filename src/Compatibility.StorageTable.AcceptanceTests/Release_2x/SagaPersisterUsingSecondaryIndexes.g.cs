@@ -13,9 +13,6 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
     using Sagas;
     using System.Linq;
     using System.Threading;
-    using Azure;
-    using Azure.Data.Tables;
-    using ITableEntity = Microsoft.Azure.Cosmos.Table.ITableEntity;
 
     /// <summary>
     /// This is a copy of the saga persister code 2.4.1
@@ -27,10 +24,7 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
         {
             this.autoUpdateSchema = autoUpdateSchema;
             var account = CloudStorageAccount.Parse(connectionString);
-            // TODO: fix
-            var client = new TableServiceClient(
-                new Uri(connectionString),
-                new TableSharedKeyCredential(null, null));
+            client = account.CreateCloudTableClient();
 
             secondaryIndices = new SecondaryIndexPersister(GetTable, ScanForSaga, Persist, assumeSecondaryIndicesExist);
         }
@@ -101,7 +95,7 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
             };
             try
             {
-                await table.DeleteEntityAsync(entity.PartitionKey, entity.RowKey).ConfigureAwait(false);
+                await table.ExecuteAsync(TableOperation.Delete(entity)).ConfigureAwait(false);
             }
             catch (StorageException e) when (e.RequestInformation.HttpStatusCode == (int)HttpStatusCode.NotFound)
             {
@@ -165,9 +159,7 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
 
             try
             {
-                var tableEntity = table.Query<DictionaryTableEntity>(e => e.PartitionKey == sagaId)
-                                       .ToList()
-                                       .FirstOrDefault();
+                var tableEntity = (await table.ExecuteQueryAsync(query).ConfigureAwait(false)).SafeFirstOrDefault();
                 return tableEntity;
             }
             catch (StorageException e) when (e.RequestInformation.HttpStatusCode == (int)HttpStatusCode.NotFound)
@@ -183,14 +175,14 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
 
             var partitionKey = saga.Id.ToString();
 
-            var batch = new List<TableTransactionAction>();
+            var batch = new TableBatchOperation();
 
             AddObjectToBatch(batch, saga, partitionKey, secondaryIndexKey, context);
 
             await table.ExecuteBatchAsync(batch).ConfigureAwait(false);
         }
 
-        async Task<TableClient> GetTable(Type sagaType)
+        async Task<CloudTable> GetTable(Type sagaType)
         {
             var tableName = $"{SetupFixture.TablePrefix}{sagaType.Name}";
             var table = client.GetTableReference(tableName);
@@ -216,7 +208,7 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
             return entities.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray();
         }
 
-        static void AddObjectToBatch(List<TableTransactionAction> batch, object entity, string partitionKey, PartitionRowKeyTuple? secondaryIndexKey, ContextBag context)
+        static void AddObjectToBatch(TableBatchOperation batch, object entity, string partitionKey, PartitionRowKeyTuple? secondaryIndexKey, ContextBag context)
         {
             var rowkey = partitionKey;
 
@@ -236,7 +228,7 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
             {
                 PartitionKey = partitionKey,
                 RowKey = rowkey,
-                ETag = new ETag(etag)
+                ETag = etag
             }, properties);
 
             if (secondaryIndexKey != null)
@@ -244,10 +236,8 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
                 toPersist.Add(SecondaryIndexIndicatorProperty, secondaryIndexKey.ToString());
             }
 
-            var operation = update
-                ? new TableTransactionAction(TableTransactionActionType.UpdateReplace, toPersist)
-                : new TableTransactionAction(TableTransactionActionType.Add, toPersist);
-            batch.Add(operation);
+            //no longer using InsertOrReplace as it ignores concurrency checks
+            batch.Add(update ? TableOperation.Replace(toPersist) : TableOperation.Insert(toPersist));
         }
 
         internal static PropertyInfo[] SelectPropertiesToPersist(Type sagaType)
@@ -258,7 +248,7 @@ namespace NServiceBus.Persistence.AzureTable.Release_2x
         readonly ILog log = LogManager.GetLogger<SagaPersisterUsingSecondaryIndexes>();
 
         bool autoUpdateSchema;
-        TableServiceClient client;
+        CloudTableClient client;
         SecondaryIndexPersister secondaryIndices;
         const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
         static ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
