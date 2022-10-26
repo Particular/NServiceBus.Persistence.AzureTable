@@ -73,7 +73,7 @@ namespace NServiceBus.Persistence.AzureTable
                 var type = accessor.PropertyType;
                 var value = accessor.Getter(sagaData);
 
-                if (type == typeof(DateTime))
+                if (type == typeof(DateTime)) // TODO: look into datetimeoffset
                 {
                     if (TryGetNullable(type, value, out DateTime? dateTime))
                     {
@@ -86,7 +86,7 @@ namespace NServiceBus.Persistence.AzureTable
                         toPersist.Add(name, value);
                     }
                 }
-                else if (!type.IsPrimitive && type != typeof(byte[]) && type != typeof(DateTime))
+                else if (!type.IsPrimitive && type != typeof(byte[]) && type != typeof(Guid))
                 {
                     using (var stringWriter = new StringWriter())
                     using (var writer = writerCreator(stringWriter))
@@ -163,7 +163,7 @@ namespace NServiceBus.Persistence.AzureTable
         {
             if (setter.PropertyType == typeof(TPrimitive))
             {
-                if (tableEntity.ContainsKey(nameof(setter.Name)))
+                if (tableEntity.ContainsKey(setter.Name))
                 {
                     var value = (TPrimitive?)tableEntity[nameof(setter.Name)];
                     var nonNullableValue = value ?? default;
