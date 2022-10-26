@@ -43,6 +43,7 @@
             var sagaDataType = sagaData.GetType();
 
             var sagaDataEntityToSave = new TableEntity(partitionKey.PartitionKey, sagaData.Id.ToString());
+            sagaDataEntityToSave = TableEntityExtensions.ToTableEntity(sagaData, sagaDataEntityToSave, jsonSerializer, writerCreator);
 
             var table = await GetTableAndCreateIfNotExists(storageSession, sagaDataType, cancellationToken)
                 .ConfigureAwait(false);
