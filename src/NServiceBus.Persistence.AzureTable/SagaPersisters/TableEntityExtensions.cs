@@ -26,7 +26,6 @@ namespace NServiceBus.Persistence.AzureTable
                     continue;
                 }
 
-                var value = entity[accessor.Name];
                 var type = accessor.PropertyType;
 
                 if (type == typeof(byte[]))
@@ -39,15 +38,14 @@ namespace NServiceBus.Persistence.AzureTable
                 }
                 else if (type == typeof(string))
                 {
-                    accessor.Setter(toCreate, entity.GetString(nameof(accessor.Name)));
+                    accessor.Setter(toCreate, entity.GetString(accessor.Name));
                 }
                 else
                 {
                     // We assume we have a specific type and will try to deserialize
-                    // TODO: a scenario was removed here, review!
                     try
                     {
-                        string propertyValue = entity.GetString(nameof(accessor.Name));
+                        string propertyValue = entity.GetString(accessor.Name);
                         using (var reader = new StringReader(propertyValue))
                         using (var jsonReader = readerCreator(reader))
                         {
@@ -165,7 +163,7 @@ namespace NServiceBus.Persistence.AzureTable
             {
                 if (tableEntity.ContainsKey(setter.Name))
                 {
-                    var value = (TPrimitive?)tableEntity[nameof(setter.Name)];
+                    var value = (TPrimitive?)tableEntity[setter.Name];
                     var nonNullableValue = value ?? default;
                     setter.Setter(entity, nonNullableValue);
                     return true;
@@ -177,9 +175,9 @@ namespace NServiceBus.Persistence.AzureTable
 
             if (setter.PropertyType == typeof(TPrimitive?))
             {
-                if (tableEntity.ContainsKey(nameof(setter.Name)))
+                if (tableEntity.ContainsKey(setter.Name))
                 {
-                    var value = (TPrimitive?)tableEntity[nameof(setter.Name)];
+                    var value = (TPrimitive?)tableEntity[setter.Name];
                     setter.Setter(entity, value);
                     return true;
                 }
