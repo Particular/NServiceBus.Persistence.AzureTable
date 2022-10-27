@@ -86,13 +86,10 @@
                 "RowKey"
             };
 
-            var items = new List<TableEntity>();
-            var result = table.QueryAsync<TableEntity>(query, int.MaxValue, selectColumns, cancellationToken: cancellationToken);
-            await foreach (var page in result.AsPages().WithCancellation(cancellationToken))
-            {
-                items.AddRange(page.Values);
-            }
-            return items.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray();
+            var result = await table.QueryAsync<Subscription>(query, cancellationToken: cancellationToken)
+                                                        .ToListAsync(cancellationToken)
+                                                        .ConfigureAwait(false);
+            return result.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray();
         }
 
         public void InvalidateCache(PartitionRowKeyTuple secondaryIndexKey)
