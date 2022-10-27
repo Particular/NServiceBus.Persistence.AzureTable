@@ -46,12 +46,10 @@ namespace NServiceBus.Persistence.AzureTable
                     try
                     {
                         string propertyValue = entity.GetString(accessor.Name);
-                        using (var reader = new StringReader(propertyValue))
-                        using (var jsonReader = readerCreator(reader))
-                        {
-                            var deserialized = jsonSerializer.Deserialize(jsonReader, type);
-                            accessor.Setter(toCreate, deserialized);
-                        }
+                        using var reader = new StringReader(propertyValue);
+                        using var jsonReader = readerCreator(reader);
+                        var deserialized = jsonSerializer.Deserialize(jsonReader, type);
+                        accessor.Setter(toCreate, deserialized);
                     }
                     catch (Exception)
                     {
@@ -71,40 +69,42 @@ namespace NServiceBus.Persistence.AzureTable
                 var type = accessor.PropertyType;
                 var value = accessor.Getter(sagaData);
 
-                if (type == typeof(DateTime)) // TODO: look into datetimeoffset
+                // TODO: look into datetimeoffset
+                if (type == typeof(byte[]) ||
+                    type == typeof(string) ||
+                    TryGetNullable(type, value, out bool? _) ||
+                    TryGetNullable(type, value, out Guid? _) ||
+                    TryGetNullable(type, value, out int? _) ||
+                    TryGetNullable(type, value, out long? _) ||
+                    TryGetNullable(type, value, out double? _))
                 {
-                    if (TryGetNullable(type, value, out DateTime? dateTime))
-                    {
-                        if (!dateTime.HasValue || dateTime.Value < StorageTableMinDateTime)
-                        {
-                            throw new Exception(
-                                $"Saga data of type '{sagaData.GetType().FullName}' with DateTime property '{name}' has an invalid value '{dateTime}'. Value cannot be null and must be equal to or greater than '{StorageTableMinDateTime}'.");
-                        }
-
-                        toPersist.Add(name, value);
-                    }
+                    toPersist.Add(name, value);
                 }
-                else if (!type.IsPrimitive && type != typeof(byte[]) && type != typeof(Guid))
+                else if (TryGetNullable(type, value, out DateTime? dateTime))
                 {
-                    using (var stringWriter = new StringWriter())
-                    using (var writer = writerCreator(stringWriter))
+                    if (!dateTime.HasValue || dateTime.Value < StorageTableMinDateTime)
                     {
-                        try
-                        {
-                            jsonSerializer.Serialize(writer, value, type);
-                        }
-                        catch (Exception)
-                        {
-                            throw new NotSupportedException(
-                                $"The property type '{type.Name}' is not supported in Azure Table Storage and it cannot be serialized with JSON.NET.");
-                        }
-
-                        toPersist[name] = stringWriter.ToString();
+                        throw new Exception(
+                            $"Saga data of type '{sagaData.GetType().FullName}' with DateTime property '{name}' has an invalid value '{dateTime}'. Value cannot be null and must be equal to or greater than '{StorageTableMinDateTime}'.");
                     }
+
+                    toPersist.Add(name, value);
                 }
                 else
                 {
-                    toPersist.Add(name, value);
+                    using var stringWriter = new StringWriter();
+                    using var writer = writerCreator(stringWriter);
+                    try
+                    {
+                        jsonSerializer.Serialize(writer, value, type);
+                    }
+                    catch (Exception)
+                    {
+                        throw new NotSupportedException(
+                            $"The property type '{type.Name}' is not supported in Azure Table Storage and it cannot be serialized with JSON.NET.");
+                    }
+
+                    toPersist[name] = stringWriter.ToString();
                 }
             }
 
@@ -145,16 +145,13 @@ namespace NServiceBus.Persistence.AzureTable
             return false;
         }
 
-        static bool TrySetNullable(TableEntity tableEntity, object entity, PropertyAccessor setter)
-        {
-            return
-                TrySetNullable<bool>(tableEntity, entity, setter) ||
-                TrySetNullable<DateTime>(tableEntity, entity, setter) ||
-                TrySetNullable<Guid>(tableEntity, entity, setter) ||
-                TrySetNullable<int>(tableEntity, entity, setter) ||
-                TrySetNullable<double>(tableEntity, entity, setter) ||
-                TrySetNullable<long>(tableEntity, entity, setter);
-        }
+        static bool TrySetNullable(TableEntity tableEntity, object entity, PropertyAccessor setter) =>
+            TrySetNullable<bool>(tableEntity, entity, setter) ||
+            TrySetNullable<DateTime>(tableEntity, entity, setter) ||
+            TrySetNullable<Guid>(tableEntity, entity, setter) ||
+            TrySetNullable<int>(tableEntity, entity, setter) ||
+            TrySetNullable<double>(tableEntity, entity, setter) ||
+            TrySetNullable<long>(tableEntity, entity, setter);
 
         static bool TrySetNullable<TPrimitive>(TableEntity tableEntity, object entity, PropertyAccessor setter)
             where TPrimitive : struct
@@ -219,7 +216,7 @@ namespace NServiceBus.Persistence.AzureTable
 
         static readonly ConcurrentDictionary<Type, IReadOnlyCollection<PropertyAccessor>> propertyAccessorCache = new();
 
-        static readonly DateTime StorageTableMinDateTime = new DateTime(1601, 1, 1);
+        static readonly DateTime StorageTableMinDateTime = new(1601, 1, 1);
 
         sealed class PropertyAccessor
         {

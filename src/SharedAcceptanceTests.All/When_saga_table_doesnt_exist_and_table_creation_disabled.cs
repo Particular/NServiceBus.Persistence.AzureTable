@@ -4,13 +4,13 @@ namespace NServiceBus.AcceptanceTests
     using System.Linq;
     using System.Net;
     using System.Threading.Tasks;
-    using NServiceBus;
     using AcceptanceTesting;
     using Azure;
-    using NServiceBus.AcceptanceTesting.Support;
-    using Testing;
     using EndpointTemplates;
+    using NServiceBus;
+    using NServiceBus.AcceptanceTesting.Support;
     using NUnit.Framework;
+    using Testing;
 
     public partial class When_saga_table_doesnt_exist_and_table_creation_disabled : NServiceBusAcceptanceTest
     {
@@ -45,7 +45,7 @@ namespace NServiceBus.AcceptanceTests
             StringAssert.Contains(
                 ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.ConnectionString)
                     ? "The specified resource does not exist."
-                    : "Element 0 in the batch returned an unexpected response code.",
+                    : "The table specified does not exist",
                 exception.FailedMessage.Exception.Message);
         }
 
@@ -55,8 +55,7 @@ namespace NServiceBus.AcceptanceTests
 
         public class EndpointWithTableCreationDisabled : EndpointConfigurationBuilder
         {
-            public EndpointWithTableCreationDisabled()
-            {
+            public EndpointWithTableCreationDisabled() =>
                 EndpointSetup<DefaultServer>(c =>
                 {
                     var sagaPersistence = c.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
@@ -66,7 +65,6 @@ namespace NServiceBus.AcceptanceTests
                     var subscriptionStorage = c.UsePersistence<AzureTablePersistence, StorageType.Subscriptions>();
                     subscriptionStorage.DisableTableCreation();
                 });
-            }
 
             public class SomeSaga : Saga<SomeSagaData>, IAmStartedByMessages<StartSagaMessage>
             {
@@ -76,11 +74,9 @@ namespace NServiceBus.AcceptanceTests
                     return Task.CompletedTask;
                 }
 
-                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<SomeSagaData> mapper)
-                {
+                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<SomeSagaData> mapper) =>
                     mapper.ConfigureMapping<StartSagaMessage>(m => m.SomeId)
-                        .ToSaga(s => s.SomeId);
-                }
+                          .ToSaga(s => s.SomeId);
             }
 
             public class SomeSagaData : ContainSagaData
