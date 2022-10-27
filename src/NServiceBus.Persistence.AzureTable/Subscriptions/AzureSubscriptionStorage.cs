@@ -6,6 +6,7 @@
     using System.Linq;
     using System.Net;
     using System.Text;
+    //using System.Text.Encodings.Web;
     using System.Threading;
     using System.Threading.Tasks;
     using Azure;
@@ -156,19 +157,13 @@
 
             foreach (var messageType in messageTypes)
             {
-                var subscriptionsForMessageType = new List<Subscription>();
                 var name = messageType.TypeName;
 
-                var lowerBound = $"PartitionKey ge {name}";
-                var upperBound = $"PartitionKey lt {GetUpperBound(name)}";
-                var query = $"{lowerBound} and {upperBound}";
-
-                var queryResults = table.QueryAsync<Subscription>(query, int.MaxValue, cancellationToken: cancellationToken);
-                await foreach (Page<Subscription> page in queryResults.AsPages().WithCancellation(cancellationToken))
-                {
-                    subscriptionsForMessageType.AddRange(page.Values);
-                }
-                var results = subscriptionsForMessageType.Select(s => new Subscriber(DecodeFrom64(s.RowKey), s.EndpointName));
+                var query = TableClient.CreateQueryFilter($"(PartitionKey ge {name}) and (PartitionKey lt {GetUpperBound(name)})");
+                var subscriptions = await table.QueryAsync<Subscription>(query, cancellationToken: cancellationToken)
+                                               .ToListAsync(cancellationToken)
+                                                             .ConfigureAwait(false);
+                var results = subscriptions.Select(s => new Subscriber(DecodeFrom64(s.RowKey), s.EndpointName));
 
                 foreach (var subscriber in results)
                 {
