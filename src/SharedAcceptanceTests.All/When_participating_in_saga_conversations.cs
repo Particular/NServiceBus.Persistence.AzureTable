@@ -9,10 +9,10 @@ namespace NServiceBus.AcceptanceTests
     using Azure.Data.Tables;
     using EndpointTemplates;
     using NServiceBus;
-    using Pipeline;
     using NServiceBus.Sagas;
     using NUnit.Framework;
     using Persistence.AzureTable;
+    using Pipeline;
 
     public class When_participating_in_saga_conversations : NServiceBusAcceptanceTest
     {
@@ -62,7 +62,7 @@ namespace NServiceBus.AcceptanceTests
 
         static TableEntity GetByRowKey(Guid sagaId)
         {
-            var table = SetupFixture.Table;
+            var table = SetupFixture.TableClient;
 
             // table scan but still probably the easiest way to do it, otherwise we would have to take the partition key into account which complicates things because this test is shared
             //var query = new TableQuery<DynamicTableEntity>().Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, sagaId.ToString()));
@@ -87,15 +87,12 @@ namespace NServiceBus.AcceptanceTests
 
         public class EndpointWithSagaThatWasMigrated : EndpointConfigurationBuilder
         {
-            public EndpointWithSagaThatWasMigrated()
-            {
+            public EndpointWithSagaThatWasMigrated() =>
                 EndpointSetup<DefaultServer>(c =>
                 {
-                    c.Pipeline.Register(typeof(PartitionPartionKeyCleanerBehavior),
-                        "Cleans partition keys out");
+                    c.Pipeline.Register(typeof(PartitionPartionKeyCleanerBehavior), "Cleans partition keys out");
                     c.Pipeline.Register(new ProvidePartitionKeyBasedOnSagaIdBehavior.Registration());
                 });
-            }
 
             class PartitionPartionKeyCleanerBehavior : IBehavior<ITransportReceiveContext, ITransportReceiveContext>,
                 IBehavior<IIncomingPhysicalMessageContext, IIncomingPhysicalMessageContext>
@@ -117,12 +114,9 @@ namespace NServiceBus.AcceptanceTests
 
             class ProvidePartitionKeyBasedOnSagaIdBehavior : Behavior<IIncomingLogicalMessageContext>
             {
-                IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId;
+                readonly IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId;
 
-                public ProvidePartitionKeyBasedOnSagaIdBehavior(IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId)
-                {
-                    this.providePartitionKeyFromSagaId = providePartitionKeyFromSagaId;
-                }
+                public ProvidePartitionKeyBasedOnSagaIdBehavior(IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId) => this.providePartitionKeyFromSagaId = providePartitionKeyFromSagaId;
 
                 public override async Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
                 {
@@ -150,19 +144,13 @@ namespace NServiceBus.AcceptanceTests
                 {
                     public Registration() : base(nameof(ProvidePartitionKeyBasedOnSagaIdBehavior),
                         typeof(ProvidePartitionKeyBasedOnSagaIdBehavior),
-                        "Populates the partition key")
-                    {
-                        InsertBeforeIfExists(nameof(LogicalOutboxBehavior));
-                    }
+                        "Populates the partition key") => InsertBeforeIfExists(nameof(LogicalOutboxBehavior));
                 }
             }
 
             public class CustomSaga : Saga<CustomSagaData>, IAmStartedByMessages<StartSagaMessage>, IAmStartedByMessages<ContinueSagaMessage>
             {
-                public CustomSaga(Context testContext)
-                {
-                    this.testContext = testContext;
-                }
+                public CustomSaga(Context testContext) => this.testContext = testContext;
 
                 public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
@@ -184,22 +172,17 @@ namespace NServiceBus.AcceptanceTests
                     return Task.CompletedTask;
                 }
 
-                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<CustomSagaData> mapper)
-                {
+                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<CustomSagaData> mapper) =>
                     mapper.MapSaga(s => s.SomeId)
                         .ToMessage<StartSagaMessage>(m => m.SomeId)
                         .ToMessage<ContinueSagaMessage>(m => m.SomeId);
-                }
 
                 readonly Context testContext;
             }
 
             public class ContinueMessageHandler : IHandleMessages<ContinueSagaMessage>
             {
-                public ContinueMessageHandler(Context testContext)
-                {
-                    this.testContext = testContext;
-                }
+                public ContinueMessageHandler(Context testContext) => this.testContext = testContext;
 
                 public Task Handle(ContinueSagaMessage message, IMessageHandlerContext context)
                 {
@@ -216,7 +199,7 @@ namespace NServiceBus.AcceptanceTests
                     return Task.CompletedTask;
                 }
 
-                Context testContext;
+                readonly Context testContext;
             }
 
             public class MyTableEntity : ITableEntity

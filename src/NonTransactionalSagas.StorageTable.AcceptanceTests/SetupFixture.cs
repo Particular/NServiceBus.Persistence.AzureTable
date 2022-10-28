@@ -19,9 +19,9 @@
 
             TableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();
 
-            TableClient = new TableServiceClient(ConnectionString);
-            Table = TableClient.GetTableClient(TableName);
-            return Table.CreateIfNotExistsAsync();
+            TableServiceClient = new TableServiceClient(ConnectionString);
+            TableClient = TableServiceClient.GetTableClient(TableName);
+            return TableClient.CreateIfNotExistsAsync();
         }
 
         [OneTimeTearDown]
@@ -30,7 +30,8 @@
             ConnectionString = null;
             try
             {
-                await TableClient.DeleteTableAsync(TableName);
+                var response = await TableServiceClient.DeleteTableAsync(TableName);
+                Assert.That(response.IsError, Is.False);
             }
             catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
             {
@@ -38,8 +39,8 @@
         }
 
         public static string ConnectionString { get; private set; }
-        public static string TableName;
-        public static TableServiceClient TableClient;
-        public static TableClient Table;
+        public static string TableName { get; private set; }
+        public static TableServiceClient TableServiceClient { get; private set; }
+        public static TableClient TableClient { get; private set; }
     }
 }

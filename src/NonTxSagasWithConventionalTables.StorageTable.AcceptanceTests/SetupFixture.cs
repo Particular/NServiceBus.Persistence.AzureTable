@@ -18,7 +18,7 @@
         {
             ConnectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
 
-            TableClient = new TableServiceClient(ConnectionString);
+            TableServiceClient = new TableServiceClient(ConnectionString);
 
             TablePrefix = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();
 
@@ -36,7 +36,8 @@
             {
                 try
                 {
-                    await TableClient.DeleteTableAsync(tableName);
+                    var response = await TableServiceClient.DeleteTableAsync(tableName);
+                    Assert.That(response.IsError, Is.False);
                 }
                 catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
                 {
@@ -46,8 +47,8 @@
 
         public static string ConnectionString { get; private set; }
 
-        public static TableServiceClient TableClient;
-        public static string TablePrefix;
+        public static TableServiceClient TableServiceClient { get; private set; }
+        public static string TablePrefix { get; private set; }
         string[] allConventionalSagaTableNamesWithPrefix;
     }
 }

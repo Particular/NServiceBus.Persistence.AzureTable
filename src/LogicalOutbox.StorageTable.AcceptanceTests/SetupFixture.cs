@@ -19,21 +19,21 @@
 
             TableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();
 
-            TableClient = new TableServiceClient(ConnectionString);
-            Table = TableClient.GetTableClient(TableName);
-            await Table.CreateIfNotExistsAsync();
-
-            handler = new TransactionalBatchCounterHandler();
+            TableServiceClient = new TableServiceClient(ConnectionString);
+            TableClient = TableServiceClient.GetTableClient(TableName);
+            var response = await TableClient.CreateIfNotExistsAsync();
+            Assert.That(response.Value, Is.Not.Null);
         }
 
         [OneTimeTearDown]
         public async Task OneTimeTearDown()
         {
             ConnectionString = null;
-            handler.Dispose();
+
             try
             {
-                await TableClient.DeleteTableAsync(TableName);
+                var response = await TableServiceClient.DeleteTableAsync(TableName);
+                Assert.That(response.IsError, Is.False);
             }
             catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
             {
@@ -42,9 +42,8 @@
 
         public static string ConnectionString { get; private set; }
 
-        public static string TableName;
-        public static TableServiceClient TableClient;
-        public static TableClient Table;
-        TransactionalBatchCounterHandler handler;
+        public static string TableName { get; private set; }
+        public static TableServiceClient TableServiceClient { get; private set; }
+        public static TableClient TableClient { get; private set; }
     }
 }

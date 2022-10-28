@@ -21,7 +21,7 @@ namespace NServiceBus.AcceptanceTests
         {
             try
             {
-                return SetupFixture.TableClient.DeleteTableAsync(TableThatDoesntExist);
+                return SetupFixture.TableServiceClient.DeleteTableAsync(TableThatDoesntExist);
             }
             catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
             {

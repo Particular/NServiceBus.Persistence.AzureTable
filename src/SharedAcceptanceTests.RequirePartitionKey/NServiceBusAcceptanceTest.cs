@@ -7,7 +7,6 @@
         [TearDown]
         public void Teardown()
         {
-            TransactionalBatchCounterHandler.Reset();
         }
     }
 }

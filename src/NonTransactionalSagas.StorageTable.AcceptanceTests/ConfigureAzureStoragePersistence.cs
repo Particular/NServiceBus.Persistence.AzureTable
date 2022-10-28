@@ -1,33 +1,31 @@
-﻿using System.Threading.Tasks;
-using NServiceBus;
-using NServiceBus.AcceptanceTesting.Support;
-using NServiceBus.AcceptanceTests;
-using NServiceBus.AcceptanceTests.Sagas;
-using Conventions = NServiceBus.AcceptanceTesting.Customization.Conventions;
-
-public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestExecution
+﻿namespace NServiceBus.AcceptanceTests
 {
-    public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
+    using System.Threading.Tasks;
+    using NServiceBus;
+    using NServiceBus.AcceptanceTesting.Support;
+    using NServiceBus.AcceptanceTests.Sagas;
+    using Conventions = AcceptanceTesting.Customization.Conventions;
+
+    public class ConfigureEndpointAzureStoragePersistence : IConfigureEndpointTestExecution
     {
-        var persistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
-        persistence.DisableTableCreation();
-        persistence.UseTableServiceClient(SetupFixture.TableClient);
-        persistence.DefaultTable(SetupFixture.TableName);
-
-        persistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
-
-        var recoverabilitySettings = configuration.Recoverability();
-
-        if (endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))
+        Task IConfigureEndpointTestExecution.Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
         {
-            recoverabilitySettings.Immediate(c => c.NumberOfRetries(1));
+            var persistence = configuration
+                .UsePersistence<AzureTablePersistence, StorageType.Sagas>()
+                .DisableTableCreation()
+                .UseTableServiceClient(SetupFixture.TableServiceClient);
+
+            persistence.DefaultTable(SetupFixture.TableName);
+            persistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
+
+            if (endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))
+            {
+                configuration.Recoverability().Immediate(c => c.NumberOfRetries(1));
+            }
+
+            return Task.FromResult(0);
         }
 
-        return Task.FromResult(0);
-    }
-
-    Task IConfigureEndpointTestExecution.Cleanup()
-    {
-        return Task.FromResult(0);
+        Task IConfigureEndpointTestExecution.Cleanup() => Task.FromResult(0);
     }
 }

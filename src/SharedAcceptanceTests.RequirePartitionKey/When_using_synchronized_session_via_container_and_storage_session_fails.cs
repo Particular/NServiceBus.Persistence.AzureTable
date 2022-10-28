@@ -1,12 +1,12 @@
 ﻿namespace NServiceBus.AcceptanceTests
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
     using AcceptanceTesting;
     using Azure;
     using Azure.Data.Tables;
-    using EndpointTemplates;
     using NUnit.Framework;
     using Persistence.AzureTable;
     using ITableEntity = Azure.Data.Tables.ITableEntity;
@@ -20,19 +20,15 @@
             // not possible to intercept cosmos API calls with OperationContext
             Requires.AzureStorageTable();
 
-            TransactionalBatchCounterHandler.Reset();
-
-            await Scenario.Define<Context>()
-                .WithEndpoint<Endpoint>(b =>
-                {
-                    b.DoNotFailOnErrorMessages();
-                    b.When(s => s.SendLocal(new MyMessage()));
-                })
+            var context = await Scenario.Define<Context>()
+                .WithEndpoint<Endpoint>(
+                    b => b.DoNotFailOnErrorMessages()
+                          .When(s => s.SendLocal(new MyMessage())))
                 .Done(c => c.FirstHandlerIsDone && c.FailedMessages.Any())
                 .Run()
                 .ConfigureAwait(false);
 
-            Assert.AreEqual(0, TransactionalBatchCounterHandler.TotalTransactionalBatches, "Expected to have no transactional batch but found one.");
+            Assert.AreEqual(0, context.BatchIdentifiers.Count, "Expected to have no transactional batch but found one.");
         }
 
         public class Context : ScenarioContext
@@ -41,13 +37,21 @@
             public const string Item2_Id = nameof(Item2_Id);
 
             public bool FirstHandlerIsDone { get; set; }
+            public HashSet<string> BatchIdentifiers { get; set; }
         }
 
         public class Endpoint : EndpointConfigurationBuilder
         {
             public Endpoint()
             {
-                EndpointSetup<DefaultServer>();
+                var server = new BatchCountingServer();
+                EndpointSetup(server, (cfg, rd) =>
+                {
+                    var context = rd.ScenarioContext as Context;
+                    Assert.That(context, Is.Not.Null);
+
+                    context.BatchIdentifiers = server.TransactionalBatchCounterPolicy.BatchIdentifiers;
+                });
             }
 
             public class MyHandlerUsingStorageSession : IHandleMessages<MyMessage>
@@ -72,8 +76,8 @@
                     return Task.CompletedTask;
                 }
 
-                Context context;
-                IAzureTableStorageSession session;
+                readonly Context context;
+                readonly IAzureTableStorageSession session;
             }
 
             public class MyHandlerUsingExtensionMethod : IHandleMessages<MyMessage>

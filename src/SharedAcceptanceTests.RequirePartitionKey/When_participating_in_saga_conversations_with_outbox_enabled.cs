@@ -65,7 +65,7 @@ namespace NServiceBus.AcceptanceTests
 
         static TableEntity GetByRowKey(Guid sagaId)
         {
-            var table = SetupFixture.Table;
+            var table = SetupFixture.TableClient;
 
             // table scan but still probably the easiest way to do it, otherwise we would have to take the partition key into account which complicates things because this test is shared
             //var query = new TableQuery<DynamicTableEntity>().Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, sagaId.ToString()));
@@ -127,7 +127,7 @@ namespace NServiceBus.AcceptanceTests
 
             class ProvidePartitionKeyBasedOnSagaIdBehavior : Behavior<IIncomingLogicalMessageContext>
             {
-                IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId;
+                readonly IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId;
 
                 public ProvidePartitionKeyBasedOnSagaIdBehavior(IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId)
                 {
@@ -226,7 +226,7 @@ namespace NServiceBus.AcceptanceTests
                     return Task.CompletedTask;
                 }
 
-                Context testContext;
+                readonly Context testContext;
             }
 
             public class MyTableEntity : ITableEntity

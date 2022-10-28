@@ -56,14 +56,14 @@ namespace NServiceBus.AcceptanceTests
 
         static TableEntity GetEntity(Guid sagaId)
         {
-            var table = SetupFixture.Table;
+            var table = SetupFixture.TableClient;
 
             // table scan but still probably the easiest way to do it, otherwise we would have to take the partition key into account which complicates things because this test is shared
             //var query = new TableQuery<DynamicTableEntity>().Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, sagaId.ToString()));
 
             try
             {
-                var tableEntity = table.Query<Azure.Data.Tables.TableEntity>(entity => entity.RowKey == sagaId.ToString()).FirstOrDefault();
+                var tableEntity = table.Query<TableEntity>(entity => entity.RowKey == sagaId.ToString()).FirstOrDefault();
                 return tableEntity;
             }
             catch (RequestFailedException e)
