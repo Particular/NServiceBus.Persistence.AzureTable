@@ -147,11 +147,44 @@ namespace NServiceBus.Persistence.AzureTable
 
         static bool TrySetNullable(TableEntity tableEntity, object entity, PropertyAccessor setter) =>
             TrySetNullable<bool>(tableEntity, entity, setter) ||
-            TrySetNullable<DateTime>(tableEntity, entity, setter) ||
+            TrySetNullableDateTime(tableEntity, entity, setter) ||
             TrySetNullable<Guid>(tableEntity, entity, setter) ||
             TrySetNullable<int>(tableEntity, entity, setter) ||
             TrySetNullable<double>(tableEntity, entity, setter) ||
             TrySetNullable<long>(tableEntity, entity, setter);
+
+        static bool TrySetNullableDateTime(TableEntity tableEntity, object entity, PropertyAccessor setter)
+        {
+            if (setter.PropertyType == typeof(DateTime))
+            {
+                SetDateTime(tableEntity, entity, setter, false);
+                return true;
+            }
+
+            if (setter.PropertyType == typeof(DateTime?))
+            {
+                SetDateTime(tableEntity, entity, setter, true);
+                return true;
+            }
+
+            return false;
+        }
+
+        static void SetDateTime(TableEntity tableEntity, object entity, PropertyAccessor setter, bool allowNull)
+        {
+            DateTime? value = default;
+
+            if (tableEntity.ContainsKey(setter.Name))
+            {
+                value = tableEntity[setter.Name] switch
+                {
+                    DateTimeOffset dateTimeOffsetValue => dateTimeOffsetValue.UtcDateTime,
+                    _ => (DateTime?)tableEntity[setter.Name]
+                };
+            }
+
+            setter.Setter(entity, allowNull ? value : value ?? default);
+        }
 
         static bool TrySetNullable<TPrimitive>(TableEntity tableEntity, object entity, PropertyAccessor setter)
             where TPrimitive : struct
