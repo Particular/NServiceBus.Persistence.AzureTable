@@ -56,7 +56,7 @@
 
         public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
         {
-            transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.Delete, sagaRow));
+            transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.Delete, sagaRow, sagaRow.ETag));
             return tableClient;
         }
     }
@@ -104,7 +104,7 @@
         }
 
         readonly ILog Logger = LogManager.GetLogger<AzureSagaPersister>();
-        PartitionRowKeyTuple partitionRowKeyTuple;
+        readonly PartitionRowKeyTuple partitionRowKeyTuple;
         readonly Guid sagaId;
     }
 }
