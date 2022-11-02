@@ -26,11 +26,15 @@
         object Client { get; }
     }
 
-    [ObsoleteEx(Message = "This exception class is deprecated in favor AzureTableBatchOperationException, supporting the Exception infromation exposed by Azure.Data.Tables.", TreatAsErrorFromVersion = "5.0.0", RemoveInVersion = "6.0.0")]
-    public class TableBatchOperationException
+    /// <summary>
+    /// Exception that is thrown when the table batch failed without throwing a storage exception. The exception gives access to the
+    /// TableResult that exposes more details about the reason of failure.
+    /// </summary>
+    [ObsoleteEx(Message = "This exception class is deprecated in favor AzureTableBatchOperationException, supporting the Exception information exposed by Azure.Data.Tables.", TreatAsErrorFromVersion = "5.0.0", RemoveInVersion = "6.0.0")]
+    public class TableBatchOperationException : Exception
     {
         /// <summary>
-        /// Initializes a new TableBatchOperationException with a <see cref="TableResult"/>.
+        /// Initializes a new TableBatchOperationException with a TableResult.
         /// </summary>
         public TableBatchOperationException(object result)
         {
@@ -38,7 +42,7 @@
         }
 
         /// <summary>
-        /// The <see cref="TableResult"/> exposing details about the reason of failure.
+        /// The TableResult exposing details about the reason of failure.
         /// </summary>
         public object Result => throw new NotImplementedException();
     }
@@ -58,6 +62,59 @@
         /// session is actually committed to avoiding running into transaction timeouts unnecessarily.</remarks>
         [ObsoleteEx(Message = "The Batch property is deprecated in favor of the BatchOperation method, which supports the TableServiceClient API provided by Azure.Data.Tables.", TreatAsErrorFromVersion = "5.0.0", RemoveInVersion = "6.0.0")]
         object Batch { get; }
+    }
+
+    partial class StorageSession
+    {
+        // This is just here to implement the full interface while we deprecate some properties
+
+        /// <summary>
+        /// The table that will be used to store the batched items.
+        /// </summary>
+        public object Table => throw new NotImplementedException();
+        /// <summary>
+        /// The transactional batch that can be used to store items.
+        /// </summary>
+        /// <remarks>The transactional batch exposed does delay the actual batch operations up to the point when the storage
+        /// session is actually committed to avoiding running into transaction timeouts unnecessarily.</remarks>
+        public object Batch => throw new NotImplementedException();
+    }
+
+    partial class AzureStorageSynchronizedStorageSession
+    {
+        // This is just here to implement the full interface while we deprecate some properties
+
+        /// <summary>
+        /// The table that will be used to store the batched items.
+        /// </summary>
+        public object Table => throw new NotImplementedException();
+        /// <summary>
+        /// The transactional batch that can be used to store items.
+        /// </summary>
+        /// <remarks>The transactional batch exposed does delay the actual batch operations up to the point when the storage
+        /// session is actually committed to avoiding running into transaction timeouts unnecessarily.</remarks>
+        public object Batch => throw new NotImplementedException();
+    }
+}
+
+namespace NServiceBus.Testing
+{
+    using System;
+
+    public partial class TestableAzureTableStorageSession
+    {
+        // This is just here to implement the full interface while we deprecate some properties
+
+        /// <summary>
+        /// The table that will be used to store the batched items.
+        /// </summary>
+        public object Table => throw new NotImplementedException();
+        /// <summary>
+        /// The transactional batch that can be used to store items.
+        /// </summary>
+        /// <remarks>The transactional batch exposed does delay the actual batch operations up to the point when the storage
+        /// session is actually committed to avoiding running into transaction timeouts unnecessarily.</remarks>
+        public object Batch => throw new NotImplementedException();
     }
 }
 

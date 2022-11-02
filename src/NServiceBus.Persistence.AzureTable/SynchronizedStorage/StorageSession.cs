@@ -6,7 +6,7 @@
     using Azure.Data.Tables;
     using Extensibility;
 
-    class StorageSession : IWorkWithSharedTransactionalBatch
+    partial class StorageSession : IWorkWithSharedTransactionalBatch
     {
         public StorageSession(TableHolderResolver resolver, ContextBag context)
         {

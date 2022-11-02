@@ -8,7 +8,7 @@
     using Outbox;
     using Transport;
 
-    class AzureStorageSynchronizedStorageSession : ICompletableSynchronizedStorageSession, IWorkWithSharedTransactionalBatch
+    partial class AzureStorageSynchronizedStorageSession : ICompletableSynchronizedStorageSession, IWorkWithSharedTransactionalBatch
     {
         public AzureStorageSynchronizedStorageSession(TableHolderResolver tableHolderResolver)
         {
