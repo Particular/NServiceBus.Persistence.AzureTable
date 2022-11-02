@@ -21,7 +21,7 @@
 
         public virtual void Conflict(Response result)
         {
-            throw new TableBatchOperationException(result);
+            throw new AzureTableBatchOperationException(result);
         }
 
         public virtual bool Handle(RequestFailedException storageException)

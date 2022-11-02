@@ -80,8 +80,8 @@
 
             public void DoSomething()
             {
-                context.RepositoryHasBatch = storageSession.Batch != null;
-                context.RepositoryHasTable = storageSession.Table != null;
+                context.RepositoryHasBatch = storageSession.BatchOperations != null;
+                context.RepositoryHasTable = storageSession.TableClient != null;
                 context.PartitionKey = storageSession.PartitionKey;
             }
 

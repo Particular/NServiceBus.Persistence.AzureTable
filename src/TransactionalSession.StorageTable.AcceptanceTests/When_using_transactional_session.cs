@@ -38,7 +38,7 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
                         Data = "MyCustomData"
                     };
 
-                    storageSession.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
+                    storageSession.BatchOperations.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
 
                     await transactionalSession.Commit().ConfigureAwait(false);
                 }))
@@ -81,7 +81,7 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
                         Data = "MyCustomData"
                     };
 
-                    storageSession.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
+                    storageSession.BatchOperations.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
 
                     await transactionalSession.Commit(CancellationToken.None).ConfigureAwait(false);
                 }))
@@ -125,7 +125,7 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
                             Data = "MyCustomData"
                         };
 
-                        storageSession.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
+                        storageSession.BatchOperations.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
                     }
 
                     //Send immediately dispatched message to finish the test

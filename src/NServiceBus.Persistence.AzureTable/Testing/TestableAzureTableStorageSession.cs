@@ -26,23 +26,23 @@
 
         void IWorkWithSharedTransactionalBatch.Add(Operation operation)
         {
-            if (Batch == null)
+            if (BatchOperations == null)
             {
                 return;
             }
 
-            operation.Apply(Batch);
+            operation.Apply(BatchOperations);
         }
 
         /// <summary>
         /// The table client to be used.
         /// </summary>
-        public TableClient Table { get; set; }
+        public TableClient TableClient { get; set; }
 
         /// <summary>
         /// The batch to be used.
         /// </summary>
-        public List<TableTransactionAction> Batch { get; set; }
+        public List<TableTransactionAction> BatchOperations { get; set; }
 
         /// <summary>
         /// The partition key to be used.

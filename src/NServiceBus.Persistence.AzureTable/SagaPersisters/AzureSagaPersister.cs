@@ -145,7 +145,7 @@
         async Task<TableClient> GetTableAndCreateIfNotExists(IAzureTableStorageSession storageSession, Type sagaDataType, CancellationToken cancellationToken)
         {
             TableClient tableToReadFrom;
-            if (storageSession.Table == null)
+            if (storageSession.TableClient == null)
             {
                 // to avoid string concat when nothing to do
                 var sagaDataTypeName = sagaDataType.Name;
@@ -156,7 +156,7 @@
             }
             else
             {
-                tableToReadFrom = storageSession.Table;
+                tableToReadFrom = storageSession.TableClient;
             }
 
             if (disableTableCreation || tableCreated.TryGetValue(tableToReadFrom.Name, out var isTableCreated) ||

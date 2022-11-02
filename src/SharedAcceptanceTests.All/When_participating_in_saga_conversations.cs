@@ -194,7 +194,7 @@ namespace NServiceBus.AcceptanceTests
                         PartitionKey = session.PartitionKey,
                         Data = session.PartitionKey
                     };
-                    session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
+                    session.BatchOperations.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
                     testContext.HandlerIsDone = true;
                     return Task.CompletedTask;
                 }

@@ -12,12 +12,12 @@
         {
             CurrentContextBag = context;
             TableHolder = resolver.ResolveAndSetIfAvailable(context);
-            Batch = new List<TableTransactionAction>();
+            BatchOperations = new List<TableTransactionAction>();
         }
 
         public void Dispose()
         {
-            Batch.Clear();
+            BatchOperations.Clear();
             operations.Clear();
         }
 
@@ -36,9 +36,9 @@
 
         public async Task Commit(CancellationToken cancellationToken = default)
         {
-            foreach (var operation in Batch)
+            foreach (var operation in BatchOperations)
             {
-                Add(new UserOperation(CurrentContextBag.Get<TableEntityPartitionKey>(), Table, operation));
+                Add(new UserOperation(CurrentContextBag.Get<TableEntityPartitionKey>(), TableClient, operation));
             }
 
             // in case there is nothing to do don't even bother checking the rest
@@ -61,10 +61,10 @@
 
 
         // for the user path only
-        public TableClient Table => TableHolder?.Table;
+        public TableClient TableClient => TableHolder?.Table;
 
         // for the user path only
-        public List<TableTransactionAction> Batch { get; }
+        public List<TableTransactionAction> BatchOperations { get; }
 
         // for the user path only
         public string PartitionKey => !CurrentContextBag.TryGet<TableEntityPartitionKey>(out var partitionKey)

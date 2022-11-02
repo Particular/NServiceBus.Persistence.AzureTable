@@ -60,8 +60,8 @@
         bool disposed;
         StorageSession session;
         bool ownsTransaction;
-        public TableClient Table => session.Table;
-        public List<TableTransactionAction> Batch => session.Batch;
+        public TableClient TableClient => session.TableClient;
+        public List<TableTransactionAction> BatchOperations => session.BatchOperations;
         public string PartitionKey => session.PartitionKey;
         public ContextBag CurrentContextBag
         {

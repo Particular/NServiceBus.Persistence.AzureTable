@@ -19,7 +19,7 @@
 
             var testableSession = new TestableAzureTableStorageSession(new TableEntityPartitionKey("mypartitionkey"))
             {
-                Batch = transactionalBatch
+                BatchOperations = transactionalBatch
             };
             var handlerContext = new TestableInvokeHandlerContext
             {
@@ -42,7 +42,7 @@
                     PartitionKey = session.PartitionKey,
                     RowKey = Guid.NewGuid().ToString()
                 };
-                session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, myItem));
+                session.BatchOperations.Add(new TableTransactionAction(TableTransactionActionType.Add, myItem));
                 return Task.CompletedTask;
             }
         }

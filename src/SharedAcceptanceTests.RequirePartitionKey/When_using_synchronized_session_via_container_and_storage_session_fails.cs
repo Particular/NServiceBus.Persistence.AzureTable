@@ -70,7 +70,7 @@
                         PartitionKey = context.TestRunId.ToString(),
                         Data = "MyCustomData"
                     };
-                    session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
+                    session.BatchOperations.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
                     context.FirstHandlerIsDone = true;
 
                     return Task.CompletedTask;
@@ -92,7 +92,7 @@
                         PartitionKey = session.PartitionKey,
                         Data = "MyCustomData"
                     };
-                    session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
+                    session.BatchOperations.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
                     throw new SimulatedException();
                 }
             }

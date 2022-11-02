@@ -45,7 +45,7 @@
                 public Task Handle(MyMessage message, IMessageHandlerContext handlerContext)
                 {
                     context.Done = true;
-                    context.HandlerHasBatch = session.Batch != null;
+                    context.HandlerHasBatch = session.BatchOperations != null;
 
                     return Task.CompletedTask;
                 }

@@ -187,7 +187,7 @@ namespace NServiceBus.AcceptanceTests
                         PartitionKey = session.PartitionKey,
                         Data = "MyCustomData"
                     };
-                    session.Batch.Add(TableOperation.Insert(entity));
+                    session.BatchOperations.Add(TableOperation.Insert(entity));
                     testContext.HandlerIsDone = true;
                     return Task.CompletedTask;
                 }
