@@ -21,6 +21,13 @@ namespace NServiceBus.Persistence.AzureTable
             var toCreate = Activator.CreateInstance(sagaDataType);
             foreach (var accessor in GetPropertyAccessors(sagaDataType))
             {
+                if (accessor.Name == nameof(IContainSagaData.Id) && accessor.PropertyType == typeof(Guid))
+                {
+                    var sagaDataId = new Guid(entity.RowKey);
+                    accessor.Setter(toCreate, sagaDataId);
+                    continue;
+                }
+
                 if (!entity.ContainsKey(accessor.Name))
                 {
                     continue;
@@ -60,11 +67,16 @@ namespace NServiceBus.Persistence.AzureTable
             return toCreate;
         }
 
-        public static TableEntity ToTableEntity(object sagaData, TableEntity toPersist, JsonSerializer jsonSerializer,
+        public static TableEntity ToTableEntity(IContainSagaData sagaData, TableEntity toPersist, JsonSerializer jsonSerializer,
                                                 Func<TextWriter, JsonWriter> writerCreator)
         {
             foreach (var accessor in GetPropertyAccessors(sagaData.GetType()))
             {
+                if (accessor.Name == nameof(IContainSagaData.Id))
+                {
+                    continue;
+                }
+
                 var name = accessor.Name;
                 var type = accessor.PropertyType;
                 var value = accessor.Getter(sagaData);
