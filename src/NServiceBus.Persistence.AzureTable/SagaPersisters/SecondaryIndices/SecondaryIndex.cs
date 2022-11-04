@@ -31,35 +31,39 @@
             }
 
             var rowKey = assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey ? key.PartitionKey : key.RowKey;
-
             Response<SecondaryIndexTableEntity> exec;
             try
             {
                 exec = await table.GetEntityAsync<SecondaryIndexTableEntity>(key.PartitionKey, rowKey, null, cancellationToken).ConfigureAwait(false);
-            }
-            catch (RequestFailedException requestFailedException) // TODO: verify if this holds up
-                when (!assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey && requestFailedException.Status == (int)HttpStatusCode.PreconditionFailed)
-            {
-                Logger.Warn(
-                    $"Trying to retrieve the secondary index entry with PartitionKey = '{key.PartitionKey}' and RowKey = 'string.Empty' failed. When using the compatibility mode on Azure Cosmos DB it is strongly recommended to enable `sagaPersistence.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey()` to avoid additional lookup costs or disable the compatibility mode entirely if not needed by calling `persistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties(). Falling back to query secondary index entry with PartitionKey = '{key.PartitionKey}' and RowKey = '{key.PartitionKey}'",
-                    requestFailedException);
-
-                exec = await table.GetEntityAsync<SecondaryIndexTableEntity>(key.PartitionKey, key.PartitionKey, null, cancellationToken).ConfigureAwait(false);
-            }
-
-            if (exec.Value != null)
-            {
                 cache.Put(key, exec.Value.SagaId);
                 return exec.Value.SagaId;
             }
+            catch (RequestFailedException requestFailedException)
+                when (requestFailedException.Status is (int)HttpStatusCode.BadRequest or (int)HttpStatusCode.NotFound)
+            {
+                if (!assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey &&
+                    requestFailedException.Status is (int)HttpStatusCode.BadRequest)
+                {
+                    Logger.Warn(
+                        $"Trying to retrieve the secondary index entry with PartitionKey = '{key.PartitionKey}' and RowKey = 'string.Empty' failed. When using the compatibility mode on Azure Cosmos DB it is strongly recommended to enable `sagaPersistence.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey()` to avoid additional lookup costs or disable the compatibility mode entirely if not needed by calling `persistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties(). Falling back to query secondary index entry with PartitionKey = '{key.PartitionKey}' and RowKey = '{key.PartitionKey}'",
+                        requestFailedException);
+                }
+            }
+
+            try
+            {
+                exec = await table.GetEntityAsync<SecondaryIndexTableEntity>(key.PartitionKey, key.PartitionKey, null, cancellationToken).ConfigureAwait(false);
+                cache.Put(key, exec.Value.SagaId);
+                return exec.Value.SagaId;
+            }
+            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound) { }
 
             if (assumeSecondaryIndicesExist)
             {
                 return null;
             }
 
-            var ids = await ScanForSaga<TSagaData>(table, correlationProperty, cancellationToken)
-                .ConfigureAwait(false);
+            var ids = await ScanForSaga<TSagaData>(table, correlationProperty, cancellationToken).ConfigureAwait(false);
             if (ids == null || ids.Length == 0)
             {
                 return null;
