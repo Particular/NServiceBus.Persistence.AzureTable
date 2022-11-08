@@ -12,7 +12,7 @@
     <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="3.0.0-rc.3" />
     <PackageReference Include="NUnit" Version="3.13.3" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.3.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
   </ItemGroup>
 
   <!-- The template project is always the StorageTable project, if you need to deveate files for a specific table API copy
