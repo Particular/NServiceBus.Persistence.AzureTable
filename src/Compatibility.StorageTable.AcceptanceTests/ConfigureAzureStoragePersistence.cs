@@ -13,7 +13,7 @@ public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExec
         persistence.GetSettings().Set("AzureSagaStorage.ConventionalTablePrefix", SetupFixture.TablePrefix);
 
         persistence.DisableTableCreation();
-        persistence.UseCloudTableClient(SetupFixture.TableClient);
+        persistence.UseTableServiceClient(SetupFixture.TableServiceClient);
 
         return Task.FromResult(0);
     }
