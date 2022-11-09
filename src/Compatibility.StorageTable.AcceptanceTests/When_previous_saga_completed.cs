@@ -7,6 +7,7 @@ namespace NServiceBus.AcceptanceTests
     using EndpointTemplates;
     using NUnit.Framework;
     using Extensibility;
+    using Persistence.AzureTable.Release_2x;
     using Sagas;
 
     public class When_previous_saga_completed : CompatibilityAcceptanceTest
@@ -19,18 +20,18 @@ namespace NServiceBus.AcceptanceTests
             var correlationPropertyValue = Guid.NewGuid();
             var sagaId = Guid.NewGuid();
 
-            var previousSagaData = new EndpointWithSagaThatWasMigrated.MigratedSagaData
+            var previousSagaData = new EndpointWithSagaThatWasMigrated.MigratedSagaDataTableEntity
             {
-                Id = sagaId,
+                RowKey = sagaId.ToString(),
+                PartitionKey = sagaId.ToString(),
                 OriginalMessageId = "",
                 Originator = "",
                 SomeId = correlationPropertyValue
             };
 
-            var sagaCorrelationProperty = new SagaCorrelationProperty("SomeId", correlationPropertyValue);
-
-            await PersisterUsingSecondaryIndexes.Save(previousSagaData, sagaCorrelationProperty, null, new ContextBag());
-            await PersisterUsingSecondaryIndexes.Complete(previousSagaData, null, new ContextBag());
+            await SaveSagaInOldFormat(previousSagaData, new SagaCorrelationProperty("SomeId", correlationPropertyValue));
+            // will delete the saga data but keep the 2nd index around
+            await DeleteEntity<EndpointWithSagaThatWasMigrated.MigratedSagaData>(previousSagaData);
 
             var context = await Scenario.Define<Context>()
                 .WithEndpoint<EndpointWithSagaThatWasMigrated>(b => b.When(session => session.SendLocal(new StartSagaMessage
@@ -89,6 +90,12 @@ namespace NServiceBus.AcceptanceTests
             }
 
             public class MigratedSagaData : ContainSagaData
+            {
+                public Guid SomeId { get; set; }
+            }
+
+            [SagaEntityType(SagaEntityType = typeof(MigratedSagaData))]
+            public class MigratedSagaDataTableEntity : SagaDataTableEntity
             {
                 public Guid SomeId { get; set; }
             }

@@ -7,6 +7,7 @@ namespace NServiceBus.AcceptanceTests
     using EndpointTemplates;
     using NUnit.Framework;
     using Extensibility;
+    using Persistence.AzureTable.Release_2x;
     using Sagas;
 
     public class When_previous_saga_completed_but_secondary_exists : CompatibilityAcceptanceTest
@@ -19,18 +20,17 @@ namespace NServiceBus.AcceptanceTests
             var correlationPropertyValue = Guid.NewGuid();
             var sagaId = Guid.NewGuid();
 
-            var previousSagaData = new EndpointWithSagaThatWasMigrated.MigratedSagaData
+            var previousSagaData = new EndpointWithSagaThatWasMigrated.MigratedSagaDataTableEntity
             {
-                Id = sagaId,
+                RowKey = sagaId.ToString(),
+                PartitionKey = sagaId.ToString(),
                 OriginalMessageId = "",
                 Originator = "",
                 SomeId = correlationPropertyValue
             };
 
-            var sagaCorrelationProperty = new SagaCorrelationProperty("SomeId", correlationPropertyValue);
-            await PersisterUsingSecondaryIndexes.Save(previousSagaData, sagaCorrelationProperty, null, new ContextBag());
-
-            var sagaEntity = GetByRowKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(sagaId.ToString());
+            await SaveSagaInOldFormat(previousSagaData, new SagaCorrelationProperty("SomeId", correlationPropertyValue));
+            var sagaEntity = await GetByRowKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(sagaId.ToString());
             await DeleteEntity<EndpointWithSagaThatWasMigrated.MigratedSagaData>(sagaEntity);
 
             var context = await Scenario.Define<Context>()
@@ -90,6 +90,12 @@ namespace NServiceBus.AcceptanceTests
             }
 
             public class MigratedSagaData : ContainSagaData
+            {
+                public Guid SomeId { get; set; }
+            }
+
+            [SagaEntityType(SagaEntityType = typeof(MigratedSagaData))]
+            public class MigratedSagaDataTableEntity : SagaDataTableEntity
             {
                 public Guid SomeId { get; set; }
             }

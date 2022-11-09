@@ -6,7 +6,6 @@ namespace NServiceBus.AcceptanceTests
     using AcceptanceTesting;
     using EndpointTemplates;
     using NUnit.Framework;
-    using Extensibility;
     using Persistence.AzureTable.Release_2x;
     using Sagas;
 
@@ -20,16 +19,17 @@ namespace NServiceBus.AcceptanceTests
             var correlationPropertyValue = Guid.NewGuid();
             var sagaId = Guid.NewGuid();
 
-            var previousSagaData = new EndpointWithSagaThatWasMigrated.MigratedSagaData
+            var previousSagaData = new EndpointWithSagaThatWasMigrated.MigratedSagaDataTableEntity
             {
-                Id = sagaId,
+                RowKey = sagaId.ToString(),
+                PartitionKey = sagaId.ToString(),
                 OriginalMessageId = "",
                 Originator = "",
                 SomeId = correlationPropertyValue
             };
 
             var sagaCorrelationProperty = new SagaCorrelationProperty("SomeId", correlationPropertyValue);
-            await PersisterUsingSecondaryIndexes.Save(previousSagaData, sagaCorrelationProperty, null, new ContextBag());
+            await SaveSagaInOldFormat(previousSagaData, sagaCorrelationProperty);
 
             var context = await Scenario.Define<Context>()
                 .WithEndpoint<EndpointWithSagaThatWasMigrated>(b => b.When(session => session.SendLocal(new ContinueSagaMessage
@@ -39,11 +39,11 @@ namespace NServiceBus.AcceptanceTests
                 .Done(c => c.Done)
                 .Run();
 
-            var sagaEntity = GetByRowKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(context.SagaId.ToString());
+            var sagaEntity = await GetByRowKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(context.SagaId.ToString());
             var partitionRowKeyTuple = SecondaryIndexKeyBuilder.BuildTableKey(typeof(EndpointWithSagaThatWasMigrated.MigratedSagaData), sagaCorrelationProperty);
-            var secondaryIndexEntry = GetByPartitionKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(partitionRowKeyTuple.PartitionKey);
+            var secondaryIndexEntry = await GetByPartitionKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(partitionRowKeyTuple.PartitionKey);
 
-            Assert.IsTrue(sagaEntity.Properties.ContainsKey("NServiceBus_2ndIndexKey"), "Secondary index property should be preserved");
+            Assert.IsTrue(sagaEntity.ContainsKey("NServiceBus_2ndIndexKey"), "Secondary index property should be preserved");
             Assert.IsNotNull(secondaryIndexEntry);
             Assert.AreEqual(sagaId, context.SagaId);
         }
@@ -94,6 +94,12 @@ namespace NServiceBus.AcceptanceTests
             }
 
             public class MigratedSagaData : ContainSagaData
+            {
+                public Guid SomeId { get; set; }
+            }
+
+            [SagaEntityType(SagaEntityType = typeof(MigratedSagaData))]
+            public class MigratedSagaDataTableEntity : SagaDataTableEntity
             {
                 public Guid SomeId { get; set; }
             }

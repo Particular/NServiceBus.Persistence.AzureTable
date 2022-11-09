@@ -4,11 +4,11 @@ namespace NServiceBus.AcceptanceTests
     using System.Threading.Tasks;
     using NServiceBus;
     using AcceptanceTesting;
+    using Azure;
+    using Azure.Data.Tables;
     using EndpointTemplates;
     using NUnit.Framework;
-    using Extensibility;
     using Sagas;
-    using Microsoft.Azure.Cosmos.Table;
     using Persistence.AzureTable.Release_2x;
     using Persistence.AzureTable;
     using Pipeline;
@@ -24,16 +24,16 @@ namespace NServiceBus.AcceptanceTests
             var sagaId = Guid.NewGuid();
             var myTableRowKey = Guid.NewGuid();
 
-            var previousSagaData = new EndpointWithSagaThatWasMigrated.MigratedSagaData
+            var previousSagaData = new EndpointWithSagaThatWasMigrated.MigratedSagaDataTableEntity
             {
-                Id = sagaId,
+                RowKey = sagaId.ToString(),
                 OriginalMessageId = "",
                 Originator = "",
                 SomeId = correlationPropertyValue
             };
 
             var sagaCorrelationProperty = new SagaCorrelationProperty("SomeId", correlationPropertyValue);
-            await PersisterUsingSecondaryIndexes.Save(previousSagaData, sagaCorrelationProperty, null, new ContextBag());
+            await SaveSagaInOldFormat(previousSagaData, sagaCorrelationProperty);
 
             var context = await Scenario.Define<Context>()
                 .WithEndpoint<EndpointWithSagaThatWasMigrated>(b => b.When(session => session.SendLocal(new ContinueSagaMessage
@@ -44,10 +44,10 @@ namespace NServiceBus.AcceptanceTests
                 .Done(c => c.SagaIsDone && c.HandlerIsDone)
                 .Run();
 
-            var myEntity = GetByRowKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(myTableRowKey.ToString());
+            var myEntity = await GetByRowKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(myTableRowKey.ToString());
 
             Assert.IsNotNull(myEntity);
-            Assert.AreEqual("MyCustomData", myEntity["Data"].StringValue);
+            Assert.AreEqual("MyCustomData", myEntity["Data"]);
             Assert.AreEqual(sagaId, context.SagaId);
         }
 
@@ -60,20 +60,21 @@ namespace NServiceBus.AcceptanceTests
             var sagaId = Guid.NewGuid();
             var myTableRowKey = Guid.NewGuid();
 
-            var previousSagaData = new EndpointWithSagaThatWasMigrated.MigratedSagaData
+            var previousSagaData = new EndpointWithSagaThatWasMigrated.MigratedSagaDataTableEntity
             {
-                Id = sagaId,
+                RowKey = sagaId.ToString(),
+                PartitionKey = sagaId.ToString(),
                 OriginalMessageId = "",
                 Originator = "",
                 SomeId = correlationPropertyValue
             };
 
             var sagaCorrelationProperty = new SagaCorrelationProperty("SomeId", correlationPropertyValue);
-            await PersisterUsingSecondaryIndexes.Save(previousSagaData, sagaCorrelationProperty, null, new ContextBag());
+            await SaveSagaInOldFormat(previousSagaData, sagaCorrelationProperty);
 
             // making sure there is no secondary to lookup
             var partitionRowKeyTuple = SecondaryIndexKeyBuilder.BuildTableKey(typeof(EndpointWithSagaThatWasMigrated.MigratedSagaData), sagaCorrelationProperty);
-            var secondaryIndexEntry = GetByPartitionKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(partitionRowKeyTuple.PartitionKey);
+            var secondaryIndexEntry = await GetByPartitionKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(partitionRowKeyTuple.PartitionKey);
             await DeleteEntity<EndpointWithSagaThatWasMigrated.MigratedSagaData>(secondaryIndexEntry);
 
             var context = await Scenario.Define<Context>()
@@ -92,10 +93,10 @@ namespace NServiceBus.AcceptanceTests
                 .Done(c => c.SagaIsDone && c.HandlerIsDone)
                 .Run();
 
-            var myEntity = GetByRowKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(myTableRowKey.ToString());
+            var myEntity = await GetByRowKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(myTableRowKey.ToString());
 
             Assert.IsNotNull(myEntity);
-            Assert.AreEqual("MyCustomData", myEntity["Data"].StringValue);
+            Assert.AreEqual("MyCustomData", myEntity["Data"]);
             Assert.AreEqual(sagaId, context.SagaId);
         }
 
@@ -108,20 +109,16 @@ namespace NServiceBus.AcceptanceTests
 
         public class EndpointWithSagaThatWasMigrated : EndpointConfigurationBuilder
         {
-            public EndpointWithSagaThatWasMigrated()
-            {
+            public EndpointWithSagaThatWasMigrated() =>
                 EndpointSetup<DefaultServer>(c =>
                     c.Pipeline.Register(typeof(PartitionKeyProviderBehavior), "Provides a partition key by deriving it from the saga id"));
-            }
 
             class PartitionKeyProviderBehavior : Behavior<IIncomingLogicalMessageContext>
             {
                 IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId;
 
                 public PartitionKeyProviderBehavior(IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId)
-                {
-                    this.providePartitionKeyFromSagaId = providePartitionKeyFromSagaId;
-                }
+                    => this.providePartitionKeyFromSagaId = providePartitionKeyFromSagaId;
 
                 public override async Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
                 {
@@ -139,9 +136,7 @@ namespace NServiceBus.AcceptanceTests
             public class SagaWithMigratedData : Saga<MigratedSagaData>, IAmStartedByMessages<StartSagaMessage>, IAmStartedByMessages<ContinueSagaMessage>
             {
                 public SagaWithMigratedData(Context testContext)
-                {
-                    this.testContext = testContext;
-                }
+                    => this.testContext = testContext;
 
                 public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
@@ -173,9 +168,7 @@ namespace NServiceBus.AcceptanceTests
             public class ContinueMessageHandler : IHandleMessages<ContinueSagaMessage>
             {
                 public ContinueMessageHandler(Context testContext)
-                {
-                    this.testContext = testContext;
-                }
+                    => this.testContext = testContext;
 
                 public Task Handle(ContinueSagaMessage message, IMessageHandlerContext context)
                 {
@@ -187,20 +180,30 @@ namespace NServiceBus.AcceptanceTests
                         PartitionKey = session.PartitionKey,
                         Data = "MyCustomData"
                     };
-                    session.Batch.Add(TableOperation.Insert(entity));
+                    session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
                     testContext.HandlerIsDone = true;
                     return Task.CompletedTask;
                 }
 
-                Context testContext;
+                readonly Context testContext;
             }
 
-            public class MyTableEntity : TableEntity
+            public class MyTableEntity : ITableEntity
             {
                 public string Data { get; set; }
+                public string PartitionKey { get; set; }
+                public string RowKey { get; set; }
+                public DateTimeOffset? Timestamp { get; set; }
+                public ETag ETag { get; set; }
             }
 
             public class MigratedSagaData : ContainSagaData
+            {
+                public Guid SomeId { get; set; }
+            }
+
+            [SagaEntityType(SagaEntityType = typeof(MigratedSagaData))]
+            public class MigratedSagaDataTableEntity : SagaDataTableEntity
             {
                 public Guid SomeId { get; set; }
             }
