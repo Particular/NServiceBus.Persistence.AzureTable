@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFrameworks>net472;net6.0</TargetFrameworks>
     <RootNamespace>NonTransactionalSagas.AcceptanceTests</RootNamespace>
-    <LangVersion>10</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
