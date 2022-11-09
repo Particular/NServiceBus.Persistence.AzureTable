@@ -4,8 +4,8 @@
     using System;
     using System.IO;
     using System.Threading.Tasks;
+    using Azure.Data.Tables;
     using NUnit.Framework;
-    using Microsoft.Azure.Cosmos.Table;
     using Testing;
 
     [SetUpFixture]
@@ -14,34 +14,27 @@
         [OneTimeSetUp]
         public Task OneTimeSetUp()
         {
-            var connectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
+            ConnectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
 
-            var account = CloudStorageAccount.Parse(connectionString);
-            TableClient = account.CreateCloudTableClient();
+            TableServiceClient = new TableServiceClient(ConnectionString);
 
             TablePrefix = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();
 
             allConventionalSagaTableNamesWithPrefix = GetType().Assembly.GetTypes().Where(x => x.GetInterfaces().Contains(typeof(IContainSagaData)))
                 .Select(x => $"{TablePrefix}{x.Name}").ToArray();
 
-            return Task.WhenAll(allConventionalSagaTableNamesWithPrefix.Select(tableName =>
-            {
-                var table = TableClient.GetTableReference(tableName);
-                return table.CreateIfNotExistsAsync();
-            }).ToArray());
+            return Task.WhenAll(allConventionalSagaTableNamesWithPrefix
+                .Select(tableName => TableServiceClient.CreateTableIfNotExistsAsync(tableName))
+                .ToArray());
         }
 
         [OneTimeTearDown]
-        public Task OneTimeTearDown()
-        {
-            return Task.WhenAll(allConventionalSagaTableNamesWithPrefix.Select(tableName =>
-            {
-                var table = TableClient.GetTableReference(tableName);
-                return table.DeleteIfExistsAsync();
-            }).ToArray());
-        }
+        public Task OneTimeTearDown() => Task.WhenAll(allConventionalSagaTableNamesWithPrefix
+            .Select(tableName => TableServiceClient.DeleteTableAsync(tableName))
+            .ToArray());
 
-        public static CloudTableClient TableClient;
+        public static string ConnectionString { get; private set; }
+        public static TableServiceClient TableServiceClient { get; private set; }
         public static string TablePrefix;
         string[] allConventionalSagaTableNamesWithPrefix;
     }
