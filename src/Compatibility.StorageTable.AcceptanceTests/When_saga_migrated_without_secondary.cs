@@ -73,7 +73,7 @@ namespace NServiceBus.AcceptanceTests
 
             var gets = recorder.Requests.Where(r => r.ToLower().Contains("get"));
             var getWithFilter = gets.Where(get =>
-                    get.Contains($"$filter=SomeId%20eq%20guid%27{correlationPropertyValue}%27&$select=PartitionKey%2CRowKey%2CTimestamp"))
+                                        get.Contains($"$select=PartitionKey%2CRowKey&$filter=SomeId%20eq%20guid%27{correlationPropertyValue}%27"))
                 .ToArray();
 
             CollectionAssert.IsNotEmpty(getWithFilter);
