@@ -27,6 +27,7 @@ namespace NServiceBus.AcceptanceTests
             var previousSagaData = new EndpointWithSagaThatWasMigrated.MigratedSagaDataTableEntity
             {
                 RowKey = sagaId.ToString(),
+                PartitionKey = sagaId.ToString(),
                 OriginalMessageId = "",
                 Originator = "",
                 SomeId = correlationPropertyValue
