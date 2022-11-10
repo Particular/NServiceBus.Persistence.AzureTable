@@ -36,7 +36,7 @@ namespace NServiceBus.AcceptanceTests
                 NullableInt = 10,
                 ComplexData = @"
                 {
-                    Data = ""SomeData""
+                    Data : ""SomeData""
                 }"
             };
 
@@ -64,28 +64,28 @@ namespace NServiceBus.AcceptanceTests
             var byteArrayProp = sagaEntity[nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.ByteArray)];
 
             Assert.AreEqual(typeof(double), nullableDoubleProp.GetType());
-            Assert.AreEqual(4.5d, nullableDoubleProp);
+            Assert.AreEqual(4.5d, (double)nullableDoubleProp);
 
             Assert.AreEqual(typeof(string), intArrayProp.GetType());
             Assert.AreEqual("[1,2,3,4]", intArrayProp);
-            //
-            // Assert.AreEqual(EdmType.String, complexObjectProp.PropertyType);
-            // Assert.AreEqual("{\"Data\":\"SomeData\"}", complexObjectProp.StringValue);
-            //
-            // Assert.AreEqual(EdmType.Boolean, nullableBoolProp.PropertyType);
-            // Assert.AreEqual(true, nullableBoolProp.BooleanValue);
-            //
-            // Assert.AreEqual(EdmType.Guid, nullableGuidProp.PropertyType);
-            // Assert.AreEqual(new Guid("3C623C1F-80AB-4036-86CA-C2020FAE2EFE"), nullableGuidProp.GuidValue);
-            //
-            // Assert.AreEqual(EdmType.Int64, nullableLongProp.PropertyType);
-            // Assert.AreEqual(10, nullableLongProp.Int64Value);
-            //
-            // Assert.AreEqual(EdmType.Int32, nullableIntProp.PropertyType);
-            // Assert.AreEqual(10, nullableIntProp.Int32Value);
-            //
-            // Assert.AreEqual(EdmType.Binary, byteArrayProp.PropertyType);
-            // CollectionAssert.AreEqual(new byte[] { 1 }, byteArrayProp.BinaryValue);
+
+            Assert.AreEqual(typeof(string), complexObjectProp.GetType());
+            Assert.AreEqual("{\"Data\":\"SomeData\"}", (string)complexObjectProp);
+
+            Assert.AreEqual(typeof(bool), nullableBoolProp.GetType());
+            Assert.AreEqual(true, (bool)nullableBoolProp);
+
+            Assert.AreEqual(typeof(Guid), nullableGuidProp.GetType());
+            Assert.AreEqual(new Guid("3C623C1F-80AB-4036-86CA-C2020FAE2EFE"), (Guid)nullableGuidProp);
+
+            Assert.AreEqual(typeof(long), nullableLongProp.GetType());
+            Assert.AreEqual(10, (long)nullableLongProp);
+
+            Assert.AreEqual(typeof(int), nullableIntProp.GetType());
+            Assert.AreEqual(10, (int)nullableIntProp);
+
+            Assert.AreEqual(typeof(byte[]), byteArrayProp.GetType());
+            CollectionAssert.AreEqual(new byte[] { 1 }, (byte[])byteArrayProp);
 
             Assert.AreEqual(sagaId, context.SagaId);
         }
