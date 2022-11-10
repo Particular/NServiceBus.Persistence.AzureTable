@@ -242,7 +242,8 @@ namespace NServiceBus.Persistence.AzureTable
 
             try
             {
-                return TableClient.CreateQueryFilter($"{propertyInfo.Name} eq {correlationProperty.Value}");
+                var propertyValue = TableClient.CreateQueryFilter($"{correlationProperty.Value}");
+                return $"{propertyInfo.Name} eq {propertyValue}";
             }
             catch (ArgumentException exception)
             {
