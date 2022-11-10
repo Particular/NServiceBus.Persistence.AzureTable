@@ -15,10 +15,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
     [TestFixture("CosmosDB")]
     public class SecondaryIndexTests
     {
-        public SecondaryIndexTests(string tableApiType)
-        {
-            this.tableApiType = tableApiType;
-        }
+        public SecondaryIndexTests(string tableApiType) => this.tableApiType = tableApiType;
 
         [SetUp]
         public Task SetUp()
@@ -68,15 +65,14 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         }
 
         [TearDown]
-        public Task Teardown()
+        public async Task Teardown()
         {
             try
             {
-                return client.DeleteTableAsync(tableName);
+                await client.DeleteTableAsync(tableName);
             }
             catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
             {
-                return Task.CompletedTask;
             }
         }
 
