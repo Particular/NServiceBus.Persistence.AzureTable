@@ -84,22 +84,15 @@
             where TSagaData : IContainSagaData
         {
             var query = TableEntityExtensions.BuildWherePropertyQuery<TSagaData>(correlationProperty);
-            var selectColumns = new List<string>
-            {
-                "PartitionKey",
-                "RowKey"
-            };
 
-            var result = await table.QueryAsync<Subscription>(query, cancellationToken: cancellationToken)
-                                                        .ToListAsync(cancellationToken)
-                                                        .ConfigureAwait(false);
+            var result = await table.QueryAsync<TableEntity>(query, select: SelectedColumnsForFullTableScan, cancellationToken: cancellationToken)
+                                                 .ToListAsync(cancellationToken)
+                                                 .ConfigureAwait(false);
             return result.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray();
         }
 
         public void InvalidateCache(PartitionRowKeyTuple secondaryIndexKey)
-        {
-            cache.Remove(secondaryIndexKey);
-        }
+            => cache.Remove(secondaryIndexKey);
 
         /// <summary>
         /// Invalidates the secondary index cache if any exists for the specified property value.
@@ -115,6 +108,11 @@
         readonly bool assumeSecondaryIndicesExist;
         readonly bool assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey;
         const int LRUCapacity = 1000;
+        static IEnumerable<string> SelectedColumnsForFullTableScan = new List<string>(2)
+        {
+            "PartitionKey",
+            "RowKey"
+        };
         static readonly ILog Logger = LogManager.GetLogger<SecondaryIndex>();
     }
 }

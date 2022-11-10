@@ -240,24 +240,15 @@ namespace NServiceBus.Persistence.AzureTable
                 return null;
             }
 
-            if (!IsSupportedPropertyType(propertyInfo.PropertyType))
+            try
             {
-                throw new NotSupportedException($"The property type '{propertyInfo.PropertyType.Name}' is not supported in Azure Table Storage");
-
+                return TableClient.CreateQueryFilter($"{propertyInfo.Name} eq {correlationProperty.Value}");
             }
-
-            return $"{propertyInfo.Name} eq {correlationProperty.Value}";
+            catch (ArgumentException exception)
+            {
+                throw new NotSupportedException($"The property type '{propertyInfo.PropertyType.Name}' is not supported in Azure Table Storage", exception);
+            }
         }
-
-        static bool IsSupportedPropertyType(Type propertyType) =>
-            propertyType == typeof(byte[]) ||
-            propertyType == typeof(bool) ||
-            propertyType == typeof(DateTime) ||
-            propertyType == typeof(Guid) ||
-            propertyType == typeof(int) ||
-            propertyType == typeof(long) ||
-            propertyType == typeof(double) ||
-            propertyType == typeof(string);
 
         static readonly ConcurrentDictionary<Type, IReadOnlyCollection<PropertyAccessor>> propertyAccessorCache = new();
 
