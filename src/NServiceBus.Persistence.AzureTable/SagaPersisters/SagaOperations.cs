@@ -7,11 +7,8 @@
     using Azure.Data.Tables;
     using Logging;
 
-    class SagaSave : Operation
+    sealed class SagaSave : Operation
     {
-        readonly TableEntity sagaRow;
-        readonly TableClient tableClient;
-
         public SagaSave(TableEntityPartitionKey partitionKey, TableEntity sagaRow, TableClient tableClient) : base(partitionKey)
         {
             this.sagaRow = sagaRow;
@@ -23,13 +20,13 @@
             transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.Add, sagaRow));
             return tableClient;
         }
-    }
 
-    class SagaUpdate : Operation
-    {
         readonly TableEntity sagaRow;
         readonly TableClient tableClient;
+    }
 
+    sealed class SagaUpdate : Operation
+    {
         public SagaUpdate(TableEntityPartitionKey partitionKey, TableEntity sagaRow, TableClient tableClient) : base(partitionKey)
         {
             this.sagaRow = sagaRow;
@@ -41,13 +38,13 @@
             transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.UpdateReplace, sagaRow, sagaRow.ETag));
             return tableClient;
         }
-    }
 
-    class SagaDelete : Operation
-    {
         readonly TableEntity sagaRow;
         readonly TableClient tableClient;
+    }
 
+    sealed class SagaDelete : Operation
+    {
         public SagaDelete(TableEntityPartitionKey partitionKey, TableEntity sagaRow, TableClient tableClient) : base(partitionKey)
         {
             this.sagaRow = sagaRow;
@@ -59,13 +56,13 @@
             transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.Delete, sagaRow, sagaRow.ETag));
             return tableClient;
         }
+
+        readonly TableEntity sagaRow;
+        readonly TableClient tableClient;
     }
 
-    class SagaRemoveSecondaryIndex : Operation
+    sealed class SagaRemoveSecondaryIndex : Operation
     {
-        readonly SecondaryIndex secondaryIndices;
-        readonly TableClient table;
-
         public SagaRemoveSecondaryIndex(TableEntityPartitionKey partitionKey, Guid sagaId, SecondaryIndex secondaryIndices, PartitionRowKeyTuple partitionRowKeyTuple, TableClient table) : base(partitionKey)
         {
             this.sagaId = sagaId;
@@ -103,8 +100,10 @@
             return true;
         }
 
-        readonly ILog Logger = LogManager.GetLogger<AzureSagaPersister>();
         readonly PartitionRowKeyTuple partitionRowKeyTuple;
         readonly Guid sagaId;
+        readonly SecondaryIndex secondaryIndices;
+        readonly TableClient table;
+        static readonly ILog Logger = LogManager.GetLogger<AzureSagaPersister>();
     }
 }

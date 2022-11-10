@@ -6,10 +6,7 @@
 
     abstract class Operation
     {
-        protected Operation(TableEntityPartitionKey partitionKey)
-        {
-            PartitionKey = partitionKey;
-        }
+        protected Operation(TableEntityPartitionKey partitionKey) => PartitionKey = partitionKey;
 
         public TableEntityPartitionKey PartitionKey { get; }
 
@@ -19,18 +16,12 @@
         {
         }
 
-        public virtual void Conflict(Response result)
-        {
-            throw new TableBatchOperationException(result);
-        }
+        public virtual void Conflict(Response result) => throw new TableBatchOperationException(result);
 
-        public virtual bool Handle(RequestFailedException storageException)
-        {
-            return false;
-        }
+        public virtual bool Handle(RequestFailedException storageException) => false;
     }
 
-    class ThrowOnConflictOperation : Operation
+    sealed class ThrowOnConflictOperation : Operation
     {
         ThrowOnConflictOperation() : base(default)
         {
@@ -38,9 +29,6 @@
 
         public static Operation Instance { get; } = new ThrowOnConflictOperation();
 
-        public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
-        {
-            return null;
-        }
+        public override TableClient Apply(List<TableTransactionAction> transactionalBatch) => null;
     }
 }

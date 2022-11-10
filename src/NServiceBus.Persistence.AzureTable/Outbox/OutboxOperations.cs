@@ -3,7 +3,7 @@
     using System.Collections.Generic;
     using Azure.Data.Tables;
 
-    class OutboxStore : Operation
+    sealed class OutboxStore : Operation
     {
         public OutboxStore(TableEntityPartitionKey partitionKey, OutboxRecord outboxRow, TableClient tableClient) : base(partitionKey)
         {
@@ -21,7 +21,7 @@
         readonly TableClient tableClient;
     }
 
-    class OutboxDelete : Operation
+    sealed class OutboxDelete : Operation
     {
         public OutboxDelete(TableEntityPartitionKey partitionKey, OutboxRecord outboxRow, TableClient tableClient) : base(partitionKey)
         {
