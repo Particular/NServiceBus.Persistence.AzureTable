@@ -242,6 +242,7 @@ namespace NServiceBus.Persistence.AzureTable
 
             try
             {
+                // We're doing this in two phases to avoid the CreateQueryFilter API from escaping the propertyInfo.Name value as it would be any argument
                 var propertyValue = TableClient.CreateQueryFilter($"{correlationProperty.Value}");
                 return $"{propertyInfo.Name} eq {propertyValue}";
             }
