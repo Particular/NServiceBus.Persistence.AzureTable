@@ -67,6 +67,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         [TearDown]
         public async Task Teardown()
         {
+            scope.Dispose();
             try
             {
                 await client.DeleteTableAsync(tableName);
