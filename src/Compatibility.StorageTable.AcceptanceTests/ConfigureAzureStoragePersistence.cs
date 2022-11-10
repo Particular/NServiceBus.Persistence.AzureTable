@@ -15,11 +15,8 @@ public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExec
         persistence.DisableTableCreation();
         persistence.UseTableServiceClient(SetupFixture.TableServiceClient);
 
-        return Task.FromResult(0);
+        return Task.CompletedTask;
     }
 
-    Task IConfigureEndpointTestExecution.Cleanup()
-    {
-        return Task.FromResult(0);
-    }
+    Task IConfigureEndpointTestExecution.Cleanup() => Task.CompletedTask;
 }

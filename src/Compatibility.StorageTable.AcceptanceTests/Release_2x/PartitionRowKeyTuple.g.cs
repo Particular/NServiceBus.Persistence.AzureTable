@@ -5,7 +5,7 @@
     /// <summary>
     /// This is a copy of the saga persister code 2.4.1
     /// </summary>
-    struct PartitionRowKeyTuple
+    readonly struct PartitionRowKeyTuple
     {
         public PartitionRowKeyTuple(string partitionKey, string rowKey)
         {
