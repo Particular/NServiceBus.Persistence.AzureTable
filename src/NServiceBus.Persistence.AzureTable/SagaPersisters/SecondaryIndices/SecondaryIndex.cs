@@ -22,7 +22,6 @@
         public virtual async Task<Guid?> FindSagaId<TSagaData>(TableClient table, SagaCorrelationProperty correlationProperty, CancellationToken cancellationToken = default)
             where TSagaData : IContainSagaData
         {
-            var sagaType = typeof(TSagaData);
             var key = SecondaryIndexKeyBuilder.BuildTableKey<TSagaData>(correlationProperty);
 
             if (cache.TryGet(key, out var guid))
@@ -72,24 +71,16 @@
                 return null;
             }
 
-            var ids = await ScanForSaga<TSagaData>(table, correlationProperty, cancellationToken).ConfigureAwait(false);
-            if (ids == null || ids.Length == 0)
+            var foundSagaIdOrNull = await ScanForSaga<TSagaData>(table, correlationProperty, cancellationToken).ConfigureAwait(false);
+            if (!foundSagaIdOrNull.HasValue)
             {
                 return null;
             }
-
-            if (ids.Length > 1)
-            {
-                throw new DuplicatedSagaFoundException(sagaType, correlationProperty.Name, ids);
-            }
-
-            // no longer creation secondary index entries
-            var id = ids[0];
-            cache.Put(key, id);
-            return id;
+            cache.Put(key, foundSagaIdOrNull.Value);
+            return foundSagaIdOrNull.Value;
         }
 
-        static async Task<Guid[]> ScanForSaga<TSagaData>(TableClient table, SagaCorrelationProperty correlationProperty, CancellationToken cancellationToken)
+        static async Task<Guid?> ScanForSaga<TSagaData>(TableClient table, SagaCorrelationProperty correlationProperty, CancellationToken cancellationToken)
             where TSagaData : IContainSagaData
         {
             var query = TableEntityExtensions.BuildWherePropertyQuery<TSagaData>(correlationProperty);
@@ -97,7 +88,16 @@
             var result = await table.QueryAsync<TableEntity>(query, select: SelectedColumnsForFullTableScan, cancellationToken: cancellationToken)
                                                  .ToListAsync(cancellationToken)
                                                  .ConfigureAwait(false);
-            return result.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray();
+            return result.Count switch
+            {
+                0 => null,
+                1 => Guid.ParseExact(result[0].PartitionKey, "D"),
+                > 1 =>
+                    // Only paying the price for LINQ and list allocations in the exception case
+                    throw new DuplicatedSagaFoundException(typeof(TSagaData), correlationProperty.Name,
+                        result.Select(entity => Guid.ParseExact(entity.PartitionKey, "D")).ToArray()),
+                _ => throw new ArgumentException() // in .NET 7 this can be switched to an UnreachableException
+            };
         }
 
         public void InvalidateCache(PartitionRowKeyTuple secondaryIndexKey)
