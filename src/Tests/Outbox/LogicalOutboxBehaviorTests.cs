@@ -24,10 +24,7 @@
         string tableName;
         string tableApiType;
 
-        public LogicalOutboxBehaviorTests(string tableApiType)
-        {
-            this.tableApiType = tableApiType;
-        }
+        public LogicalOutboxBehaviorTests(string tableApiType) => this.tableApiType = tableApiType;
 
         [SetUp]
         public Task SetUp()
@@ -40,15 +37,14 @@
         }
 
         [TearDown]
-        public Task Teardown()
+        public async Task Teardown()
         {
             try
             {
-                return tableServiceClient.DeleteTableAsync(tableName);
+                await tableServiceClient.DeleteTableAsync(tableName);
             }
             catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
             {
-                return Task.CompletedTask;
             }
         }
 

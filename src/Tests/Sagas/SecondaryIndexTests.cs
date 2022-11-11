@@ -23,10 +23,10 @@ namespace NServiceBus.Persistence.AzureTable.Tests
             logStatements = new StringBuilder();
 
             string connectionString = ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence(tableApiType);
-            client = new TableServiceClient(connectionString);
+            tableServiceClient = new TableServiceClient(connectionString);
 
             tableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}{nameof(SecondaryIndexTests)}".ToLowerInvariant();
-            tableClient = client.GetTableClient(tableName);
+            tableClient = tableServiceClient.GetTableClient(tableName);
             return tableClient.CreateIfNotExistsAsync();
         }
 
@@ -70,7 +70,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
             scope.Dispose();
             try
             {
-                await client.DeleteTableAsync(tableName);
+                await tableServiceClient.DeleteTableAsync(tableName);
             }
             catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
             {
@@ -85,7 +85,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         StringBuilder logStatements;
         IDisposable scope;
         TableClient tableClient;
-        TableServiceClient client;
+        TableServiceClient tableServiceClient;
         string tableName;
         string tableApiType;
     }

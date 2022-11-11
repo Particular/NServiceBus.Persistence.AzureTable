@@ -18,10 +18,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         AzureSubscriptionStorage persister;
         SubscriptionTestHelper.Scope scope;
 
-        public When_caching(string tableApiType)
-        {
-            this.tableApiType = tableApiType;
-        }
+        public When_caching(string tableApiType) => this.tableApiType = tableApiType;
 
         [SetUp]
         public async Task Setup()
@@ -31,10 +28,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         }
 
         [TearDown]
-        public void Teardown()
-        {
-            scope.Dispose();
-        }
+        public async Task Teardown() => await scope.DisposeAsync();
 
         [Test]
         public async Task Cached_get_should_be_faster()

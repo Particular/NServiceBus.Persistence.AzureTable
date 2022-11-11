@@ -15,8 +15,8 @@
 
             var subscriptionTableName = $"{$"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant()}{AzureSubscriptionStorageDefaults.TableName}";
 
-            var table = tableServiceClient.GetTableClient(subscriptionTableName);
-            await table.CreateIfNotExistsAsync();
+            var tableClient = tableServiceClient.GetTableClient(subscriptionTableName);
+            await tableClient.CreateIfNotExistsAsync();
 
             return new Scope(new AzureSubscriptionStorage(
                 new TableServiceClientForSubscriptionsFromConnectionString(connectionString),
@@ -26,7 +26,7 @@
                 subscriptionTableName);
         }
 
-        internal class Scope : IDisposable
+        internal class Scope : IAsyncDisposable
         {
             readonly TableServiceClient tableServiceClient;
             readonly string tableName;
@@ -40,11 +40,8 @@
 
             public AzureSubscriptionStorage Storage { get; }
 
-            public void Dispose()
-            {
-                // unfortunately we don't have IAsyncDisposable yet.
-                tableServiceClient.DeleteTable(tableName);
-            }
+            public async ValueTask DisposeAsync() =>
+                await tableServiceClient.DeleteTableAsync(tableName);
         }
     }
 }
