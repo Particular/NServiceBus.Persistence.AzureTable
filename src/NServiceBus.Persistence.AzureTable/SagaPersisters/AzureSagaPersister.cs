@@ -13,7 +13,7 @@
     using Newtonsoft.Json;
     using Sagas;
 
-    class AzureSagaPersister : ISagaPersister
+    sealed class AzureSagaPersister : ISagaPersister
     {
         public AzureSagaPersister(
             IProvideTableServiceClient tableServiceClientProvider,
@@ -45,7 +45,7 @@
             var sagaDataEntityToSave = new TableEntity(partitionKey.PartitionKey, sagaData.Id.ToString());
             sagaDataEntityToSave = TableEntityExtensions.ToTableEntity(sagaData, sagaDataEntityToSave, jsonSerializer, writerCreator);
 
-            var table = await GetTableAndCreateIfNotExists(storageSession, sagaDataType, cancellationToken)
+            var table = await GetTableClientAndCreateTableIfNotExists(storageSession, sagaDataType, cancellationToken)
                 .ConfigureAwait(false);
 
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
@@ -75,7 +75,7 @@
         {
             var storageSession = (IWorkWithSharedTransactionalBatch)session;
 
-            var tableToReadFrom = await GetTableAndCreateIfNotExists(storageSession, typeof(TSagaData), cancellationToken)
+            var tableClient = await GetTableClientAndCreateTableIfNotExists(storageSession, typeof(TSagaData), cancellationToken)
                 .ConfigureAwait(false);
 
             // reads need to go directly
@@ -83,11 +83,11 @@
 
             try
             {
-                var readSagaDataEntity = await tableToReadFrom.GetEntityAsync<TableEntity>(partitionKey.PartitionKey, sagaId.ToString(), null, cancellationToken).ConfigureAwait(false);
+                var readSagaDataEntity = await tableClient.GetEntityAsync<TableEntity>(partitionKey.PartitionKey, sagaId.ToString(), null, cancellationToken).ConfigureAwait(false);
                 var sagaData = TableEntityExtensions.ToSagaData<TSagaData>(readSagaDataEntity.Value, jsonSerializer, readerCreator);
                 var meta = context.GetOrCreate<SagaInstanceMetadata>();
                 var entityId = sagaData.Id;
-                meta.Entities[entityId] = new(tableToReadFrom, readSagaDataEntity.Value);
+                meta.Entities[entityId] = new(tableClient, readSagaDataEntity.Value);
                 return sagaData;
             }
             catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
@@ -118,7 +118,7 @@
         {
             var storageSession = (IWorkWithSharedTransactionalBatch)session;
 
-            var tableToReadFrom = await GetTableAndCreateIfNotExists(storageSession, typeof(TSagaData), cancellationToken)
+            var tableToReadFrom = await GetTableClientAndCreateTableIfNotExists(storageSession, typeof(TSagaData), cancellationToken)
                 .ConfigureAwait(false);
 
             var sagaId = await secondaryIndex.FindSagaId<TSagaData>(tableToReadFrom, correlationProperty, cancellationToken).ConfigureAwait(false);
@@ -142,7 +142,7 @@
             return null;
         }
 
-        async Task<TableClient> GetTableAndCreateIfNotExists(IAzureTableStorageSession storageSession, Type sagaDataType, CancellationToken cancellationToken)
+        async ValueTask<TableClient> GetTableClientAndCreateTableIfNotExists(IAzureTableStorageSession storageSession, Type sagaDataType, CancellationToken cancellationToken)
         {
             TableClient tableToReadFrom;
             if (storageSession.Table == null)
@@ -197,14 +197,7 @@
         }
 
         static TableEntityPartitionKey GetPartitionKey(ContextBag context, Guid sagaDataId)
-        {
-            if (!context.TryGet<TableEntityPartitionKey>(out var partitionKey))
-            {
-                return new TableEntityPartitionKey(sagaDataId.ToString());
-            }
-
-            return partitionKey;
-        }
+            => !context.TryGet<TableEntityPartitionKey>(out var partitionKey) ? new TableEntityPartitionKey(sagaDataId.ToString()) : partitionKey;
 
         readonly bool disableTableCreation;
         readonly TableServiceClient client;
