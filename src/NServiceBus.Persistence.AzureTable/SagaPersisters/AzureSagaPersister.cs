@@ -60,12 +60,11 @@
             var partitionKey = GetPartitionKey(context, sagaData.Id);
 
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            (TableClient, TableEntity) metaEntity = meta.Entities[sagaData.Id];
-            var sagaDataEntityToUpdate = metaEntity.Item2;
+            var (tableClient, sagaDataEntityToUpdate) = meta.Entities[sagaData.Id];
 
             var sagaAsTableEntity = TableEntityExtensions.ToTableEntity(sagaData, sagaDataEntityToUpdate, jsonSerializer, writerCreator);
 
-            storageSession.Add(new SagaUpdate(partitionKey, sagaAsTableEntity, metaEntity.Item1));
+            storageSession.Add(new SagaUpdate(partitionKey, sagaAsTableEntity, tableClient));
 
             return Task.CompletedTask;
         }
@@ -87,7 +86,7 @@
                 var sagaData = TableEntityExtensions.ToSagaData<TSagaData>(readSagaDataEntity.Value, jsonSerializer, readerCreator);
                 var meta = context.GetOrCreate<SagaInstanceMetadata>();
                 var entityId = sagaData.Id;
-                meta.Entities[entityId] = new(tableClient, readSagaDataEntity.Value);
+                meta.Entities[entityId] = (tableClient, readSagaDataEntity.Value);
                 return sagaData;
             }
             catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
@@ -213,7 +212,7 @@
         /// <summary>
         /// Holds saga instance related metadata in a scope of a <see cref="ContextBag" />.
         /// </summary>
-        class SagaInstanceMetadata
+        sealed class SagaInstanceMetadata
         {
             public Dictionary<Guid, (TableClient, TableEntity)> Entities { get; } = new();
         }
