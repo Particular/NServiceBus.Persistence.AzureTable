@@ -9,13 +9,13 @@
 
     static class OutboxTableExtensions
     {
-        public static async Task<OutboxRecord> ReadOutboxRecord(this TableClient table, string messageId, TableEntityPartitionKey partitionKey, ContextBag context, CancellationToken cancellationToken = default)
+        public static async Task<OutboxRecord> ReadOutboxRecord(this TableClient tableClient, string messageId, TableEntityPartitionKey partitionKey, ContextBag context, CancellationToken cancellationToken = default)
         {
             _ = context;
 
             try
             {
-                var retrieveResult = await table.GetEntityAsync<OutboxRecord>(partitionKey.PartitionKey, messageId, null, cancellationToken)
+                var retrieveResult = await tableClient.GetEntityAsync<OutboxRecord>(partitionKey.PartitionKey, messageId, null, cancellationToken)
                                                 .ConfigureAwait(false);
                 return retrieveResult.Value;
             }
