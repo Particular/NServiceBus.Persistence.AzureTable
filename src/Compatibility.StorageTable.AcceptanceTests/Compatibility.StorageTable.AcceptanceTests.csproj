@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <Compile Include="..\SharedAcceptanceTests.All\ConnectionStringHelper.cs" />
+    <Compile Include="..\SharedAcceptanceTests.All\AzureRequestRecorder.cs" />
   </ItemGroup>
 
   <ItemGroup>
