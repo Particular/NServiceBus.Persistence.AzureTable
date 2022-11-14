@@ -100,6 +100,8 @@ namespace NServiceBus.Persistence.AzureTable
     {
         public System.Threading.Tasks.Task Invoke(NServiceBus.Pipeline.IIncomingLogicalMessageContext context, System.Func<NServiceBus.Pipeline.IIncomingLogicalMessageContext, System.Threading.Tasks.Task> next) { }
     }
+    [System.Obsolete("The exception is no longer in use since version 3.0.0 of the persistence. Will be" +
+        " treated as an error from version 5.0.0. Will be removed in version 6.0.0.", false)]
     public class RetryNeededException : System.Exception
     {
         public RetryNeededException() { }

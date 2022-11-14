@@ -1,6 +1,8 @@
 ﻿#pragma warning disable CS1591
 namespace NServiceBus.Persistence.AzureTable
 {
+    using System;
+
     [ObsoleteEx(Message = "The IProvideCloudTableClient is deprecated in favor of IProvideTableServiceClient, which supports the TableServiceClient API provided by Azure.Data.Tables.", TreatAsErrorFromVersion = "5.0.0", RemoveInVersion = "6.0.0")]
     public interface IProvideCloudTableClient
     {
@@ -11,6 +13,20 @@ namespace NServiceBus.Persistence.AzureTable
     public interface IProvideCloudTableClientForSubscriptions
     {
         object Client { get; }
+    }
+
+    [ObsoleteEx(Message = "The exception is no longer in use since version 3.0.0 of the persistence.", TreatAsErrorFromVersion = "5.0.0", RemoveInVersion = "6.0.0")]
+    public class RetryNeededException : Exception
+    {
+        const string ErrorMessage = "This operation requires a retry as it wasn't possible to successfully process it now.";
+
+        public RetryNeededException() : base(ErrorMessage)
+        {
+        }
+
+        public RetryNeededException(Exception innerException) : base(ErrorMessage, innerException)
+        {
+        }
     }
 }
 
