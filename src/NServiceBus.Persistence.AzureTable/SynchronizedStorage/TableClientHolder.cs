@@ -2,12 +2,9 @@
 {
     using Azure.Data.Tables;
 
-    class TableClientHolder
+    sealed class TableClientHolder
     {
-        public TableClientHolder(TableClient tableClient)
-        {
-            TableClient = tableClient;
-        }
+        public TableClientHolder(TableClient tableClient) => TableClient = tableClient;
 
         public TableClient TableClient { get; set; }
     }

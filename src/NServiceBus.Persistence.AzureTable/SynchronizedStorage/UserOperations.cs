@@ -3,7 +3,7 @@ namespace NServiceBus.Persistence.AzureTable
     using System.Collections.Generic;
     using Azure.Data.Tables;
 
-    class UserOperation : Operation
+    sealed class UserOperation : Operation
     {
         public UserOperation(TableEntityPartitionKey partitionKey, TableClient table, TableTransactionAction tableOperation) : base(partitionKey)
         {
@@ -17,7 +17,7 @@ namespace NServiceBus.Persistence.AzureTable
             return table;
         }
 
-        TableClient table;
+        readonly TableClient table;
         readonly TableTransactionAction tableOperation;
     }
 }

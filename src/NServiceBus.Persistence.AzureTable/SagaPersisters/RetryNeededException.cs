@@ -5,15 +5,15 @@
     /// <summary></summary>
     public class RetryNeededException : Exception
     {
-        const string errorMessage = "This operation requires a retry as it wasn't possible to successfully process it now.";
+        const string ErrorMessage = "This operation requires a retry as it wasn't possible to successfully process it now.";
 
         /// <summary></summary>
-        public RetryNeededException() : base(errorMessage)
+        public RetryNeededException() : base(ErrorMessage)
         {
         }
 
         /// <summary></summary>
-        public RetryNeededException(Exception innerException) : base(errorMessage, innerException)
+        public RetryNeededException(Exception innerException) : base(ErrorMessage, innerException)
         {
         }
     }

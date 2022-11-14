@@ -14,7 +14,7 @@ namespace NServiceBus.Persistence.AzureTable.Migration
             this.compatibilityMode = compatibilityMode;
             this.resolver = resolver;
             this.secondaryIndex = secondaryIndex;
-            client = tableServiceClientProvider.Client;
+            tableServiceClient = tableServiceClientProvider.Client;
         }
 
         public async Task SetPartitionKey<TSagaData>(IIncomingLogicalMessageContext context,
@@ -28,7 +28,7 @@ namespace NServiceBus.Persistence.AzureTable.Migration
             var tableHolder = resolver.ResolveAndSetIfAvailable(context.Extensions);
             // slight duplication between saga persister and here when it comes to conventional tables
             // assuming the table will be created by the saga persister
-            var sagaTable = tableHolder == null ? client.GetTableClient($"{conventionalTablePrefix}{typeof(TSagaData).Name}") : tableHolder.TableClient;
+            var sagaTable = tableHolder == null ? tableServiceClient.GetTableClient($"{conventionalTablePrefix}{typeof(TSagaData).Name}") : tableHolder.TableClient;
 
             if (!context.Extensions.TryGet<TableInformation>(out _))
             {
@@ -64,7 +64,7 @@ namespace NServiceBus.Persistence.AzureTable.Migration
         }
 
         readonly SecondaryIndex secondaryIndex;
-        TableServiceClient client;
+        readonly TableServiceClient tableServiceClient;
         readonly TableClientHolderResolver resolver;
         readonly bool compatibilityMode;
         readonly string conventionalTablePrefix;

@@ -13,10 +13,7 @@ namespace NServiceBus.Persistence.AzureTable
         /// <summary>
         /// Initializes a new TableBatchOperationException with a <see cref="TableTransactionResult"/>.
         /// </summary>
-        public TableBatchOperationException(Response result)
-        {
-            Result = result;
-        }
+        public TableBatchOperationException(Response result) => Result = result;
 
         /// <summary>
         /// The <see cref="TableTransactionResult"/> exposing details about the reason of failure.

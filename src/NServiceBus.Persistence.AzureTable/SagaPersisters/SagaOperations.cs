@@ -84,9 +84,9 @@
             return table;
         }
 
-        public override bool Handle(RequestFailedException storageException)
+        public override bool Handle(RequestFailedException requestFailedException)
         {
-            if (storageException.Status == (int)HttpStatusCode.NotFound)
+            if (requestFailedException.Status == (int)HttpStatusCode.NotFound)
             {
                 Logger.Warn($"Removal of the secondary index entry for the following saga failed: '{sagaId}'");
             }

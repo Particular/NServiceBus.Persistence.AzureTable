@@ -18,7 +18,7 @@
 
         public virtual void Conflict(Response result) => throw new TableBatchOperationException(result);
 
-        public virtual bool Handle(RequestFailedException storageException) => false;
+        public virtual bool Handle(RequestFailedException requestFailedException) => false;
     }
 
     sealed class ThrowOnConflictOperation : Operation

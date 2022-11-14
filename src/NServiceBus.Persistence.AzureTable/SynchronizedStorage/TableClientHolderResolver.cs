@@ -2,11 +2,8 @@
 {
     using Extensibility;
 
-    class TableClientHolderResolver
+    sealed class TableClientHolderResolver
     {
-        readonly IProvideTableServiceClient provideTableServiceClient;
-        readonly TableInformation? defaultTableInformation;
-
         public TableClientHolderResolver(IProvideTableServiceClient provideTableServiceClient, TableInformation? defaultTableInformation)
         {
             this.defaultTableInformation = defaultTableInformation;
@@ -32,5 +29,8 @@
             context.Set(tableHolder);
             return tableHolder;
         }
+
+        readonly IProvideTableServiceClient provideTableServiceClient;
+        readonly TableInformation? defaultTableInformation;
     }
 }

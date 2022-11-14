@@ -11,9 +11,7 @@
     class AzureStorageSynchronizedStorageSession : ICompletableSynchronizedStorageSession, IWorkWithSharedTransactionalBatch
     {
         public AzureStorageSynchronizedStorageSession(TableClientHolderResolver tableClientHolderResolver)
-        {
-            this.tableClientHolderResolver = tableClientHolderResolver;
-        }
+            => this.tableClientHolderResolver = tableClientHolderResolver;
 
         public void Dispose()
         {
