@@ -82,10 +82,9 @@
             record.SetAsDispatched();
 
             var operation = new OutboxDelete(setAsDispatchedHolder.PartitionKey, record, tableHolder.TableClient);
-            var transactionalBatch = new List<TableTransactionAction>();
-            operation.Apply(transactionalBatch);
-
-            return tableHolder.TableClient.SubmitTransactionAsync(transactionalBatch, cancellationToken);
+            // Capacity is set to one with the knowledge that outbox delete only adds one action
+            var transactionalBatch = new List<TableTransactionAction>(1);
+            return transactionalBatch.ExecuteOperationAsync(operation, cancellationToken);
         }
 
         readonly TableClientHolderResolver tableClientHolderResolver;
