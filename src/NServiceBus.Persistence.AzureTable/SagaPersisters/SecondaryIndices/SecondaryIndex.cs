@@ -43,7 +43,7 @@
                 // intentionally ignored
             }
             catch (RequestFailedException requestFailedException)
-                when (!assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey && requestFailedException.Status is (int)HttpStatusCode.PreconditionFailed)
+                when (!assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey && requestFailedException.Status is (int)HttpStatusCode.BadRequest)
             {
                 Logger.Warn(
                     $"Trying to retrieve the secondary index entry with PartitionKey = '{key.PartitionKey}' and RowKey = 'string.Empty' failed. When using the compatibility mode on Azure Cosmos DB it is strongly recommended to enable `sagaPersistence.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey()` to avoid additional lookup costs or disable the compatibility mode entirely if not needed by calling `persistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties(). Falling back to query secondary index entry with PartitionKey = '{key.PartitionKey}' and RowKey = '{key.PartitionKey}'",
