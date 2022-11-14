@@ -7,7 +7,6 @@
     {
         public TableServiceClientForSubscriptionsFromConnectionString(string subscriptionConnectionString)
         {
-            // TODO: should we set additional options here?
             var tableClientOptions = new TableClientOptions
             {
                 Retry = { Mode = RetryMode.Exponential }
