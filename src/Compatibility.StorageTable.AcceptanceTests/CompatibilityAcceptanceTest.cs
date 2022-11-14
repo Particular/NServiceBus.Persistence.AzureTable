@@ -15,10 +15,10 @@ namespace NServiceBus.AcceptanceTests
         /// <summary>
         /// Stores the saga table entity in a format that mimics the 2.4.x version of the saga persistence.
         /// </summary>
-        /// <param name="sagaData"></param>
-        /// <param name="correlationProperty"></param>
-        /// <typeparam name="TSagaTableEntity"></typeparam>
-        /// <exception cref="InvalidOperationException"></exception>
+        /// <param name="sagaData">The saga data table entity that must be annotated with <see cref="SagaEntityTypeAttribute"/> that points to the corresponding saga data class.</param>
+        /// <param name="correlationProperty">The correlation property.</param>
+        /// <typeparam name="TSagaTableEntity">The saga table entity type.</typeparam>
+        /// <exception cref="InvalidOperationException">Throw when the <typeparam name="TSagaTableEntity"/> is not annotated with <see cref="SagaEntityTypeAttribute"/></exception>
         protected static async Task SaveSagaInOldFormat<TSagaTableEntity>(TSagaTableEntity sagaData, SagaCorrelationProperty correlationProperty)
             where TSagaTableEntity : SagaDataTableEntity
         {
@@ -26,7 +26,15 @@ namespace NServiceBus.AcceptanceTests
 
             if (typeof(TSagaTableEntity).GetCustomAttribute(typeof(SagaEntityTypeAttribute)) is not SagaEntityTypeAttribute sagaEntityTypeAttribute)
             {
-                throw new InvalidOperationException("Specify SagaEntityTypeAttribute on the entity type");
+                throw new InvalidOperationException($@"Specify '{nameof(SagaEntityTypeAttribute)}' on the entity type that points to the corresponding saga data class. 
+For example:
+public class MigratedSagaData : ContainSagaData {{ }}
+
+requires a corresponding
+
+[SagaEntityType(SagaEntityType = typeof(MigratedSagaData))]
+public class MigratedSagaDataTableEntity : SagaDataTableEntity {{ }}
+");
             }
 
             var sagaDataType = sagaEntityTypeAttribute.SagaEntityType;
