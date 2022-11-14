@@ -34,10 +34,10 @@
                     DefaultTable = defaultTableInformation.HasValue ? defaultTableInformation.Value.TableName : "Not used",
                 });
 
-            context.Services.AddSingleton(provider => new TableHolderResolver(provider.GetRequiredService<IProvideTableServiceClient>(), defaultTableInformation));
+            context.Services.AddSingleton(provider => new TableClientHolderResolver(provider.GetRequiredService<IProvideTableServiceClient>(), defaultTableInformation));
 
             context.Services.AddScoped<ICompletableSynchronizedStorageSession>(provider =>
-                new AzureStorageSynchronizedStorageSession(provider.GetRequiredService<TableHolderResolver>()));
+                new AzureStorageSynchronizedStorageSession(provider.GetRequiredService<TableClientHolderResolver>()));
             context.Services.AddScoped(provider => provider.GetRequiredService<ICompletableSynchronizedStorageSession>().AzureTablePersistenceSession());
 
         }

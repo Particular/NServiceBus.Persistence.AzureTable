@@ -8,10 +8,10 @@
 
     class StorageSession : IWorkWithSharedTransactionalBatch
     {
-        public StorageSession(TableHolderResolver resolver, ContextBag context)
+        public StorageSession(TableClientHolderResolver resolver, ContextBag context)
         {
             CurrentContextBag = context;
-            TableHolder = resolver.ResolveAndSetIfAvailable(context);
+            TableClientHolder = resolver.ResolveAndSetIfAvailable(context);
             Batch = new List<TableTransactionAction>();
         }
 
@@ -56,12 +56,12 @@
             }
         }
 
-        public TableHolder TableHolder { get; set; }
+        public TableClientHolder TableClientHolder { get; set; }
         public ContextBag CurrentContextBag { get; set; }
 
 
         // for the user path only
-        public TableClient Table => TableHolder?.Table;
+        public TableClient Table => TableClientHolder?.TableClient;
 
         // for the user path only
         public List<TableTransactionAction> Batch { get; }

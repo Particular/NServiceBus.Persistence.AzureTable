@@ -36,7 +36,7 @@
             partitionKey = Guid.NewGuid().ToString();
 
             SagaIdGenerator = new SagaIdGenerator();
-            var resolver = new TableHolderResolver(this, new TableInformation(SetupFixture.TableName));
+            var resolver = new TableClientHolderResolver(this, new TableInformation(SetupFixture.TableName));
             var secondaryIndices = new SecondaryIndex();
             SagaStorage = new AzureSagaPersister(
                 this,
@@ -56,7 +56,7 @@
                 // This populates the partition key required to participate in a shared transaction
                 var setAsDispatchedHolder = new SetAsDispatchedHolder
                 {
-                    TableHolder = resolver.ResolveAndSetIfAvailable(contextBag)
+                    TableClientHolder = resolver.ResolveAndSetIfAvailable(contextBag)
                 };
                 contextBag.Set(setAsDispatchedHolder);
                 contextBag.Set(new TableEntityPartitionKey(partitionKey));
@@ -69,7 +69,7 @@
                 // This populates the partition key required to participate in a shared transaction
                 var setAsDispatchedHolder = new SetAsDispatchedHolder
                 {
-                    TableHolder = resolver.ResolveAndSetIfAvailable(contextBag)
+                    TableClientHolder = resolver.ResolveAndSetIfAvailable(contextBag)
                 };
                 contextBag.Set(setAsDispatchedHolder);
                 contextBag.Set(new TableEntityPartitionKey(partitionKey));

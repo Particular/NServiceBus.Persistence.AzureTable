@@ -10,9 +10,9 @@
 
     class AzureStorageSynchronizedStorageSession : ICompletableSynchronizedStorageSession, IWorkWithSharedTransactionalBatch
     {
-        public AzureStorageSynchronizedStorageSession(TableHolderResolver tableHolderResolver)
+        public AzureStorageSynchronizedStorageSession(TableClientHolderResolver tableClientHolderResolver)
         {
-            this.tableHolderResolver = tableHolderResolver;
+            this.tableClientHolderResolver = tableClientHolderResolver;
         }
 
         public void Dispose()
@@ -43,7 +43,7 @@
         public Task Open(ContextBag contextBag, CancellationToken cancellationToken = default)
         {
             ownsTransaction = true;
-            session = new StorageSession(tableHolderResolver, contextBag);
+            session = new StorageSession(tableClientHolderResolver, contextBag);
             return Task.CompletedTask;
         }
 
@@ -56,7 +56,7 @@
             return Task.CompletedTask;
         }
 
-        readonly TableHolderResolver tableHolderResolver;
+        readonly TableClientHolderResolver tableClientHolderResolver;
         bool disposed;
         StorageSession session;
         bool ownsTransaction;

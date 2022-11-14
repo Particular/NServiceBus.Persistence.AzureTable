@@ -54,7 +54,7 @@
 
             context.Services.AddSingleton<IProvidePartitionKeyFromSagaId>(provider =>
                 new ProvidePartitionKeyFromSagaId(provider.GetRequiredService<IProvideTableServiceClient>(),
-                    provider.GetRequiredService<TableHolderResolver>(), secondaryIndices, compatibilityModeEnabled, conventionalTablePrefix));
+                    provider.GetRequiredService<TableClientHolderResolver>(), secondaryIndices, compatibilityModeEnabled, conventionalTablePrefix));
 
             var installerSettings = context.Settings.Get<SynchronizedStorageInstallerSettings>();
             var jsonSerializer = context.Settings.Get<JsonSerializer>(WellKnownConfigurationKeys.SagaJsonSerializer);

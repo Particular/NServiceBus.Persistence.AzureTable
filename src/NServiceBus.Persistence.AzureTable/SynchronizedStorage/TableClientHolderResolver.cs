@@ -2,20 +2,20 @@
 {
     using Extensibility;
 
-    class TableHolderResolver
+    class TableClientHolderResolver
     {
         readonly IProvideTableServiceClient provideTableServiceClient;
         readonly TableInformation? defaultTableInformation;
 
-        public TableHolderResolver(IProvideTableServiceClient provideTableServiceClient, TableInformation? defaultTableInformation)
+        public TableClientHolderResolver(IProvideTableServiceClient provideTableServiceClient, TableInformation? defaultTableInformation)
         {
             this.defaultTableInformation = defaultTableInformation;
             this.provideTableServiceClient = provideTableServiceClient;
         }
 
-        public TableHolder ResolveAndSetIfAvailable(ContextBag context)
+        public TableClientHolder ResolveAndSetIfAvailable(ContextBag context)
         {
-            if (context.TryGet<TableHolder>(out var tableHolder))
+            if (context.TryGet<TableClientHolder>(out var tableHolder))
             {
                 return tableHolder;
             }
@@ -28,7 +28,7 @@
             }
 
             var informationValue = information.Value;
-            tableHolder = new TableHolder(provideTableServiceClient.Client.GetTableClient(informationValue.TableName));
+            tableHolder = new TableClientHolder(provideTableServiceClient.Client.GetTableClient(informationValue.TableName));
             context.Set(tableHolder);
             return tableHolder;
         }

@@ -4,17 +4,17 @@ namespace NServiceBus.TransactionalSession
 
     sealed class SetAsDispatchedHolderOpenSessionOptionCustomization : IOpenSessionOptionsCustomization
     {
-        public SetAsDispatchedHolderOpenSessionOptionCustomization(TableHolderResolver tableHolderResolver) =>
-            this.tableHolderResolver = tableHolderResolver;
+        public SetAsDispatchedHolderOpenSessionOptionCustomization(TableClientHolderResolver tableClientHolderResolver) =>
+            this.tableClientHolderResolver = tableClientHolderResolver;
 
         public void Apply(OpenSessionOptions options)
         {
             if (options is AzureTableOpenSessionOptions azureTableOpenSessionOptions)
             {
-                azureTableOpenSessionOptions.SetDispatchHolder(tableHolderResolver);
+                azureTableOpenSessionOptions.SetDispatchHolder(tableClientHolderResolver);
             }
         }
 
-        readonly TableHolderResolver tableHolderResolver;
+        readonly TableClientHolderResolver tableClientHolderResolver;
     }
 }

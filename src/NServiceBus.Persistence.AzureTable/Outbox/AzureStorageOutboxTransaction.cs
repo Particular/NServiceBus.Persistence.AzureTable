@@ -13,7 +13,7 @@
         public bool SuppressStoreAndCommit { get; set; }
         public TableEntityPartitionKey? PartitionKey { get; set; }
 
-        public AzureStorageOutboxTransaction(TableHolderResolver resolver, ContextBag context)
+        public AzureStorageOutboxTransaction(TableClientHolderResolver resolver, ContextBag context)
         {
             StorageSession = new StorageSession(resolver, context);
         }

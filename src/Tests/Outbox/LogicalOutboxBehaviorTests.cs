@@ -72,7 +72,7 @@
 
             await tableClient.AddEntityAsync(record);
 
-            var containerHolderHolderResolver = new TableHolderResolver(new Provider()
+            var containerHolderHolderResolver = new TableClientHolderResolver(new Provider()
             {
                 Client = tableServiceClient
             },

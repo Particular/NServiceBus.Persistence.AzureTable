@@ -4,7 +4,7 @@
     class SetAsDispatchedHolder
     {
         public OutboxRecord Record { get; set; }
-        public TableHolder TableHolder { get; set; }
+        public TableClientHolder TableClientHolder { get; set; }
         public TableEntityPartitionKey PartitionKey { get; set; }
     }
 }

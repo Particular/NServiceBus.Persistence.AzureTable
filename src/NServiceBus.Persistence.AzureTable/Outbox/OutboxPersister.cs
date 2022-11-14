@@ -9,14 +9,14 @@
 
     class OutboxPersister : IOutboxStorage
     {
-        public OutboxPersister(TableHolderResolver tableHolderResolver)
+        public OutboxPersister(TableClientHolderResolver tableClientHolderResolver)
         {
-            this.tableHolderResolver = tableHolderResolver;
+            this.tableClientHolderResolver = tableClientHolderResolver;
         }
 
         public Task<IOutboxTransaction> BeginTransaction(ContextBag context, CancellationToken cancellationToken = default)
         {
-            var azureStorageOutboxTransaction = new AzureStorageOutboxTransaction(tableHolderResolver, context);
+            var azureStorageOutboxTransaction = new AzureStorageOutboxTransaction(tableClientHolderResolver, context);
 
             if (context.TryGet<TableEntityPartitionKey>(out var partitionKey))
             {
@@ -29,7 +29,7 @@
         {
             var setAsDispatchedHolder = new SetAsDispatchedHolder
             {
-                TableHolder = tableHolderResolver.ResolveAndSetIfAvailable(context)
+                TableClientHolder = tableClientHolderResolver.ResolveAndSetIfAvailable(context)
             };
             context.Set(setAsDispatchedHolder);
 
@@ -39,7 +39,7 @@
                 return null;
             }
 
-            var outboxRecord = await setAsDispatchedHolder.TableHolder.Table
+            var outboxRecord = await setAsDispatchedHolder.TableClientHolder.TableClient
                 .ReadOutboxRecord(messageId, partitionKey, context, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -69,7 +69,7 @@
 
             setAsDispatchedHolder.Record = outboxRecord;
 
-            azureStorageOutboxTransaction.StorageSession.Add(new OutboxStore(setAsDispatchedHolder.PartitionKey, outboxRecord, setAsDispatchedHolder.TableHolder.Table));
+            azureStorageOutboxTransaction.StorageSession.Add(new OutboxStore(setAsDispatchedHolder.PartitionKey, outboxRecord, setAsDispatchedHolder.TableClientHolder.TableClient));
 
             return Task.CompletedTask;
         }
@@ -78,18 +78,18 @@
         {
             var setAsDispatchedHolder = context.Get<SetAsDispatchedHolder>();
 
-            var tableHolder = setAsDispatchedHolder.TableHolder;
+            var tableHolder = setAsDispatchedHolder.TableClientHolder;
             var record = setAsDispatchedHolder.Record;
 
             record.SetAsDispatched();
 
-            var operation = new OutboxDelete(setAsDispatchedHolder.PartitionKey, record, tableHolder.Table);
+            var operation = new OutboxDelete(setAsDispatchedHolder.PartitionKey, record, tableHolder.TableClient);
             var transactionalBatch = new List<TableTransactionAction>();
             operation.Apply(transactionalBatch);
 
-            return tableHolder.Table.SubmitTransactionAsync(transactionalBatch, cancellationToken);
+            return tableHolder.TableClient.SubmitTransactionAsync(transactionalBatch, cancellationToken);
         }
 
-        readonly TableHolderResolver tableHolderResolver;
+        readonly TableClientHolderResolver tableClientHolderResolver;
     }
 }
