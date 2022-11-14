@@ -38,17 +38,11 @@ namespace NServiceBus.Testing
             return string.IsNullOrWhiteSpace(candidate) ? Environment.GetEnvironmentVariable(variable) : candidate;
         }
 
+        // Adopted from Cosmos DB Table API SDK that uses similar approach to change the underlying execution
         public static bool IsPremiumEndpoint(string connectionString)
         {
-            // TODO: to be verified
-            if (connectionString.Contains("https://localhost") ||
-                connectionString.Contains(".table.cosmosdb.") ||
-                connectionString.Contains(".table.cosmos."))
-            {
-                return true;
-            }
-
-            return false;
+            var lowerInvariant = connectionString.ToLowerInvariant();
+            return lowerInvariant.Contains("https://localhost") || lowerInvariant.Contains(".table.cosmosdb.") || lowerInvariant.Contains(".table.cosmos.");
         }
     }
 }
