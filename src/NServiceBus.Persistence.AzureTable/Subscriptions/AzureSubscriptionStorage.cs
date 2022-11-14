@@ -74,8 +74,9 @@
             var table = client.GetTableClient(subscriptionTableName);
             try
             {
-                await table.DeleteEntityAsync(messageType.ToString(), EncodeTo64(subscriber.TransportAddress),
-                    ETag.All, cancellationToken).ConfigureAwait(false);
+                string partitionKey = messageType.ToString();
+                string rowKey = EncodeTo64(subscriber.TransportAddress);
+                await table.DeleteEntityAsync(partitionKey, rowKey, ETag.All, cancellationToken).ConfigureAwait(false);
             }
             catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
             {
