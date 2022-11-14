@@ -90,11 +90,11 @@ namespace NServiceBus.AcceptanceTests
             public EndpointWithSagaThatWasMigrated() =>
                 EndpointSetup<DefaultServer>(c =>
                 {
-                    c.Pipeline.Register(typeof(PartitionPartionKeyCleanerBehavior), "Cleans partition keys out");
+                    c.Pipeline.Register(typeof(PartitionPartitionKeyCleanerBehavior), "Cleans partition keys out");
                     c.Pipeline.Register(new ProvidePartitionKeyBasedOnSagaIdBehavior.Registration());
                 });
 
-            class PartitionPartionKeyCleanerBehavior : IBehavior<ITransportReceiveContext, ITransportReceiveContext>,
+            class PartitionPartitionKeyCleanerBehavior : IBehavior<ITransportReceiveContext, ITransportReceiveContext>,
                 IBehavior<IIncomingPhysicalMessageContext, IIncomingPhysicalMessageContext>
             {
                 public Task Invoke(ITransportReceiveContext context, Func<ITransportReceiveContext, Task> next)
