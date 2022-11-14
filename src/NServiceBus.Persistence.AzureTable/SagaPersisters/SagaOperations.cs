@@ -86,16 +86,9 @@
 
         public override bool Handle(RequestFailedException storageException)
         {
-            // Horrible logic to check if item has already been deleted or not
-            var webException = storageException.InnerException as WebException;
-            if (webException?.Response != null)
+            if (storageException.Status == (int)HttpStatusCode.NotFound)
             {
-                var response = (HttpWebResponse)webException.Response;
-                if ((int)response.StatusCode != 404)
-                {
-                    // Was not a previously deleted exception
-                    Logger.Warn($"Removal of the secondary index entry for the following saga failed: '{sagaId}'");
-                }
+                Logger.Warn($"Removal of the secondary index entry for the following saga failed: '{sagaId}'");
             }
             return true;
         }
