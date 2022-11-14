@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 /// <summary>
 /// Converts a binary value to and from a base 64 string value.
 /// </summary>
-class ReadOnlyMemoryConverter : JsonConverter
+sealed class ReadOnlyMemoryConverter : JsonConverter
 {
     /// <summary>
     /// Writes the JSON representation of the object.

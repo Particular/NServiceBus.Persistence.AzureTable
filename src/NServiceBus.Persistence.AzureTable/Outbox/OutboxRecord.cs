@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Runtime.Serialization;
     using Azure;
     using Azure.Data.Tables;
@@ -11,8 +10,6 @@
 
     sealed class OutboxRecord : ITableEntity
     {
-        static ReadOnlyMemoryConverter ReadOnlyMemoryConverter = new();
-
         // ignoring this property to avoid double storing and clashing with Cosmos Id property.
         [IgnoreDataMember]
         public string Id
@@ -28,10 +25,13 @@
 
         public bool Dispatched { get; set; }
 
+        /// <summary>
+        /// This property is assumed to be only ever accessed by the serialization mechanism of the SDK
+        /// </summary>
         public string TransportOperations
         {
             get => SerializeTransportOperations(Operations);
-            set => DeserializeAndSetTransportOperations(value);
+            set => Operations = DeserializeTransportOperations(value);
         }
 
         public string DispatchedAt { get; set; }
@@ -46,27 +46,44 @@
             DispatchedAt = DateTimeOffsetHelper.ToWireFormattedString(DateTimeOffset.UtcNow);
         }
 
-        void DeserializeAndSetTransportOperations(string transportOperations)
+        TransportOperation[] DeserializeTransportOperations(string transportOperations)
         {
-            var storageOperations = DeserializeTransportOperations(transportOperations);
-            Operations = storageOperations.Select(op =>
-                                              new TransportOperation(op.MessageId, new Transport.DispatchProperties(op.Options), op.Body,
-                                                  op.Headers))
-                                          .ToArray();
+            var storageOperations = DeserializeStorageTransportOperations(transportOperations);
+            var operations = new TransportOperation[storageOperations.Length];
+            int index = 0;
+            foreach (var storageOperation in storageOperations)
+            {
+                operations[index] = new TransportOperation(
+                    storageOperation.MessageId,
+                    new Transport.DispatchProperties(storageOperation.Options), storageOperation.Body,
+                    storageOperation.Headers);
+                index++;
+            }
+            return operations;
         }
 
-        public static StorageTransportOperation[] DeserializeTransportOperations(string operations)
-            => JsonConvert.DeserializeObject<StorageTransportOperation[]>(operations, ReadOnlyMemoryConverter);
+        public static StorageTransportOperation[] DeserializeStorageTransportOperations(string operations)
+            => JsonConvert.DeserializeObject<StorageTransportOperation[]>(operations, Converters);
 
-        static string SerializeTransportOperations(TransportOperation[] transportOperations) =>
-            JsonConvert.SerializeObject(
-                transportOperations.Select(transportOperation => new StorageTransportOperation()
+        static string SerializeTransportOperations(TransportOperation[] transportOperations)
+        {
+            var storageOperations = new StorageTransportOperation[transportOperations.Length];
+            int index = 0;
+            foreach (var transportOperation in transportOperations)
+            {
+                storageOperations[index] = new StorageTransportOperation
                 {
                     MessageId = transportOperation.MessageId,
                     Body = transportOperation.Body,
                     Options = transportOperation.Options,
                     Headers = transportOperation.Headers
-                }), Formatting.Indented, ReadOnlyMemoryConverter);
+                };
+                index++;
+            }
+            return JsonConvert.SerializeObject(storageOperations, Formatting.Indented, Converters);
+        }
+
+        static readonly JsonConverter[] Converters = { new ReadOnlyMemoryConverter() };
 
         internal class StorageTransportOperation
         {
@@ -75,6 +92,5 @@
             public ReadOnlyMemory<byte> Body { get; set; }
             public Dictionary<string, string> Headers { get; set; }
         }
-
     }
 }
