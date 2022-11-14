@@ -28,7 +28,7 @@
 
         public IOutboxStorage OutboxStorage { get; private set; }
 
-        public TableServiceClient Client => SetupFixture.TableClient;
+        public TableServiceClient Client => SetupFixture.TableServiceClient;
 
         public Task Configure(CancellationToken cancellationToken = default)
         {

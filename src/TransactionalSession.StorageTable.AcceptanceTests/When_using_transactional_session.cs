@@ -47,7 +47,7 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
 
             try
             {
-                var entity = SetupFixture.Table.GetEntity<Azure.Data.Tables.TableEntity>(context.TestRunId.ToString(), entityRowId).Value;
+                var entity = SetupFixture.TableClient.GetEntity<Azure.Data.Tables.TableEntity>(context.TestRunId.ToString(), entityRowId).Value;
                 Assert.IsTrue(entity.TryGetValue("Data", out var entityValue));
                 Assert.AreEqual("MyCustomData", entityValue);
             }
@@ -90,7 +90,7 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
 
             try
             {
-                var entity = SetupFixture.Table.GetEntity<Azure.Data.Tables.TableEntity>(context.TestRunId.ToString(), entityRowId).Value;
+                var entity = SetupFixture.TableClient.GetEntity<Azure.Data.Tables.TableEntity>(context.TestRunId.ToString(), entityRowId).Value;
                 Assert.IsTrue(entity.TryGetValue("Data", out var entityValue));
                 Assert.AreEqual("MyCustomData", entityValue);
             }
@@ -139,7 +139,7 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
 
             RequestFailedException requestFailedException = Assert.Throws<RequestFailedException>(() =>
             {
-                SetupFixture.Table.GetEntity<Azure.Data.Tables.TableEntity>(context.TestRunId.ToString(), entityRowId);
+                SetupFixture.TableClient.GetEntity<Azure.Data.Tables.TableEntity>(context.TestRunId.ToString(), entityRowId);
             });
             Assert.AreEqual((int)HttpStatusCode.NotFound, requestFailedException.Status);
         }
