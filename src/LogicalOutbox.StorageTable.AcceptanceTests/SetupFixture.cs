@@ -32,8 +32,7 @@
 
             try
             {
-                var response = await TableServiceClient.DeleteTableAsync(TableName);
-                Assert.That(response.IsError, Is.False);
+                await TableServiceClient.DeleteTableAsync(TableName);
             }
             catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
             {
