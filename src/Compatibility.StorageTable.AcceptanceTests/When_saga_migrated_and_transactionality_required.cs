@@ -116,8 +116,6 @@ namespace NServiceBus.AcceptanceTests
 
             class PartitionKeyProviderBehavior : Behavior<IIncomingLogicalMessageContext>
             {
-                IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId;
-
                 public PartitionKeyProviderBehavior(IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId)
                     => this.providePartitionKeyFromSagaId = providePartitionKeyFromSagaId;
 
@@ -132,6 +130,8 @@ namespace NServiceBus.AcceptanceTests
 
                     await next().ConfigureAwait(false);
                 }
+
+                readonly IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId;
             }
 
             public class SagaWithMigratedData : Saga<MigratedSagaData>, IAmStartedByMessages<StartSagaMessage>, IAmStartedByMessages<ContinueSagaMessage>
@@ -156,12 +156,10 @@ namespace NServiceBus.AcceptanceTests
                     return Task.CompletedTask;
                 }
 
-                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<MigratedSagaData> mapper)
-                {
+                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<MigratedSagaData> mapper) =>
                     mapper.MapSaga(s => s.SomeId)
                         .ToMessage<StartSagaMessage>(m => m.SomeId)
                         .ToMessage<ContinueSagaMessage>(m => m.SomeId);
-                }
 
                 readonly Context testContext;
             }

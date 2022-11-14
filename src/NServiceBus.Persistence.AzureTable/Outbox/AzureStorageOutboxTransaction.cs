@@ -14,18 +14,11 @@
         public TableEntityPartitionKey? PartitionKey { get; set; }
 
         public AzureStorageOutboxTransaction(TableClientHolderResolver resolver, ContextBag context)
-        {
-            StorageSession = new StorageSession(resolver, context);
-        }
+            => StorageSession = new StorageSession(resolver, context);
 
         public Task Commit(CancellationToken cancellationToken = default)
-        {
-            return SuppressStoreAndCommit ? Task.CompletedTask : StorageSession.Commit(cancellationToken);
-        }
+            => SuppressStoreAndCommit ? Task.CompletedTask : StorageSession.Commit(cancellationToken);
 
-        public void Dispose()
-        {
-            StorageSession.Dispose();
-        }
+        public void Dispose() => StorageSession.Dispose();
     }
 }

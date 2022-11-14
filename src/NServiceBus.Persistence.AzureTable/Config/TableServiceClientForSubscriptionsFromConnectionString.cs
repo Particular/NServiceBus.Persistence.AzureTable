@@ -3,7 +3,7 @@
     using Azure.Core;
     using Azure.Data.Tables;
 
-    class TableServiceClientForSubscriptionsFromConnectionString : IProvideTableServiceClientForSubscriptions
+    sealed class TableServiceClientForSubscriptionsFromConnectionString : IProvideTableServiceClientForSubscriptions
     {
         public TableServiceClientForSubscriptionsFromConnectionString(string subscriptionConnectionString)
         {

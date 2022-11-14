@@ -2,12 +2,10 @@
 {
     using Azure.Data.Tables;
 
-    class TableServiceClientFromConnectionString : IProvideTableServiceClient
+    sealed class TableServiceClientFromConnectionString : IProvideTableServiceClient
     {
         public TableServiceClientFromConnectionString(string sagaConnectionString)
-        {
-            Client = new TableServiceClient(sagaConnectionString);
-        }
+            => Client = new TableServiceClient(sagaConnectionString);
 
         public TableServiceClient Client { get; }
     }

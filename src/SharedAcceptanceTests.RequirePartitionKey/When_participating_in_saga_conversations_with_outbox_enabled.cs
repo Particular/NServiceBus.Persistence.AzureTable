@@ -34,7 +34,7 @@ namespace NServiceBus.AcceptanceTests
                 .Done(c => c.SagaIsDone && c.HandlerIsDone)
                 .Run();
 
-            var myEntity = GetByRowKey(myTableRowKey);
+            var myEntity = await GetByRowKey(myTableRowKey);
 
             Assert.IsNotNull(myEntity);
             Assert.IsTrue(myEntity.TryGetValue("Data", out var entityValue));
@@ -56,14 +56,14 @@ namespace NServiceBus.AcceptanceTests
                 .Done(c => c.SagaIsDone && c.HandlerIsDone)
                 .Run();
 
-            var myEntity = GetByRowKey(myTableRowKey);
+            var myEntity = await GetByRowKey(myTableRowKey);
 
             Assert.IsNotNull(myEntity);
             Assert.IsTrue(myEntity.TryGetValue("Data", out var entityValue));
             Assert.AreEqual(context.SagaId.ToString(), entityValue);
         }
 
-        static TableEntity GetByRowKey(Guid sagaId)
+        static async Task<TableEntity> GetByRowKey(Guid sagaId)
         {
             var table = SetupFixture.TableClient;
 
@@ -72,7 +72,7 @@ namespace NServiceBus.AcceptanceTests
 
             try
             {
-                var tableEntity = table.Query<TableEntity>(entity => entity.RowKey == sagaId.ToString()).FirstOrDefault();
+                var tableEntity = await table.QueryAsync<TableEntity>(entity => entity.RowKey == sagaId.ToString()).FirstOrDefaultAsync();
                 return tableEntity;
             }
             catch (StorageException e)
@@ -95,8 +95,7 @@ namespace NServiceBus.AcceptanceTests
 
         public class EndpointWithSagaThatWasMigrated : EndpointConfigurationBuilder
         {
-            public EndpointWithSagaThatWasMigrated()
-            {
+            public EndpointWithSagaThatWasMigrated() =>
                 EndpointSetup<DefaultServer>(c =>
                 {
                     c.EnableOutbox();
@@ -126,12 +125,8 @@ namespace NServiceBus.AcceptanceTests
 
             class ProvidePartitionKeyBasedOnSagaIdBehavior : Behavior<IIncomingLogicalMessageContext>
             {
-                readonly IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId;
-
                 public ProvidePartitionKeyBasedOnSagaIdBehavior(IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId)
-                {
-                    this.providePartitionKeyFromSagaId = providePartitionKeyFromSagaId;
-                }
+                    => this.providePartitionKeyFromSagaId = providePartitionKeyFromSagaId;
 
                 public override async Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
                 {
@@ -155,14 +150,14 @@ namespace NServiceBus.AcceptanceTests
                     await next().ConfigureAwait(false);
                 }
 
+                readonly IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId;
+
                 public class Registration : RegisterStep
                 {
                     public Registration() : base(nameof(ProvidePartitionKeyBasedOnSagaIdBehavior),
                         typeof(ProvidePartitionKeyBasedOnSagaIdBehavior),
-                        "Populates the partition key")
-                    {
+                        "Populates the partition key") =>
                         InsertBeforeIfExists(nameof(LogicalOutboxBehavior));
-                    }
                 }
             }
 

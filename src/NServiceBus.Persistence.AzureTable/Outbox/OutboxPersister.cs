@@ -10,9 +10,7 @@
     class OutboxPersister : IOutboxStorage
     {
         public OutboxPersister(TableClientHolderResolver tableClientHolderResolver)
-        {
-            this.tableClientHolderResolver = tableClientHolderResolver;
-        }
+            => this.tableClientHolderResolver = tableClientHolderResolver;
 
         public Task<IOutboxTransaction> BeginTransaction(ContextBag context, CancellationToken cancellationToken = default)
         {

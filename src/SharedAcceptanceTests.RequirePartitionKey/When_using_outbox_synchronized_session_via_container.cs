@@ -36,8 +36,7 @@
 
         public class Endpoint : EndpointConfigurationBuilder
         {
-            public Endpoint()
-            {
+            public Endpoint() =>
                 EndpointSetup<DefaultServer>(config =>
                 {
                     config.EnableOutbox();
@@ -47,7 +46,6 @@
                         c.AddScoped<MyRepository>();
                     });
                 });
-            }
 
             public class MyMessageHandler : IHandleMessages<MyMessage>
             {
@@ -57,7 +55,6 @@
                     this.repository = repository;
                 }
 
-
                 public Task Handle(MyMessage message, IMessageHandlerContext handlerContext)
                 {
                     repository.DoSomething();
@@ -65,8 +62,8 @@
                     return Task.CompletedTask;
                 }
 
-                Context context;
-                MyRepository repository;
+                readonly Context context;
+                readonly MyRepository repository;
             }
         }
 
@@ -85,8 +82,8 @@
                 context.PartitionKey = storageSession.PartitionKey;
             }
 
-            IAzureTableStorageSession storageSession;
-            Context context;
+            readonly IAzureTableStorageSession storageSession;
+            readonly Context context;
         }
 
         public class MyMessage : IMessage

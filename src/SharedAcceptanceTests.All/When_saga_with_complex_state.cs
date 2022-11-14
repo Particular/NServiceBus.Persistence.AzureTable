@@ -25,7 +25,7 @@ namespace NServiceBus.AcceptanceTests
                 .Done(c => c.Done)
                 .Run();
 
-            var sagaEntity = GetEntity(context.SagaId);
+            var sagaEntity = await GetEntity(context.SagaId);
 
             Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableDouble), out var nullableDouble));
             Assert.AreEqual(4.5d, nullableDouble);
@@ -54,7 +54,7 @@ namespace NServiceBus.AcceptanceTests
             Assert.IsFalse(sagaEntity.ContainsKey("NServiceBus_2ndIndexKey"), "Entity should not contain secondary index property");
         }
 
-        static TableEntity GetEntity(Guid sagaId)
+        static async Task<TableEntity> GetEntity(Guid sagaId)
         {
             var table = SetupFixture.TableClient;
 
@@ -63,7 +63,7 @@ namespace NServiceBus.AcceptanceTests
 
             try
             {
-                var tableEntity = table.Query<TableEntity>(entity => entity.RowKey == sagaId.ToString()).FirstOrDefault();
+                var tableEntity = await table.QueryAsync<TableEntity>(entity => entity.RowKey == sagaId.ToString()).FirstOrDefaultAsync();
                 return tableEntity;
             }
             catch (RequestFailedException e)
@@ -85,17 +85,11 @@ namespace NServiceBus.AcceptanceTests
 
         public class EndpointWithSagaWithComplexState : EndpointConfigurationBuilder
         {
-            public EndpointWithSagaWithComplexState()
-            {
-                EndpointSetup<DefaultServer>();
-            }
+            public EndpointWithSagaWithComplexState() => EndpointSetup<DefaultServer>();
 
             public class SagaWithComplexState : Saga<ComplexStateSagaData>, IAmStartedByMessages<StartSagaMessage>, IHandleMessages<ContinueSagaMessage>
             {
-                public SagaWithComplexState(Context testContext)
-                {
-                    this.testContext = testContext;
-                }
+                public SagaWithComplexState(Context testContext) => this.testContext = testContext;
 
                 public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
@@ -121,12 +115,10 @@ namespace NServiceBus.AcceptanceTests
                     return Task.CompletedTask;
                 }
 
-                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<ComplexStateSagaData> mapper)
-                {
+                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<ComplexStateSagaData> mapper) =>
                     mapper.MapSaga(s => s.SomeId)
                         .ToMessage<StartSagaMessage>(m => m.SomeId)
                         .ToMessage<ContinueSagaMessage>(m => m.SomeId);
-                }
 
                 readonly Context testContext;
             }

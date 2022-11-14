@@ -16,11 +16,6 @@
 
     class AzureSubscriptionStorage : ISubscriptionStorage
     {
-        string subscriptionTableName;
-        TimeSpan? cacheFor;
-        TableServiceClient client;
-        public ConcurrentDictionary<string, CacheItem> Cache;
-
         public AzureSubscriptionStorage(IProvideTableServiceClientForSubscriptions tableServiceClientProvider, string subscriptionTableName, TimeSpan? cacheFor)
         {
             this.subscriptionTableName = subscriptionTableName;
@@ -55,14 +50,11 @@
                 ETag = ETag.All
             };
 
-            // TODO: StorageException is not an expected exception type, replaced by RequestFailedException
-            // https://learn.microsoft.com/en-us/dotnet/api/azure.data.tables.tableclient.upsertentityasync?view=azure-dotnet
-
             try
             {
                 await table.UpsertEntityAsync(subscription, TableUpdateMode.Replace, cancellationToken).ConfigureAwait(false);
             }
-            catch (RequestFailedException ex) when (ex.Status == 409)
+            catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.Conflict)
             {
                 throw;
             }
@@ -91,10 +83,7 @@
             return string.Join(",", typeNames) + ",";
         }
 
-        static string GetKeyPart(MessageType type)
-        {
-            return $"{type.TypeName},";
-        }
+        static string GetKeyPart(MessageType type) => $"{type.TypeName},";
 
         void ClearForMessageType(MessageType messageType)
         {
@@ -174,27 +163,24 @@
             return subscribers;
         }
 
-        static string GetUpperBound(string name)
-        {
-            return name + ", Version=z";
-        }
+        static string GetUpperBound(string name) => $"{name}, Version=z";
 
-        class SubscriberComparer : IEqualityComparer<Subscriber>
+        readonly string subscriptionTableName;
+        readonly TimeSpan? cacheFor;
+        readonly TableServiceClient client;
+        public readonly ConcurrentDictionary<string, CacheItem> Cache;
+
+        sealed class SubscriberComparer : IEqualityComparer<Subscriber>
         {
             public static readonly SubscriberComparer Instance = new();
 
             public bool Equals(Subscriber x, Subscriber y)
-            {
-                return StringComparer.InvariantCulture.Compare(x.Endpoint, y.Endpoint) == 0 && StringComparer.InvariantCulture.Compare(x.TransportAddress, y.TransportAddress) == 0;
-            }
+                => StringComparer.InvariantCulture.Compare(x.Endpoint, y.Endpoint) == 0 && StringComparer.InvariantCulture.Compare(x.TransportAddress, y.TransportAddress) == 0;
 
-            public int GetHashCode(Subscriber obj)
-            {
-                return (obj.Endpoint ?? string.Empty).Length;
-            }
+            public int GetHashCode(Subscriber obj) => (obj.Endpoint ?? string.Empty).Length;
         }
 
-        internal class CacheItem
+        internal sealed class CacheItem
         {
             public DateTime Stored;
             public Task<IEnumerable<Subscriber>> Subscribers;

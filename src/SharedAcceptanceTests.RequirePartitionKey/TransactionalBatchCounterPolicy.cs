@@ -11,7 +11,7 @@ namespace NServiceBus.AcceptanceTests
     /// <summary>
     /// This policy counts transaction batches by looking for the "boundary" header in the request
     /// </summary>
-    class TransactionalBatchCounterPolicy : HttpPipelinePolicy
+    sealed class TransactionalBatchCounterPolicy : HttpPipelinePolicy
     {
         public HashSet<string> BatchIdentifiers { get; } = new();
 

@@ -26,14 +26,14 @@
                 return;
             }
 
-            if (transaction is not AzureStorageOutboxTransaction IOutboxTransaction)
+            if (transaction is not AzureStorageOutboxTransaction azureStorageOutboxTransaction)
             {
                 await next(context).ConfigureAwait(false);
                 return;
             }
 
             // Normal outbox operating at the physical stage
-            if (IOutboxTransaction.PartitionKey.HasValue)
+            if (azureStorageOutboxTransaction.PartitionKey.HasValue)
             {
                 await next(context).ConfigureAwait(false);
                 return;
@@ -51,10 +51,10 @@
             setAsDispatchedHolder.PartitionKey = partitionKey;
             setAsDispatchedHolder.TableClientHolder = tableHolder;
 
-            IOutboxTransaction.PartitionKey = partitionKey;
-            IOutboxTransaction.StorageSession.TableClientHolder = tableHolder;
+            azureStorageOutboxTransaction.PartitionKey = partitionKey;
+            azureStorageOutboxTransaction.StorageSession.TableClientHolder = tableHolder;
 
-            var outboxRecord = await tableHolder.TableClient.ReadOutboxRecord(context.MessageId, IOutboxTransaction.PartitionKey.Value, context.Extensions, context.CancellationToken)
+            var outboxRecord = await tableHolder.TableClient.ReadOutboxRecord(context.MessageId, azureStorageOutboxTransaction.PartitionKey.Value, context.Extensions, context.CancellationToken)
                 .ConfigureAwait(false);
 
             if (outboxRecord is null)
@@ -66,7 +66,7 @@
             setAsDispatchedHolder.Record = outboxRecord;
 
             // Signals that Outbox persister Store and Commit should be no-ops
-            IOutboxTransaction.SuppressStoreAndCommit = true;
+            azureStorageOutboxTransaction.SuppressStoreAndCommit = true;
 
             var pendingTransportOperations = context.Extensions.Get<PendingTransportOperations>();
             pendingTransportOperations.Clear();

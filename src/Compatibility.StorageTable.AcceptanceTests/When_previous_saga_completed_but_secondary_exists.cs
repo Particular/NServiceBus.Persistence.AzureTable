@@ -6,7 +6,6 @@ namespace NServiceBus.AcceptanceTests
     using AcceptanceTesting;
     using EndpointTemplates;
     using NUnit.Framework;
-    using Extensibility;
     using Persistence.AzureTable.Release_2x;
     using Sagas;
 

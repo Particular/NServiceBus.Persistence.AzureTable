@@ -2,12 +2,10 @@
 {
     using Azure.Data.Tables;
 
-    class TableServiceServiceClientForSubscriptionsFromConfiguration : IProvideTableServiceClientForSubscriptions
+    sealed class TableServiceServiceClientForSubscriptionsFromConfiguration : IProvideTableServiceClientForSubscriptions
     {
         public TableServiceServiceClientForSubscriptionsFromConfiguration(TableServiceClient client)
-        {
-            Client = client;
-        }
+            => Client = client;
 
         public TableServiceClient Client { get; }
     }

@@ -29,10 +29,7 @@
 
         public class Endpoint : EndpointConfigurationBuilder
         {
-            public Endpoint()
-            {
-                EndpointSetup<DefaultServer>();
-            }
+            public Endpoint() => EndpointSetup<DefaultServer>();
 
             public class MyHandler : IHandleMessages<MyMessage>
             {
@@ -50,8 +47,8 @@
                     return Task.CompletedTask;
                 }
 
-                Context context;
-                IAzureTableStorageSession session;
+                readonly Context context;
+                readonly IAzureTableStorageSession session;
             }
         }
 

@@ -15,8 +15,6 @@
 
     public class ConfigureAzureTablePersistence : IConfigureEndpointTestExecution
     {
-        readonly TableServiceClient tableServiceClient;
-
         public ConfigureAzureTablePersistence(TableServiceClient tableServiceClient = null) =>
             this.tableServiceClient = tableServiceClient ?? SetupFixture.TableServiceClient;
 
@@ -36,10 +34,12 @@
 
             configuration.Pipeline.Register(new PartitionKeyProviderBehavior.PartitionKeyProviderBehaviorRegisterStep());
 
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
-        Task IConfigureEndpointTestExecution.Cleanup() => Task.FromResult(0);
+        Task IConfigureEndpointTestExecution.Cleanup() => Task.CompletedTask;
+
+        readonly TableServiceClient tableServiceClient;
 
         class PartitionKeyProviderBehavior : Behavior<IIncomingLogicalMessageContext>
         {

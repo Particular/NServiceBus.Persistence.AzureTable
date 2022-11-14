@@ -64,25 +64,25 @@ namespace NServiceBus.AcceptanceTests
             var byteArrayProp = sagaEntity[nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.ByteArray)];
 
             Assert.AreEqual(typeof(double), nullableDoubleProp.GetType());
-            Assert.AreEqual(4.5d, (double)nullableDoubleProp);
+            Assert.AreEqual(4.5d, nullableDoubleProp);
 
             Assert.AreEqual(typeof(string), intArrayProp.GetType());
             Assert.AreEqual("[1,2,3,4]", intArrayProp);
 
             Assert.AreEqual(typeof(string), complexObjectProp.GetType());
-            Assert.AreEqual("{\"Data\":\"SomeData\"}", (string)complexObjectProp);
+            Assert.AreEqual("{\"Data\":\"SomeData\"}", complexObjectProp);
 
             Assert.AreEqual(typeof(bool), nullableBoolProp.GetType());
-            Assert.AreEqual(true, (bool)nullableBoolProp);
+            Assert.AreEqual(true, nullableBoolProp);
 
             Assert.AreEqual(typeof(Guid), nullableGuidProp.GetType());
-            Assert.AreEqual(new Guid("3C623C1F-80AB-4036-86CA-C2020FAE2EFE"), (Guid)nullableGuidProp);
+            Assert.AreEqual(new Guid("3C623C1F-80AB-4036-86CA-C2020FAE2EFE"), nullableGuidProp);
 
             Assert.AreEqual(typeof(long), nullableLongProp.GetType());
-            Assert.AreEqual(10, (long)nullableLongProp);
+            Assert.AreEqual(10L, nullableLongProp);
 
             Assert.AreEqual(typeof(int), nullableIntProp.GetType());
-            Assert.AreEqual(10, (int)nullableIntProp);
+            Assert.AreEqual(10, nullableIntProp);
 
             Assert.AreEqual(typeof(byte[]), byteArrayProp.GetType());
             CollectionAssert.AreEqual(new byte[] { 1 }, (byte[])byteArrayProp);
@@ -98,17 +98,11 @@ namespace NServiceBus.AcceptanceTests
 
         public class EndpointWithSagaWithComplexState : EndpointConfigurationBuilder
         {
-            public EndpointWithSagaWithComplexState()
-            {
-                EndpointSetup<DefaultServer>();
-            }
+            public EndpointWithSagaWithComplexState() => EndpointSetup<DefaultServer>();
 
             public class SagaWithComplexState : Saga<ComplexStateSagaData>, IAmStartedByMessages<StartSagaMessage>, IHandleMessages<ContinueSagaMessage>
             {
-                public SagaWithComplexState(Context testContext)
-                {
-                    this.testContext = testContext;
-                }
+                public SagaWithComplexState(Context testContext) => this.testContext = testContext;
 
                 public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {

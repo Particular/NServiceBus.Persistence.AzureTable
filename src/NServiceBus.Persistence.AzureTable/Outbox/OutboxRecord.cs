@@ -46,7 +46,7 @@
             DispatchedAt = DateTimeOffsetHelper.ToWireFormattedString(DateTimeOffset.UtcNow);
         }
 
-        internal void DeserializeAndSetTransportOperations(string transportOperations)
+        void DeserializeAndSetTransportOperations(string transportOperations)
         {
             var storageOperations = DeserializeTransportOperations(transportOperations);
             Operations = storageOperations.Select(op =>
@@ -56,13 +56,10 @@
         }
 
         public static StorageTransportOperation[] DeserializeTransportOperations(string operations)
-        {
-            return JsonConvert.DeserializeObject<StorageTransportOperation[]>(operations, ReadOnlyMemoryConverter);
-        }
+            => JsonConvert.DeserializeObject<StorageTransportOperation[]>(operations, ReadOnlyMemoryConverter);
 
-        internal static string SerializeTransportOperations(TransportOperation[] transportOperations)
-        {
-            return JsonConvert.SerializeObject(
+        static string SerializeTransportOperations(TransportOperation[] transportOperations) =>
+            JsonConvert.SerializeObject(
                 transportOperations.Select(transportOperation => new StorageTransportOperation()
                 {
                     MessageId = transportOperation.MessageId,
@@ -70,7 +67,6 @@
                     Options = transportOperation.Options,
                     Headers = transportOperation.Headers
                 }), Formatting.Indented, ReadOnlyMemoryConverter);
-        }
 
         internal class StorageTransportOperation
         {

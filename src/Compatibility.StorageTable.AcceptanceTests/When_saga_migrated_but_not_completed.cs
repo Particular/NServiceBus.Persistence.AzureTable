@@ -56,17 +56,11 @@ namespace NServiceBus.AcceptanceTests
 
         public class EndpointWithSagaThatWasMigrated : EndpointConfigurationBuilder
         {
-            public EndpointWithSagaThatWasMigrated()
-            {
-                EndpointSetup<DefaultServer>();
-            }
+            public EndpointWithSagaThatWasMigrated() => EndpointSetup<DefaultServer>();
 
             public class SagaWithMigratedData : Saga<MigratedSagaData>, IAmStartedByMessages<StartSagaMessage>, IHandleMessages<ContinueSagaMessage>
             {
-                public SagaWithMigratedData(Context testContext)
-                {
-                    this.testContext = testContext;
-                }
+                public SagaWithMigratedData(Context testContext) => this.testContext = testContext;
 
                 public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
@@ -83,12 +77,10 @@ namespace NServiceBus.AcceptanceTests
                     return Task.CompletedTask;
                 }
 
-                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<MigratedSagaData> mapper)
-                {
+                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<MigratedSagaData> mapper) =>
                     mapper.MapSaga(s => s.SomeId)
                         .ToMessage<StartSagaMessage>(m => m.SomeId)
                         .ToMessage<ContinueSagaMessage>(m => m.SomeId);
-                }
 
                 readonly Context testContext;
             }
