@@ -7,7 +7,7 @@
     /// <summary>
     /// This mimics the secondary index table entity of the 2.4.x versions
     /// </summary>
-    class SecondaryIndexTableEntity : ITableEntity
+    sealed class SecondaryIndexTableEntity : ITableEntity
     {
         public Guid SagaId { get; set; }
         public byte[] InitialSagaData { get; set; }

@@ -9,7 +9,7 @@
     using Newtonsoft.Json;
     using Outbox;
 
-    class OutboxRecord : ITableEntity
+    sealed class OutboxRecord : ITableEntity
     {
         static ReadOnlyMemoryConverter ReadOnlyMemoryConverter = new();
 

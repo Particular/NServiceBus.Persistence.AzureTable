@@ -4,7 +4,7 @@
     using Azure;
     using Azure.Data.Tables;
 
-    class Subscription : ITableEntity
+    sealed class Subscription : ITableEntity
     {
         public string EndpointName { get; set; }
 
@@ -28,7 +28,7 @@
             return Equals((Subscription)obj);
         }
 
-        public virtual bool Equals(Subscription other)
+        public bool Equals(Subscription other)
         {
             if (other is null)
             {

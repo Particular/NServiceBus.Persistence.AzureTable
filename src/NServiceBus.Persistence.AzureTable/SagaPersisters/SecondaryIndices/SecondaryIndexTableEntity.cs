@@ -5,7 +5,7 @@
     using Azure.Data.Tables;
 
     // An entity holding information about the secondary index.
-    class SecondaryIndexTableEntity : ITableEntity
+    sealed class SecondaryIndexTableEntity : ITableEntity
     {
         public Guid SagaId { get; set; }
         public string PartitionKey { get; set; }
