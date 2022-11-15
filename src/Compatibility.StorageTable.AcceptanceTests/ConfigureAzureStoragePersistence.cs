@@ -14,6 +14,8 @@ public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExec
 
         persistence.DisableTableCreation();
         persistence.UseTableServiceClient(SetupFixture.TableServiceClient);
+        var compatibility = persistence.Compatibility();
+        compatibility.EnableSecondaryKeyLookupForSagasCorrelatedByProperties();
 
         return Task.CompletedTask;
     }
