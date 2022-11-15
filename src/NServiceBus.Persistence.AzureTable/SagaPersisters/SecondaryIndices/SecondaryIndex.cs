@@ -57,13 +57,13 @@
 
             if (assumeSecondaryIndicesExist)
             {
-                return null;
+                return default;
             }
 
             var foundSagaIdOrNull = await ScanForSaga<TSagaData>(table, correlationProperty, cancellationToken).ConfigureAwait(false);
             if (!foundSagaIdOrNull.HasValue)
             {
-                return null;
+                return default;
             }
             cache.Put(key, foundSagaIdOrNull.Value);
             return foundSagaIdOrNull.Value;
