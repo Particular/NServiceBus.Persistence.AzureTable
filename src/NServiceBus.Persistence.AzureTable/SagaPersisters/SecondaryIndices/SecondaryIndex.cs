@@ -30,17 +30,12 @@
             }
 
             var rowKey = assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey ? key.PartitionKey : key.RowKey;
-            Response<SecondaryIndexTableEntity> exec = null;
+            NullableResponse<SecondaryIndexTableEntity> exec;
             try
             {
                 exec = await table
-                    .GetEntityAsync<SecondaryIndexTableEntity>(key.PartitionKey, rowKey, null, cancellationToken)
+                    .GetEntityIfExistsAsync<SecondaryIndexTableEntity>(key.PartitionKey, rowKey, null, cancellationToken)
                     .ConfigureAwait(false);
-            }
-            catch (RequestFailedException requestFailedException)
-                when (requestFailedException.Status is (int)HttpStatusCode.NotFound)
-            {
-                // intentionally ignored
             }
             catch (RequestFailedException requestFailedException)
                 when (!assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey && requestFailedException.Status is (int)HttpStatusCode.BadRequest)
@@ -49,19 +44,13 @@
                     $"Trying to retrieve the secondary index entry with PartitionKey = '{key.PartitionKey}' and RowKey = 'string.Empty' failed. When using the compatibility mode on Azure Cosmos DB it is strongly recommended to enable `sagaPersistence.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey()` to avoid additional lookup costs or disable the compatibility mode entirely if not needed by calling `persistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties(). Falling back to query secondary index entry with PartitionKey = '{key.PartitionKey}' and RowKey = '{key.PartitionKey}'",
                     requestFailedException);
 
-                try
-                {
-                    exec = await table.GetEntityAsync<SecondaryIndexTableEntity>(key.PartitionKey, key.PartitionKey, null, cancellationToken)
-                        .ConfigureAwait(false);
-                }
-                catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
-                {
-                    // intentionally ignored
-                }
+                exec = await table.GetEntityIfExistsAsync<SecondaryIndexTableEntity>(key.PartitionKey, key.PartitionKey, null, cancellationToken)
+                    .ConfigureAwait(false);
             }
 
-            if (exec?.Value is { } secondaryIndexEntry)
+            if (exec.HasValue)
             {
+                var secondaryIndexEntry = exec.Value;
                 cache.Put(key, secondaryIndexEntry.SagaId);
                 return secondaryIndexEntry.SagaId;
             }
@@ -113,7 +102,7 @@
             cache.Remove(key);
         }
 
-        readonly LRUCache<PartitionRowKeyTuple, Guid> cache = new LRUCache<PartitionRowKeyTuple, Guid>(LRUCapacity);
+        readonly LRUCache<PartitionRowKeyTuple, Guid> cache = new(LRUCapacity);
         readonly bool assumeSecondaryIndicesExist;
         readonly bool assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey;
         const int LRUCapacity = 1000;
