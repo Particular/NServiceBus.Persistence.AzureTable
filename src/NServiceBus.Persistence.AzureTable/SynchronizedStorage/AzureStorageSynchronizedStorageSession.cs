@@ -1,18 +1,17 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure.Data.Tables;
     using Extensibility;
-    using Microsoft.Azure.Cosmos.Table;
     using Outbox;
     using Transport;
 
     class AzureStorageSynchronizedStorageSession : ICompletableSynchronizedStorageSession, IWorkWithSharedTransactionalBatch
     {
-        public AzureStorageSynchronizedStorageSession(TableHolderResolver tableHolderResolver)
-        {
-            this.tableHolderResolver = tableHolderResolver;
-        }
+        public AzureStorageSynchronizedStorageSession(TableClientHolderResolver tableClientHolderResolver)
+            => this.tableClientHolderResolver = tableClientHolderResolver;
 
         public void Dispose()
         {
@@ -42,7 +41,7 @@
         public Task Open(ContextBag contextBag, CancellationToken cancellationToken = default)
         {
             ownsTransaction = true;
-            session = new StorageSession(tableHolderResolver, contextBag);
+            session = new StorageSession(tableClientHolderResolver, contextBag);
             return Task.CompletedTask;
         }
 
@@ -55,12 +54,12 @@
             return Task.CompletedTask;
         }
 
-        readonly TableHolderResolver tableHolderResolver;
+        readonly TableClientHolderResolver tableClientHolderResolver;
         bool disposed;
         StorageSession session;
         bool ownsTransaction;
-        public CloudTable Table => session.Table;
-        public TableBatchOperation Batch => session.Batch;
+        public TableClient Table => session.Table;
+        public List<TableTransactionAction> Batch => session.Batch;
         public string PartitionKey => session.PartitionKey;
         public ContextBag CurrentContextBag
         {

@@ -21,37 +21,27 @@
 
         /// <inheritdoc />
         public bool Equals(TableEntityPartitionKey other)
-        {
-            return string.Equals(PartitionKey, other.PartitionKey, StringComparison.OrdinalIgnoreCase);
-        }
+            => string.Equals(PartitionKey, other.PartitionKey, StringComparison.OrdinalIgnoreCase);
 
         /// <inheritdoc />
         public override bool Equals(object obj)
-        {
-            return obj is TableEntityPartitionKey other && Equals(other);
-        }
+            => obj is TableEntityPartitionKey other && Equals(other);
 
         /// <inheritdoc />
         public override int GetHashCode()
-        {
-            return StringComparer.OrdinalIgnoreCase.GetHashCode(PartitionKey);
-        }
+            => StringComparer.OrdinalIgnoreCase.GetHashCode(PartitionKey);
 
         /// <summary>
         /// Overloaded == equality operator
         /// </summary>
         public static bool operator ==(TableEntityPartitionKey left, TableEntityPartitionKey right)
-        {
-            return left.Equals(right);
-        }
+            => left.Equals(right);
 
         /// <summary>
         /// Overloaded != equality operator
         /// </summary>
         public static bool operator !=(TableEntityPartitionKey left, TableEntityPartitionKey right)
-        {
-            return !left.Equals(right);
-        }
+            => !left.Equals(right);
 
         /// <summary>
         /// The partition key.

@@ -4,7 +4,7 @@
     using System.Threading.Tasks;
     using AcceptanceTesting;
     using EndpointTemplates;
-    using NServiceBus.Pipeline;
+    using Pipeline;
     using NUnit.Framework;
     using Persistence.AzureTable;
 
@@ -28,13 +28,11 @@
 
         public class EndpointWithRegularHandler : EndpointConfigurationBuilder
         {
-            public EndpointWithRegularHandler()
-            {
+            public EndpointWithRegularHandler() =>
                 EndpointSetup<DefaultServer>(config =>
                 {
                     config.Pipeline.Register(new ContainerInformationRemoverBehavior.Registration());
                 });
-            }
 
             class ContainerInformationRemoverBehavior : Behavior<IIncomingLogicalMessageContext>
             {
@@ -49,19 +47,14 @@
                     public Registration() : base(nameof(ContainerInformationRemoverBehavior),
                         typeof(ContainerInformationRemoverBehavior),
                         "Removes the container information if present",
-                        b => new ContainerInformationRemoverBehavior())
-                    {
+                        b => new ContainerInformationRemoverBehavior()) =>
                         InsertBeforeIfExists(nameof(LogicalOutboxBehavior));
-                    }
                 }
             }
 
             public class AHandler : IHandleMessages<MyMessage>
             {
-                public AHandler(Context testContext)
-                {
-                    this.testContext = testContext;
-                }
+                public AHandler(Context testContext) => this.testContext = testContext;
 
                 public Task Handle(MyMessage message, IMessageHandlerContext context)
                 {

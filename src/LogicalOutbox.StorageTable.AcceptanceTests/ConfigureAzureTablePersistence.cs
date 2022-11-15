@@ -1,77 +1,78 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using NServiceBus;
-using NServiceBus.AcceptanceTesting;
-using NServiceBus.AcceptanceTesting.Support;
-using NServiceBus.AcceptanceTests;
-using NServiceBus.AcceptanceTests.Sagas;
-using NServiceBus.Persistence.AzureTable;
-using NServiceBus.Pipeline;
-using NServiceBus.Settings;
-using Conventions = NServiceBus.AcceptanceTesting.Customization.Conventions;
-
-public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExecution
+﻿namespace NServiceBus.AcceptanceTests
 {
-    public Task Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
+    using System;
+    using System.Threading.Tasks;
+    using Azure.Data.Tables;
+    using Microsoft.Extensions.DependencyInjection;
+    using NServiceBus;
+    using NServiceBus.AcceptanceTesting;
+    using NServiceBus.AcceptanceTesting.Support;
+    using NServiceBus.AcceptanceTests.Sagas;
+    using NServiceBus.Persistence.AzureTable;
+    using NServiceBus.Pipeline;
+    using NServiceBus.Settings;
+    using Conventions = AcceptanceTesting.Customization.Conventions;
+
+    public class ConfigureAzureTablePersistence : IConfigureEndpointTestExecution
     {
-        var sagaPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
-        sagaPersistence.DisableTableCreation();
-        sagaPersistence.UseCloudTableClient(SetupFixture.TableClient);
-        sagaPersistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
+        public ConfigureAzureTablePersistence(TableServiceClient tableServiceClient = null) =>
+            this.tableServiceClient = tableServiceClient ?? SetupFixture.TableServiceClient;
 
-        configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
-
-        var recoverabilitySettings = configuration.Recoverability();
-
-        if (endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))
+        Task IConfigureEndpointTestExecution.Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
         {
-            recoverabilitySettings.Immediate(c => c.NumberOfRetries(1));
-        }
+            configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>()
+                         .DisableTableCreation()
+                         .UseTableServiceClient(tableServiceClient)
+                         .Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
 
-        configuration.Pipeline.Register(new PartitionKeyProviderBehavior.PartitionKeyProviderBehaviorRegisterStep());
+            configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
 
-        return Task.FromResult(0);
-    }
-
-    Task IConfigureEndpointTestExecution.Cleanup()
-    {
-        return Task.FromResult(0);
-    }
-
-    class PartitionKeyProviderBehavior : Behavior<IIncomingLogicalMessageContext>
-    {
-        readonly ScenarioContext scenarioContext;
-        readonly IReadOnlySettings settings;
-
-        public PartitionKeyProviderBehavior(ScenarioContext scenarioContext, IReadOnlySettings settings)
-        {
-            this.settings = settings;
-            this.scenarioContext = scenarioContext;
-        }
-
-        public override Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
-        {
-            if (!context.Extensions.TryGet<TableEntityPartitionKey>(out _))
+            if (endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))
             {
-                context.Extensions.Set(new TableEntityPartitionKey(scenarioContext.TestRunId.ToString()));
+                configuration.Recoverability().Immediate(c => c.NumberOfRetries(1));
             }
 
-            if (!settings.TryGet<TableInformation>(out _) && !context.Extensions.TryGet<TableInformation>(out _))
-            {
-                context.Extensions.Set(new TableInformation(SetupFixture.TableName));
-            }
-            return next();
+            configuration.Pipeline.Register(new PartitionKeyProviderBehavior.PartitionKeyProviderBehaviorRegisterStep());
+
+            return Task.CompletedTask;
         }
 
-        public class PartitionKeyProviderBehaviorRegisterStep : RegisterStep
+        Task IConfigureEndpointTestExecution.Cleanup() => Task.CompletedTask;
+
+        readonly TableServiceClient tableServiceClient;
+
+        class PartitionKeyProviderBehavior : Behavior<IIncomingLogicalMessageContext>
         {
-            public PartitionKeyProviderBehaviorRegisterStep() : base(nameof(PartitionKeyProviderBehavior),
-                typeof(PartitionKeyProviderBehavior),
-                "Populates the partition key",
-                provider => new PartitionKeyProviderBehavior(provider.GetRequiredService<ScenarioContext>(), provider.GetRequiredService<IReadOnlySettings>()))
+            readonly ScenarioContext scenarioContext;
+            readonly IReadOnlySettings settings;
+
+            public PartitionKeyProviderBehavior(ScenarioContext scenarioContext, IReadOnlySettings settings)
             {
-                InsertBeforeIfExists(nameof(LogicalOutboxBehavior));
+                this.settings = settings;
+                this.scenarioContext = scenarioContext;
+            }
+
+            public override Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
+            {
+                if (!context.Extensions.TryGet<TableEntityPartitionKey>(out _))
+                {
+                    context.Extensions.Set(new TableEntityPartitionKey(scenarioContext.TestRunId.ToString()));
+                }
+
+                if (!settings.TryGet<TableInformation>(out _) && !context.Extensions.TryGet<TableInformation>(out _))
+                {
+                    context.Extensions.Set(new TableInformation(SetupFixture.TableName));
+                }
+                return next();
+            }
+
+            public class PartitionKeyProviderBehaviorRegisterStep : RegisterStep
+            {
+                public PartitionKeyProviderBehaviorRegisterStep() : base(nameof(PartitionKeyProviderBehavior),
+                    typeof(PartitionKeyProviderBehavior),
+                    "Populates the partition key",
+                    provider => new PartitionKeyProviderBehavior(provider.GetRequiredService<ScenarioContext>(), provider.GetRequiredService<IReadOnlySettings>())) =>
+                    InsertBeforeIfExists(nameof(LogicalOutboxBehavior));
             }
         }
     }

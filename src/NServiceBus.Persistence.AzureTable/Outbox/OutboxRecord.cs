@@ -2,65 +2,42 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using Microsoft.Azure.Cosmos.Table;
+    using System.Runtime.Serialization;
+    using Azure;
+    using Azure.Data.Tables;
     using Newtonsoft.Json;
     using Outbox;
 
-    class OutboxRecord : TableEntity
+    sealed class OutboxRecord : ITableEntity
     {
-        static ReadOnlyMemoryConverter ReadOnlyMemoryConverter = new ReadOnlyMemoryConverter();
-
         // ignoring this property to avoid double storing and clashing with Cosmos Id property.
-        [IgnoreProperty]
+        [IgnoreDataMember]
         public string Id
         {
             get => RowKey;
             set => RowKey = value;
         }
 
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
+
         public bool Dispatched { get; set; }
 
-        public string TransportOperations { get; set; }
+        /// <summary>
+        /// This property is assumed to be only ever accessed by the serialization mechanism of the SDK
+        /// </summary>
+        public string TransportOperations
+        {
+            get => SerializeTransportOperations(Operations);
+            set => Operations = DeserializeTransportOperations(value);
+        }
 
         public string DispatchedAt { get; set; }
 
-        // ignoring this property because we are custom serializing the operations into TransportOperations and deserializing it back
-        [IgnoreProperty] public TransportOperation[] Operations { get; set; } = Array.Empty<TransportOperation>();
-
-        public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
-        {
-            TransportOperations = SerializeTransportOperations(Operations);
-            return base.WriteEntity(operationContext);
-        }
-
-        internal static StorageTransportOperation[] DeserializeTransportOperations(string transportOperations)
-        {
-            return JsonConvert.DeserializeObject<StorageTransportOperation[]>(transportOperations, ReadOnlyMemoryConverter);
-        }
-
-        internal static string SerializeTransportOperations(TransportOperation[] transportOperations)
-        {
-            return JsonConvert.SerializeObject(
-                transportOperations.Select(transportOperation => new StorageTransportOperation()
-                {
-                    MessageId = transportOperation.MessageId,
-                    Body = transportOperation.Body,
-                    Options = transportOperation.Options,
-                    Headers = transportOperation.Headers
-                }), Formatting.Indented, ReadOnlyMemoryConverter);
-        }
-
-        public override void ReadEntity(IDictionary<string, EntityProperty> properties,
-            OperationContext operationContext)
-        {
-            base.ReadEntity(properties, operationContext);
-            var storageOperations = DeserializeTransportOperations(TransportOperations);
-            Operations = storageOperations.Select(op =>
-                    new TransportOperation(op.MessageId, new Transport.DispatchProperties(op.Options), op.Body,
-                        op.Headers))
-                .ToArray();
-        }
+        [IgnoreDataMember]
+        public TransportOperation[] Operations { get; set; } = Array.Empty<TransportOperation>();
 
         public void SetAsDispatched()
         {
@@ -68,6 +45,45 @@
             Operations = Array.Empty<TransportOperation>();
             DispatchedAt = DateTimeOffsetHelper.ToWireFormattedString(DateTimeOffset.UtcNow);
         }
+
+        TransportOperation[] DeserializeTransportOperations(string transportOperations)
+        {
+            var storageOperations = DeserializeStorageTransportOperations(transportOperations);
+            var operations = new TransportOperation[storageOperations.Length];
+            int index = 0;
+            foreach (var storageOperation in storageOperations)
+            {
+                operations[index] = new TransportOperation(
+                    storageOperation.MessageId,
+                    new Transport.DispatchProperties(storageOperation.Options), storageOperation.Body,
+                    storageOperation.Headers);
+                index++;
+            }
+            return operations;
+        }
+
+        public static StorageTransportOperation[] DeserializeStorageTransportOperations(string operations)
+            => JsonConvert.DeserializeObject<StorageTransportOperation[]>(operations, Converters);
+
+        static string SerializeTransportOperations(TransportOperation[] transportOperations)
+        {
+            var storageOperations = new StorageTransportOperation[transportOperations.Length];
+            int index = 0;
+            foreach (var transportOperation in transportOperations)
+            {
+                storageOperations[index] = new StorageTransportOperation
+                {
+                    MessageId = transportOperation.MessageId,
+                    Body = transportOperation.Body,
+                    Options = transportOperation.Options,
+                    Headers = transportOperation.Headers
+                };
+                index++;
+            }
+            return JsonConvert.SerializeObject(storageOperations, Formatting.Indented, Converters);
+        }
+
+        static readonly JsonConverter[] Converters = { new ReadOnlyMemoryConverter() };
 
         internal class StorageTransportOperation
         {

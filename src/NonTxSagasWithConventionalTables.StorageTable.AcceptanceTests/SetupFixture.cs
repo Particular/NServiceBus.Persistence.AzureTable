@@ -3,9 +3,11 @@
     using System;
     using System.IO;
     using System.Linq;
+    using System.Net;
     using System.Threading.Tasks;
+    using Azure;
+    using Azure.Data.Tables;
     using NUnit.Framework;
-    using Microsoft.Azure.Cosmos.Table;
     using Testing;
 
     [SetUpFixture]
@@ -14,10 +16,9 @@
         [OneTimeSetUp]
         public Task OneTimeSetUp()
         {
-            var connectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
+            ConnectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
 
-            var account = CloudStorageAccount.Parse(connectionString);
-            TableClient = account.CreateCloudTableClient();
+            TableServiceClient = new TableServiceClient(ConnectionString);
 
             TablePrefix = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();
 
@@ -30,15 +31,23 @@
         [OneTimeTearDown]
         public Task OneTimeTearDown()
         {
-            return Task.WhenAll(allConventionalSagaTableNamesWithPrefix.Select(tableName =>
+            ConnectionString = null;
+            return Task.WhenAll(allConventionalSagaTableNamesWithPrefix.Select(async tableName =>
             {
-                var table = TableClient.GetTableReference(tableName);
-                return table.DeleteIfExistsAsync();
+                try
+                {
+                    await TableServiceClient.DeleteTableAsync(tableName);
+                }
+                catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
+                {
+                }
             }).ToArray());
         }
 
-        public static CloudTableClient TableClient;
-        public static string TablePrefix;
+        public static string ConnectionString { get; private set; }
+
+        public static TableServiceClient TableServiceClient { get; private set; }
+        public static string TablePrefix { get; private set; }
         string[] allConventionalSagaTableNamesWithPrefix;
     }
 }

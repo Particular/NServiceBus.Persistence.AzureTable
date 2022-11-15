@@ -1,28 +1,30 @@
-﻿namespace NServiceBus.Persistence.AzureStorage.ComponentTests
+﻿namespace NServiceBus.AcceptanceTests
 {
     using System;
-    using System.Collections.Generic;
+    using System.Collections.Concurrent;
     using System.IO;
-    using Microsoft.Azure.Cosmos.Table;
+    using System.Threading.Tasks;
+    using Azure.Core;
+    using Azure.Core.Pipeline;
 
-    public class AzureRequestRecorder : IDisposable
+    public class AzureRequestRecorder : HttpPipelinePolicy
     {
-        public List<string> Requests = new List<string>();
+        public ConcurrentQueue<string> Requests { get; } = new();
 
-        public AzureRequestRecorder()
+        public override void Process(HttpMessage message, ReadOnlyMemory<HttpPipelinePolicy> pipeline)
         {
-            OperationContext.GlobalSendingRequest += OnSendingRequest;
+            CaptureRequest(message);
+            ProcessNext(message, pipeline);
         }
 
-        void OnSendingRequest(object sender, RequestEventArgs e)
+        public override async ValueTask ProcessAsync(HttpMessage message, ReadOnlyMemory<HttpPipelinePolicy> pipeline)
         {
-            Requests.Add($"{e.Request.Method,-7} {e.Request.RequestUri.PathAndQuery}");
+            CaptureRequest(message);
+            await ProcessNextAsync(message, pipeline);
         }
 
-        public void Dispose()
-        {
-            OperationContext.GlobalSendingRequest -= OnSendingRequest;
-        }
+        void CaptureRequest(HttpMessage message)
+            => Requests.Enqueue($"{message.Request.Method,-7} {message.Request.Uri.PathAndQuery}");
 
         public void Print(TextWriter @out)
         {

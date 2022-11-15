@@ -7,15 +7,16 @@
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure;
+    using Azure.Data.Tables;
     using Extensibility;
-    using Microsoft.Azure.Cosmos.Table;
     using Newtonsoft.Json;
     using Sagas;
 
-    class AzureSagaPersister : ISagaPersister
+    sealed class AzureSagaPersister : ISagaPersister
     {
         public AzureSagaPersister(
-            IProvideCloudTableClient tableClientProvider,
+            IProvideTableServiceClient tableServiceClientProvider,
             bool disableTableCreation,
             bool compatibilityMode,
             SecondaryIndex secondaryIndex,
@@ -30,7 +31,7 @@
             this.conventionalTablePrefix = conventionalTablePrefix;
             this.compatibilityMode = compatibilityMode;
             this.disableTableCreation = disableTableCreation;
-            client = tableClientProvider.Client;
+            client = tableServiceClientProvider.Client;
             this.secondaryIndex = secondaryIndex;
         }
 
@@ -41,21 +42,16 @@
             var partitionKey = GetPartitionKey(context, sagaData.Id);
             var sagaDataType = sagaData.GetType();
 
-            var sagaDataEntityToSave = DictionaryTableEntityExtensions.ToDictionaryTableEntity(sagaData, new DictionaryTableEntity
-            {
-                PartitionKey = partitionKey.PartitionKey,
-                RowKey = sagaData.Id.ToString(),
-            }, jsonSerializer, writerCreator);
+            var sagaDataEntityToSave = new TableEntity(partitionKey.PartitionKey, sagaData.Id.ToString());
+            sagaDataEntityToSave = TableEntityExtensions.ToTableEntity(sagaData, sagaDataEntityToSave, jsonSerializer, writerCreator);
 
-            var table = await GetTableAndCreateIfNotExists(storageSession, sagaDataType, cancellationToken)
+            var table = await GetTableClientAndCreateTableIfNotExists(storageSession, sagaDataType, cancellationToken)
                 .ConfigureAwait(false);
 
-            sagaDataEntityToSave.Table = table;
-
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            meta.Entities[sagaData.Id] = sagaDataEntityToSave;
+            meta.Entities[sagaData.Id] = (table, sagaDataEntityToSave);
 
-            storageSession.Add(new SagaSave(partitionKey, sagaDataEntityToSave));
+            storageSession.Add(new SagaSave(partitionKey, sagaDataEntityToSave, table));
         }
 
         public Task Update(IContainSagaData sagaData, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
@@ -64,11 +60,11 @@
             var partitionKey = GetPartitionKey(context, sagaData.Id);
 
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            var sagaDataEntityToUpdate = meta.Entities[sagaData.Id];
+            var (tableClient, sagaDataEntityToUpdate) = meta.Entities[sagaData.Id];
 
-            var sagaAsDictionaryTableEntity = DictionaryTableEntityExtensions.ToDictionaryTableEntity(sagaData, sagaDataEntityToUpdate, jsonSerializer, writerCreator);
+            var sagaAsTableEntity = TableEntityExtensions.ToTableEntity(sagaData, sagaDataEntityToUpdate, jsonSerializer, writerCreator);
 
-            storageSession.Add(new SagaUpdate(partitionKey, sagaAsDictionaryTableEntity));
+            storageSession.Add(new SagaUpdate(partitionKey, sagaAsTableEntity, tableClient));
 
             return Task.CompletedTask;
         }
@@ -78,29 +74,25 @@
         {
             var storageSession = (IWorkWithSharedTransactionalBatch)session;
 
-            var tableToReadFrom = await GetTableAndCreateIfNotExists(storageSession, typeof(TSagaData), cancellationToken)
+            var tableClient = await GetTableClientAndCreateTableIfNotExists(storageSession, typeof(TSagaData), cancellationToken)
                 .ConfigureAwait(false);
 
             // reads need to go directly
             var partitionKey = GetPartitionKey(context, sagaId);
 
-            var retrieveResult = await tableToReadFrom.ExecuteAsync(TableOperation.Retrieve<DictionaryTableEntity>(partitionKey.PartitionKey, sagaId.ToString()), cancellationToken)
-                .ConfigureAwait(false);
-
-            var readSagaDataEntity = retrieveResult.Result as DictionaryTableEntity;
-            var sagaNotFound = retrieveResult.HttpStatusCode == (int)HttpStatusCode.NotFound || readSagaDataEntity == null;
-
-            if (sagaNotFound)
+            try
+            {
+                var readSagaDataEntity = await tableClient.GetEntityAsync<TableEntity>(partitionKey.PartitionKey, sagaId.ToString(), null, cancellationToken).ConfigureAwait(false);
+                var sagaData = TableEntityExtensions.ToSagaData<TSagaData>(readSagaDataEntity.Value, jsonSerializer, readerCreator);
+                var meta = context.GetOrCreate<SagaInstanceMetadata>();
+                var entityId = sagaData.Id;
+                meta.Entities[entityId] = (tableClient, readSagaDataEntity.Value);
+                return sagaData;
+            }
+            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
             {
                 return default;
             }
-
-            readSagaDataEntity.Table = tableToReadFrom;
-
-            var sagaData = DictionaryTableEntityExtensions.ToSagaData<TSagaData>(readSagaDataEntity, jsonSerializer, readerCreator);
-            var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            meta.Entities[sagaData.Id] = readSagaDataEntity;
-            return sagaData;
         }
 
         public async Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
@@ -125,7 +117,7 @@
         {
             var storageSession = (IWorkWithSharedTransactionalBatch)session;
 
-            var tableToReadFrom = await GetTableAndCreateIfNotExists(storageSession, typeof(TSagaData), cancellationToken)
+            var tableToReadFrom = await GetTableClientAndCreateTableIfNotExists(storageSession, typeof(TSagaData), cancellationToken)
                 .ConfigureAwait(false);
 
             var sagaId = await secondaryIndex.FindSagaId<TSagaData>(tableToReadFrom, correlationProperty, cancellationToken).ConfigureAwait(false);
@@ -149,16 +141,16 @@
             return null;
         }
 
-        async Task<CloudTable> GetTableAndCreateIfNotExists(IAzureTableStorageSession storageSession, Type sagaDataType, CancellationToken cancellationToken)
+        async ValueTask<TableClient> GetTableClientAndCreateTableIfNotExists(IAzureTableStorageSession storageSession, Type sagaDataType, CancellationToken cancellationToken)
         {
-            CloudTable tableToReadFrom;
+            TableClient tableToReadFrom;
             if (storageSession.Table == null)
             {
                 // to avoid string concat when nothing to do
                 var sagaDataTypeName = sagaDataType.Name;
                 var sagaTableNameByConvention = string.IsNullOrEmpty(conventionalTablePrefix) ?
                     sagaDataTypeName : $"{conventionalTablePrefix}{sagaDataTypeName}";
-                var sagaTableByConvention = client.GetTableReference(sagaTableNameByConvention);
+                var sagaTableByConvention = client.GetTableClient(sagaTableNameByConvention);
                 tableToReadFrom = sagaTableByConvention;
             }
             else
@@ -181,10 +173,11 @@
         {
             var storageSession = (IWorkWithSharedTransactionalBatch)session;
             var meta = context.GetOrCreate<SagaInstanceMetadata>();
-            var sagaDataEntityToDelete = meta.Entities[sagaData.Id];
+            var sagaDataEntityToDeleteTuple = meta.Entities[sagaData.Id];
+            var sagaDataEntityToDelete = sagaDataEntityToDeleteTuple.Item2;
             var partitionKey = GetPartitionKey(context, sagaData.Id);
 
-            storageSession.Add(new SagaDelete(partitionKey, sagaDataEntityToDelete));
+            storageSession.Add(new SagaDelete(partitionKey, sagaDataEntityToDelete, sagaDataEntityToDeleteTuple.Item1));
 
             //  if it is not an old saga just go ahead
             if (!sagaDataEntityToDelete.TryGetValue(SecondaryIndexIndicatorProperty, out var secondaryIndexKey))
@@ -192,31 +185,24 @@
                 return Task.CompletedTask;
             }
 
-            var partitionRowKeyTuple = PartitionRowKeyTuple.Parse(secondaryIndexKey.StringValue);
+            var partitionRowKeyTuple = PartitionRowKeyTuple.Parse(secondaryIndexKey.ToString());
             if (partitionRowKeyTuple.HasValue)
             {
                 // fake partition key to make sure we get a dedicated batch for this operation
                 var tableEntityPartitionKey = new TableEntityPartitionKey(Guid.NewGuid().ToString());
-                storageSession.Add(new SagaRemoveSecondaryIndex(tableEntityPartitionKey, sagaData.Id, secondaryIndex, partitionRowKeyTuple.Value, sagaDataEntityToDelete.Table));
+                storageSession.Add(new SagaRemoveSecondaryIndex(tableEntityPartitionKey, sagaData.Id, secondaryIndex, partitionRowKeyTuple.Value, sagaDataEntityToDeleteTuple.Item1));
             }
             return Task.CompletedTask;
         }
 
         static TableEntityPartitionKey GetPartitionKey(ContextBag context, Guid sagaDataId)
-        {
-            if (!context.TryGet<TableEntityPartitionKey>(out var partitionKey))
-            {
-                partitionKey = new TableEntityPartitionKey(sagaDataId.ToString());
-            }
-
-            return partitionKey;
-        }
+            => !context.TryGet<TableEntityPartitionKey>(out var partitionKey) ? new TableEntityPartitionKey(sagaDataId.ToString()) : partitionKey;
 
         readonly bool disableTableCreation;
-        readonly CloudTableClient client;
+        readonly TableServiceClient client;
         readonly SecondaryIndex secondaryIndex;
         const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
-        static readonly ConcurrentDictionary<string, bool> tableCreated = new ConcurrentDictionary<string, bool>();
+        static readonly ConcurrentDictionary<string, bool> tableCreated = new();
         readonly bool compatibilityMode;
         readonly string conventionalTablePrefix;
         readonly JsonSerializer jsonSerializer;
@@ -226,9 +212,9 @@
         /// <summary>
         /// Holds saga instance related metadata in a scope of a <see cref="ContextBag" />.
         /// </summary>
-        class SagaInstanceMetadata
+        sealed class SagaInstanceMetadata
         {
-            public Dictionary<Guid, DictionaryTableEntity> Entities { get; } = new Dictionary<Guid, DictionaryTableEntity>();
+            public Dictionary<Guid, (TableClient, TableEntity)> Entities { get; } = new();
         }
     }
 

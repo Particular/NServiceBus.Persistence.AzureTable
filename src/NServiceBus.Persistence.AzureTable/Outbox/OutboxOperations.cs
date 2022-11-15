@@ -1,40 +1,41 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
-    using Microsoft.Azure.Cosmos.Table;
+    using System.Collections.Generic;
+    using Azure.Data.Tables;
 
-    class OutboxStore : Operation
+    sealed class OutboxStore : Operation
     {
-        public OutboxStore(TableEntityPartitionKey partitionKey, OutboxRecord outboxRow, CloudTable cloudTable) : base(partitionKey)
+        public OutboxStore(TableEntityPartitionKey partitionKey, OutboxRecord outboxRow, TableClient tableClient) : base(partitionKey)
         {
-            this.cloudTable = cloudTable;
+            this.tableClient = tableClient;
             this.outboxRow = outboxRow;
         }
 
-        public override CloudTable Apply(TableBatchOperation transactionalBatch)
+        public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
         {
-            transactionalBatch.Add(TableOperation.Insert(outboxRow));
-            return cloudTable;
+            transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.Add, outboxRow));
+            return tableClient;
         }
 
         readonly OutboxRecord outboxRow;
-        readonly CloudTable cloudTable;
+        readonly TableClient tableClient;
     }
 
-    class OutboxDelete : Operation
+    sealed class OutboxDelete : Operation
     {
-        public OutboxDelete(TableEntityPartitionKey partitionKey, OutboxRecord outboxRow, CloudTable cloudTable) : base(partitionKey)
+        public OutboxDelete(TableEntityPartitionKey partitionKey, OutboxRecord outboxRow, TableClient tableClient) : base(partitionKey)
         {
-            this.cloudTable = cloudTable;
+            this.tableClient = tableClient;
             this.outboxRow = outboxRow;
         }
 
-        public override CloudTable Apply(TableBatchOperation transactionalBatch)
+        public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
         {
-            transactionalBatch.Add(TableOperation.Replace(outboxRow));
-            return cloudTable;
+            transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.UpdateReplace, outboxRow, outboxRow.ETag));
+            return tableClient;
         }
 
         readonly OutboxRecord outboxRow;
-        readonly CloudTable cloudTable;
+        readonly TableClient tableClient;
     }
 }

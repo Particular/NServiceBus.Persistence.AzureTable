@@ -1,64 +1,69 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
     using System;
+    using System.Collections.Generic;
     using System.Net;
-    using Microsoft.Azure.Cosmos.Table;
+    using Azure;
+    using Azure.Data.Tables;
     using Logging;
 
-    class SagaSave : Operation
+    sealed class SagaSave : Operation
     {
-        readonly DictionaryTableEntity sagaRow;
-
-        public SagaSave(TableEntityPartitionKey partitionKey, DictionaryTableEntity sagaRow) : base(partitionKey)
+        public SagaSave(TableEntityPartitionKey partitionKey, TableEntity sagaRow, TableClient tableClient) : base(partitionKey)
         {
             this.sagaRow = sagaRow;
+            this.tableClient = tableClient;
         }
 
-        public override CloudTable Apply(TableBatchOperation transactionalBatch)
+        public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
         {
-            transactionalBatch.Add(TableOperation.Insert(sagaRow));
-            return sagaRow.Table;
+            transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.Add, sagaRow));
+            return tableClient;
         }
+
+        readonly TableEntity sagaRow;
+        readonly TableClient tableClient;
     }
 
-    class SagaUpdate : Operation
+    sealed class SagaUpdate : Operation
     {
-        readonly DictionaryTableEntity sagaRow;
-
-        public SagaUpdate(TableEntityPartitionKey partitionKey, DictionaryTableEntity sagaRow) : base(partitionKey)
+        public SagaUpdate(TableEntityPartitionKey partitionKey, TableEntity sagaRow, TableClient tableClient) : base(partitionKey)
         {
             this.sagaRow = sagaRow;
+            this.tableClient = tableClient;
         }
 
-        public override CloudTable Apply(TableBatchOperation transactionalBatch)
+        public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
         {
-            transactionalBatch.Add(TableOperation.Replace(sagaRow));
-            return sagaRow.Table;
+            transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.UpdateReplace, sagaRow, sagaRow.ETag));
+            return tableClient;
         }
+
+        readonly TableEntity sagaRow;
+        readonly TableClient tableClient;
     }
 
-    class SagaDelete : Operation
+    sealed class SagaDelete : Operation
     {
-        readonly DictionaryTableEntity sagaRow;
-
-        public SagaDelete(TableEntityPartitionKey partitionKey, DictionaryTableEntity sagaRow) : base(partitionKey)
+        public SagaDelete(TableEntityPartitionKey partitionKey, TableEntity sagaRow, TableClient tableClient) : base(partitionKey)
         {
             this.sagaRow = sagaRow;
+            this.tableClient = tableClient;
         }
 
-        public override CloudTable Apply(TableBatchOperation transactionalBatch)
+        public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
         {
-            transactionalBatch.Add(TableOperation.Delete(sagaRow));
-            return sagaRow.Table;
+            transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.Delete, sagaRow, sagaRow.ETag));
+            return tableClient;
         }
+
+        readonly TableEntity sagaRow;
+        readonly TableClient tableClient;
     }
 
-    class SagaRemoveSecondaryIndex : Operation
+    sealed class SagaRemoveSecondaryIndex : Operation
     {
-        readonly SecondaryIndex secondaryIndices;
-        readonly CloudTable table;
-
-        public SagaRemoveSecondaryIndex(TableEntityPartitionKey partitionKey, Guid sagaId, SecondaryIndex secondaryIndices, PartitionRowKeyTuple partitionRowKeyTuple, CloudTable table) : base(partitionKey)
+        public SagaRemoveSecondaryIndex(TableEntityPartitionKey partitionKey, Guid sagaId, SecondaryIndex secondaryIndices, PartitionRowKeyTuple partitionRowKeyTuple, TableClient table) : base(partitionKey)
         {
             this.sagaId = sagaId;
             this.partitionRowKeyTuple = partitionRowKeyTuple;
@@ -66,37 +71,32 @@
             this.secondaryIndices = secondaryIndices;
         }
 
-        public override CloudTable Apply(TableBatchOperation transactionalBatch)
+        public override TableClient Apply(List<TableTransactionAction> transactionalBatch)
         {
             var e = new TableEntity
             {
-                ETag = "*"
+                ETag = ETag.All
             };
 
             partitionRowKeyTuple.Apply(e);
             secondaryIndices.InvalidateCache(partitionRowKeyTuple);
-            transactionalBatch.Add(TableOperation.Delete(e));
+            transactionalBatch.Add(new TableTransactionAction(TableTransactionActionType.Delete, e));
             return table;
         }
 
-        public override bool Handle(StorageException storageException)
+        public override bool Handle(RequestFailedException requestFailedException)
         {
-            // Horrible logic to check if item has already been deleted or not
-            var webException = storageException.InnerException as WebException;
-            if (webException?.Response != null)
+            if (requestFailedException.Status == (int)HttpStatusCode.NotFound)
             {
-                var response = (HttpWebResponse)webException.Response;
-                if ((int)response.StatusCode != 404)
-                {
-                    // Was not a previously deleted exception
-                    Logger.Warn($"Removal of the secondary index entry for the following saga failed: '{sagaId}'");
-                }
+                Logger.Warn($"Removal of the secondary index entry for the following saga failed: '{sagaId}'");
             }
             return true;
         }
 
-        readonly ILog Logger = LogManager.GetLogger<AzureSagaPersister>();
-        PartitionRowKeyTuple partitionRowKeyTuple;
+        readonly PartitionRowKeyTuple partitionRowKeyTuple;
         readonly Guid sagaId;
+        readonly SecondaryIndex secondaryIndices;
+        readonly TableClient table;
+        static readonly ILog Logger = LogManager.GetLogger<AzureSagaPersister>();
     }
 }

@@ -2,15 +2,16 @@
 {
     using System;
     using System.IO;
+    using Azure.Data.Tables;
     using Configuration.AdvancedExtensibility;
-    using Microsoft.Azure.Cosmos.Table;
     using Newtonsoft.Json;
     using Persistence.AzureTable;
+    using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
     /// <summary>
     /// Configuration extensions for the sagas storage
     /// </summary>
-    public static class ConfigureAzureSagaStorage
+    public static partial class ConfigureAzureSagaStorage
     {
         /// <summary>
         /// Connection string to use for sagas storage.
@@ -19,19 +20,19 @@
         {
             AzureStorageSagaGuard.CheckConnectionString(connectionString);
 
-            config.GetSettings().Set<IProvideCloudTableClient>(new CloudTableClientFromConnectionString(connectionString));
+            config.GetSettings().Set<IProvideTableServiceClient>(new TableServiceClientFromConnectionString(connectionString));
             return config;
         }
 
         /// <summary>
-        /// Cloud Table Client to use for the saga storage.
+        /// TableServiceClient to use for the saga storage.
         /// </summary>
-        public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> UseCloudTableClient(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config, CloudTableClient client)
+        public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> UseTableServiceClient(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config, TableServiceClient client)
         {
             Guard.AgainstNull(nameof(client), client);
 
             var settings = config.GetSettings();
-            settings.Set<IProvideCloudTableClient>(new CloudTableClientFromConfiguration(client));
+            settings.Set<IProvideTableServiceClient>(new TableServiceClientFromConfiguration(client));
 
             return config;
         }

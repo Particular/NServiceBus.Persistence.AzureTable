@@ -1,10 +1,13 @@
 ﻿namespace NServiceBus.Persistence.AzureTable.Tests
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
-    using NServiceBus.Testing;
+    using Azure;
+    using Azure.Data.Tables;
+    using Testing;
     using NUnit.Framework;
-    using Microsoft.Azure.Cosmos.Table;
+    using ITableEntity = Azure.Data.Tables.ITableEntity;
 
     [TestFixture]
     public class TestableAzureTableStorageSessionTests
@@ -12,7 +15,7 @@
         [Test]
         public async Task CanBeUsed()
         {
-            var transactionalBatch = new TableBatchOperation();
+            var transactionalBatch = new List<TableTransactionAction>();
 
             var testableSession = new TestableAzureTableStorageSession(new TableEntityPartitionKey("mypartitionkey"))
             {
@@ -39,13 +42,17 @@
                     PartitionKey = session.PartitionKey,
                     RowKey = Guid.NewGuid().ToString()
                 };
-                session.Batch.Add(TableOperation.Insert(myItem));
+                session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, myItem));
                 return Task.CompletedTask;
             }
         }
 
-        class MyItem : TableEntity
+        class MyItem : ITableEntity
         {
+            public string PartitionKey { get; set; }
+            public string RowKey { get; set; }
+            public DateTimeOffset? Timestamp { get; set; }
+            public ETag ETag { get; set; }
         }
 
         class MyMessage { }

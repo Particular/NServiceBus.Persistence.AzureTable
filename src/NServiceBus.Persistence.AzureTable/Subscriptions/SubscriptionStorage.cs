@@ -23,8 +23,8 @@ namespace NServiceBus.Persistence.AzureTable
         protected override void Setup(FeatureConfigurationContext context)
         {
             // If a client has been registered in the container, it will added later in the configuration process and replace any client set here
-            context.Settings.TryGet(out IProvideCloudTableClientForSubscriptions cloudTableClientProvider);
-            context.Services.AddSingleton(cloudTableClientProvider ?? new ThrowIfNoCloudTableClientForSubscriptionsProvider());
+            context.Settings.TryGet(out IProvideTableServiceClientForSubscriptions tableServiceClientProvider);
+            context.Services.AddSingleton(tableServiceClientProvider ?? new ThrowIfNoTableServiceServiceClientForSubscriptionsProvider());
 
             var subscriptionTableName = context.Settings.GetSubscriptionTableName();
             var cacheFor = context.Settings.GetOrDefault<TimeSpan>(WellKnownConfigurationKeys.SubscriptionStorageCacheFor);
@@ -33,12 +33,12 @@ namespace NServiceBus.Persistence.AzureTable
                 "NServiceBus.Persistence.AzureTable.Subscriptions",
                 new
                 {
-                    ConnectionMechanism = cloudTableClientProvider is CloudTableClientForSubscriptionsFromConnectionString ? "ConnectionString" : "CloudTableClient",
+                    ConnectionMechanism = tableServiceClientProvider is TableServiceClientForSubscriptionsFromConnectionString ? "ConnectionString" : "TableServiceClient",
                     TableName = subscriptionTableName,
                     CacheFor = cacheFor,
                 });
 
-            context.Services.AddSingleton<ISubscriptionStorage>(provider => new AzureSubscriptionStorage(provider.GetRequiredService<IProvideCloudTableClientForSubscriptions>(), subscriptionTableName, cacheFor));
+            context.Services.AddSingleton<ISubscriptionStorage>(provider => new AzureSubscriptionStorage(provider.GetRequiredService<IProvideTableServiceClientForSubscriptions>(), subscriptionTableName, cacheFor));
         }
     }
 }

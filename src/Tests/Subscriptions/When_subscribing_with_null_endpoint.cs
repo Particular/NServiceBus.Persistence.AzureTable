@@ -27,10 +27,7 @@
         }
 
         [TearDown]
-        public void Teardown()
-        {
-            scope.Dispose();
-        }
+        public async Task Teardown() => await scope.DisposeAsync();
 
         [Test]
         public async Task Ensure_that_the_subscription_is_persisted()

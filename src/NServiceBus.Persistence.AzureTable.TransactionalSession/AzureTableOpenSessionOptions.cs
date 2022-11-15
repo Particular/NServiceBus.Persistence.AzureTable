@@ -31,10 +31,10 @@ namespace NServiceBus.TransactionalSession
             Metadata.Add(AzureTableControlMessageBehavior.TableInformationHeaderKey, tableInformation.Value.TableName);
         }
 
-        internal void SetDispatchHolder(TableHolderResolver resolver) =>
+        internal void SetDispatchHolder(TableClientHolderResolver resolver) =>
             Extensions.Set(new SetAsDispatchedHolder
             {
-                TableHolder = resolver.ResolveAndSetIfAvailable(Extensions),
+                TableClientHolder = resolver.ResolveAndSetIfAvailable(Extensions),
                 PartitionKey = Extensions.Get<TableEntityPartitionKey>()
             });
     }

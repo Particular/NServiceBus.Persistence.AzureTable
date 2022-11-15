@@ -3,8 +3,8 @@
     using System;
     using System.Threading.Tasks;
     using AcceptanceTesting;
+    using Azure.Data.Tables;
     using EndpointTemplates;
-    using Microsoft.Azure.Cosmos.Table;
     using Microsoft.Extensions.DependencyInjection;
     using NUnit.Framework;
     using Persistence.AzureTable;
@@ -33,21 +33,13 @@
 
         public class EndpointWithCustomProvider : EndpointConfigurationBuilder
         {
-            public EndpointWithCustomProvider()
-            {
-                EndpointSetup<DefaultServer>(config =>
-                {
-                    config.RegisterComponents(c =>
-                        c.AddSingleton<IProvideCloudTableClient>(provider => new CustomProvider(provider.GetRequiredService<Context>())));
-                });
-            }
+            public EndpointWithCustomProvider() =>
+                EndpointSetup<DefaultServer>(config => config.RegisterComponents(
+                    c => c.AddSingleton<IProvideTableServiceClient>(provider => new CustomProvider(provider.GetRequiredService<Context>()))));
 
             public class JustASaga : Saga<JustASagaData>, IAmStartedByMessages<StartSaga1>
             {
-                public JustASaga(Context testContext)
-                {
-                    this.testContext = testContext;
-                }
+                public JustASaga(Context testContext) => this.testContext = testContext;
 
                 public Task Handle(StartSaga1 message, IMessageHandlerContext context)
                 {
@@ -57,27 +49,23 @@
                     return Task.CompletedTask;
                 }
 
-                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<JustASagaData> mapper)
-                {
-                    mapper.ConfigureMapping<StartSaga1>(m => m.DataId).ToSaga(s => s.DataId);
-                }
+                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<JustASagaData> mapper) =>
+                    mapper.ConfigureMapping<StartSaga1>(m => m.DataId)
+                        .ToSaga(s => s.DataId);
 
                 readonly Context testContext;
             }
 
-            public class CustomProvider : IProvideCloudTableClient
+            public class CustomProvider : IProvideTableServiceClient
             {
-                public CustomProvider(Context testContext)
-                {
-                    this.testContext = testContext;
-                }
+                public CustomProvider(Context testContext) => this.testContext = testContext;
 
-                public CloudTableClient Client
+                public TableServiceClient Client
                 {
                     get
                     {
                         testContext.ProviderWasCalled = true;
-                        return SetupFixture.TableClient;
+                        return SetupFixture.TableServiceClient;
                     }
                 }
 

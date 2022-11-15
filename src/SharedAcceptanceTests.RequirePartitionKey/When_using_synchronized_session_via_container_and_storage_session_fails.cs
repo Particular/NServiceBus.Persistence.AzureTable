@@ -1,12 +1,15 @@
 ﻿namespace NServiceBus.AcceptanceTests
 {
+    using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
     using AcceptanceTesting;
-    using EndpointTemplates;
+    using Azure;
+    using Azure.Data.Tables;
     using NUnit.Framework;
-    using Microsoft.Azure.Cosmos.Table;
     using Persistence.AzureTable;
+    using ITableEntity = Azure.Data.Tables.ITableEntity;
 
     [TestFixture]
     public class When_using_synchronized_session_via_container_and_storage_session_fails : NServiceBusAcceptanceTest
@@ -17,19 +20,15 @@
             // not possible to intercept cosmos API calls with OperationContext
             Requires.AzureStorageTable();
 
-            TransactionalBatchCounterHandler.Reset();
-
-            await Scenario.Define<Context>()
-                .WithEndpoint<Endpoint>(b =>
-                {
-                    b.DoNotFailOnErrorMessages();
-                    b.When(s => s.SendLocal(new MyMessage()));
-                })
+            var context = await Scenario.Define<Context>()
+                .WithEndpoint<Endpoint>(
+                    b => b.DoNotFailOnErrorMessages()
+                          .When(s => s.SendLocal(new MyMessage())))
                 .Done(c => c.FirstHandlerIsDone && c.FailedMessages.Any())
                 .Run()
                 .ConfigureAwait(false);
 
-            Assert.AreEqual(0, TransactionalBatchCounterHandler.TotalTransactionalBatches, "Expected to have no transactional batch but found one.");
+            Assert.AreEqual(0, context.BatchIdentifiers.Count, "Expected to have no transactional batch but found one.");
         }
 
         public class Context : ScenarioContext
@@ -38,13 +37,21 @@
             public const string Item2_Id = nameof(Item2_Id);
 
             public bool FirstHandlerIsDone { get; set; }
+            public HashSet<string> BatchIdentifiers { get; set; }
         }
 
         public class Endpoint : EndpointConfigurationBuilder
         {
             public Endpoint()
             {
-                EndpointSetup<DefaultServer>();
+                var server = new BatchCountingServer();
+                EndpointSetup(server, (cfg, rd) =>
+                {
+                    var context = rd.ScenarioContext as Context;
+                    Assert.That(context, Is.Not.Null);
+
+                    context.BatchIdentifiers = server.TransactionalBatchCounterPolicy.BatchIdentifiers;
+                });
             }
 
             public class MyHandlerUsingStorageSession : IHandleMessages<MyMessage>
@@ -63,14 +70,14 @@
                         PartitionKey = context.TestRunId.ToString(),
                         Data = "MyCustomData"
                     };
-                    session.Batch.Add(TableOperation.Insert(entity));
+                    session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
                     context.FirstHandlerIsDone = true;
 
                     return Task.CompletedTask;
                 }
 
-                Context context;
-                IAzureTableStorageSession session;
+                readonly Context context;
+                readonly IAzureTableStorageSession session;
             }
 
             public class MyHandlerUsingExtensionMethod : IHandleMessages<MyMessage>
@@ -85,15 +92,19 @@
                         PartitionKey = session.PartitionKey,
                         Data = "MyCustomData"
                     };
-                    session.Batch.Add(TableOperation.Insert(entity));
+                    session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
                     throw new SimulatedException();
                 }
             }
         }
 
-        public class MyTableEntity : TableEntity
+        public class MyTableEntity : ITableEntity
         {
             public string Data { get; set; }
+            public string PartitionKey { get; set; }
+            public string RowKey { get; set; }
+            public DateTimeOffset? Timestamp { get; set; }
+            public ETag ETag { get; set; }
         }
 
         public class MyMessage : IMessage

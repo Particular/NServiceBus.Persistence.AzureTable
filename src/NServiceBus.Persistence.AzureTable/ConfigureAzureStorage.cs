@@ -1,7 +1,7 @@
 ﻿namespace NServiceBus
 {
+    using Azure.Data.Tables;
     using Configuration.AdvancedExtensibility;
-    using Microsoft.Azure.Cosmos.Table;
     using Persistence.AzureTable;
 
     /// <summary>
@@ -19,22 +19,22 @@
             AzureStorageSagaGuard.CheckConnectionString(connectionString);
 
             var settings = config.GetSettings();
-            settings.Set<IProvideCloudTableClient>(new CloudTableClientFromConnectionString(connectionString));
-            settings.Set<IProvideCloudTableClientForSubscriptions>(new CloudTableClientForSubscriptionsFromConnectionString(connectionString));
+            settings.Set<IProvideTableServiceClient>(new TableServiceClientFromConnectionString(connectionString));
+            settings.Set<IProvideTableServiceClientForSubscriptions>(new TableServiceClientForSubscriptionsFromConnectionString(connectionString));
 
             return config;
         }
 
         /// <summary>
-        /// Cloud Table Client to use for Saga, Outbox and Subscription storage.
+        /// TableServiceClient to use for Saga, Outbox and Subscription storage.
         /// </summary>
-        public static PersistenceExtensions<AzureTablePersistence> UseCloudTableClient(this PersistenceExtensions<AzureTablePersistence> config, CloudTableClient client)
+        public static PersistenceExtensions<AzureTablePersistence> UseTableServiceClient(this PersistenceExtensions<AzureTablePersistence> config, TableServiceClient client)
         {
             Guard.AgainstNull(nameof(client), client);
 
             var settings = config.GetSettings();
-            settings.Set<IProvideCloudTableClient>(new CloudTableClientFromConfiguration(client));
-            settings.Set<IProvideCloudTableClientForSubscriptions>(new CloudTableClientForSubscriptionsFromConfiguration(client));
+            settings.Set<IProvideTableServiceClient>(new TableServiceClientFromConfiguration(client));
+            settings.Set<IProvideTableServiceClientForSubscriptions>(new TableServiceServiceClientForSubscriptionsFromConfiguration(client));
 
             return config;
         }

@@ -53,15 +53,15 @@
             var secondaryIndices = new SecondaryIndex(assumeSecondaryIndicesExist, assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
 
             context.Services.AddSingleton<IProvidePartitionKeyFromSagaId>(provider =>
-                new ProvidePartitionKeyFromSagaId(provider.GetRequiredService<IProvideCloudTableClient>(),
-                    provider.GetRequiredService<TableHolderResolver>(), secondaryIndices, compatibilityModeEnabled, conventionalTablePrefix));
+                new ProvidePartitionKeyFromSagaId(provider.GetRequiredService<IProvideTableServiceClient>(),
+                    provider.GetRequiredService<TableClientHolderResolver>(), secondaryIndices, compatibilityModeEnabled, conventionalTablePrefix));
 
             var installerSettings = context.Settings.Get<SynchronizedStorageInstallerSettings>();
             var jsonSerializer = context.Settings.Get<JsonSerializer>(WellKnownConfigurationKeys.SagaJsonSerializer);
             var readerCreator = context.Settings.Get<Func<TextReader, JsonReader>>(WellKnownConfigurationKeys.SagaReaderCreator);
             var writerCreator = context.Settings.Get<Func<TextWriter, JsonWriter>>(WellKnownConfigurationKeys.SagaWriterCreator);
 
-            context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideCloudTableClient>(),
+            context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideTableServiceClient>(),
                 installerSettings.Disabled, compatibilityModeEnabled, secondaryIndices, conventionalTablePrefix, jsonSerializer, readerCreator, writerCreator));
         }
 

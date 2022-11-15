@@ -1,21 +1,20 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure.Data.Tables;
     using Extensibility;
-    using Microsoft.Azure.Cosmos.Table;
     using Outbox;
 
     class OutboxPersister : IOutboxStorage
     {
-        public OutboxPersister(TableHolderResolver tableHolderResolver)
-        {
-            this.tableHolderResolver = tableHolderResolver;
-        }
+        public OutboxPersister(TableClientHolderResolver tableClientHolderResolver)
+            => this.tableClientHolderResolver = tableClientHolderResolver;
 
         public Task<IOutboxTransaction> BeginTransaction(ContextBag context, CancellationToken cancellationToken = default)
         {
-            var azureStorageOutboxTransaction = new AzureStorageOutboxTransaction(tableHolderResolver, context);
+            var azureStorageOutboxTransaction = new AzureStorageOutboxTransaction(tableClientHolderResolver, context);
 
             if (context.TryGet<TableEntityPartitionKey>(out var partitionKey))
             {
@@ -28,7 +27,7 @@
         {
             var setAsDispatchedHolder = new SetAsDispatchedHolder
             {
-                TableHolder = tableHolderResolver.ResolveAndSetIfAvailable(context)
+                TableClientHolder = tableClientHolderResolver.ResolveAndSetIfAvailable(context)
             };
             context.Set(setAsDispatchedHolder);
 
@@ -38,7 +37,7 @@
                 return null;
             }
 
-            var outboxRecord = await setAsDispatchedHolder.TableHolder.Table
+            var outboxRecord = await setAsDispatchedHolder.TableClientHolder.TableClient
                 .ReadOutboxRecord(messageId, partitionKey, context, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -68,7 +67,7 @@
 
             setAsDispatchedHolder.Record = outboxRecord;
 
-            azureStorageOutboxTransaction.StorageSession.Add(new OutboxStore(setAsDispatchedHolder.PartitionKey, outboxRecord, setAsDispatchedHolder.TableHolder.Table));
+            azureStorageOutboxTransaction.StorageSession.Add(new OutboxStore(setAsDispatchedHolder.PartitionKey, outboxRecord, setAsDispatchedHolder.TableClientHolder.TableClient));
 
             return Task.CompletedTask;
         }
@@ -77,16 +76,17 @@
         {
             var setAsDispatchedHolder = context.Get<SetAsDispatchedHolder>();
 
-            var tableHolder = setAsDispatchedHolder.TableHolder;
+            var tableHolder = setAsDispatchedHolder.TableClientHolder;
             var record = setAsDispatchedHolder.Record;
 
             record.SetAsDispatched();
 
-            var operation = new OutboxDelete(setAsDispatchedHolder.PartitionKey, record, tableHolder.Table);
-            var transactionalBatch = new TableBatchOperation();
-            return transactionalBatch.ExecuteOperationAsync(operation, cancellationToken: cancellationToken);
+            var operation = new OutboxDelete(setAsDispatchedHolder.PartitionKey, record, tableHolder.TableClient);
+            // Capacity is set to one with the knowledge that outbox delete only adds one action
+            var transactionalBatch = new List<TableTransactionAction>(1);
+            return transactionalBatch.ExecuteOperationAsync(operation, cancellationToken);
         }
 
-        readonly TableHolderResolver tableHolderResolver;
+        readonly TableClientHolderResolver tableClientHolderResolver;
     }
 }

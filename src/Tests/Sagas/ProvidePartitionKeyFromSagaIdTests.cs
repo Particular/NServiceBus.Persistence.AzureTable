@@ -3,7 +3,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Cosmos.Table;
+    using Azure.Data.Tables;
     using Migration;
     using NUnit.Framework;
     using Sagas;
@@ -12,19 +12,18 @@ namespace NServiceBus.Persistence.AzureTable.Tests
     [TestFixture]
     public class ProvidePartitionKeyFromSagaIdTests
     {
-        CloudTable cloudTable;
-        CloudTableClient client;
+        TableClient tableClient;
+        TableServiceClient tableServiceClient;
         string tableName;
 
         [SetUp]
         public void SetUp()
         {
-            var account = CloudStorageAccount.Parse(ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence("StorageTable"));
+            tableServiceClient = new TableServiceClient(ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence("StorageTable"));
 
-            client = account.CreateCloudTableClient();
-            // we don't really need this table to exist but this is easier than faking away cloud tables
+            // we don't really need this table to exist but this is easier than faking away tables
             tableName = nameof(ProvidePartitionKeyFromSagaIdTests).ToLower();
-            cloudTable = client.GetTableReference(tableName);
+            tableClient = tableServiceClient.GetTableClient(tableName);
         }
 
         [Test]
@@ -46,10 +45,10 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         public void Should_throw_with_correlation_property_none()
         {
             var secondaryIndex = new TestableSecondaryIndex();
-            var provider = new ProvidePartitionKeyFromSagaId(new Provider(), new TableHolderResolver(new Provider(), null), secondaryIndex, false, string.Empty);
+            var provider = new ProvidePartitionKeyFromSagaId(new Provider(), new TableClientHolderResolver(new Provider(), null), secondaryIndex, false, string.Empty);
             var logicalMessageContext = new TestableIncomingLogicalMessageContext();
 
-            var tableHolder = new TableHolder(cloudTable);
+            var tableHolder = new TableClientHolder(tableClient);
             logicalMessageContext.Extensions.Set(tableHolder);
 
             var exception = Assert.ThrowsAsync<Exception>(async () => await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, SagaCorrelationProperty.None));
@@ -60,28 +59,28 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         public async Task Should_set_table_information_to_table_holder_if_not_available()
         {
             var secondaryIndex = new TestableSecondaryIndex();
-            var provider = new ProvidePartitionKeyFromSagaId(new Provider(), new TableHolderResolver(new Provider(), null), secondaryIndex, false, string.Empty);
+            var provider = new ProvidePartitionKeyFromSagaId(new Provider(), new TableClientHolderResolver(new Provider(), null), secondaryIndex, false, string.Empty);
             var logicalMessageContext = new TestableIncomingLogicalMessageContext();
 
-            var tableHolder = new TableHolder(cloudTable);
+            var tableHolder = new TableClientHolder(tableClient);
             logicalMessageContext.Extensions.Set(tableHolder);
 
             await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, new SagaCorrelationProperty("SomeId", Guid.NewGuid()));
 
             var tableInformation = logicalMessageContext.Extensions.Get<TableInformation>();
 
-            Assert.AreEqual(cloudTable.Name, tableInformation.TableName);
+            Assert.AreEqual(tableClient.Name, tableInformation.TableName);
         }
 
         [Test]
         public async Task Should_set_table_information_by_convention_when_no_table_holder()
         {
             var secondaryIndex = new TestableSecondaryIndex();
-            var provideCloudTableClient = new Provider
+            var tableServiceClientProvider = new Provider
             {
-                Client = client
+                Client = tableServiceClient
             };
-            var provider = new ProvidePartitionKeyFromSagaId(provideCloudTableClient, new TableHolderResolver(provideCloudTableClient, null), secondaryIndex, false, string.Empty);
+            var provider = new ProvidePartitionKeyFromSagaId(tableServiceClientProvider, new TableClientHolderResolver(tableServiceClientProvider, null), secondaryIndex, false, string.Empty);
             var logicalMessageContext = new TestableIncomingLogicalMessageContext();
 
             await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, new SagaCorrelationProperty("SomeId", Guid.NewGuid()));
@@ -95,10 +94,10 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         public async Task Should_not_override_existing_table_information()
         {
             var secondaryIndex = new TestableSecondaryIndex();
-            var provider = new ProvidePartitionKeyFromSagaId(new Provider(), new TableHolderResolver(new Provider(), null), secondaryIndex, false, string.Empty);
+            var provider = new ProvidePartitionKeyFromSagaId(new Provider(), new TableClientHolderResolver(new Provider(), null), secondaryIndex, false, string.Empty);
             var logicalMessageContext = new TestableIncomingLogicalMessageContext();
 
-            var tableHolder = new TableHolder(cloudTable);
+            var tableHolder = new TableClientHolder(tableClient);
             logicalMessageContext.Extensions.Set(tableHolder);
 
             var tableInformation = new TableInformation("MyTable");
@@ -113,10 +112,10 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         public async Task Should_set_partition_key_to_sagaid_header()
         {
             var secondaryIndex = new TestableSecondaryIndex();
-            var provider = new ProvidePartitionKeyFromSagaId(new Provider(), new TableHolderResolver(new Provider(), null), secondaryIndex, false, string.Empty);
+            var provider = new ProvidePartitionKeyFromSagaId(new Provider(), new TableClientHolderResolver(new Provider(), null), secondaryIndex, false, string.Empty);
             var logicalMessageContext = new TestableIncomingLogicalMessageContext();
 
-            var tableHolder = new TableHolder(cloudTable);
+            var tableHolder = new TableClientHolder(tableClient);
             logicalMessageContext.Extensions.Set(tableHolder);
 
             var sagaId = Guid.NewGuid().ToString();
@@ -132,10 +131,10 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         {
             var secondaryIndex = new TestableSecondaryIndex();
             var migrationModeEnabled = true;
-            var provider = new ProvidePartitionKeyFromSagaId(new Provider(), new TableHolderResolver(new Provider(), null), secondaryIndex, migrationModeEnabled, string.Empty);
+            var provider = new ProvidePartitionKeyFromSagaId(new Provider(), new TableClientHolderResolver(new Provider(), null), secondaryIndex, migrationModeEnabled, string.Empty);
             var logicalMessageContext = new TestableIncomingLogicalMessageContext();
 
-            var tableHolder = new TableHolder(cloudTable);
+            var tableHolder = new TableClientHolder(tableClient);
             logicalMessageContext.Extensions.Set(tableHolder);
 
             Guid? sagaId = Guid.NewGuid();
@@ -151,10 +150,10 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         {
             var secondaryIndex = new TestableSecondaryIndex();
             var migrationModeEnabled = true;
-            var provider = new ProvidePartitionKeyFromSagaId(new Provider(), new TableHolderResolver(new Provider(), null), secondaryIndex, migrationModeEnabled, string.Empty);
+            var provider = new ProvidePartitionKeyFromSagaId(new Provider(), new TableClientHolderResolver(new Provider(), null), secondaryIndex, migrationModeEnabled, string.Empty);
             var logicalMessageContext = new TestableIncomingLogicalMessageContext();
 
-            var tableHolder = new TableHolder(cloudTable);
+            var tableHolder = new TableClientHolder(tableClient);
             logicalMessageContext.Extensions.Set(tableHolder);
 
             await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, new SagaCorrelationProperty("SomeId", Guid.NewGuid()));
@@ -167,10 +166,10 @@ namespace NServiceBus.Persistence.AzureTable.Tests
         {
             var secondaryIndex = new TestableSecondaryIndex();
             var migrationModeEnabled = false;
-            var provider = new ProvidePartitionKeyFromSagaId(new Provider(), new TableHolderResolver(new Provider(), null), secondaryIndex, migrationModeEnabled, string.Empty);
+            var provider = new ProvidePartitionKeyFromSagaId(new Provider(), new TableClientHolderResolver(new Provider(), null), secondaryIndex, migrationModeEnabled, string.Empty);
             var logicalMessageContext = new TestableIncomingLogicalMessageContext();
 
-            var tableHolder = new TableHolder(cloudTable);
+            var tableHolder = new TableClientHolder(tableClient);
             logicalMessageContext.Extensions.Set(tableHolder);
 
             await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, new SagaCorrelationProperty("SomeId", Guid.NewGuid()));
@@ -189,16 +188,16 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             public bool FindSagaIdCalled { get; private set; }
 
-            public override Task<Guid?> FindSagaId<TSagaData>(CloudTable table, SagaCorrelationProperty correlationProperty, CancellationToken cancellationToken = default)
+            public override Task<Guid?> FindSagaId<TSagaData>(TableClient table, SagaCorrelationProperty correlationProperty, CancellationToken cancellationToken = default)
             {
                 FindSagaIdCalled = true;
                 return Task.FromResult(Result);
             }
         }
 
-        class Provider : IProvideCloudTableClient
+        class Provider : IProvideTableServiceClient
         {
-            public CloudTableClient Client { get; set; }
+            public TableServiceClient Client { get; set; }
         }
     }
 }

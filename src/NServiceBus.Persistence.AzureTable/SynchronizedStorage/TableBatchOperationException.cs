@@ -1,25 +1,23 @@
 namespace NServiceBus.Persistence.AzureTable
 {
     using System;
-    using Microsoft.Azure.Cosmos.Table;
+    using Azure;
+    using Azure.Data.Tables.Models;
 
     /// <summary>
     /// Exception that is thrown when the table batch failed without throwing a storage exception. The exception gives access to the
-    /// <see cref="TableResult"/> that exposes more details about the reason of failure.
+    /// <see cref="TableTransactionResult"/> that exposes more details about the reason of failure.
     /// </summary>
     public sealed class TableBatchOperationException : Exception
     {
         /// <summary>
-        /// Initializes a new TableBatchOperationException with a <see cref="TableResult"/>.
+        /// Initializes a new TableBatchOperationException with a <see cref="TableTransactionResult"/>.
         /// </summary>
-        public TableBatchOperationException(TableResult result)
-        {
-            Result = result;
-        }
+        public TableBatchOperationException(Response result) => Result = result;
 
         /// <summary>
-        /// The <see cref="TableResult"/> exposing details about the reason of failure.
+        /// The <see cref="TableTransactionResult"/> exposing details about the reason of failure.
         /// </summary>
-        public TableResult Result { get; }
+        public Response Result { get; }
     }
 }

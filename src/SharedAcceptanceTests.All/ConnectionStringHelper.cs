@@ -2,7 +2,6 @@ namespace NServiceBus.Testing
 {
     using System;
     using System.Linq;
-    using Microsoft.Azure.Cosmos.Table;
 
     public static class ConnectionStringHelper
     {
@@ -39,11 +38,11 @@ namespace NServiceBus.Testing
             return string.IsNullOrWhiteSpace(candidate) ? Environment.GetEnvironmentVariable(variable) : candidate;
         }
 
-        // the SDK uses exactly this method of changing the underlying executor
-        public static bool IsPremiumEndpoint(CloudTableClient cloudTableClient)
+        // Adopted from Cosmos DB Table API SDK that uses similar approach to change the underlying execution
+        public static bool IsPremiumEndpoint(string connectionString)
         {
-            var lowerInvariant = cloudTableClient.StorageUri.PrimaryUri.OriginalString.ToLowerInvariant();
-            return (lowerInvariant.Contains("https://localhost") && cloudTableClient.StorageUri.PrimaryUri.Port != 10002) || lowerInvariant.Contains(".table.cosmosdb.") || lowerInvariant.Contains(".table.cosmos.");
+            var lowerInvariant = connectionString.ToLowerInvariant();
+            return lowerInvariant.Contains("https://localhost") || lowerInvariant.Contains(".table.cosmosdb.") || lowerInvariant.Contains(".table.cosmos.");
         }
     }
 }

@@ -14,8 +14,8 @@
     /// </summary>
     public sealed class LogicalOutboxBehavior : IBehavior<IIncomingLogicalMessageContext, IIncomingLogicalMessageContext>
     {
-        internal LogicalOutboxBehavior(TableHolderResolver tableHolderResolver) =>
-            this.tableHolderResolver = tableHolderResolver;
+        internal LogicalOutboxBehavior(TableClientHolderResolver tableClientHolderResolver) =>
+            this.tableClientHolderResolver = tableClientHolderResolver;
 
         /// <inheritdoc />
         public async Task Invoke(IIncomingLogicalMessageContext context, Func<IIncomingLogicalMessageContext, Task> next)
@@ -26,14 +26,14 @@
                 return;
             }
 
-            if (transaction is not AzureStorageOutboxTransaction IOutboxTransaction)
+            if (transaction is not AzureStorageOutboxTransaction azureStorageOutboxTransaction)
             {
                 await next(context).ConfigureAwait(false);
                 return;
             }
 
             // Normal outbox operating at the physical stage
-            if (IOutboxTransaction.PartitionKey.HasValue)
+            if (azureStorageOutboxTransaction.PartitionKey.HasValue)
             {
                 await next(context).ConfigureAwait(false);
                 return;
@@ -45,16 +45,16 @@
                 throw new Exception("For the outbox to work the following information must be provided at latest up to the incoming physical or logical message stage. A partition key via `context.Extensions.Set<PartitionKey>(yourPartitionKey)`.");
             }
 
-            var tableHolder = tableHolderResolver.ResolveAndSetIfAvailable(context.Extensions);
+            var tableHolder = tableClientHolderResolver.ResolveAndSetIfAvailable(context.Extensions);
 
             var setAsDispatchedHolder = context.Extensions.Get<SetAsDispatchedHolder>();
             setAsDispatchedHolder.PartitionKey = partitionKey;
-            setAsDispatchedHolder.TableHolder = tableHolder;
+            setAsDispatchedHolder.TableClientHolder = tableHolder;
 
-            IOutboxTransaction.PartitionKey = partitionKey;
-            IOutboxTransaction.StorageSession.TableHolder = tableHolder;
+            azureStorageOutboxTransaction.PartitionKey = partitionKey;
+            azureStorageOutboxTransaction.StorageSession.TableClientHolder = tableHolder;
 
-            var outboxRecord = await tableHolder.Table.ReadOutboxRecord(context.MessageId, IOutboxTransaction.PartitionKey.Value, context.Extensions, context.CancellationToken)
+            var outboxRecord = await tableHolder.TableClient.ReadOutboxRecord(context.MessageId, azureStorageOutboxTransaction.PartitionKey.Value, context.Extensions, context.CancellationToken)
                 .ConfigureAwait(false);
 
             if (outboxRecord is null)
@@ -66,7 +66,7 @@
             setAsDispatchedHolder.Record = outboxRecord;
 
             // Signals that Outbox persister Store and Commit should be no-ops
-            IOutboxTransaction.SuppressStoreAndCommit = true;
+            azureStorageOutboxTransaction.SuppressStoreAndCommit = true;
 
             var pendingTransportOperations = context.Extensions.Get<PendingTransportOperations>();
             pendingTransportOperations.Clear();
@@ -99,6 +99,6 @@
             throw new Exception("Could not find routing strategy to deserialize.");
         }
 
-        readonly TableHolderResolver tableHolderResolver;
+        readonly TableClientHolderResolver tableClientHolderResolver;
     }
 }

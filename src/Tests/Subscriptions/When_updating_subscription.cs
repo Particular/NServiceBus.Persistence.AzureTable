@@ -14,10 +14,7 @@
         AzureSubscriptionStorage persister;
         SubscriptionTestHelper.Scope scope;
 
-        public When_updating_subscription(string tableApiType)
-        {
-            this.tableApiType = tableApiType;
-        }
+        public When_updating_subscription(string tableApiType) => this.tableApiType = tableApiType;
 
         [SetUp]
         public async Task Setup()
@@ -27,10 +24,7 @@
         }
 
         [TearDown]
-        public void Teardown()
-        {
-            scope.Dispose();
-        }
+        public async Task Teardown() => await scope.DisposeAsync();
 
         [Test]
         public async Task New_subscription_should_overwrite_existing()

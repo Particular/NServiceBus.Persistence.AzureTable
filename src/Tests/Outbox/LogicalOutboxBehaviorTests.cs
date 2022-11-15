@@ -4,9 +4,11 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Net;
     using System.Threading.Tasks;
+    using Azure;
+    using Azure.Data.Tables;
     using AzureTable;
-    using Microsoft.Azure.Cosmos.Table;
     using NUnit.Framework;
     using Outbox;
     using Testing;
@@ -17,31 +19,33 @@
     [TestFixture("CosmosDB")]
     public class LogicalOutboxBehaviorTests
     {
-        CloudTable cloudTable;
-        CloudTableClient client;
+        TableClient tableClient;
+        TableServiceClient tableServiceClient;
         string tableName;
         string tableApiType;
 
-        public LogicalOutboxBehaviorTests(string tableApiType)
-        {
-            this.tableApiType = tableApiType;
-        }
+        public LogicalOutboxBehaviorTests(string tableApiType) => this.tableApiType = tableApiType;
 
         [SetUp]
         public Task SetUp()
         {
-            var account = CloudStorageAccount.Parse(ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence(tableApiType));
-
-            client = account.CreateCloudTableClient();
+            var connectionString = ConnectionStringHelper.GetEnvConfiguredConnectionStringForPersistence(tableApiType);
+            tableServiceClient = new TableServiceClient(connectionString);
             tableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}{nameof(LogicalOutboxBehavior)}".ToLowerInvariant();
-            cloudTable = client.GetTableReference(tableName);
-            return cloudTable.CreateIfNotExistsAsync();
+            tableClient = tableServiceClient.GetTableClient(tableName);
+            return tableClient.CreateIfNotExistsAsync();
         }
 
         [TearDown]
-        public Task Teardown()
+        public async Task Teardown()
         {
-            return cloudTable.DeleteIfExistsAsync();
+            try
+            {
+                await tableServiceClient.DeleteTableAsync(tableName);
+            }
+            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
+            {
+            }
         }
 
         [Test]
@@ -66,11 +70,11 @@
                 }
             };
 
-            await cloudTable.ExecuteAsync(TableOperation.Insert(record));
+            await tableClient.AddEntityAsync(record);
 
-            var containerHolderHolderResolver = new TableHolderResolver(new Provider()
+            var containerHolderHolderResolver = new TableClientHolderResolver(new Provider()
             {
-                Client = client
+                Client = tableServiceClient
             },
                 new TableInformation(tableName));
 
@@ -97,8 +101,8 @@
         }
     }
 
-    class Provider : IProvideCloudTableClient
+    class Provider : IProvideTableServiceClient
     {
-        public CloudTableClient Client { get; set; }
+        public TableServiceClient Client { get; set; }
     }
 }

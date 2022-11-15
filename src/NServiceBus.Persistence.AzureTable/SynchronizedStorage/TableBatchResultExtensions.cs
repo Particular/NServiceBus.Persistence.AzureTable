@@ -4,23 +4,24 @@
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Cosmos.Table;
+    using Azure;
+    using Azure.Data.Tables;
 
     static class TableBatchResultExtensions
     {
-        internal static async Task ExecuteOperationAsync(this TableBatchOperation transactionalBatch, Operation operation, CancellationToken cancellationToken = default)
+        internal static async Task ExecuteOperationAsync(this List<TableTransactionAction> transactionalBatch, Operation operation, CancellationToken cancellationToken = default)
         {
             var table = operation.Apply(transactionalBatch);
             try
             {
-                var batchResult = await table.ExecuteBatchAsync(transactionalBatch, cancellationToken).ConfigureAwait(false);
+                var batchResult = await table.SubmitTransactionAsync(transactionalBatch, cancellationToken).ConfigureAwait(false);
 
-                if (batchResult.Count > 1)
+                if (batchResult.Value.Count > 1)
                 {
-                    throw new Exception($"The transactional batch was expected to have a single operation but contained {batchResult.Count} operations.");
+                    throw new Exception($"The transactional batch was expected to have a single operation but contained {batchResult.Value.Count} operations.");
                 }
 
-                var result = batchResult[0];
+                var result = batchResult.Value[0];
 
                 if (result.IsSuccessStatusCode())
                 {
@@ -31,7 +32,7 @@
                 // guaranteed to throw
                 operation.Conflict(result);
             }
-            catch (StorageException e)
+            catch (RequestFailedException e)
             {
                 if (!operation.Handle(e))
                 {
@@ -40,9 +41,9 @@
             }
         }
 
-        internal static async Task ExecuteOperationsAsync(this TableBatchOperation transactionalBatch, Dictionary<int, Operation> operationMappings, CancellationToken cancellationToken = default)
+        internal static async Task ExecuteOperationsAsync(this List<TableTransactionAction> transactionalBatch, Dictionary<int, Operation> operationMappings, CancellationToken cancellationToken = default)
         {
-            CloudTable previousTable, currentTable = null;
+            TableClient previousTable, currentTable = null;
             foreach (var operation in operationMappings.Values)
             {
                 previousTable = currentTable;
@@ -62,10 +63,10 @@
 
             try
             {
-                var batchResult = await currentTable.ExecuteBatchAsync(transactionalBatch, cancellationToken).ConfigureAwait(false);
-                for (var i = 0; i < batchResult.Count; i++)
+                var batchResult = await currentTable.SubmitTransactionAsync(transactionalBatch, cancellationToken).ConfigureAwait(false);
+                for (var i = 0; i < batchResult.Value.Count; i++)
                 {
-                    var result = batchResult[i];
+                    var result = batchResult.Value[i];
 
                     operationMappings.TryGetValue(i, out var operation);
                     operation ??= ThrowOnConflictOperation.Instance;
@@ -79,7 +80,7 @@
                     operation.Conflict(result);
                 }
             }
-            catch (StorageException e)
+            catch (RequestFailedException e)
             {
                 for (var i = 0; i < operationMappings.Count; i++)
                 {

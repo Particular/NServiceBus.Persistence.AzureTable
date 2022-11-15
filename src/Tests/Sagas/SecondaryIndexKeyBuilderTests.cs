@@ -23,15 +23,10 @@
 
         class TestSaga : Saga<SagaData>, IAmStartedByMessages<StartSagaMessage>
         {
-            public Task Handle(StartSagaMessage message, IMessageHandlerContext context)
-            {
-                return Task.CompletedTask;
-            }
+            public Task Handle(StartSagaMessage message, IMessageHandlerContext context) => Task.CompletedTask;
 
             protected override void ConfigureHowToFindSaga(SagaPropertyMapper<SagaData> mapper)
-            {
-                mapper.ConfigureMapping<StartSagaMessage>(m => m.AdditionalId).ToSaga(a => a.AdditionalId);
-            }
+                => mapper.ConfigureMapping<StartSagaMessage>(m => m.AdditionalId).ToSaga(a => a.AdditionalId);
         }
 
         class StartSagaMessage

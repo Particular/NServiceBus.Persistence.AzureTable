@@ -1,12 +1,14 @@
 ﻿namespace NServiceBus.AcceptanceTests
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using AcceptanceTesting;
-    using EndpointTemplates;
+    using Azure;
+    using Azure.Data.Tables;
     using NUnit.Framework;
-    using Microsoft.Azure.Cosmos.Table;
     using Persistence.AzureTable;
+    using ITableEntity = Azure.Data.Tables.ITableEntity;
 
     [TestFixture]
     public class When_using_synchronized_session_via_container_and_storage_session_extension : NServiceBusAcceptanceTest
@@ -17,28 +19,34 @@
             // not possible to intercept cosmos API calls with OperationContext
             Requires.AzureStorageTable();
 
-            TransactionalBatchCounterHandler.Reset();
-
-            await Scenario.Define<Context>()
+            var context = await Scenario.Define<Context>()
                 .WithEndpoint<Endpoint>(b => b.When(s => s.SendLocal(new MyMessage())))
                 .Done(c => c.FirstHandlerIsDone && c.SecondHandlerIsDone)
                 .Run()
                 .ConfigureAwait(false);
 
-            Assert.AreEqual(1, TransactionalBatchCounterHandler.TotalTransactionalBatches, "Expected to have a single transactional batch but found more.");
+            Assert.AreEqual(1, context.BatchIdentifiers.Count, "Expected to have a single transactional batch but found more.");
         }
 
         public class Context : ScenarioContext
         {
             public bool FirstHandlerIsDone { get; set; }
             public bool SecondHandlerIsDone { get; set; }
+            public HashSet<string> BatchIdentifiers { get; set; }
         }
 
         public class Endpoint : EndpointConfigurationBuilder
         {
             public Endpoint()
             {
-                EndpointSetup<DefaultServer>();
+                var server = new BatchCountingServer();
+                EndpointSetup(server, (cfg, rd) =>
+                {
+                    var context = rd.ScenarioContext as Context;
+                    Assert.That(context, Is.Not.Null);
+
+                    context.BatchIdentifiers = server.TransactionalBatchCounterPolicy.BatchIdentifiers;
+                });
             }
 
             public class MyHandlerUsingStorageSession : IHandleMessages<MyMessage>
@@ -57,22 +65,19 @@
                         PartitionKey = context.TestRunId.ToString(),
                         Data = "MyCustomData"
                     };
-                    session.Batch.Add(TableOperation.Insert(entity));
+                    session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
                     context.FirstHandlerIsDone = true;
 
                     return Task.CompletedTask;
                 }
 
-                Context context;
-                IAzureTableStorageSession session;
+                readonly Context context;
+                readonly IAzureTableStorageSession session;
             }
 
             public class MyHandlerUsingExtensionMethod : IHandleMessages<MyMessage>
             {
-                public MyHandlerUsingExtensionMethod(Context context)
-                {
-                    this.context = context;
-                }
+                public MyHandlerUsingExtensionMethod(Context context) => this.context = context;
 
                 public Task Handle(MyMessage message, IMessageHandlerContext handlerContext)
                 {
@@ -84,19 +89,23 @@
                         PartitionKey = session.PartitionKey,
                         Data = "MyCustomData"
                     };
-                    session.Batch.Add(TableOperation.Insert(entity));
+                    session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
                     context.SecondHandlerIsDone = true;
 
                     return Task.CompletedTask;
                 }
 
-                Context context;
+                readonly Context context;
             }
         }
 
-        public class MyTableEntity : TableEntity
+        public class MyTableEntity : ITableEntity
         {
             public string Data { get; set; }
+            public string PartitionKey { get; set; }
+            public string RowKey { get; set; }
+            public DateTimeOffset? Timestamp { get; set; }
+            public ETag ETag { get; set; }
         }
 
         public class MyMessage : IMessage

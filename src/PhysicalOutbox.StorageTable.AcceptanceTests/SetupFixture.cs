@@ -2,9 +2,11 @@
 {
     using System;
     using System.IO;
+    using System.Net;
     using System.Threading.Tasks;
+    using Azure;
+    using Azure.Data.Tables;
     using NUnit.Framework;
-    using Microsoft.Azure.Cosmos.Table;
     using Testing;
 
     [SetUpFixture]
@@ -13,28 +15,32 @@
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
-            var connectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
-
+            ConnectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
             TableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();
 
-            var account = CloudStorageAccount.Parse(connectionString);
-            TableClient = account.CreateCloudTableClient();
-            Table = TableClient.GetTableReference(TableName);
-            await Table.CreateIfNotExistsAsync();
-
-            handler = new TransactionalBatchCounterHandler();
+            TableServiceClient = new TableServiceClient(ConnectionString);
+            TableClient = TableServiceClient.GetTableClient(TableName);
+            var response = await TableClient.CreateIfNotExistsAsync();
+            Assert.That(response.Value, Is.Not.Null);
         }
 
         [OneTimeTearDown]
-        public Task OneTimeTearDown()
+        public async Task OneTimeTearDown()
         {
-            handler.Dispose();
-            return Table.DeleteIfExistsAsync();
+            ConnectionString = null;
+
+            try
+            {
+                await TableServiceClient.DeleteTableAsync(TableName);
+            }
+            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
+            {
+            }
         }
 
-        public static string TableName;
-        public static CloudTableClient TableClient;
-        public static CloudTable Table;
-        TransactionalBatchCounterHandler handler;
+        public static string ConnectionString { get; private set; }
+        public static string TableName { get; private set; }
+        public static TableServiceClient TableServiceClient { get; private set; }
+        public static TableClient TableClient { get; private set; }
     }
 }

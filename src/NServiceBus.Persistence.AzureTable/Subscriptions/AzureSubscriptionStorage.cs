@@ -8,24 +8,19 @@
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure;
+    using Azure.Data.Tables;
     using Extensibility;
-    using Microsoft.Azure.Cosmos.Table;
     using Unicast.Subscriptions;
     using Unicast.Subscriptions.MessageDrivenSubscriptions;
 
-
     class AzureSubscriptionStorage : ISubscriptionStorage
     {
-        string subscriptionTableName;
-        TimeSpan? cacheFor;
-        CloudTableClient client;
-        public ConcurrentDictionary<string, CacheItem> Cache;
-
-        public AzureSubscriptionStorage(IProvideCloudTableClientForSubscriptions tableClientProvider, string subscriptionTableName, TimeSpan? cacheFor)
+        public AzureSubscriptionStorage(IProvideTableServiceClientForSubscriptions tableServiceClientProvider, string subscriptionTableName, TimeSpan? cacheFor)
         {
             this.subscriptionTableName = subscriptionTableName;
             this.cacheFor = cacheFor;
-            client = tableClientProvider.Client;
+            client = tableServiceClientProvider.Client;
 
             if (cacheFor != null)
             {
@@ -45,47 +40,37 @@
 
         public async Task Subscribe(Subscriber subscriber, MessageType messageType, ContextBag context, CancellationToken cancellationToken = default)
         {
-            var table = client.GetTableReference(subscriptionTableName);
+            var table = client.GetTableClient(subscriptionTableName);
 
             var subscription = new Subscription
             {
                 RowKey = EncodeTo64(subscriber.TransportAddress),
                 PartitionKey = messageType.ToString(),
                 EndpointName = subscriber.Endpoint,
-                ETag = "*"
+                ETag = ETag.All
             };
 
             try
             {
-                var operation = TableOperation.InsertOrReplace(subscription);
-                await table.ExecuteAsync(operation, cancellationToken).ConfigureAwait(false);
+                await table.UpsertEntityAsync(subscription, TableUpdateMode.Replace, cancellationToken).ConfigureAwait(false);
             }
-            catch (StorageException ex)
+            catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.Conflict)
             {
-                if (ex.RequestInformation.HttpStatusCode != 409)
-                {
-                    throw;
-                }
+                throw;
             }
             ClearForMessageType(messageType);
         }
 
         public async Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context, CancellationToken cancellationToken = default)
         {
-            var table = client.GetTableReference(subscriptionTableName);
+            var table = client.GetTableClient(subscriptionTableName);
             try
             {
-                var subscription = new Subscription
-                {
-                    RowKey = EncodeTo64(subscriber.TransportAddress),
-                    PartitionKey = messageType.ToString(),
-                    EndpointName = subscriber.Endpoint,
-                    ETag = "*"
-                };
-                var operation = TableOperation.Delete(subscription);
-                await table.ExecuteAsync(operation, cancellationToken).ConfigureAwait(false);
+                string partitionKey = messageType.ToString();
+                string rowKey = EncodeTo64(subscriber.TransportAddress);
+                await table.DeleteEntityAsync(partitionKey, rowKey, ETag.All, cancellationToken).ConfigureAwait(false);
             }
-            catch (StorageException ex) when (ex.RequestInformation.HttpStatusCode == (int)HttpStatusCode.NotFound)
+            catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
             {
                 // intentionally ignored
             }
@@ -98,10 +83,7 @@
             return string.Join(",", typeNames) + ",";
         }
 
-        static string GetKeyPart(MessageType type)
-        {
-            return $"{type.TypeName},";
-        }
+        static string GetKeyPart(MessageType type) => $"{type.TypeName},";
 
         void ClearForMessageType(MessageType messageType)
         {
@@ -160,16 +142,16 @@
         async Task<IEnumerable<Subscriber>> GetSubscriptions(IEnumerable<MessageType> messageTypes, CancellationToken cancellationToken)
         {
             var subscribers = new HashSet<Subscriber>(SubscriberComparer.Instance);
-            var table = client.GetTableReference(subscriptionTableName);
+            var table = client.GetTableClient(subscriptionTableName);
 
             foreach (var messageType in messageTypes)
             {
                 var name = messageType.TypeName;
-                var lowerBound = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.GreaterThanOrEqual, name);
-                var upperBound = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.LessThan, GetUpperBound(name));
-                var query = new TableQuery<Subscription>().Where(TableQuery.CombineFilters(lowerBound, "and", upperBound));
 
-                var subscriptions = await table.ExecuteQueryAsync(query, cancellationToken: cancellationToken).ConfigureAwait(false);
+                var query = TableClient.CreateQueryFilter($"(PartitionKey ge {name}) and (PartitionKey lt {GetUpperBound(name)})");
+                var subscriptions = await table.QueryAsync<Subscription>(query, cancellationToken: cancellationToken)
+                                               .ToListAsync(cancellationToken)
+                                                             .ConfigureAwait(false);
                 var results = subscriptions.Select(s => new Subscriber(DecodeFrom64(s.RowKey), s.EndpointName));
 
                 foreach (var subscriber in results)
@@ -181,27 +163,24 @@
             return subscribers;
         }
 
-        static string GetUpperBound(string name)
-        {
-            return name + ", Version=z";
-        }
+        static string GetUpperBound(string name) => $"{name}, Version=z";
 
-        class SubscriberComparer : IEqualityComparer<Subscriber>
+        readonly string subscriptionTableName;
+        readonly TimeSpan? cacheFor;
+        readonly TableServiceClient client;
+        public readonly ConcurrentDictionary<string, CacheItem> Cache;
+
+        sealed class SubscriberComparer : IEqualityComparer<Subscriber>
         {
-            public static readonly SubscriberComparer Instance = new SubscriberComparer();
+            public static readonly SubscriberComparer Instance = new();
 
             public bool Equals(Subscriber x, Subscriber y)
-            {
-                return StringComparer.InvariantCulture.Compare(x.Endpoint, y.Endpoint) == 0 && StringComparer.InvariantCulture.Compare(x.TransportAddress, y.TransportAddress) == 0;
-            }
+                => StringComparer.InvariantCulture.Compare(x.Endpoint, y.Endpoint) == 0 && StringComparer.InvariantCulture.Compare(x.TransportAddress, y.TransportAddress) == 0;
 
-            public int GetHashCode(Subscriber obj)
-            {
-                return (obj.Endpoint ?? string.Empty).Length;
-            }
+            public int GetHashCode(Subscriber obj) => (obj.Endpoint ?? string.Empty).Length;
         }
 
-        internal class CacheItem
+        internal sealed class CacheItem
         {
             public DateTime Stored;
             public Task<IEnumerable<Subscriber>> Subscribers;

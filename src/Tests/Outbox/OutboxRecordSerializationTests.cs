@@ -18,7 +18,7 @@
   }
 ]";
 
-            Assert.DoesNotThrow(() => OutboxRecord.DeserializeTransportOperations(oldRecord));
+            Assert.DoesNotThrow(() => OutboxRecord.DeserializeStorageTransportOperations(oldRecord));
         }
     }
 }

@@ -1,12 +1,11 @@
 ﻿namespace NServiceBus.Persistence.AzureTable.Release_2x
 {
     using System;
-    using Microsoft.Azure.Cosmos.Table;
 
     /// <summary>
     /// This is a copy of the saga persister code 2.4.1
     /// </summary>
-    struct PartitionRowKeyTuple
+    readonly struct PartitionRowKeyTuple
     {
         public PartitionRowKeyTuple(string partitionKey, string rowKey)
         {
@@ -17,12 +16,6 @@
         public string PartitionKey { get; }
 
         public string RowKey { get; }
-
-        public void Apply(ITableEntity entity)
-        {
-            entity.PartitionKey = PartitionKey;
-            entity.RowKey = RowKey;
-        }
 
         public override bool Equals(object obj)
         {

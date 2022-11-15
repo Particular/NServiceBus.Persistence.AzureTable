@@ -33,7 +33,7 @@ namespace NServiceBus.Persistence.AzureTable
             try
             {
                 Logger.Info("Creating Subscription Table");
-                await CreateTableIfNotExists(installerSettings, serviceProvider.GetRequiredService<IProvideCloudTableClientForSubscriptions>(), cancellationToken).ConfigureAwait(false);
+                await CreateTableIfNotExists(installerSettings, serviceProvider.GetRequiredService<IProvideTableServiceClientForSubscriptions>(), cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex) when (!ex.IsCausedBy(cancellationToken))
             {
@@ -42,10 +42,10 @@ namespace NServiceBus.Persistence.AzureTable
             }
         }
 
-        async Task CreateTableIfNotExists(SubscriptionStorageInstallerSettings installerSettings, IProvideCloudTableClientForSubscriptions clientProvider, CancellationToken cancellationToken)
+        async Task CreateTableIfNotExists(SubscriptionStorageInstallerSettings installerSettings, IProvideTableServiceClientForSubscriptions serviceClientProvider, CancellationToken cancellationToken)
         {
-            var cloudTable = clientProvider.Client.GetTableReference(installerSettings.TableName);
-            await cloudTable.CreateIfNotExistsAsync(cancellationToken).ConfigureAwait(false);
+            var tableClient = serviceClientProvider.Client.GetTableClient(installerSettings.TableName);
+            await tableClient.CreateIfNotExistsAsync(cancellationToken).ConfigureAwait(false);
         }
 
         IServiceProvider serviceProvider;

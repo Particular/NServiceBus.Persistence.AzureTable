@@ -3,8 +3,8 @@
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure.Data.Tables;
     using Extensibility;
-    using Microsoft.Azure.Cosmos.Table;
     using Newtonsoft.Json;
     using NServiceBus.Outbox;
     using NServiceBus.Sagas;
@@ -12,7 +12,7 @@
     using Persistence.AzureTable;
     using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
-    public partial class PersistenceTestsConfiguration : IProvideCloudTableClient
+    public partial class PersistenceTestsConfiguration : IProvideTableServiceClient
     {
         public bool SupportsDtc => false;
 
@@ -28,7 +28,7 @@
 
         public IOutboxStorage OutboxStorage { get; private set; }
 
-        public CloudTableClient Client => SetupFixture.TableClient;
+        public TableServiceClient Client => SetupFixture.TableServiceClient;
 
         public Task Configure(CancellationToken cancellationToken = default)
         {
@@ -36,7 +36,7 @@
             partitionKey = Guid.NewGuid().ToString();
 
             SagaIdGenerator = new SagaIdGenerator();
-            var resolver = new TableHolderResolver(this, new TableInformation(SetupFixture.TableName));
+            var resolver = new TableClientHolderResolver(this, new TableInformation(SetupFixture.TableName));
             var secondaryIndices = new SecondaryIndex();
             SagaStorage = new AzureSagaPersister(
                 this,
@@ -56,7 +56,7 @@
                 // This populates the partition key required to participate in a shared transaction
                 var setAsDispatchedHolder = new SetAsDispatchedHolder
                 {
-                    TableHolder = resolver.ResolveAndSetIfAvailable(contextBag)
+                    TableClientHolder = resolver.ResolveAndSetIfAvailable(contextBag)
                 };
                 contextBag.Set(setAsDispatchedHolder);
                 contextBag.Set(new TableEntityPartitionKey(partitionKey));
@@ -69,7 +69,7 @@
                 // This populates the partition key required to participate in a shared transaction
                 var setAsDispatchedHolder = new SetAsDispatchedHolder
                 {
-                    TableHolder = resolver.ResolveAndSetIfAvailable(contextBag)
+                    TableClientHolder = resolver.ResolveAndSetIfAvailable(contextBag)
                 };
                 contextBag.Set(setAsDispatchedHolder);
                 contextBag.Set(new TableEntityPartitionKey(partitionKey));

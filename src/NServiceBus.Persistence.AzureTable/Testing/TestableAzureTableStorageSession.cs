@@ -1,6 +1,7 @@
 ﻿namespace NServiceBus.Testing
 {
-    using Microsoft.Azure.Cosmos.Table;
+    using System.Collections.Generic;
+    using Azure.Data.Tables;
     using Extensibility;
     using Persistence;
     using Persistence.AzureTable;
@@ -34,14 +35,14 @@
         }
 
         /// <summary>
-        /// The cloud table to be used.
+        /// The table client to be used.
         /// </summary>
-        public CloudTable Table { get; set; }
+        public TableClient Table { get; set; }
 
         /// <summary>
         /// The batch to be used.
         /// </summary>
-        public TableBatchOperation Batch { get; set; }
+        public List<TableTransactionAction> Batch { get; set; }
 
         /// <summary>
         /// The partition key to be used.

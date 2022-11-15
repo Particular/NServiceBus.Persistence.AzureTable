@@ -1,34 +1,27 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
-    using Microsoft.Azure.Cosmos.Table;
+    using System.Collections.Generic;
+    using Azure;
+    using Azure.Data.Tables;
 
     abstract class Operation
     {
-        protected Operation(TableEntityPartitionKey partitionKey)
-        {
-            PartitionKey = partitionKey;
-        }
+        protected Operation(TableEntityPartitionKey partitionKey) => PartitionKey = partitionKey;
 
         public TableEntityPartitionKey PartitionKey { get; }
 
-        public abstract CloudTable Apply(TableBatchOperation transactionalBatch);
+        public abstract TableClient Apply(List<TableTransactionAction> transactionalBatch);
 
-        public virtual void Success(TableResult result)
+        public virtual void Success(Response result)
         {
         }
 
-        public virtual void Conflict(TableResult result)
-        {
-            throw new TableBatchOperationException(result);
-        }
+        public virtual void Conflict(Response result) => throw new TableBatchOperationException(result);
 
-        public virtual bool Handle(StorageException storageException)
-        {
-            return false;
-        }
+        public virtual bool Handle(RequestFailedException requestFailedException) => false;
     }
 
-    class ThrowOnConflictOperation : Operation
+    sealed class ThrowOnConflictOperation : Operation
     {
         ThrowOnConflictOperation() : base(default)
         {
@@ -36,9 +29,6 @@
 
         public static Operation Instance { get; } = new ThrowOnConflictOperation();
 
-        public override CloudTable Apply(TableBatchOperation transactionalBatch)
-        {
-            return null;
-        }
+        public override TableClient Apply(List<TableTransactionAction> transactionalBatch) => null;
     }
 }

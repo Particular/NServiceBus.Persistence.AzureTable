@@ -2,9 +2,11 @@
 {
     using System;
     using System.IO;
+    using System.Net;
     using System.Threading.Tasks;
+    using Azure;
+    using Azure.Data.Tables;
     using NUnit.Framework;
-    using Microsoft.Azure.Cosmos.Table;
     using Testing;
 
     [SetUpFixture]
@@ -16,24 +18,32 @@
             // ensure the persistence assembly is loaded into the AppDomain because it needs its features to be scanned to work properly.
             typeof(AzureTablePersistence).ToString();
 
-            var connectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
+            ConnectionString = this.GetEnvConfiguredConnectionStringByCallerConvention();
 
             TableName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();
 
-            var account = CloudStorageAccount.Parse(connectionString);
-            TableClient = account.CreateCloudTableClient();
-            Table = TableClient.GetTableReference(TableName);
-            await Table.CreateIfNotExistsAsync();
+            TableServiceClient = new TableServiceClient(ConnectionString);
+            TableClient = TableServiceClient.GetTableClient(TableName);
+            await TableClient.CreateIfNotExistsAsync();
         }
 
         [OneTimeTearDown]
-        public Task OneTimeTearDown()
+        public async Task OneTimeTearDown()
         {
-            return Table.DeleteIfExistsAsync();
+            ConnectionString = null;
+            try
+            {
+                await TableServiceClient.DeleteTableAsync(TableName);
+            }
+            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
+            {
+            }
         }
 
+        public static string ConnectionString { get; private set; }
+
         public static string TableName;
-        public static CloudTableClient TableClient;
-        public static CloudTable Table;
+        public static TableServiceClient TableServiceClient;
+        public static TableClient TableClient;
     }
 }

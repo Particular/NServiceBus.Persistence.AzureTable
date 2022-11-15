@@ -5,6 +5,8 @@ namespace NServiceBus.AcceptanceTests
     using System.Net;
     using System.Threading.Tasks;
     using AcceptanceTesting;
+    using Azure;
+    using Azure.Data.Tables;
     using EndpointTemplates;
     using Microsoft.Azure.Cosmos.Table;
     using NServiceBus;
@@ -12,6 +14,8 @@ namespace NServiceBus.AcceptanceTests
     using NServiceBus.Sagas;
     using NUnit.Framework;
     using Persistence.AzureTable;
+    using ITableEntity = Azure.Data.Tables.ITableEntity;
+    using TableEntity = Azure.Data.Tables.TableEntity;
 
     public class When_participating_in_saga_conversations_with_outbox_enabled : NServiceBusAcceptanceTest
     {
@@ -30,10 +34,11 @@ namespace NServiceBus.AcceptanceTests
                 .Done(c => c.SagaIsDone && c.HandlerIsDone)
                 .Run();
 
-            var myEntity = GetByRowKey(myTableRowKey);
+            var myEntity = await GetByRowKey(myTableRowKey);
 
             Assert.IsNotNull(myEntity);
-            Assert.AreEqual(context.SagaId.ToString(), myEntity["Data"].StringValue);
+            Assert.IsTrue(myEntity.TryGetValue("Data", out var entityValue));
+            Assert.AreEqual(context.SagaId.ToString(), entityValue);
         }
 
         [Test]
@@ -51,22 +56,23 @@ namespace NServiceBus.AcceptanceTests
                 .Done(c => c.SagaIsDone && c.HandlerIsDone)
                 .Run();
 
-            var myEntity = GetByRowKey(myTableRowKey);
+            var myEntity = await GetByRowKey(myTableRowKey);
 
             Assert.IsNotNull(myEntity);
-            Assert.AreEqual(context.SagaId.ToString(), myEntity["Data"].StringValue);
+            Assert.IsTrue(myEntity.TryGetValue("Data", out var entityValue));
+            Assert.AreEqual(context.SagaId.ToString(), entityValue);
         }
 
-        static DynamicTableEntity GetByRowKey(Guid sagaId)
+        static async Task<TableEntity> GetByRowKey(Guid sagaId)
         {
-            var table = SetupFixture.Table;
+            var table = SetupFixture.TableClient;
 
             // table scan but still probably the easiest way to do it, otherwise we would have to take the partition key into account which complicates things because this test is shared
-            var query = new TableQuery<DynamicTableEntity>().Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, sagaId.ToString()));
+            //var query = new TableQuery<DynamicTableEntity>().Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, sagaId.ToString()));
 
             try
             {
-                var tableEntity = table.ExecuteQuery(query).FirstOrDefault();
+                var tableEntity = await table.QueryAsync<TableEntity>(entity => entity.RowKey == sagaId.ToString()).FirstOrDefaultAsync();
                 return tableEntity;
             }
             catch (StorageException e)
@@ -89,19 +95,17 @@ namespace NServiceBus.AcceptanceTests
 
         public class EndpointWithSagaThatWasMigrated : EndpointConfigurationBuilder
         {
-            public EndpointWithSagaThatWasMigrated()
-            {
+            public EndpointWithSagaThatWasMigrated() =>
                 EndpointSetup<DefaultServer>(c =>
                 {
                     c.EnableOutbox();
                     c.ConfigureTransport().TransportTransactionMode = TransportTransactionMode.ReceiveOnly;
-                    c.Pipeline.Register(typeof(PartitionPartionKeyCleanerBehavior),
+                    c.Pipeline.Register(typeof(PartitionPartitionKeyCleanerBehavior),
                         "Cleans partition keys out");
                     c.Pipeline.Register(new ProvidePartitionKeyBasedOnSagaIdBehavior.Registration());
                 });
-            }
 
-            class PartitionPartionKeyCleanerBehavior : IBehavior<ITransportReceiveContext, ITransportReceiveContext>,
+            class PartitionPartitionKeyCleanerBehavior : IBehavior<ITransportReceiveContext, ITransportReceiveContext>,
                 IBehavior<IIncomingPhysicalMessageContext, IIncomingPhysicalMessageContext>
             {
                 public Task Invoke(ITransportReceiveContext context, Func<ITransportReceiveContext, Task> next)
@@ -121,12 +125,8 @@ namespace NServiceBus.AcceptanceTests
 
             class ProvidePartitionKeyBasedOnSagaIdBehavior : Behavior<IIncomingLogicalMessageContext>
             {
-                IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId;
-
                 public ProvidePartitionKeyBasedOnSagaIdBehavior(IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId)
-                {
-                    this.providePartitionKeyFromSagaId = providePartitionKeyFromSagaId;
-                }
+                    => this.providePartitionKeyFromSagaId = providePartitionKeyFromSagaId;
 
                 public override async Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
                 {
@@ -150,14 +150,14 @@ namespace NServiceBus.AcceptanceTests
                     await next().ConfigureAwait(false);
                 }
 
+                readonly IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId;
+
                 public class Registration : RegisterStep
                 {
                     public Registration() : base(nameof(ProvidePartitionKeyBasedOnSagaIdBehavior),
                         typeof(ProvidePartitionKeyBasedOnSagaIdBehavior),
-                        "Populates the partition key")
-                    {
+                        "Populates the partition key") =>
                         InsertBeforeIfExists(nameof(LogicalOutboxBehavior));
-                    }
                 }
             }
 
@@ -215,17 +215,21 @@ namespace NServiceBus.AcceptanceTests
                         PartitionKey = session.PartitionKey,
                         Data = session.PartitionKey
                     };
-                    session.Batch.Add(TableOperation.Insert(entity));
+                    session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
                     testContext.HandlerIsDone = true;
                     return Task.CompletedTask;
                 }
 
-                Context testContext;
+                readonly Context testContext;
             }
 
-            public class MyTableEntity : TableEntity
+            public class MyTableEntity : ITableEntity
             {
                 public string Data { get; set; }
+                public string PartitionKey { get; set; }
+                public string RowKey { get; set; }
+                public DateTimeOffset? Timestamp { get; set; }
+                public ETag ETag { get; set; }
             }
 
             public class CustomSagaData : ContainSagaData

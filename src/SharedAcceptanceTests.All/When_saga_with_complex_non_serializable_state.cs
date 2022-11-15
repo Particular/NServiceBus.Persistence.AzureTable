@@ -37,15 +37,13 @@ namespace NServiceBus.AcceptanceTests
 
         public class EndpointWithNonSerializableSaga : EndpointConfigurationBuilder
         {
-            public EndpointWithNonSerializableSaga()
-            {
+            public EndpointWithNonSerializableSaga() =>
                 EndpointSetup<DefaultServer>(b =>
                 {
                     var sagaPersistence = b.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
                     var customSettings = new JsonSerializerSettings { ContractResolver = new NonAbstractDefaultContractResolver() };
                     sagaPersistence.JsonSettings(customSettings);
                 });
-            }
 
             class NonAbstractDefaultContractResolver : DefaultContractResolver
             {
@@ -67,11 +65,9 @@ namespace NServiceBus.AcceptanceTests
                     return Task.CompletedTask;
                 }
 
-                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<NonSerializableSagaData> mapper)
-                {
+                protected override void ConfigureHowToFindSaga(SagaPropertyMapper<NonSerializableSagaData> mapper) =>
                     mapper.ConfigureMapping<StartSagaMessage>(m => m.SomeId)
                         .ToSaga(s => s.SomeId);
-                }
             }
 
             public class NonSerializableSagaData : ContainSagaData

@@ -14,10 +14,7 @@
         AzureSubscriptionStorage persister;
         SubscriptionTestHelper.Scope scope;
 
-        public When_unsubscribing(string tableApiType)
-        {
-            this.tableApiType = tableApiType;
-        }
+        public When_unsubscribing(string tableApiType) => this.tableApiType = tableApiType;
 
         [SetUp]
         public async Task Setup()
@@ -27,10 +24,7 @@
         }
 
         [TearDown]
-        public void Teardown()
-        {
-            scope.Dispose();
-        }
+        public async Task Teardown() => await scope.DisposeAsync();
 
         [Test]
         public async Task The_subscription_should_be_removed()
