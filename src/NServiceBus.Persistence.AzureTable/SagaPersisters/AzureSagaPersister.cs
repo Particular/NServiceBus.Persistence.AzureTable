@@ -4,10 +4,8 @@
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.IO;
-    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure;
     using Azure.Data.Tables;
     using Extensibility;
     using Newtonsoft.Json;
@@ -80,19 +78,19 @@
             // reads need to go directly
             var partitionKey = GetPartitionKey(context, sagaId);
 
-            try
-            {
-                var readSagaDataEntity = await tableClient.GetEntityAsync<TableEntity>(partitionKey.PartitionKey, sagaId.ToString(), null, cancellationToken).ConfigureAwait(false);
-                var sagaData = TableEntityExtensions.ToSagaData<TSagaData>(readSagaDataEntity.Value, jsonSerializer, readerCreator);
-                var meta = context.GetOrCreate<SagaInstanceMetadata>();
-                var entityId = sagaData.Id;
-                meta.Entities[entityId] = (tableClient, readSagaDataEntity.Value);
-                return sagaData;
-            }
-            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
+            var readSagaDataEntity = await tableClient.GetEntityIfExistsAsync<TableEntity>(partitionKey.PartitionKey, sagaId.ToString(), null, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!readSagaDataEntity.HasValue)
             {
                 return default;
             }
+
+            var sagaData = TableEntityExtensions.ToSagaData<TSagaData>(readSagaDataEntity.Value, jsonSerializer, readerCreator);
+            var meta = context.GetOrCreate<SagaInstanceMetadata>();
+            var entityId = sagaData.Id;
+            meta.Entities[entityId] = (tableClient, readSagaDataEntity.Value);
+            return sagaData;
         }
 
         public async Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)

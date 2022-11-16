@@ -1,9 +1,7 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
-    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure;
     using Azure.Data.Tables;
     using Extensibility;
 
@@ -13,16 +11,9 @@
         {
             _ = context;
 
-            try
-            {
-                var retrieveResult = await tableClient.GetEntityAsync<OutboxRecord>(partitionKey.PartitionKey, messageId, null, cancellationToken)
-                                                .ConfigureAwait(false);
-                return retrieveResult.Value;
-            }
-            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
-            {
-                return default;
-            }
+            var retrieveResult = await tableClient.GetEntityIfExistsAsync<OutboxRecord>(partitionKey.PartitionKey, messageId, null, cancellationToken)
+                .ConfigureAwait(false);
+            return retrieveResult.HasValue ? retrieveResult.Value : default;
         }
     }
 }
