@@ -9,10 +9,9 @@ namespace NServiceBus
     {
         public void AllowSecondaryKeyLookupToFallbackToFullTableScan() { }
         public void AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey() { }
-        [System.Obsolete("The compatibility mode has been disabled and requires opt-in to enable. Calling t" +
-            "his method is no longer necessary. Will be treated as an error from version 5.0." +
-            "0. The member currently throws a NotImplementedException. Will be removed in ver" +
-            "sion 6.0.0.", false)]
+        [System.Obsolete("The compatibility mode has been disabled by default and requires opt-in to enable" +
+            ". Calling this method is no longer necessary. The member currently throws a NotI" +
+            "mplementedException. Will be removed in version 6.0.0.", true)]
         public void DisableSecondaryKeyLookupForSagasCorrelatedByProperties() { }
         public void EnableSecondaryKeyLookupForSagasCorrelatedByProperties() { }
     }
