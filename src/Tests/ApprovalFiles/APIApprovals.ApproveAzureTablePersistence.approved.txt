@@ -18,7 +18,10 @@ namespace NServiceBus
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> DisableTableCreation(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> JsonSettings(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config, Newtonsoft.Json.JsonSerializerSettings jsonSerializerSettings) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> ReaderCreator(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config, System.Func<System.IO.TextReader, Newtonsoft.Json.JsonReader> readerCreator) { }
-        [System.Obsolete(@"The UseCloudTableClient method is deprecated in favor of the UseTableServiceClient method, which supports the TableServiceClient API provided by Azure.Data.Tables. Will be treated as an error from version 5.0.0. The member currently throws a NotImplementedException. Will be removed in version 6.0.0.", false)]
+        [System.Obsolete("The UseCloudTableClient method is deprecated in favor of the UseTableServiceClien" +
+            "t method, which supports the TableServiceClient API provided by Azure.Data.Table" +
+            "s. The member currently throws a NotImplementedException. Will be removed in ver" +
+            "sion 6.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence> UseCloudTableClient(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence> config, object client) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> UseTableServiceClient(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config, Azure.Data.Tables.TableServiceClient client) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> WriterCreator(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config, System.Func<System.IO.StringWriter, Newtonsoft.Json.JsonWriter> writerCreator) { }
@@ -36,7 +39,10 @@ namespace NServiceBus
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> config, string connectionString) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> DisableTableCreation(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> config) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> TableName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> config, string tableName) { }
-        [System.Obsolete(@"The UseCloudTableClient method is deprecated in favor of the UseTableServiceClient method, which supports the TableServiceClient API provided by Azure.Data.Tables. Will be treated as an error from version 5.0.0. The member currently throws a NotImplementedException. Will be removed in version 6.0.0.", false)]
+        [System.Obsolete("The UseCloudTableClient method is deprecated in favor of the UseTableServiceClien" +
+            "t method, which supports the TableServiceClient API provided by Azure.Data.Table" +
+            "s. The member currently throws a NotImplementedException. Will be removed in ver" +
+            "sion 6.0.0.", true)]
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> UseCloudTableClient(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> config, object client) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> UseTableServiceClient(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> config, Azure.Data.Tables.TableServiceClient client) { }
     }
@@ -73,12 +79,14 @@ namespace NServiceBus.Persistence.AzureTable
     }
     [System.Obsolete("The IProvideCloudTableClient is deprecated in favor of IProvideTableServiceClient" +
         ", which supports the TableServiceClient API provided by Azure.Data.Tables. Will " +
-        "be treated as an error from version 5.0.0. Will be removed in version 6.0.0.", false)]
+        "be removed in version 6.0.0.", true)]
     public interface IProvideCloudTableClient
     {
         object Client { get; }
     }
-    [System.Obsolete(@"The IProvideCloudTableClientForSubscriptions is deprecated in favor of IProvideTableServiceClientForSubscriptions, which supports the TableServiceClient API provided by Azure.Data.Tables. Will be treated as an error from version 5.0.0. Will be removed in version 6.0.0.", false)]
+    [System.Obsolete("The IProvideCloudTableClientForSubscriptions is deprecated in favor of IProvideTa" +
+        "bleServiceClientForSubscriptions, which supports the TableServiceClient API prov" +
+        "ided by Azure.Data.Tables. Will be removed in version 6.0.0.", true)]
     public interface IProvideCloudTableClientForSubscriptions
     {
         object Client { get; }
@@ -101,7 +109,7 @@ namespace NServiceBus.Persistence.AzureTable
         public System.Threading.Tasks.Task Invoke(NServiceBus.Pipeline.IIncomingLogicalMessageContext context, System.Func<NServiceBus.Pipeline.IIncomingLogicalMessageContext, System.Threading.Tasks.Task> next) { }
     }
     [System.Obsolete("The exception is no longer in use since version 3.0.0 of the persistence. Will be" +
-        " treated as an error from version 5.0.0. Will be removed in version 6.0.0.", false)]
+        " removed in version 6.0.0.", true)]
     public class RetryNeededException : System.Exception
     {
         public RetryNeededException() { }
