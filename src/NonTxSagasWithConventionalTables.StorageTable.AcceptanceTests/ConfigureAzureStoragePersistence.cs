@@ -16,8 +16,7 @@
             // backdoor for testing
             persistence.GetSettings().Set("AzureSagaStorage.ConventionalTablePrefix", SetupFixture.TablePrefix);
 
-            persistence.UseTableServiceClient(SetupFixture.TableServiceClient)
-                       .Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
+            persistence.UseTableServiceClient(SetupFixture.TableServiceClient);
 
             var recoverabilitySettings = configuration.Recoverability();
 

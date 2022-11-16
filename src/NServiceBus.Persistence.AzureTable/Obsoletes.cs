@@ -50,5 +50,12 @@ namespace NServiceBus
             object client) =>
             throw new NotImplementedException();
     }
+
+    public partial class CompatibilitySettings
+    {
+        [ObsoleteEx(Message = "The compatibility mode has been disabled by default and requires opt-in to enable. Calling this method is no longer necessary.", TreatAsErrorFromVersion = "5.0.0", RemoveInVersion = "6.0.0")]
+        public void DisableSecondaryKeyLookupForSagasCorrelatedByProperties()
+            => throw new NotImplementedException();
+    }
 }
 #pragma warning restore CS1591

@@ -9,7 +9,11 @@ namespace NServiceBus
     {
         public void AllowSecondaryKeyLookupToFallbackToFullTableScan() { }
         public void AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey() { }
+        [System.Obsolete("The compatibility mode has been disabled by default and requires opt-in to enable" +
+            ". Calling this method is no longer necessary. The member currently throws a NotI" +
+            "mplementedException. Will be removed in version 6.0.0.", true)]
         public void DisableSecondaryKeyLookupForSagasCorrelatedByProperties() { }
+        public void EnableSecondaryKeyLookupForSagasCorrelatedByProperties() { }
     }
     public static class ConfigureAzureSagaStorage
     {

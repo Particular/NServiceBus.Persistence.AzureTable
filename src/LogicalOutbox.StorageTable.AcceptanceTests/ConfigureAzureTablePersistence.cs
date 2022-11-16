@@ -22,8 +22,7 @@
         {
             configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>()
                          .DisableTableCreation()
-                         .UseTableServiceClient(tableServiceClient)
-                         .Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
+                         .UseTableServiceClient(tableServiceClient);
 
             configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
 

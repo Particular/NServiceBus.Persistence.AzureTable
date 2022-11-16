@@ -20,34 +20,45 @@
         }
 
         [Test]
+        public void Should_enable_compatibility_mode_when_enableSecondaryKeyLookupForSagasCorrelatedByProperties_called()
+        {
+            settings.EnableSecondaryKeyLookupForSagasCorrelatedByProperties();
+
+            Assert.That(settings.GetSettings().Get<bool>(WellKnownConfigurationKeys.SagaStorageCompatibilityMode), Is.True);
+        }
+
+        [Test]
         public void Should_throw_when_compatibility_mode_off_and_allowSecondaryKeyLookupToFallbackToFullTableScan()
         {
-            settings.DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
             Assert.Throws<InvalidOperationException>(() => settings.AllowSecondaryKeyLookupToFallbackToFullTableScan());
+        }
+
+        [Test]
+        public void Should_enable_when_compatibility_mode_on_and_allowSecondaryKeyLookupToFallbackToFullTableScan()
+        {
+            settings.EnableSecondaryKeyLookupForSagasCorrelatedByProperties();
+
+            settings.AllowSecondaryKeyLookupToFallbackToFullTableScan();
+
+            Assert.That(settings.GetSettings().Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist), Is.False);
         }
 
         [Test]
         public void Should_throw_when_compatibility_mode_off_and_assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey()
         {
-            settings.DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
             Assert.Throws<InvalidOperationException>(() => settings.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey());
         }
 
         [Test]
-        public void Should_throw_when_assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey_and_disable_compatibility_mode_called()
+        public void Should_enable_when_compatibility_mode_on_and_assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey()
         {
-            settings.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey();
-            Assert.Throws<InvalidOperationException>(() => settings.DisableSecondaryKeyLookupForSagasCorrelatedByProperties());
-        }
+            settings.EnableSecondaryKeyLookupForSagasCorrelatedByProperties();
 
-        [Test]
-        public void Should_throw_when_allowSecondaryKeyLookupToFallbackToFullTableScan_and_disable_compatibility_mode_called()
-        {
-            settings.AllowSecondaryKeyLookupToFallbackToFullTableScan();
-            Assert.Throws<InvalidOperationException>(() => settings.DisableSecondaryKeyLookupForSagasCorrelatedByProperties());
+            settings.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey();
+
+            Assert.That(settings.GetSettings().Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey), Is.True);
         }
 
         CompatibilitySettings settings;
-
     }
 }

@@ -16,7 +16,6 @@
                 .UseTableServiceClient(SetupFixture.TableServiceClient);
 
             persistence.DefaultTable(SetupFixture.TableName);
-            persistence.Compatibility().DisableSecondaryKeyLookupForSagasCorrelatedByProperties();
 
             if (endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))
             {
