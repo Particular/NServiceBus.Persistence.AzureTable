@@ -7,6 +7,8 @@
     <LangVersion>10.0</LangVersion>
     <!-- We want the root namespace to match the transactional session one -->
     <RootNamespace>NServiceBus.TransactionalSession.AcceptanceTests</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +31,10 @@
 
   <ItemGroup>
     <Compile Include="..\$(TemplateProject)\**\*.cs" Exclude="\**\obj\**\*.*;" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="..\TransactionalSession.StorageTable.AcceptanceTests\obj\Debug\**" />
   </ItemGroup>
 
 </Project>
