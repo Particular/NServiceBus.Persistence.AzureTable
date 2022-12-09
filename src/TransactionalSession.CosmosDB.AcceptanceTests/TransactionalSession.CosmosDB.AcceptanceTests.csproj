@@ -30,7 +30,7 @@
   <Import Project="..\$(TemplateProject)\Includes.targets" />
 
   <ItemGroup>
-    <Compile Include="..\$(TemplateProject)\**\*.cs" Exclude="\**\obj\**\*.*;" />
+    <Compile Include="..\$(TemplateProject)\**\*.cs" Exclude="..\$(TemplateProject)\obj\**\*.*;" />
   </ItemGroup>
 
   <ItemGroup>
