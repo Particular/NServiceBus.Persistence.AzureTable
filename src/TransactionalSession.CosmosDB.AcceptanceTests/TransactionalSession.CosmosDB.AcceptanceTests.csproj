@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;net6.0</TargetFrameworks>
+    <TargetFrameworks>net472;net6.0;net7.0</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\NServiceBusTests.snk</AssemblyOriginatorKeyFile>
     <LangVersion>10.0</LangVersion>
     <!-- We want the root namespace to match the transactional session one -->
-    <RootNamespace>NServiceBus.TransactionalSession.AcceptanceTests</RootNamespace>
+    <RootNamespace>NServiceBus.TransactionalSession.AcceptanceTests</RootNamespace>   
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,8 +27,8 @@
 
   <Import Project="..\$(TemplateProject)\Includes.targets" />
 
-  <ItemGroup>
-    <Compile Include="..\$(TemplateProject)\**\*.cs" Exclude="\**\obj\**\*.*;" />
+  <ItemGroup>    
+    <Compile Include="..\$(TemplateProject)\**\*.cs" Exclude="..\$(TemplateProject)\obj\**\*.*;" />
   </ItemGroup>
 
 </Project>
