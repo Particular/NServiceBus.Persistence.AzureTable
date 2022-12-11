@@ -31,8 +31,4 @@
     <Compile Include="..\$(TemplateProject)\**\*.cs" Exclude="..\$(TemplateProject)\obj\**\*.*;" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="..\TransactionalSession.StorageTable.AcceptanceTests\obj\Debug\**" />
-  </ItemGroup>
-
 </Project>
