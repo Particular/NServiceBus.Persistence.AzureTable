@@ -1,7 +1,6 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.IO;
     using System.Threading;
@@ -156,14 +155,12 @@
                 tableToReadFrom = storageSession.Table;
             }
 
-            if (disableTableCreation || tableCreated.TryGetValue(tableToReadFrom.Name, out var isTableCreated) ||
-                isTableCreated)
+            if (disableTableCreation)
             {
                 return tableToReadFrom;
             }
 
-            await tableToReadFrom.CreateIfNotExistsAsync(cancellationToken).ConfigureAwait(false);
-            tableCreated[tableToReadFrom.Name] = true;
+            await TableClientHolder.CreateTableIfNotExists(tableToReadFrom, cancellationToken).ConfigureAwait(false);
             return tableToReadFrom;
         }
 
@@ -200,7 +197,6 @@
         readonly TableServiceClient client;
         readonly SecondaryIndex secondaryIndex;
         const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
-        static readonly ConcurrentDictionary<string, bool> tableCreated = new();
         readonly bool compatibilityMode;
         readonly string conventionalTablePrefix;
         readonly JsonSerializer jsonSerializer;

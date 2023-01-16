@@ -48,7 +48,7 @@
                 reader => new JsonTextReader(reader),
                 writer => new JsonTextWriter(writer));
 
-            OutboxStorage = new OutboxPersister(resolver);
+            OutboxStorage = new OutboxPersister(resolver, true);
 
             GetContextBagForSagaStorage = () =>
             {

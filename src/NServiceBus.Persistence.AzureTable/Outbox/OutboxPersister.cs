@@ -9,8 +9,11 @@
 
     class OutboxPersister : IOutboxStorage
     {
-        public OutboxPersister(TableClientHolderResolver tableClientHolderResolver)
-            => this.tableClientHolderResolver = tableClientHolderResolver;
+        public OutboxPersister(TableClientHolderResolver tableClientHolderResolver, bool disableTableCreation)
+        {
+            this.tableClientHolderResolver = tableClientHolderResolver;
+            tableCreationEnabled = !disableTableCreation;
+        }
 
         public Task<IOutboxTransaction> BeginTransaction(ContextBag context, CancellationToken cancellationToken = default)
         {
@@ -25,19 +28,25 @@
 
         public async Task<OutboxMessage> Get(string messageId, ContextBag context, CancellationToken cancellationToken = default)
         {
+            var tableClientHolder = tableClientHolderResolver.ResolveAndSetIfAvailable(context);
             var setAsDispatchedHolder = new SetAsDispatchedHolder
             {
-                TableClientHolder = tableClientHolderResolver.ResolveAndSetIfAvailable(context)
+                TableClientHolder = tableClientHolder
             };
             context.Set(setAsDispatchedHolder);
 
-            if (!context.TryGet<TableEntityPartitionKey>(out var partitionKey))
+            if (tableClientHolder == null || !context.TryGet<TableEntityPartitionKey>(out var partitionKey))
             {
                 // we return null here to enable outbox work at logical stage
                 return null;
             }
 
-            var outboxRecord = await setAsDispatchedHolder.TableClientHolder.TableClient
+            if (tableCreationEnabled)
+            {
+                await tableClientHolder.CreateTableIfNotExists(cancellationToken).ConfigureAwait(false);
+            }
+
+            var outboxRecord = await tableClientHolder.TableClient
                 .ReadOutboxRecord(messageId, partitionKey, context, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -88,5 +97,6 @@
         }
 
         readonly TableClientHolderResolver tableClientHolderResolver;
+        readonly bool tableCreationEnabled;
     }
 }

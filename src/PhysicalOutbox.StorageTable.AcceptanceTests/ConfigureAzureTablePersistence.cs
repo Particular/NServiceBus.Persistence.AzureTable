@@ -20,9 +20,13 @@
 
         Task IConfigureEndpointTestExecution.Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
         {
-            configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>()
-                         .DisableTableCreation()
-                         .UseTableServiceClient(tableServiceClient);
+            var sagaPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>()
+                .UseTableServiceClient(tableServiceClient);
+
+            if (!(settings.TryGet("allowTableCreation", out bool allowTableCreation) && allowTableCreation))
+            {
+                sagaPersistence.DisableTableCreation();
+            }
 
             configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
 
