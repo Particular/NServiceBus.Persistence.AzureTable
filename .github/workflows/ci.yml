@@ -62,4 +62,4 @@ jobs:
           connection-string-name: AzureTable_StorageTable_ConnectionString
           tag: AzureStorage
       - name: Run tests
-        uses: Particular/run-tests-action@v1.4.0
+        uses: Particular/run-tests-action@v1.5.0
