@@ -40,7 +40,7 @@
                     config.EnableOutbox();
                     config.ConfigureTransport().TransportTransactionMode = TransportTransactionMode.ReceiveOnly;
                     config.RegisterStartupTask<ControlMessageSender>();
-                    config.Pipeline.Register(new ControlMessageBehavior(runDescriptor.ScenarioContext as Context), "Checks for confirmation control message");
+                    config.Pipeline.Register(new ControlMessageBehavior(runDescriptor.ScenarioContext as Context), "Checks that the control message was processed successfully");
                 });
 
             class ControlMessageSender : FeatureStartupTask
@@ -52,14 +52,12 @@
                     this.dispatcher = dispatcher;
                 }
 
-                protected override async Task OnStart(IMessageSession session, CancellationToken cancellationToken = default)
+                protected override Task OnStart(IMessageSession session, CancellationToken cancellationToken = default)
                 {
                     var controlMessage = ControlMessageFactory.Create(MessageIntent.Subscribe);
-                    // set necessary subscription control message headers
-                    controlMessage.Headers.Add(Headers.SubscriptionMessageType, typeof(object).AssemblyQualifiedName);
-                    controlMessage.Headers.Add(Headers.ReplyToAddress, "TestSubscriberAddress");
                     var messageOperation = new TransportOperation(controlMessage, new UnicastAddressTag(AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(Endpoint))));
-                    await dispatcher.Dispatch(new TransportOperations(messageOperation), new TransportTransaction(), cancellationToken);
+
+                    return dispatcher.Dispatch(new TransportOperations(messageOperation), new TransportTransaction(), cancellationToken);
                 }
 
                 protected override Task OnStop(IMessageSession session, CancellationToken cancellationToken = default) => Task.CompletedTask;
@@ -67,12 +65,7 @@
 
             class ControlMessageBehavior : Behavior<IIncomingPhysicalMessageContext>
             {
-                Context testContext;
-
-                public ControlMessageBehavior(Context testContext)
-                {
-                    this.testContext = testContext;
-                }
+                public ControlMessageBehavior(Context testContext) => this.testContext = testContext;
 
                 public override async Task Invoke(IIncomingPhysicalMessageContext context, Func<Task> next)
                 {
@@ -80,6 +73,8 @@
 
                     testContext.ProcessedControlMessage = true;
                 }
+
+                Context testContext;
             }
         }
     }
