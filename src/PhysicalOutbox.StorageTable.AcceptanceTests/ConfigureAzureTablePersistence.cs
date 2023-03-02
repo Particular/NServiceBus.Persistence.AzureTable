@@ -32,10 +32,11 @@
             }
 
             // This populates the partition key at the physical stage to test the conventional outbox use-case
-            if (endpointName != Conventions.EndpointNamingConvention(typeof(When_using_outbox_control_message.Endpoint)))
+            if (!settings.TryGet<DoNotRegisterDefaultPartitionKeyProvider>(out _))
             {
                 configuration.Pipeline.Register(typeof(PartitionKeyProviderBehavior), "Populates the partition key");
             }
+
             return Task.FromResult(0);
         }
 

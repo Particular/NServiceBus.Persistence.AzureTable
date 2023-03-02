@@ -5,6 +5,7 @@
     using System.Threading.Tasks;
     using AcceptanceTesting;
     using EndpointTemplates;
+    using NServiceBus.AcceptanceTesting.Support;
     using NServiceBus.Features;
     using NServiceBus.Pipeline;
     using NServiceBus.Routing;
@@ -18,10 +19,13 @@
         [Test]
         public async Task Should_work()
         {
+            var runSettings = new RunSettings();
+            runSettings.Set(new DoNotRegisterDefaultPartitionKeyProvider());
+
             var context = await Scenario.Define<Context>()
                 .WithEndpoint<Endpoint>()
                 .Done(c => c.ProcessedControlMessage)
-                .Run()
+                .Run(runSettings)
                 .ConfigureAwait(false);
 
             Assert.True(context.ProcessedControlMessage);
