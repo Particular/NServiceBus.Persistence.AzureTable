@@ -5,6 +5,7 @@
     using System.Threading.Tasks;
     using Azure.Data.Tables;
     using Extensibility;
+    using NServiceBus.Transport;
     using Outbox;
 
     class OutboxPersister : IOutboxStorage
@@ -33,8 +34,16 @@
 
             if (!context.TryGet<TableEntityPartitionKey>(out var partitionKey))
             {
-                // we return null here to enable outbox work at logical stage
-                return null;
+                var message = context.Get<IncomingMessage>();
+
+                if (!message.Headers.ContainsKey(Headers.ControlMessageHeader))
+                {
+                    // we return null here to enable outbox work at logical stage
+                    return null;
+                }
+
+                partitionKey = new TableEntityPartitionKey(messageId);
+                context.Set(partitionKey);
             }
 
             var outboxRecord = await setAsDispatchedHolder.TableClientHolder.TableClient

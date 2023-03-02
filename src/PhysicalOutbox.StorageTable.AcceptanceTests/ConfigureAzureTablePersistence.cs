@@ -37,7 +37,9 @@
                 configuration.Pipeline.Register(typeof(PartitionKeyProviderBehavior), "Populates the partition key");
             }
 
-            return Task.FromResult(0);
+            configuration.Pipeline.Register(typeof(TableInformationProviderBehavior), "Populates the table information key");
+
+            return Task.CompletedTask;
         }
 
         Task IConfigureEndpointTestExecution.Cleanup() => Task.FromResult(0);
@@ -45,11 +47,9 @@
         class PartitionKeyProviderBehavior : Behavior<ITransportReceiveContext>
         {
             readonly ScenarioContext scenarioContext;
-            readonly IReadOnlySettings settings;
 
-            public PartitionKeyProviderBehavior(ScenarioContext scenarioContext, IReadOnlySettings settings)
+            public PartitionKeyProviderBehavior(ScenarioContext scenarioContext)
             {
-                this.settings = settings;
                 this.scenarioContext = scenarioContext;
             }
 
@@ -60,6 +60,21 @@
                     context.Extensions.Set(new TableEntityPartitionKey(scenarioContext.TestRunId.ToString()));
                 }
 
+                return next();
+            }
+        }
+
+        class TableInformationProviderBehavior : Behavior<ITransportReceiveContext>
+        {
+            readonly IReadOnlySettings settings;
+
+            public TableInformationProviderBehavior(IReadOnlySettings settings)
+            {
+                this.settings = settings;
+            }
+
+            public override Task Invoke(ITransportReceiveContext context, Func<Task> next)
+            {
                 if (!settings.TryGet<TableInformation>(out _) && !context.Extensions.TryGet<TableInformation>(out _))
                 {
                     context.Extensions.Set(new TableInformation(SetupFixture.TableName));
