@@ -20,7 +20,7 @@
         public async Task Should_work()
         {
             var runSettings = new RunSettings();
-            runSettings.Set(new DoNotRegisterDefaultPartitionKeyProvider());
+            runSettings.DoNotRegisterDefaultPartitionKeyProvider();
 
             var context = await Scenario.Define<Context>()
                 .WithEndpoint<Endpoint>()
@@ -49,12 +49,7 @@
 
             class ControlMessageSender : FeatureStartupTask
             {
-                IMessageDispatcher dispatcher;
-
-                public ControlMessageSender(IMessageDispatcher dispatcher)
-                {
-                    this.dispatcher = dispatcher;
-                }
+                public ControlMessageSender(IMessageDispatcher dispatcher) => this.dispatcher = dispatcher;
 
                 protected override Task OnStart(IMessageSession session, CancellationToken cancellationToken = default)
                 {
@@ -65,6 +60,8 @@
                 }
 
                 protected override Task OnStop(IMessageSession session, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+                readonly IMessageDispatcher dispatcher;
             }
 
             class ControlMessageBehavior : Behavior<IIncomingPhysicalMessageContext>
@@ -78,7 +75,7 @@
                     testContext.ProcessedControlMessage = true;
                 }
 
-                Context testContext;
+                readonly Context testContext;
             }
         }
     }

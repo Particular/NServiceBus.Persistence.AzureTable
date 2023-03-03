@@ -46,12 +46,7 @@
 
         class PartitionKeyProviderBehavior : Behavior<ITransportReceiveContext>
         {
-            readonly ScenarioContext scenarioContext;
-
-            public PartitionKeyProviderBehavior(ScenarioContext scenarioContext)
-            {
-                this.scenarioContext = scenarioContext;
-            }
+            public PartitionKeyProviderBehavior(ScenarioContext scenarioContext) => this.scenarioContext = scenarioContext;
 
             public override Task Invoke(ITransportReceiveContext context, Func<Task> next)
             {
@@ -62,16 +57,13 @@
 
                 return next();
             }
+
+            readonly ScenarioContext scenarioContext;
         }
 
         class TableInformationProviderBehavior : Behavior<ITransportReceiveContext>
         {
-            readonly IReadOnlySettings settings;
-
-            public TableInformationProviderBehavior(IReadOnlySettings settings)
-            {
-                this.settings = settings;
-            }
+            public TableInformationProviderBehavior(IReadOnlySettings settings) => this.settings = settings;
 
             public override Task Invoke(ITransportReceiveContext context, Func<Task> next)
             {
@@ -81,6 +73,8 @@
                 }
                 return next();
             }
+
+            readonly IReadOnlySettings settings;
         }
     }
 }
