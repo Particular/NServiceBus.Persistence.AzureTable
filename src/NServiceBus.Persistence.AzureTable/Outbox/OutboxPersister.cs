@@ -34,9 +34,9 @@
 
             if (!context.TryGet<TableEntityPartitionKey>(out var partitionKey))
             {
-                var message = context.Get<IncomingMessage>();
-
-                if (!message.Headers.ContainsKey(Headers.ControlMessageHeader))
+                // because of the transactional session we cannot assume the incoming message is always present
+                if (!context.TryGet<IncomingMessage>(out var incomingMessage) ||
+                    !incomingMessage.Headers.ContainsKey(Headers.ControlMessageHeader))
                 {
                     // we return null here to enable outbox work at logical stage
                     return null;
