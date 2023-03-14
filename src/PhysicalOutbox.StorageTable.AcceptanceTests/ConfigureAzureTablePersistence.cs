@@ -37,7 +37,10 @@
                 configuration.Pipeline.Register(typeof(PartitionKeyProviderBehavior), "Populates the partition key");
             }
 
-            configuration.Pipeline.Register(typeof(TableInformationProviderBehavior), "Populates the table information key");
+            if (!settings.TryGet<DoNotRegisterDefaultTableNameProvider>(out _))
+            {
+                configuration.Pipeline.Register(typeof(TableInformationProviderBehavior), "Populates the table information key");
+            }
 
             return Task.CompletedTask;
         }

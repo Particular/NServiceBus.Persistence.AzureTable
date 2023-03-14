@@ -6,5 +6,8 @@ namespace NServiceBus.AcceptanceTests
     {
         public static void DoNotRegisterDefaultPartitionKeyProvider(this RunSettings runSettings) =>
             runSettings.Set(new DoNotRegisterDefaultPartitionKeyProvider());
+
+        public static void DoNotRegisterDefaultTableNameProvider(this RunSettings runSettings) =>
+            runSettings.Set(new DoNotRegisterDefaultTableNameProvider());
     }
 }

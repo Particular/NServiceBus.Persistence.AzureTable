@@ -35,8 +35,10 @@
             {
                 configuration.Pipeline.Register(new PartitionKeyProviderBehavior.Registration());
             }
-
-            configuration.Pipeline.Register(new TableInformationProviderBehavior.Registration());
+            if (!settings.TryGet<DoNotRegisterDefaultTableNameProvider>(out _))
+            {
+                configuration.Pipeline.Register(new TableInformationProviderBehavior.Registration());
+            }
 
             return Task.CompletedTask;
         }
