@@ -87,6 +87,7 @@
         public Task SetAsDispatched(string messageId, ContextBag context, CancellationToken cancellationToken = default)
         {
             var setAsDispatchedHolder = context.Get<SetAsDispatchedHolder>();
+            setAsDispatchedHolder.ThrowIfTableClientIsNotSet();
 
             var tableHolder = setAsDispatchedHolder.TableClientHolder;
             var record = setAsDispatchedHolder.Record;
