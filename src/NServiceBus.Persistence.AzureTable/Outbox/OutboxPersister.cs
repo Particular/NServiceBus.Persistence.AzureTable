@@ -1,6 +1,5 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
-    using System;
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
@@ -47,7 +46,7 @@
                 context.Set(partitionKey);
             }
 
-            ThrowIfTableClientIsNotSet(setAsDispatchedHolder);
+            setAsDispatchedHolder.ThrowIfTableClientIsNotSet();
 
             var outboxRecord = await setAsDispatchedHolder.TableClientHolder.TableClient
                 .ReadOutboxRecord(messageId, partitionKey, context, cancellationToken)
@@ -69,8 +68,7 @@
             }
 
             var setAsDispatchedHolder = context.Get<SetAsDispatchedHolder>();
-
-            ThrowIfTableClientIsNotSet(setAsDispatchedHolder);
+            setAsDispatchedHolder.ThrowIfTableClientIsNotSet();
 
             var outboxRecord = new OutboxRecord
             {
@@ -99,16 +97,6 @@
             // Capacity is set to one with the knowledge that outbox delete only adds one action
             var transactionalBatch = new List<TableTransactionAction>(1);
             return transactionalBatch.ExecuteOperationAsync(operation, cancellationToken);
-        }
-
-        public static void ThrowIfTableClientIsNotSet(SetAsDispatchedHolder setAsDispatchedHolder)
-        {
-            if (setAsDispatchedHolder.TableClientHolder != null)
-            {
-                return;
-            }
-
-            throw new Exception($"For the outbox to work a table name must be configured. Either configure a default one using {nameof(ConfigureAzureStorage.DefaultTable)} or set one via a behavior calling `context.Extensions.Set(new {nameof(TableInformation)}(\"SomeTableName\"))`");
         }
 
         readonly TableClientHolderResolver tableClientHolderResolver;
