@@ -32,23 +32,24 @@
             }
 
             // This populates the partition key at the physical stage to test the conventional outbox use-case
-            configuration.Pipeline.Register(typeof(PartitionKeyProviderBehavior), "Populates the partition key");
+            if (!settings.TryGet<DoNotRegisterDefaultPartitionKeyProvider>(out _))
+            {
+                configuration.Pipeline.Register(typeof(PartitionKeyProviderBehavior), "Populates the partition key");
+            }
 
-            return Task.FromResult(0);
+            if (!settings.TryGet<DoNotRegisterDefaultTableNameProvider>(out _))
+            {
+                configuration.Pipeline.Register(typeof(TableInformationProviderBehavior), "Populates the table information key");
+            }
+
+            return Task.CompletedTask;
         }
 
         Task IConfigureEndpointTestExecution.Cleanup() => Task.FromResult(0);
 
         class PartitionKeyProviderBehavior : Behavior<ITransportReceiveContext>
         {
-            readonly ScenarioContext scenarioContext;
-            readonly IReadOnlySettings settings;
-
-            public PartitionKeyProviderBehavior(ScenarioContext scenarioContext, IReadOnlySettings settings)
-            {
-                this.settings = settings;
-                this.scenarioContext = scenarioContext;
-            }
+            public PartitionKeyProviderBehavior(ScenarioContext scenarioContext) => this.scenarioContext = scenarioContext;
 
             public override Task Invoke(ITransportReceiveContext context, Func<Task> next)
             {
@@ -57,12 +58,26 @@
                     context.Extensions.Set(new TableEntityPartitionKey(scenarioContext.TestRunId.ToString()));
                 }
 
+                return next();
+            }
+
+            readonly ScenarioContext scenarioContext;
+        }
+
+        class TableInformationProviderBehavior : Behavior<ITransportReceiveContext>
+        {
+            public TableInformationProviderBehavior(IReadOnlySettings settings) => this.settings = settings;
+
+            public override Task Invoke(ITransportReceiveContext context, Func<Task> next)
+            {
                 if (!settings.TryGet<TableInformation>(out _) && !context.Extensions.TryGet<TableInformation>(out _))
                 {
                     context.Extensions.Set(new TableInformation(SetupFixture.TableName));
                 }
                 return next();
             }
+
+            readonly IReadOnlySettings settings;
         }
     }
 }
