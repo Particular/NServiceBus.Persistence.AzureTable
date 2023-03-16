@@ -8,7 +8,7 @@ namespace NServiceBus.Persistence.AzureTable
     {
         public static void ThrowIfTableClientIsNotSet(this SetAsDispatchedHolder setAsDispatchedHolder)
         {
-            if (setAsDispatchedHolder.TableClientHolder != null)
+            if (setAsDispatchedHolder.TableClientHolder is { TableClient: not null })
             {
                 return;
             }
