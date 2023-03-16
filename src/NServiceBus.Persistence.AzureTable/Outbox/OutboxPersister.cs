@@ -101,7 +101,7 @@
             return transactionalBatch.ExecuteOperationAsync(operation, cancellationToken);
         }
 
-        void ThrowIfTableClientIsNotSet(SetAsDispatchedHolder setAsDispatchedHolder)
+        public static void ThrowIfTableClientIsNotSet(SetAsDispatchedHolder setAsDispatchedHolder)
         {
             if (setAsDispatchedHolder.TableClientHolder != null)
             {

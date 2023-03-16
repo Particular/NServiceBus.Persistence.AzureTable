@@ -54,6 +54,8 @@
             azureStorageOutboxTransaction.PartitionKey = partitionKey;
             azureStorageOutboxTransaction.StorageSession.TableClientHolder = tableHolder;
 
+            OutboxPersister.ThrowIfTableClientIsNotSet(setAsDispatchedHolder);
+
             var outboxRecord = await tableHolder.TableClient.ReadOutboxRecord(context.MessageId, azureStorageOutboxTransaction.PartitionKey.Value, context.Extensions, context.CancellationToken)
                 .ConfigureAwait(false);
 
