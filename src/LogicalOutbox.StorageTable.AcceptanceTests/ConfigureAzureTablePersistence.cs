@@ -29,26 +29,26 @@ public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExec
             recoverabilitySettings.Immediate(c => c.NumberOfRetries(1));
         }
 
-        configuration.Pipeline.Register(new PartitionKeyProviderBehavior.PartitionKeyProviderBehaviorRegisterStep());
+        if (!settings.TryGet<DoNotRegisterDefaultPartitionKeyProvider>(out _))
+        {
+            configuration.Pipeline.Register(new PartitionKeyProviderBehavior.Registration());
+        }
+        if (!settings.TryGet<DoNotRegisterDefaultTableNameProvider>(out _))
+        {
+            configuration.Pipeline.Register(new TableInformationProviderBehavior.Registration());
+        }
 
-        return Task.FromResult(0);
+        return Task.CompletedTask;
     }
 
     Task IConfigureEndpointTestExecution.Cleanup()
     {
-        return Task.FromResult(0);
+        return Task.CompletedTask;
     }
 
     class PartitionKeyProviderBehavior : Behavior<IIncomingLogicalMessageContext>
     {
-        readonly ScenarioContext scenarioContext;
-        readonly IReadOnlySettings settings;
-
-        public PartitionKeyProviderBehavior(ScenarioContext scenarioContext, IReadOnlySettings settings)
-        {
-            this.settings = settings;
-            this.scenarioContext = scenarioContext;
-        }
+        public PartitionKeyProviderBehavior(ScenarioContext scenarioContext) => this.scenarioContext = scenarioContext;
 
         public override Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
         {
@@ -57,6 +57,27 @@ public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExec
                 context.Extensions.Set(new TableEntityPartitionKey(scenarioContext.TestRunId.ToString()));
             }
 
+            return next();
+        }
+
+        readonly ScenarioContext scenarioContext;
+
+        public class Registration : RegisterStep
+        {
+            public Registration() : base(nameof(PartitionKeyProviderBehavior),
+                typeof(PartitionKeyProviderBehavior),
+                "Populates the partition key",
+                provider => new PartitionKeyProviderBehavior(provider.GetRequiredService<ScenarioContext>())) =>
+                InsertBeforeIfExists(nameof(LogicalOutboxBehavior));
+        }
+    }
+
+    class TableInformationProviderBehavior : Behavior<IIncomingLogicalMessageContext>
+    {
+        public TableInformationProviderBehavior(IReadOnlySettings settings) => this.settings = settings;
+
+        public override Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
+        {
             if (!settings.TryGet<TableInformation>(out _) && !context.Extensions.TryGet<TableInformation>(out _))
             {
                 context.Extensions.Set(new TableInformation(SetupFixture.TableName));
@@ -64,15 +85,15 @@ public class ConfigureEndpointAzureTablePersistence : IConfigureEndpointTestExec
             return next();
         }
 
-        public class PartitionKeyProviderBehaviorRegisterStep : RegisterStep
+        readonly IReadOnlySettings settings;
+
+        public class Registration : RegisterStep
         {
-            public PartitionKeyProviderBehaviorRegisterStep() : base(nameof(PartitionKeyProviderBehavior),
-                typeof(PartitionKeyProviderBehavior),
-                "Populates the partition key",
-                provider => new PartitionKeyProviderBehavior(provider.GetRequiredService<ScenarioContext>(), provider.GetRequiredService<IReadOnlySettings>()))
-            {
+            public Registration() : base(nameof(TableInformationProviderBehavior),
+                typeof(TableInformationProviderBehavior),
+                "Populates the table information",
+                provider => new TableInformationProviderBehavior(provider.GetRequiredService<IReadOnlySettings>())) =>
                 InsertBeforeIfExists(nameof(LogicalOutboxBehavior));
-            }
         }
     }
 }
