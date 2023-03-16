@@ -57,6 +57,8 @@
             outboxTransaction.PartitionKey = partitionKey;
             outboxTransaction.StorageSession.TableHolder = tableHolder;
 
+            setAsDispatchedHolder.ThrowIfTableClientIsNotSet();
+
             var outboxRecord = await tableHolder.Table.ReadOutboxRecord(context.MessageId, outboxTransaction.PartitionKey.Value, context.Extensions)
                 .ConfigureAwait(false);
 
