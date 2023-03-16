@@ -3,6 +3,7 @@
     using System.Threading.Tasks;
     using Microsoft.Azure.Cosmos.Table;
     using Extensibility;
+    using NServiceBus.Transport;
     using Outbox;
 
     class OutboxPersister  : IOutboxStorage
@@ -33,9 +34,19 @@
 
             if (!context.TryGet<TableEntityPartitionKey>(out var partitionKey))
             {
-                // we return null here to enable outbox work at logical stage
-                return null;
+                // because of the transactional session we cannot assume the incoming message is always present
+                if (!context.TryGet<IncomingMessage>(out var incomingMessage) ||
+                    !incomingMessage.Headers.ContainsKey(Headers.ControlMessageHeader))
+                {
+                    // we return null here to enable outbox work at logical stage
+                    return null;
+                }
+
+                partitionKey = new TableEntityPartitionKey(messageId);
+                context.Set(partitionKey);
             }
+
+            setAsDispatchedHolder.ThrowIfTableClientIsNotSet();
 
             var outboxRecord = await setAsDispatchedHolder.TableHolder.Table
                 .ReadOutboxRecord(messageId, partitionKey, context)
@@ -57,6 +68,7 @@
             }
 
             var setAsDispatchedHolder = context.Get<SetAsDispatchedHolder>();
+            setAsDispatchedHolder.ThrowIfTableClientIsNotSet();
 
             var outboxRecord = new OutboxRecord
             {
@@ -75,6 +87,7 @@
         public Task SetAsDispatched(string messageId, ContextBag context)
         {
             var setAsDispatchedHolder = context.Get<SetAsDispatchedHolder>();
+            setAsDispatchedHolder.ThrowIfTableClientIsNotSet();
 
             var tableHolder = setAsDispatchedHolder.TableHolder;
             var record = setAsDispatchedHolder.Record;
