@@ -38,7 +38,7 @@
 
             context.Services.AddScoped<ICompletableSynchronizedStorageSession>(provider =>
                 new AzureStorageSynchronizedStorageSession(provider.GetRequiredService<TableClientHolderResolver>()));
-            context.services.AddScoped(sp => (sp.GetService<ICompletableSynchronizedStorageSession>() as ISqlStorageSession)!);
+            context.Services.AddScoped(sp => (sp.GetService<ICompletableSynchronizedStorageSession>() as IAzureTableStorageSession)!);
 
         }
     }
