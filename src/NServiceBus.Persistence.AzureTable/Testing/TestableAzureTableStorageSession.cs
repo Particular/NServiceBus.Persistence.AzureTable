@@ -7,7 +7,7 @@
     using Persistence.AzureTable;
 
     /// <summary>
-    /// A fake implementation for <see cref="SynchronizedStorageSession"/> for testing purposes.
+    /// A fake implementation for <see cref="ISynchronizedStorageSession"/> for testing purposes.
     /// </summary>
     public class TestableAzureTableStorageSession : ISynchronizedStorageSession, IWorkWithSharedTransactionalBatch
     {
