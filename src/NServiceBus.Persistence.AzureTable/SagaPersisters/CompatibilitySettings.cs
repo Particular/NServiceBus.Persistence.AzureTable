@@ -1,9 +1,9 @@
 namespace NServiceBus
 {
-    using Settings;
+    using System;
     using Configuration.AdvancedExtensibility;
     using Persistence.AzureTable;
-    using System;
+    using Settings;
 
     /// <summary>
     /// Custom settings related to backward compatibility.
@@ -20,7 +20,7 @@ namespace NServiceBus
         /// All migrated sagas do not contain a row called NServiceBus_2ndIndexKey
         /// </summary>
         [PreObsolete("https://github.com/Particular/NServiceBus.Persistence.AzureTable/issues/836",
-                     Note = "Following our breaking change guidelines the compatibility mode should be removed at some point after making it opt-in, otherwise keep on bumping the version numbers.")]
+                     Note = "Following our breaking change guidelines, the compatibility mode should be removed at some point after making it opt-in.")]
         public void EnableSecondaryKeyLookupForSagasCorrelatedByProperties()
         {
             var settings = this.GetSettings();
@@ -31,7 +31,7 @@ namespace NServiceBus
         /// Opt-in to full table scanning for sagas that have been stored with version 1.4 or earlier.
         /// </summary>
         /// <remarks>Enabling this also requires enabling the compatibility mode by calling <see cref="EnableSecondaryKeyLookupForSagasCorrelatedByProperties"/></remarks>
-        [PreObsolete("https://github.com/Particular/NServiceBus.Persistence.AzureTable/issues/836", Note = "Following our breaking change guidelines the compatibility mode should be removed at some point after making it opt-in, otherwise keep on bumping the version numbers.")]
+        [PreObsolete("https://github.com/Particular/NServiceBus.Persistence.AzureTable/issues/836", Note = "Following our breaking change guidelines, the compatibility mode should be removed at some point after making it opt-in.")]
         public void AllowSecondaryKeyLookupToFallbackToFullTableScan()
         {
             var settings = this.GetSettings();
@@ -49,7 +49,7 @@ namespace NServiceBus
         /// ensure all secondary index entries use RowKey = PartitionKey. By enabling this setting the secondary key lookups will assume RowKey = PartitionKey.
         /// </summary>
         /// <remarks>Enabling this also requires enabling the compatibility mode by calling <see cref="EnableSecondaryKeyLookupForSagasCorrelatedByProperties"/></remarks>
-        [PreObsolete("https://github.com/Particular/NServiceBus.Persistence.AzureTable/issues/836", Note = "Following our breaking change guidelines the compatibility mode should be removed at some point after making it opt-in, otherwise keep on bumping the version numbers.")]
+        [PreObsolete("https://github.com/Particular/NServiceBus.Persistence.AzureTable/issues/836", Note = "Following our breaking change guidelines, the compatibility mode should be removed at some point after making it opt-in.")]
         public void AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey()
         {
             var settings = this.GetSettings();
