@@ -6,13 +6,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GitHubActionsTestLogger" Version="2.3.3" />
-    <PackageReference Include="NServiceBus.AcceptanceTests.Sources" Version="9.0.0-alpha.3" GeneratePathProperty="true" />
+    <ProjectReference Include="..\NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Azure.Data.Tables" Version="12.8.0" />
+    <PackageReference Include="GitHubActionsTestLogger" Version="2.3.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0-preview-23424-02" />
+    <PackageReference Include="NServiceBus.AcceptanceTests.Sources" Version="9.0.0-alpha.3" GeneratePathProperty="true" />
     <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="4.0.0-alpha.1" />
     <PackageReference Include="NUnit" Version="3.13.3" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0-preview-23424-02" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,10 +32,6 @@
     <Compile Include="$(PkgNServiceBus_AcceptanceTests_Sources)\contentFiles\cs\$(TargetFramework)\**\ConfigureEndpointAcceptanceTestingPersistence.cs" />
     <Compile Include="$(PkgNServiceBus_AcceptanceTests_Sources)\contentFiles\cs\$(TargetFramework)\**\DeterministicGuid.cs" />
     <Compile Include="$(PkgNServiceBus_AcceptanceTests_Sources)\contentFiles\cs\$(TargetFramework)\**\NServiceBusAcceptanceTest.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj" />
   </ItemGroup>
 
 </Project>

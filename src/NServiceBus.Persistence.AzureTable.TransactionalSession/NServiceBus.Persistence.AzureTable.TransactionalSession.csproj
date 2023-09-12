@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -10,12 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Particular.Packaging" Version="3.0.0" PrivateAssets="All" />
-    <PackageReference Include="NServiceBus.TransactionalSession" Version="[2.0.2, 3.0.0)" />
+    <ProjectReference Include="..\NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj" />
+    <PackageReference Include="NServiceBus.TransactionalSession" Version="[2.0.2, 3.0.0)" />
+    <PackageReference Include="Particular.Packaging" Version="3.0.0" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
