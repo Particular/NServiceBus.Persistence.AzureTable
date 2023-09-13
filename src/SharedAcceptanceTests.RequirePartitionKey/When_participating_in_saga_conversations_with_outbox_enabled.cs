@@ -8,7 +8,6 @@ namespace NServiceBus.AcceptanceTests
     using Azure;
     using Azure.Data.Tables;
     using EndpointTemplates;
-    using Microsoft.Azure.Cosmos.Table;
     using NServiceBus;
     using NServiceBus.Pipeline;
     using NServiceBus.Sagas;
@@ -75,9 +74,9 @@ namespace NServiceBus.AcceptanceTests
                 var tableEntity = await table.QueryAsync<TableEntity>(entity => entity.RowKey == sagaId.ToString()).FirstOrDefaultAsync();
                 return tableEntity;
             }
-            catch (StorageException e)
+            catch (RequestFailedException e)
             {
-                if (e.RequestInformation.HttpStatusCode == (int)HttpStatusCode.NotFound)
+                if (e.Status == (int)HttpStatusCode.NotFound)
                 {
                     return null;
                 }
