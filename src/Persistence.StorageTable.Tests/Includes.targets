@@ -1,11 +1,7 @@
 <Project>
 
-    <ItemGroup>
-        <Compile Include="..\SharedAcceptanceTests.All\ConnectionStringHelper.cs" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\SharedAcceptanceTests.All\ConnectionStringHelper.cs" />
+  </ItemGroup>
 
 </Project>

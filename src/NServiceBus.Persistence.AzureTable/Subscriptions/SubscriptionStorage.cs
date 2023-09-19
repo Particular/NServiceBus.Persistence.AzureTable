@@ -9,10 +9,7 @@ namespace NServiceBus.Persistence.AzureTable
     {
         internal SubscriptionStorage()
         {
-#pragma warning disable 618
-            DependsOn<MessageDrivenSubscriptions>();
-#pragma warning restore 618
-
+            DependsOn("NServiceBus.Features.MessageDrivenSubscriptions");
             Defaults(s =>
             {
                 s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageTableName, AzureSubscriptionStorageDefaults.TableName);

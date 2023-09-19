@@ -12,7 +12,7 @@
         {
             CurrentContextBag = context;
             TableClientHolder = resolver.ResolveAndSetIfAvailable(context);
-            Batch = new List<TableTransactionAction>();
+            Batch = [];
         }
 
         public void Dispose()

@@ -1,31 +1,28 @@
 <Project>
 
-    <ItemGroup>
-        <Compile Include="..\SharedAcceptanceTests.All\ConnectionStringHelper.cs" />
-    </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\SharedAcceptanceTests.All\ConnectionStringHelper.cs" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Audit\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Correlation\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\DataBus\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\DelayedDelivery\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Forwarding\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\MessageId\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Pipeline\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Recoverability\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Satellites\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Sagas\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Scheduling\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\SelfVerification\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Serialization\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Timeout\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\TimeToBeReceived\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Tx\**\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Versioning\*.*" />
-        <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Outbox\*.*" />
-    </ItemGroup>
+  <ItemGroup Condition="'$(PkgNServiceBus_AcceptanceTests_Sources)' != ''">
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Audit\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Correlation\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\DataBus\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\DelayedDelivery\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Forwarding\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\MessageId\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Pipeline\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Recoverability\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Satellites\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Sagas\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Scheduling\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\SelfVerification\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Serialization\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Timeout\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\TimeToBeReceived\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Tx\**\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Versioning\*.*" />
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Outbox\*.*" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj" />
-    </ItemGroup>
 </Project>

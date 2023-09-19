@@ -7,12 +7,14 @@ namespace NServiceBus
     public sealed class AzureTablePersistence : NServiceBus.Persistence.PersistenceDefinition { }
     public class CompatibilitySettings : NServiceBus.Configuration.AdvancedExtensibility.ExposeSettings
     {
+        [System.Obsolete("Compatibility mode is deprecated. Will be treated as an error from version 7.0.0." +
+            " Will be removed in version 8.0.0.", false)]
         public void AllowSecondaryKeyLookupToFallbackToFullTableScan() { }
+        [System.Obsolete("Compatibility mode is deprecated. Will be treated as an error from version 7.0.0." +
+            " Will be removed in version 8.0.0.", false)]
         public void AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey() { }
-        [System.Obsolete("The compatibility mode has been disabled by default and requires opt-in to enable" +
-            ". Calling this method is no longer necessary. The member currently throws a NotI" +
-            "mplementedException. Will be removed in version 6.0.0.", true)]
-        public void DisableSecondaryKeyLookupForSagasCorrelatedByProperties() { }
+        [System.Obsolete("Compatibility mode is deprecated. Will be treated as an error from version 7.0.0." +
+            " Will be removed in version 8.0.0.", false)]
         public void EnableSecondaryKeyLookupForSagasCorrelatedByProperties() { }
     }
     public static class ConfigureAzureSagaStorage
@@ -22,11 +24,6 @@ namespace NServiceBus
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> DisableTableCreation(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> JsonSettings(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config, Newtonsoft.Json.JsonSerializerSettings jsonSerializerSettings) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> ReaderCreator(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config, System.Func<System.IO.TextReader, Newtonsoft.Json.JsonReader> readerCreator) { }
-        [System.Obsolete("The UseCloudTableClient method is deprecated in favor of the UseTableServiceClien" +
-            "t method, which supports the TableServiceClient API provided by Azure.Data.Table" +
-            "s. The member currently throws a NotImplementedException. Will be removed in ver" +
-            "sion 6.0.0.", true)]
-        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence> UseCloudTableClient(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence> config, object client) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> UseTableServiceClient(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config, Azure.Data.Tables.TableServiceClient client) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> WriterCreator(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config, System.Func<System.IO.StringWriter, Newtonsoft.Json.JsonWriter> writerCreator) { }
     }
@@ -43,11 +40,6 @@ namespace NServiceBus
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> config, string connectionString) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> DisableTableCreation(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> config) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> TableName(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> config, string tableName) { }
-        [System.Obsolete("The UseCloudTableClient method is deprecated in favor of the UseTableServiceClien" +
-            "t method, which supports the TableServiceClient API provided by Azure.Data.Table" +
-            "s. The member currently throws a NotImplementedException. Will be removed in ver" +
-            "sion 6.0.0.", true)]
-        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> UseCloudTableClient(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> config, object client) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> UseTableServiceClient(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Subscriptions> config, Azure.Data.Tables.TableServiceClient client) { }
     }
     public readonly struct TableEntityPartitionKey : System.IEquatable<NServiceBus.TableEntityPartitionKey>
@@ -81,20 +73,6 @@ namespace NServiceBus.Persistence.AzureTable
         string PartitionKey { get; }
         Azure.Data.Tables.TableClient Table { get; }
     }
-    [System.Obsolete("The IProvideCloudTableClient is deprecated in favor of IProvideTableServiceClient" +
-        ", which supports the TableServiceClient API provided by Azure.Data.Tables. Will " +
-        "be removed in version 6.0.0.", true)]
-    public interface IProvideCloudTableClient
-    {
-        object Client { get; }
-    }
-    [System.Obsolete("The IProvideCloudTableClientForSubscriptions is deprecated in favor of IProvideTa" +
-        "bleServiceClientForSubscriptions, which supports the TableServiceClient API prov" +
-        "ided by Azure.Data.Tables. Will be removed in version 6.0.0.", true)]
-    public interface IProvideCloudTableClientForSubscriptions
-    {
-        object Client { get; }
-    }
     public interface IProvidePartitionKeyFromSagaId
     {
         System.Threading.Tasks.Task SetPartitionKey<TSagaData>(NServiceBus.Pipeline.IIncomingLogicalMessageContext context, NServiceBus.Sagas.SagaCorrelationProperty correlationProperty)
@@ -111,13 +89,6 @@ namespace NServiceBus.Persistence.AzureTable
     public sealed class LogicalOutboxBehavior : NServiceBus.Pipeline.IBehavior, NServiceBus.Pipeline.IBehavior<NServiceBus.Pipeline.IIncomingLogicalMessageContext, NServiceBus.Pipeline.IIncomingLogicalMessageContext>
     {
         public System.Threading.Tasks.Task Invoke(NServiceBus.Pipeline.IIncomingLogicalMessageContext context, System.Func<NServiceBus.Pipeline.IIncomingLogicalMessageContext, System.Threading.Tasks.Task> next) { }
-    }
-    [System.Obsolete("The exception is no longer in use since version 3.0.0 of the persistence. Will be" +
-        " removed in version 6.0.0.", true)]
-    public class RetryNeededException : System.Exception
-    {
-        public RetryNeededException() { }
-        public RetryNeededException(System.Exception innerException) { }
     }
     public static class SynchronizedStorageSessionExtensions
     {
