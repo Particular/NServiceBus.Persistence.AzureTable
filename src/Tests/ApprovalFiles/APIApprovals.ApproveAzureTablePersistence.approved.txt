@@ -7,8 +7,14 @@ namespace NServiceBus
     public sealed class AzureTablePersistence : NServiceBus.Persistence.PersistenceDefinition { }
     public class CompatibilitySettings : NServiceBus.Configuration.AdvancedExtensibility.ExposeSettings
     {
+        [System.Obsolete("Compatibility mode is deprecated. Will be treated as an error from version 7.0.0." +
+            " Will be removed in version 8.0.0.", false)]
         public void AllowSecondaryKeyLookupToFallbackToFullTableScan() { }
+        [System.Obsolete("Compatibility mode is deprecated. Will be treated as an error from version 7.0.0." +
+            " Will be removed in version 8.0.0.", false)]
         public void AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey() { }
+        [System.Obsolete("Compatibility mode is deprecated. Will be treated as an error from version 7.0.0." +
+            " Will be removed in version 8.0.0.", false)]
         public void EnableSecondaryKeyLookupForSagasCorrelatedByProperties() { }
     }
     public static class ConfigureAzureSagaStorage

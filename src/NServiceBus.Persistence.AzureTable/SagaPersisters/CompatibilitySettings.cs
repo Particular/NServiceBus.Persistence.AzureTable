@@ -19,7 +19,7 @@ namespace NServiceBus
         /// Once all sagas have been migrated from version 2.4.x of the persister to the current version the lookup can be disabled no longer calling this method.
         /// All migrated sagas do not contain a row called NServiceBus_2ndIndexKey
         /// </summary>
-        [ObsoleteEx(Message = "Compatibility mode is deprecated and will be removed in future versions.", RemoveInVersion = "8.0", TreatAsErrorFromVersion = "7.0")]
+        [ObsoleteEx(Message = "Compatibility mode is deprecated.", RemoveInVersion = "8.0", TreatAsErrorFromVersion = "7.0")]
         public void EnableSecondaryKeyLookupForSagasCorrelatedByProperties()
         {
             var settings = this.GetSettings();
@@ -30,7 +30,7 @@ namespace NServiceBus
         /// Opt-in to full table scanning for sagas that have been stored with version 1.4 or earlier.
         /// </summary>
         /// <remarks>Enabling this also requires enabling the compatibility mode by calling <see cref="EnableSecondaryKeyLookupForSagasCorrelatedByProperties"/></remarks>
-        [ObsoleteEx(Message = "Compatibility mode is deprecated and will be removed in future versions.", RemoveInVersion = "8.0", TreatAsErrorFromVersion = "7.0")]
+        [ObsoleteEx(Message = "Compatibility mode is deprecated.", RemoveInVersion = "8.0", TreatAsErrorFromVersion = "7.0")]
         public void AllowSecondaryKeyLookupToFallbackToFullTableScan()
         {
             var settings = this.GetSettings();
@@ -48,7 +48,7 @@ namespace NServiceBus
         /// ensure all secondary index entries use RowKey = PartitionKey. By enabling this setting the secondary key lookups will assume RowKey = PartitionKey.
         /// </summary>
         /// <remarks>Enabling this also requires enabling the compatibility mode by calling <see cref="EnableSecondaryKeyLookupForSagasCorrelatedByProperties"/></remarks>
-        [ObsoleteEx(Message = "Compatibility mode is deprecated and will be removed in future versions.", RemoveInVersion = "8.0", TreatAsErrorFromVersion = "7.0")]
+        [ObsoleteEx(Message = "Compatibility mode is deprecated.", RemoveInVersion = "8.0", TreatAsErrorFromVersion = "7.0")]
         public void AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey()
         {
             var settings = this.GetSettings();
