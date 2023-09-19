@@ -25,8 +25,4 @@
     <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Outbox\*.*" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj" />
-  </ItemGroup>
-
 </Project>

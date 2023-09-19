@@ -29,8 +29,4 @@
     <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Versioning\*.*" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\NServiceBus.Persistence.AzureTable\NServiceBus.Persistence.AzureTable.csproj" />
-  </ItemGroup>
-
 </Project>
