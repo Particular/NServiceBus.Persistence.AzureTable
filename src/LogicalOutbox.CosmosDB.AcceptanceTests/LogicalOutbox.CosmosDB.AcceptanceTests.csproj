@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -19,7 +19,7 @@
   <ItemGroup>
     <PackageReference Include="Azure.Data.Tables" Version="12.8.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NServiceBus.AcceptanceTests.Sources" Version="9.0.0-alpha.4" GeneratePathProperty="true" />
+    <PackageReference Include="NServiceBus.AcceptanceTests.Sources" Version="9.0.0-alpha.6" GeneratePathProperty="true" />
   </ItemGroup>
 
   <!-- The template project is always the StorageTable project, if you need to deviate files for a specific table API copy
