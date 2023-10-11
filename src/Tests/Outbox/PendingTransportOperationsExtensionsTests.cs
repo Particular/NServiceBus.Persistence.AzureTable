@@ -14,7 +14,7 @@
         {
             var operations = new PendingTransportOperations();
             operations.Add(new TransportOperation(
-                new OutgoingMessage("", new Dictionary<string, string>(), ReadOnlyMemory<byte>.Empty),
+                new OutgoingMessage("", [], ReadOnlyMemory<byte>.Empty),
                 new UnicastAddressTag("someQueue")));
 
             operations.Clear();
@@ -27,19 +27,19 @@
         {
             var operations = new PendingTransportOperations();
             operations.Add(new TransportOperation(
-                new OutgoingMessage("1", new Dictionary<string, string>(), ReadOnlyMemory<byte>.Empty),
+                new OutgoingMessage("1", [], ReadOnlyMemory<byte>.Empty),
                 new UnicastAddressTag("someQueue")));
 
             operations.Clear();
 
             operations.Add(new TransportOperation(
-                new OutgoingMessage("2", new Dictionary<string, string>(), ReadOnlyMemory<byte>.Empty),
+                new OutgoingMessage("2", [], ReadOnlyMemory<byte>.Empty),
                 new UnicastAddressTag("someQueue")));
 
             operations.Clear();
 
             operations.Add(new TransportOperation(
-                new OutgoingMessage("3", new Dictionary<string, string>(), ReadOnlyMemory<byte>.Empty),
+                new OutgoingMessage("3", [], ReadOnlyMemory<byte>.Empty),
                 new UnicastAddressTag("someQueue")));
 
             Assert.That(operations.Operations, Has.Length.EqualTo(1));
