@@ -66,7 +66,7 @@
                 Id = messageId,
                 Operations = new[]
                 {
-                    new TransportOperation("42", dispatchProperties, Array.Empty<byte>(), new Dictionary<string, string>()),
+                    new TransportOperation("42", dispatchProperties, Array.Empty<byte>(), []),
                 }
             };
 

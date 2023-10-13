@@ -212,7 +212,7 @@
         /// </summary>
         sealed class SagaInstanceMetadata
         {
-            public Dictionary<Guid, (TableClient, TableEntity)> Entities { get; } = new();
+            public Dictionary<Guid, (TableClient, TableEntity)> Entities { get; } = [];
         }
     }
 

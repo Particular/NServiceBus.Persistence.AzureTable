@@ -27,7 +27,7 @@
 
             if (!operations.ContainsKey(operationPartitionKey))
             {
-                operations.Add(operationPartitionKey, new Dictionary<int, Operation>());
+                operations.Add(operationPartitionKey, []);
             }
 
             var index = operations[operationPartitionKey].Count;
@@ -71,6 +71,6 @@
             ? null
             : partitionKey.PartitionKey;
 
-        readonly Dictionary<TableEntityPartitionKey, Dictionary<int, Operation>> operations = new();
+        readonly Dictionary<TableEntityPartitionKey, Dictionary<int, Operation>> operations = [];
     }
 }

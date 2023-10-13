@@ -87,7 +87,7 @@ namespace NServiceBus.Persistence.AzureTable
         }
 
         LinkedList<Item> lru = new LinkedList<Item>();
-        Dictionary<TKey, LinkedListNode<Item>> items = new Dictionary<TKey, LinkedListNode<Item>>();
+        Dictionary<TKey, LinkedListNode<Item>> items = [];
 
         int capacity;
         object @lock = new object();

@@ -13,7 +13,7 @@ namespace NServiceBus.AcceptanceTests
     /// </summary>
     sealed class TransactionalBatchCounterPolicy : HttpPipelinePolicy
     {
-        public HashSet<string> BatchIdentifiers { get; } = new();
+        public HashSet<string> BatchIdentifiers { get; } = [];
 
         public override void Process(HttpMessage message, ReadOnlyMemory<HttpPipelinePolicy> pipeline)
         {
