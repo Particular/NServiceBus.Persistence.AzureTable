@@ -4,7 +4,7 @@ NServiceBus.Persistence.AzureTable is the official [NServiceBus](https://github.
 
 It is part of the [Particular Service Platform](https://particular.net/service-platform), which includes [NServiceBus](https://particular.net/nservicebus) and tools to build, monitor, and debug distributed systems.
 
-## Official documentation
+## Documentation
 
 See the [Azure Table Persistence documentation](https://docs.particular.net/persistence/azure-table/) for more details on how to use it.
 
@@ -19,7 +19,3 @@ Copy the connection string into an environment variable called `AzureTable_Stora
 After creating the Azure Cosmos DB Table API account, locate the connection string for the account. You can find it by selecting the Azure Cosmos DB instance, selecting "Connection String", then copy the primary or secondary connection string.
 
 Copy the connection string into an environment variable called `AzureTable_CosmosDB_ConnectionString`. 
-
-## Contributing
-
-If you are interested in contributing, please follow the instructions on [How to contribute](https://docs.particular.net/platform/contributing).
