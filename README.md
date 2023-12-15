@@ -1,12 +1,12 @@
 # NServiceBus.Persistence.AzureTable
 
-The official [NServiceBus](https://github.com/Particular/NServiceBus) persistence implementation for [Azure Table Storage](https://azure.microsoft.com/en-us/services/storage/tables/) and [Azure Cosmos DB Table API](https://docs.microsoft.com/en-us/azure/cosmos-db/table-support/).
+NServiceBus.Persistence.AzureTable is the official [NServiceBus](https://github.com/Particular/NServiceBus) persistence implementation for [Azure Table Storage](https://azure.microsoft.com/en-us/services/storage/tables/) and [Azure Cosmos DB Table API](https://docs.microsoft.com/en-us/azure/cosmos-db/table-support/).
 
-Learn more about NServiceBus.Persistence.AzureTable through our [documentation](https://docs.particular.net/persistence/azure-table/).
+It is part of the [Particular Service Platform](https://particular.net/service-platform), which includes [NServiceBus](https://particular.net/nservicebus) and tools to build, monitor, and debug distributed systems.
 
-If you are interested in contributing, please follow the instructions [here](https://github.com/Particular/NServiceBus/blob/develop/CONTRIBUTING.md).
+See the [Azure Table Persistence documentation](https://docs.particular.net/persistence/azure-table/) for more details on how to use it.
 
-## Before running the tests
+## Running tests locally
 
 The tests require a connection to Azure Table Storage and Cosmos Table API. We recommend [creating an Azure Storage account](https://azure.microsoft.com/en-us/documentation/services/storage/) and an Azure Cosmos DB instance using the Table API rather than using the Azure Storage or the Cosmos DB Emulator.
 
