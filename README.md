@@ -4,8 +4,6 @@ NServiceBus.Persistence.AzureTable is the official [NServiceBus](https://github.
 
 It is part of the [Particular Service Platform](https://particular.net/service-platform), which includes [NServiceBus](https://particular.net/nservicebus) and tools to build, monitor, and debug distributed systems.
 
-## Documentation
-
 See the [Azure Table Persistence documentation](https://docs.particular.net/persistence/azure-table/) for more details on how to use it.
 
 ## Running tests locally
