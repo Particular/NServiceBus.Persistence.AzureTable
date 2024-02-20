@@ -56,7 +56,7 @@ jobs:
           tag: AzureStoragePersistence
           api: Table
       - name: Setup Azure Storage
-        uses: Particular/setup-azurestorage-action@v1.1.0
+        uses: Particular/setup-azurestorage-action@v1.2.0
         with:
           connection-string-name: AzureTable_StorageTable_ConnectionString
           tag: AzureStorage
