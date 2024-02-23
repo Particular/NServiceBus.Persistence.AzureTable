@@ -1,5 +1,6 @@
 ﻿namespace NServiceBus
 {
+    using System;
     using Azure.Data.Tables;
     using Configuration.AdvancedExtensibility;
     using Persistence.AzureTable;
@@ -30,7 +31,7 @@
         /// </summary>
         public static PersistenceExtensions<AzureTablePersistence> UseTableServiceClient(this PersistenceExtensions<AzureTablePersistence> config, TableServiceClient client)
         {
-            Guard.AgainstNull(nameof(client), client);
+            ArgumentNullException.ThrowIfNull(client);
 
             var settings = config.GetSettings();
             settings.Set<IProvideTableServiceClient>(new TableServiceClientFromConfiguration(client));
@@ -45,7 +46,7 @@
         /// <remarks>When the default table is not set the table information needs to be provided as part of the message handling pipeline.</remarks>
         public static PersistenceExtensions<AzureTablePersistence> DefaultTable(this PersistenceExtensions<AzureTablePersistence> config, string tableName)
         {
-            Guard.AgainstNull(nameof(config), config);
+            ArgumentNullException.ThrowIfNull(config);
 
             config.GetSettings().Set(new TableInformation(tableName));
 
@@ -57,7 +58,7 @@
         /// </summary>
         public static PersistenceExtensions<AzureTablePersistence> DisableTableCreation(this PersistenceExtensions<AzureTablePersistence> config)
         {
-            Guard.AgainstNull(nameof(config), config);
+            ArgumentNullException.ThrowIfNull(config);
 
             var settings = config.GetSettings();
             settings.GetOrCreate<SynchronizedStorageInstallerSettings>().Disabled = true;

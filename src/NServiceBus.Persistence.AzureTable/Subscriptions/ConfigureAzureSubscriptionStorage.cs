@@ -26,7 +26,7 @@
         /// </summary>
         public static PersistenceExtensions<AzureTablePersistence, StorageType.Subscriptions> UseTableServiceClient(this PersistenceExtensions<AzureTablePersistence, StorageType.Subscriptions> config, TableServiceClient client)
         {
-            Guard.AgainstNull(nameof(client), client);
+            ArgumentNullException.ThrowIfNull(client);
 
             var settings = config.GetSettings();
             settings.Set<IProvideTableServiceClientForSubscriptions>(new TableServiceServiceClientForSubscriptionsFromConfiguration(client));
@@ -60,7 +60,7 @@
         /// </summary>
         public static PersistenceExtensions<AzureTablePersistence, StorageType.Subscriptions> DisableTableCreation(this PersistenceExtensions<AzureTablePersistence, StorageType.Subscriptions> config)
         {
-            Guard.AgainstNull(nameof(config), config);
+            ArgumentNullException.ThrowIfNull(config);
 
             var settings = config.GetSettings();
             settings.GetOrCreate<SubscriptionStorageInstallerSettings>().Disabled = true;

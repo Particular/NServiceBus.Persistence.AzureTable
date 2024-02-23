@@ -13,7 +13,7 @@
         public static IAzureTableStorageSession AzureTablePersistenceSession(
             this ISynchronizedStorageSession session)
         {
-            Guard.AgainstNull(nameof(session), session);
+            ArgumentNullException.ThrowIfNull(session);
 
             if (session is not IWorkWithSharedTransactionalBatch workWith)
             {

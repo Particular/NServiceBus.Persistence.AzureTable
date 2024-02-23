@@ -22,8 +22,8 @@
   <ItemGroup>
     <PackageReference Include="Azure.Data.Tables" Version="12.8.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NServiceBus.AcceptanceTesting" Version="9.0.0-alpha.9" />
-    <PackageReference Include="NServiceBus.TransactionalSession" Version="3.0.0-alpha.1" />
+    <PackageReference Include="NServiceBus.AcceptanceTesting" Version="9.0.0" />
+    <PackageReference Include="NServiceBus.TransactionalSession" Version="3.0.0" />
   </ItemGroup>
 
   <Import Project="Includes.targets" />
