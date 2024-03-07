@@ -11,6 +11,7 @@
 
         // By default, store and commit are enabled
         public bool SuppressStoreAndCommit { get; set; }
+
         public TableEntityPartitionKey? PartitionKey { get; set; }
 
         public AzureStorageOutboxTransaction(TableClientHolderResolver resolver, ContextBag context)
