@@ -1,7 +1,6 @@
 ﻿namespace NServiceBus
 {
     using System;
-    using Persistence.AzureTable;
 
     /// <summary>
     /// Represents the partition key when the partition key is provided at runtime through the pipeline.
@@ -14,7 +13,7 @@
         /// <param name="partitionKey">The partition key value.</param>
         public TableEntityPartitionKey(string partitionKey)
         {
-            Guard.AgainstNullAndEmpty(nameof(partitionKey), partitionKey);
+            ArgumentException.ThrowIfNullOrWhiteSpace(partitionKey);
 
             PartitionKey = partitionKey;
         }

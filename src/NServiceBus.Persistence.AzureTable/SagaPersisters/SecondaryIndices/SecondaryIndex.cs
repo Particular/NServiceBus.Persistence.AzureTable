@@ -106,11 +106,7 @@
         readonly bool assumeSecondaryIndicesExist;
         readonly bool assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey;
         const int LRUCapacity = 1000;
-        static IEnumerable<string> SelectedColumnsForFullTableScan = new List<string>(2)
-        {
-            "PartitionKey",
-            "RowKey"
-        };
+        static IEnumerable<string> SelectedColumnsForFullTableScan = ["PartitionKey", "RowKey"];
         static readonly ILog Logger = LogManager.GetLogger<SecondaryIndex>();
     }
 }

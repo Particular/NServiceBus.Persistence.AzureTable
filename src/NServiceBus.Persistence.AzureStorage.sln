@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NonTransactionalSagas.Stora
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{98E63ED0-83D3-475E-89AF-95D5659F2C40}"
 	ProjectSection(SolutionItems) = preProject
+		..\.github\workflows\ci.yml = ..\.github\workflows\ci.yml
 		Custom.Build.props = Custom.Build.props
+		..\.github\workflows\release.yml = ..\.github\workflows\release.yml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Persistence.StorageTable.Tests", "Persistence.StorageTable.Tests\Persistence.StorageTable.Tests.csproj", "{25876184-D0C6-4049-AE23-8345A8D5097D}"

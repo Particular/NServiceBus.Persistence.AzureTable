@@ -12,40 +12,42 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
 
     public class TransactionSessionDefaultServer : IEndpointSetupTemplate
     {
-        public virtual async Task<EndpointConfiguration> GetConfiguration(RunDescriptor runDescriptor, EndpointCustomizationConfiguration endpointConfiguration,
+        public virtual async Task<EndpointConfiguration> GetConfiguration(RunDescriptor runDescriptor, EndpointCustomizationConfiguration endpointCustomizations,
             Func<EndpointConfiguration, Task> configurationBuilderCustomization)
         {
-            var builder = new EndpointConfiguration(endpointConfiguration.EndpointName);
-            builder.EnableInstallers();
+            var endpointConfiguration = new EndpointConfiguration(endpointCustomizations.EndpointName);
 
-            builder.Recoverability()
+            endpointConfiguration.EnableInstallers();
+            endpointConfiguration.UseSerialization<SystemJsonSerializer>();
+
+            endpointConfiguration.Recoverability()
                 .Delayed(delayed => delayed.NumberOfRetries(0))
                 .Immediate(immediate => immediate.NumberOfRetries(0));
-            builder.SendFailedMessagesTo("error");
+            endpointConfiguration.SendFailedMessagesTo("error");
 
             var storageDir = Path.Combine(Path.GetTempPath(), "learn", TestContext.CurrentContext.Test.ID);
 
-            builder.UseTransport(new AcceptanceTestingTransport
+            endpointConfiguration.UseTransport(new AcceptanceTestingTransport
             {
                 StorageLocation = storageDir
             });
 
-            var persistence = builder.UsePersistence<AzureTablePersistence>();
+            var persistence = endpointConfiguration.UsePersistence<AzureTablePersistence>();
             persistence.EnableTransactionalSession();
             persistence.UseTableServiceClient(SetupFixture.TableServiceClient);
             persistence.DefaultTable(SetupFixture.TableName);
 
             // This populates the partition key at the physical stage to test the conventional outbox use-case
-            builder.Pipeline.Register(typeof(PartitionKeyProviderBehavior), "Populates the partition key");
+            endpointConfiguration.Pipeline.Register(typeof(PartitionKeyProviderBehavior), "Populates the partition key");
 
-            builder.RegisterStartupTask(sp => new CaptureServiceProviderStartupTask(sp, runDescriptor.ScenarioContext));
+            endpointConfiguration.RegisterStartupTask(sp => new CaptureServiceProviderStartupTask(sp, runDescriptor.ScenarioContext));
 
-            await configurationBuilderCustomization(builder).ConfigureAwait(false);
+            await configurationBuilderCustomization(endpointConfiguration).ConfigureAwait(false);
 
             // scan types at the end so that all types used by the configuration have been loaded into the AppDomain
-            builder.TypesToIncludeInScan(endpointConfiguration.GetTypesScopedByTestClass());
+            endpointConfiguration.TypesToIncludeInScan(endpointCustomizations.GetTypesScopedByTestClass());
 
-            return builder;
+            return endpointConfiguration;
         }
 
         class PartitionKeyProviderBehavior : Behavior<ITransportReceiveContext>

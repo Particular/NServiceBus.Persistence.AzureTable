@@ -29,7 +29,7 @@
         /// </summary>
         public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> UseTableServiceClient(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config, TableServiceClient client)
         {
-            Guard.AgainstNull(nameof(client), client);
+            ArgumentNullException.ThrowIfNull(client);
 
             var settings = config.GetSettings();
             settings.Set<IProvideTableServiceClient>(new TableServiceClientFromConfiguration(client));
@@ -42,7 +42,7 @@
         /// </summary>
         public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> DisableTableCreation(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config)
         {
-            Guard.AgainstNull(nameof(config), config);
+            ArgumentNullException.ThrowIfNull(config);
 
             var settings = config.GetSettings();
             settings.GetOrCreate<SynchronizedStorageInstallerSettings>().Disabled = true;
@@ -55,8 +55,8 @@
         /// </summary>
         public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> JsonSettings(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config, JsonSerializerSettings jsonSerializerSettings)
         {
-            Guard.AgainstNull(nameof(config), config);
-            Guard.AgainstNull(nameof(jsonSerializerSettings), jsonSerializerSettings);
+            ArgumentNullException.ThrowIfNull(config);
+            ArgumentNullException.ThrowIfNull(jsonSerializerSettings);
 
             var settings = config.GetSettings();
             settings.Set(WellKnownConfigurationKeys.SagaJsonSerializer, JsonSerializer.Create(jsonSerializerSettings));
@@ -69,8 +69,8 @@
         /// </summary>
         public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> ReaderCreator(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config, Func<TextReader, JsonReader> readerCreator)
         {
-            Guard.AgainstNull(nameof(config), config);
-            Guard.AgainstNull(nameof(readerCreator), readerCreator);
+            ArgumentNullException.ThrowIfNull(config);
+            ArgumentNullException.ThrowIfNull(readerCreator);
 
             var settings = config.GetSettings();
 
@@ -84,8 +84,8 @@
         /// </summary>
         public static PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> WriterCreator(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config, Func<StringWriter, JsonWriter> writerCreator)
         {
-            Guard.AgainstNull(nameof(config), config);
-            Guard.AgainstNull(nameof(writerCreator), writerCreator);
+            ArgumentNullException.ThrowIfNull(config);
+            ArgumentNullException.ThrowIfNull(writerCreator);
 
             var settings = config.GetSettings();
 
@@ -99,7 +99,7 @@
         /// </summary>
         public static CompatibilitySettings Compatibility(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config)
         {
-            Guard.AgainstNull(nameof(config), config);
+            ArgumentNullException.ThrowIfNull(config);
 
             return new CompatibilitySettings(config.GetSettings());
         }

@@ -3,22 +3,22 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(SolutionDir)NServiceBus.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\NServiceBus.snk</AssemblyOriginatorKeyFile>
     <Description>NServiceBus Azure Table Persistence</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Data.Tables" Version="[12.8.1, 13.0.0)" />
-    <PackageReference Include="Newtonsoft.Json" Version="[13.0.1, 14.0.0)" />
-    <PackageReference Include="NServiceBus" Version="9.0.0-alpha.4" />
+    <PackageReference Include="Azure.Data.Tables" Version="[12.8.3, 13.0.0)" />
+    <PackageReference Include="Newtonsoft.Json" Version="[13.0.3, 14.0.0)" />
+    <PackageReference Include="NServiceBus" Version="[9.0.0, 10.0.0)" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Fody" Version="6.8.0" PrivateAssets="All" />
     <PackageReference Include="Obsolete.Fody" Version="5.3.0" PrivateAssets="All" />
-    <PackageReference Include="Particular.Packaging" Version="4.0.0" PrivateAssets="All" />
+    <PackageReference Include="Particular.Packaging" Version="4.1.0" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>

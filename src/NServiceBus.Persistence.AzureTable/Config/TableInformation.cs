@@ -1,6 +1,6 @@
 ﻿namespace NServiceBus
 {
-    using Persistence.AzureTable;
+    using System;
 
     /// <summary>
     /// Represents the table name when the table information is provided at runtime through the pipeline.
@@ -13,7 +13,7 @@
         /// <param name="tableName">The name of the table to use.</param>
         public TableInformation(string tableName)
         {
-            Guard.AgainstNullAndEmpty(nameof(tableName), tableName);
+            ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
             TableName = tableName;
         }
