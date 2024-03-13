@@ -6,7 +6,7 @@
     <AssemblyOriginatorKeyFile>..\NServiceBusTests.snk</AssemblyOriginatorKeyFile>
     <LangVersion>10.0</LangVersion>
     <!-- We want the root namespace to match the transactional session one -->
-    <RootNamespace>NServiceBus.TransactionalSession.AcceptanceTests</RootNamespace>	
+    <RootNamespace>NServiceBus.TransactionalSession.AcceptanceTests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
