@@ -4,7 +4,7 @@
         <Compile Include="..\SharedAcceptanceTests.All\ConnectionStringHelper.cs" />
     </ItemGroup>
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(PkgNServiceBus_PersistenceTests_Sources)' != ''">
         <!-- Remove once https://github.com/Particular/NServiceBus/pull/5808 is merged and new alpha released -->
         <Compile Remove="$(PkgNServiceBus_PersistenceTests_Sources)\**\Outbox\*.cs" />
     </ItemGroup>
