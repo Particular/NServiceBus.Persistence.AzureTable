@@ -1,4 +1,0 @@
-component_type: Persistence
-component_packages:
-  - name: NServiceBus.Persistence.AzureTable
-  - name: NServiceBus.Persistence.AzureTable.TransactionalSession
