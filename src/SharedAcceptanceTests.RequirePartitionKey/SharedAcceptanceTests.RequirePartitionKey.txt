@@ -1,1 +1,1 @@
-src\SharedAcceptanceTests.RequirePartitionKey contains tests shared betweet PhysicalOutbox.AcceptanceTests and LogicalOutbox.AcceptanceTests projects
+src\SharedAcceptanceTests.RequirePartitionKey contains tests shared between PhysicalOutbox.AcceptanceTests and LogicalOutbox.AcceptanceTests projects
