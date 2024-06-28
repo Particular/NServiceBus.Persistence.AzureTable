@@ -1,0 +1,1 @@
+src\SharedAcceptanceTests.StorageTable contains tests shared all projects that use Azure Storage Table projects

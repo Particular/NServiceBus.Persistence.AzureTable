@@ -38,6 +38,11 @@ namespace NServiceBus.Testing
             return string.IsNullOrWhiteSpace(candidate) ? Environment.GetEnvironmentVariable(variable) : candidate;
         }
 
+        public static bool IsRunningWithEmulator(string connectionString) => connectionString is CosmosDbEmulatorConnectionString or AzureTableStorageEmulatorConnectionString;
+
+        const string CosmosDbEmulatorConnectionString = "AccountEndpoint = https://localhost:8081/;AccountKey=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+        const string AzureTableStorageEmulatorConnectionString = "UseDevelopmentStorage=true";
+
         // Adopted from Cosmos DB Table API SDK that uses similar approach to change the underlying execution
         public static bool IsPremiumEndpoint(string connectionString)
         {
