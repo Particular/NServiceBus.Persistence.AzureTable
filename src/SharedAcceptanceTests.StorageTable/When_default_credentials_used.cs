@@ -26,7 +26,7 @@
                     DataId = Guid.NewGuid()
                 })))
                 .Done(c => c.SagaReceivedMessage)
-                .Run().ConfigureAwait(false); // TODO find out why the analyzer flags this
+                .Run();
 
             Assert.True(context.SagaReceivedMessage);
         }
