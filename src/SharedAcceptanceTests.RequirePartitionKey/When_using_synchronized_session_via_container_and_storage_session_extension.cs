@@ -22,8 +22,7 @@
             var context = await Scenario.Define<Context>()
                 .WithEndpoint<Endpoint>(b => b.When(s => s.SendLocal(new MyMessage())))
                 .Done(c => c.FirstHandlerIsDone && c.SecondHandlerIsDone)
-                .Run()
-                .ConfigureAwait(false);
+                .Run();
 
             Assert.AreEqual(1, context.BatchIdentifiers.Count, "Expected to have a single transactional batch but found more.");
         }

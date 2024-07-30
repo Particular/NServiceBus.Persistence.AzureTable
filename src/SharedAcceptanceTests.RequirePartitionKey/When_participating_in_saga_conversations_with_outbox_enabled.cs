@@ -135,18 +135,16 @@ namespace NServiceBus.AcceptanceTests
                     if (context.Message.Instance is ContinueSagaMessage continueSagaMessage)
                     {
                         await providePartitionKeyFromSagaId
-                            .SetPartitionKey<CustomSagaData>(context, new SagaCorrelationProperty(nameof(continueSagaMessage.SomeId), continueSagaMessage.SomeId))
-                            .ConfigureAwait(false);
+                            .SetPartitionKey<CustomSagaData>(context, new SagaCorrelationProperty(nameof(continueSagaMessage.SomeId), continueSagaMessage.SomeId));
                     }
 
                     if (context.Message.Instance is StartSagaMessage startSagaMessage)
                     {
                         await providePartitionKeyFromSagaId
-                            .SetPartitionKey<CustomSagaData>(context, new SagaCorrelationProperty(nameof(startSagaMessage.SomeId), startSagaMessage.SomeId))
-                            .ConfigureAwait(false);
+                            .SetPartitionKey<CustomSagaData>(context, new SagaCorrelationProperty(nameof(startSagaMessage.SomeId), startSagaMessage.SomeId));
                     }
 
-                    await next().ConfigureAwait(false);
+                    await next();
                 }
 
                 readonly IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId;

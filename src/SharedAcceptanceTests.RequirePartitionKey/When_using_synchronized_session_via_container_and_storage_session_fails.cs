@@ -25,8 +25,7 @@
                     b => b.DoNotFailOnErrorMessages()
                           .When(s => s.SendLocal(new MyMessage())))
                 .Done(c => c.FirstHandlerIsDone && c.FailedMessages.Any())
-                .Run()
-                .ConfigureAwait(false);
+                .Run();
 
             Assert.AreEqual(0, context.BatchIdentifiers.Count, "Expected to have no transactional batch but found one.");
         }

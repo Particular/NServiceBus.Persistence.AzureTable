@@ -124,11 +124,10 @@ namespace NServiceBus.AcceptanceTests
                     if (context.Message.Instance is ContinueSagaMessage continueSagaMessage)
                     {
                         await providePartitionKeyFromSagaId
-                            .SetPartitionKey<MigratedSagaData>(context, new SagaCorrelationProperty(nameof(continueSagaMessage.SomeId), continueSagaMessage.SomeId))
-                            .ConfigureAwait(false);
+                            .SetPartitionKey<MigratedSagaData>(context, new SagaCorrelationProperty(nameof(continueSagaMessage.SomeId), continueSagaMessage.SomeId));
                     }
 
-                    await next().ConfigureAwait(false);
+                    await next();
                 }
 
                 readonly IProvidePartitionKeyFromSagaId providePartitionKeyFromSagaId;

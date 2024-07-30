@@ -23,8 +23,7 @@
                     b.When(s => s.SendLocal(new MyMessage()));
                 })
                 .Done(c => c.FailedMessages.Any())
-                .Run(runSettings)
-                .ConfigureAwait(false);
+                .Run(runSettings);
 
             var failure = context.FailedMessages.FirstOrDefault()
                 .Value.First();
