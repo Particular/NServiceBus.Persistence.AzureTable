@@ -37,12 +37,10 @@ namespace NServiceBus.Persistence.AzureTable.Tests
             var type = new MessageType("type1", new Version(0, 0, 0, 0));
             await persister.Subscribe(new Subscriber("address://test-queue", "endpoint"), type, null);
             var first = Stopwatch.StartNew();
-            var subscribersFirst = await persister.GetSubscribers(type)
-                .ConfigureAwait(false);
+            var subscribersFirst = await persister.GetSubscribers(type);
             var firstTime = first.ElapsedMilliseconds;
             var second = Stopwatch.StartNew();
-            var subscribersSecond = await persister.GetSubscribers(type)
-                .ConfigureAwait(false);
+            var subscribersSecond = await persister.GetSubscribers(type);
             var secondTime = second.ElapsedMilliseconds;
             Assert.IsTrue(secondTime * 1000 < firstTime);
             Assert.AreEqual(subscribersFirst.Count(), subscribersSecond.Count());

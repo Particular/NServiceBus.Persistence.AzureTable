@@ -26,7 +26,7 @@
                     DataId = Guid.NewGuid()
                 })))
                 .Done(c => c.SagaReceivedMessage)
-                .Run().ConfigureAwait(false);
+                .Run();
 
             Assert.True(context.SagaReceivedMessage);
         }

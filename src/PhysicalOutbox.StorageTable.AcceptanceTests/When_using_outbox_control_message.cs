@@ -25,8 +25,7 @@
             var context = await Scenario.Define<Context>()
                 .WithEndpoint<Endpoint>()
                 .Done(c => c.ProcessedControlMessage)
-                .Run(runSettings)
-                .ConfigureAwait(false);
+                .Run(runSettings);
 
             Assert.True(context.ProcessedControlMessage);
         }

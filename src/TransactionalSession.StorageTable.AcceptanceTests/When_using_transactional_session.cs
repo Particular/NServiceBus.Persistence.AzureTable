@@ -40,7 +40,7 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
 
                     storageSession.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
 
-                    await transactionalSession.Commit().ConfigureAwait(false);
+                    await transactionalSession.Commit();
                 }))
                 .Done(c => c.MessageReceived)
                 .Run();
@@ -83,7 +83,7 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
 
                     storageSession.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
 
-                    await transactionalSession.Commit(CancellationToken.None).ConfigureAwait(false);
+                    await transactionalSession.Commit();
                 }))
                 .Done(c => c.MessageReceived)
                 .Run();
