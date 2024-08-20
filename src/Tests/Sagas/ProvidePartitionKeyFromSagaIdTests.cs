@@ -175,7 +175,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
             await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, new SagaCorrelationProperty("SomeId", Guid.NewGuid()));
 
             Assert.IsTrue(Guid.TryParse(logicalMessageContext.Extensions.Get<TableEntityPartitionKey>().PartitionKey, out _));
-            Assert.False(secondaryIndex.FindSagaIdCalled);
+            Assert.That(secondaryIndex.FindSagaIdCalled, Is.False);
         }
 
         class TestSagaData : ContainSagaData
