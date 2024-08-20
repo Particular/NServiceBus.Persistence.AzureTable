@@ -51,7 +51,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
             var result = await secondaryIndex.FindSagaId<TestSagaData>(tableClient,
                 new SagaCorrelationProperty("SomeId", someId));
 
-            Assert.IsNull(result);
+            Assert.That(result, Is.Null);
             if (tableApiType == "CosmosDB")
             {
                 StringAssert.Contains("Trying to retrieve the secondary index entry with PartitionKey = 'Index_NServiceBus.Persistence.AzureTable.Tests.SecondaryIndexTests+TestSagaData_SomeId_\"e57cf37c-1cbc-4b08-8c19-3fce2ffc0451\"' and RowKey = 'string.Empty' failed", logStatements.ToString());
@@ -75,7 +75,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
             var result = await secondaryIndex.FindSagaId<TestSagaData>(tableClient,
                 new SagaCorrelationProperty("SomeId", someId));
 
-            Assert.IsNull(result);
+            Assert.That(result, Is.Null);
             Assert.IsEmpty(logStatements.ToString());
         }
 
