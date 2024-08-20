@@ -84,14 +84,14 @@
         static void AssertValue(LRUCache<int, int> lruCache, int key, int expectedValue)
         {
             Assert.That(lruCache.TryGet(key, out var value), Is.True);
-            Assert.AreEqual(expectedValue, value);
+            Assert.That(value, Is.EqualTo(expectedValue));
         }
 
         static void AssertNoValue(LRUCache<int, int> lruCache, int key)
         {
             var tryGet = lruCache.TryGet(key, out var value);
-            Assert.AreEqual(false, tryGet);
-            Assert.AreEqual(default(int), value);
+            Assert.That(tryGet, Is.EqualTo(false));
+            Assert.That(value, Is.EqualTo(default(int)));
         }
     }
 }

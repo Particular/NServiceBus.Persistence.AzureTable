@@ -27,7 +27,7 @@
                 .Done(c => c.FirstHandlerIsDone && c.FailedMessages.Any())
                 .Run();
 
-            Assert.AreEqual(0, context.BatchIdentifiers.Count, "Expected to have no transactional batch but found one.");
+            Assert.That(context.BatchIdentifiers.Count, Is.EqualTo(0), "Expected to have no transactional batch but found one.");
         }
 
         public class Context : ScenarioContext

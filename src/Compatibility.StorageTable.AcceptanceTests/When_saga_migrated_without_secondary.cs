@@ -77,7 +77,7 @@ namespace NServiceBus.AcceptanceTests
                 .ToArray();
 
             CollectionAssert.IsNotEmpty(getWithFilter);
-            Assert.AreEqual(sagaId, context.SagaId);
+            Assert.That(context.SagaId, Is.EqualTo(sagaId));
         }
 
         [Test]

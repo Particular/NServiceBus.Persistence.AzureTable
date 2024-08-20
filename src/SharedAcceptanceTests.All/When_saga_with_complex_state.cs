@@ -28,28 +28,28 @@ namespace NServiceBus.AcceptanceTests
             var sagaEntity = await GetEntity(context.SagaId);
 
             Assert.That(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableDouble), out var nullableDouble), Is.True);
-            Assert.AreEqual(4.5d, nullableDouble);
+            Assert.That(nullableDouble, Is.EqualTo(4.5d));
 
             Assert.That(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.IntArray), out var intArray), Is.True);
-            Assert.AreEqual("[1,2,3,4]", intArray);
+            Assert.That(intArray, Is.EqualTo("[1,2,3,4]"));
 
             Assert.That(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.ComplexData), out var complexData), Is.True);
-            Assert.AreEqual("{\"Data\":\"SomeData\"}", complexData);
+            Assert.That(complexData, Is.EqualTo("{\"Data\":\"SomeData\"}"));
 
             Assert.That(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableBool), out var nullableBool), Is.True);
-            Assert.AreEqual(true, nullableBool);
+            Assert.That(nullableBool, Is.EqualTo(true));
 
             Assert.That(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableGuid), out var nullableGuid), Is.True);
-            Assert.AreEqual(new Guid("3C623C1F-80AB-4036-86CA-C2020FAE2EFE"), nullableGuid);
+            Assert.That(nullableGuid, Is.EqualTo(new Guid("3C623C1F-80AB-4036-86CA-C2020FAE2EFE")));
 
             Assert.That(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableLong), out var nullableLong), Is.True);
-            Assert.AreEqual(10, nullableLong);
+            Assert.That(nullableLong, Is.EqualTo(10));
 
             Assert.That(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableInt), out var nullableInt), Is.True);
-            Assert.AreEqual(10, nullableInt);
+            Assert.That(nullableInt, Is.EqualTo(10));
 
             Assert.That(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.ByteArray), out var byteArray), Is.True);
-            Assert.AreEqual(new byte[] { 1 }, byteArray);
+            Assert.That(byteArray, Is.EqualTo(new byte[] { 1 }));
 
             Assert.That(sagaEntity.ContainsKey("NServiceBus_2ndIndexKey"), Is.False, "Entity should not contain secondary index property");
         }

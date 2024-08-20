@@ -25,7 +25,7 @@ namespace NServiceBus.AcceptanceTests
                     .Done(c => c.FailedMessages.Any())
                     .Run());
 
-            Assert.AreEqual(1, exception.ScenarioContext.FailedMessages.Count);
+            Assert.That(exception.ScenarioContext.FailedMessages.Count, Is.EqualTo(1));
             StringAssert.Contains(
                 "The property type 'SomethingComplex' is not supported in Azure Table Storage and it cannot be serialized with JSON.NET.",
                 exception.FailedMessage.Exception.Message);

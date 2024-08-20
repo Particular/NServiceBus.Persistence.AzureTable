@@ -17,8 +17,8 @@
 
             var key = SecondaryIndexKeyBuilder.BuildTableKey<SagaData>(new SagaCorrelationProperty(sagaProp.Name, id));
             var expected = "Index_NServiceBus.Persistence.AzureTable.Tests.SecondaryIndexKeyBuilderTests+SagaData_AdditionalId_\"C4D91B59-A407-4CDA-A689-60AA3C334699\"";
-            Assert.AreEqual(expected, key.PartitionKey);
-            Assert.AreEqual(string.Empty, key.RowKey);
+            Assert.That(key.PartitionKey, Is.EqualTo(expected));
+            Assert.That(key.RowKey, Is.EqualTo(string.Empty));
         }
 
         class TestSaga : Saga<SagaData>, IAmStartedByMessages<StartSagaMessage>

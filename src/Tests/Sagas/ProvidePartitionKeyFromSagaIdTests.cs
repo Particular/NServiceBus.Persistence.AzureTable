@@ -38,7 +38,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, new SagaCorrelationProperty("SomeId", Guid.NewGuid()));
 
-            Assert.AreEqual(tableEntityPartitionKey, logicalMessageContext.Extensions.Get<TableEntityPartitionKey>());
+            Assert.That(logicalMessageContext.Extensions.Get<TableEntityPartitionKey>(), Is.EqualTo(tableEntityPartitionKey));
         }
 
         [Test]
@@ -69,7 +69,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             var tableInformation = logicalMessageContext.Extensions.Get<TableInformation>();
 
-            Assert.AreEqual(tableClient.Name, tableInformation.TableName);
+            Assert.That(tableInformation.TableName, Is.EqualTo(tableClient.Name));
         }
 
         [Test]
@@ -87,7 +87,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             var tableInformation = logicalMessageContext.Extensions.Get<TableInformation>();
 
-            Assert.AreEqual(nameof(TestSagaData), tableInformation.TableName);
+            Assert.That(tableInformation.TableName, Is.EqualTo(nameof(TestSagaData)));
         }
 
         [Test]
@@ -105,7 +105,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, new SagaCorrelationProperty("SomeId", Guid.NewGuid()));
 
-            Assert.AreEqual(tableInformation, logicalMessageContext.Extensions.Get<TableInformation>());
+            Assert.That(logicalMessageContext.Extensions.Get<TableInformation>(), Is.EqualTo(tableInformation));
         }
 
         [Test]
@@ -123,7 +123,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, new SagaCorrelationProperty("SomeId", Guid.NewGuid()));
 
-            Assert.AreEqual(sagaId, logicalMessageContext.Extensions.Get<TableEntityPartitionKey>().PartitionKey);
+            Assert.That(logicalMessageContext.Extensions.Get<TableEntityPartitionKey>().PartitionKey, Is.EqualTo(sagaId));
         }
 
         [Test]
@@ -142,7 +142,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, new SagaCorrelationProperty("SomeId", Guid.NewGuid()));
 
-            Assert.AreEqual(sagaId.ToString(), logicalMessageContext.Extensions.Get<TableEntityPartitionKey>().PartitionKey);
+            Assert.That(logicalMessageContext.Extensions.Get<TableEntityPartitionKey>().PartitionKey, Is.EqualTo(sagaId.ToString()));
         }
 
         [Test]

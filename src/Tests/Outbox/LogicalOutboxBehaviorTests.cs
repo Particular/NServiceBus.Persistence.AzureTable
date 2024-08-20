@@ -97,7 +97,7 @@
             await behavior.Invoke(testableContext, c => Task.CompletedTask);
 
             Assert.That(pendingTransportOperations.HasOperations, Is.True, "Should have exactly one operation added found on the outbox record");
-            Assert.AreEqual("42", pendingTransportOperations.Operations.ElementAt(0).Message.MessageId, "Should have exactly one operation added found on the outbox record");
+            Assert.That(pendingTransportOperations.Operations.ElementAt(0).Message.MessageId, Is.EqualTo("42"), "Should have exactly one operation added found on the outbox record");
         }
     }
 

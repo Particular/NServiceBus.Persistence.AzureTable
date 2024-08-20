@@ -43,7 +43,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
             var subscribersSecond = await persister.GetSubscribers(type);
             var secondTime = second.ElapsedMilliseconds;
             Assert.That(secondTime * 1000 < firstTime, Is.True);
-            Assert.AreEqual(subscribersFirst.Count(), subscribersSecond.Count());
+            Assert.That(subscribersSecond.Count(), Is.EqualTo(subscribersFirst.Count()));
         }
 
         [Test]

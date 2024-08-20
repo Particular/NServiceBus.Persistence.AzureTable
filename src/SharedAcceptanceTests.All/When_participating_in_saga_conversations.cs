@@ -35,7 +35,7 @@ namespace NServiceBus.AcceptanceTests
 
             Assert.IsNotNull(myEntity);
             Assert.That(myEntity.TryGetValue("Data", out var entityValue), Is.True);
-            Assert.AreEqual(context.SagaId.ToString(), entityValue);
+            Assert.That(entityValue, Is.EqualTo(context.SagaId.ToString()));
         }
 
         [Test]
@@ -57,7 +57,7 @@ namespace NServiceBus.AcceptanceTests
 
             Assert.IsNotNull(myEntity);
             Assert.That(myEntity.TryGetValue("Data", out var entityValue), Is.True);
-            Assert.AreEqual(context.SagaId.ToString(), entityValue);
+            Assert.That(entityValue, Is.EqualTo(context.SagaId.ToString()));
         }
 
         static TableEntity GetByRowKey(Guid sagaId)
