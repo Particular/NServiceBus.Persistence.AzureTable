@@ -42,11 +42,11 @@ namespace NServiceBus.AcceptanceTests
                     .Run());
 
             Assert.That(exception.ScenarioContext.FailedMessages, Has.Count.EqualTo(1));
-            StringAssert.Contains(
-                ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.ConnectionString)
+            Assert.That(
+                exception.FailedMessage.Exception.Message,
+                Does.Contain(ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.ConnectionString)
                     ? "The specified resource does not exist."
-                    : "The table specified does not exist",
-                exception.FailedMessage.Exception.Message);
+                    : "The table specified does not exist"));
         }
 
         public class Context : ScenarioContext

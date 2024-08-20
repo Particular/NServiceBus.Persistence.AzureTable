@@ -27,7 +27,7 @@
 
             var failure = context.FailedMessages.FirstOrDefault()
                 .Value.First();
-            StringAssert.Contains("table name", failure.Exception.Message);
+            Assert.That(failure.Exception.Message, Does.Contain("table name"));
         }
 
         public class Context : ScenarioContext

@@ -52,7 +52,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
             logicalMessageContext.Extensions.Set(tableHolder);
 
             var exception = Assert.ThrowsAsync<Exception>(async () => await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, SagaCorrelationProperty.None));
-            StringAssert.Contains("The Azure Table saga persister doesn't support custom saga finders.", exception.Message);
+            Assert.That(exception.Message, Does.Contain("The Azure Table saga persister doesn't support custom saga finders."));
         }
 
         [Test]

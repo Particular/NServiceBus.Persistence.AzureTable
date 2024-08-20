@@ -27,7 +27,7 @@
 
             var failure = context.FailedMessages.FirstOrDefault()
                 .Value.First();
-            StringAssert.Contains("A partition key via", failure.Exception.Message);
+            Assert.That(failure.Exception.Message, Does.Contain("A partition key via"));
         }
 
         public class Context : ScenarioContext

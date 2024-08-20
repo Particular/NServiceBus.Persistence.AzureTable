@@ -54,7 +54,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
             Assert.That(result, Is.Null);
             if (tableApiType == "CosmosDB")
             {
-                StringAssert.Contains("Trying to retrieve the secondary index entry with PartitionKey = 'Index_NServiceBus.Persistence.AzureTable.Tests.SecondaryIndexTests+TestSagaData_SomeId_\"e57cf37c-1cbc-4b08-8c19-3fce2ffc0451\"' and RowKey = 'string.Empty' failed", logStatements.ToString());
+                Assert.That(logStatements.ToString(), Does.Contain("Trying to retrieve the secondary index entry with PartitionKey = 'Index_NServiceBus.Persistence.AzureTable.Tests.SecondaryIndexTests+TestSagaData_SomeId_\"e57cf37c-1cbc-4b08-8c19-3fce2ffc0451\"' and RowKey = 'string.Empty' failed"));
             }
             else
             {

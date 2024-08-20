@@ -24,9 +24,9 @@ namespace NServiceBus.AcceptanceTests
                     .Run());
 
             Assert.That(exception.ScenarioContext.FailedMessages, Has.Count.EqualTo(1));
-            StringAssert.Contains(
-                "with DateTime property 'DateTime' has an invalid value",
-                exception.FailedMessage.Exception.Message);
+            Assert.That(
+                exception.FailedMessage.Exception.Message,
+                Does.Contain("with DateTime property 'DateTime' has an invalid value"));
         }
 
         public class Context : ScenarioContext
