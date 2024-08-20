@@ -126,7 +126,7 @@ namespace NServiceBus.AcceptanceTests
                 .ToArray();
 
             CollectionAssert.IsEmpty(getWithFilter);
-            Assert.AreNotEqual(sagaId, context.SagaId);
+            Assert.That(context.SagaId, Is.Not.EqualTo(sagaId));
         }
 
         public class Context : ScenarioContext

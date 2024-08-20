@@ -104,7 +104,7 @@ namespace NServiceBus.AcceptanceTests
                 .Done(c => c.Done)
                 .Run();
 
-            Assert.AreNotEqual(sagaId, context.SagaId);
+            Assert.That(context.SagaId, Is.Not.EqualTo(sagaId));
         }
 
         public class Context : ScenarioContext
