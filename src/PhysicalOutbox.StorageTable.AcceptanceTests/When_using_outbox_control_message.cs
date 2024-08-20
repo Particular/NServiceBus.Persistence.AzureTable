@@ -27,7 +27,7 @@
                 .Done(c => c.ProcessedControlMessage)
                 .Run(runSettings);
 
-            Assert.True(context.ProcessedControlMessage);
+            Assert.That(context.ProcessedControlMessage, Is.True);
         }
 
         public class Context : ScenarioContext

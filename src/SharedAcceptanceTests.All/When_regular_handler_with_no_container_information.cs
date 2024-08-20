@@ -18,7 +18,7 @@
                 .Done(c => c.MessageReceived)
                 .Run();
 
-            Assert.True(context.MessageReceived);
+            Assert.That(context.MessageReceived, Is.True);
         }
 
         public class Context : ScenarioContext

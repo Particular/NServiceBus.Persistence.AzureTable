@@ -28,7 +28,7 @@
                 .Done(c => c.SagaReceivedMessage)
                 .Run();
 
-            Assert.True(context.SagaReceivedMessage);
+            Assert.That(context.SagaReceivedMessage, Is.True);
         }
 
         public class Context : ScenarioContext

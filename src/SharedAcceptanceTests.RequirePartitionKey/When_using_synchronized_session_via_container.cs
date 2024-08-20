@@ -17,7 +17,7 @@
                 .Done(c => c.Done)
                 .Run();
 
-            Assert.True(context.HandlerHasBatch);
+            Assert.That(context.HandlerHasBatch, Is.True);
         }
 
         public class Context : ScenarioContext
