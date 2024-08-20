@@ -48,8 +48,11 @@ namespace NServiceBus.AcceptanceTests
             var myEntity = await GetByRowKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(myTableRowKey.ToString());
 
             Assert.That(myEntity, Is.Not.Null);
-            Assert.That(myEntity["Data"], Is.EqualTo("MyCustomData"));
-            Assert.That(context.SagaId, Is.EqualTo(sagaId));
+            Assert.Multiple(() =>
+            {
+                Assert.That(myEntity["Data"], Is.EqualTo("MyCustomData"));
+                Assert.That(context.SagaId, Is.EqualTo(sagaId));
+            });
         }
 
         [Test]
@@ -97,8 +100,11 @@ namespace NServiceBus.AcceptanceTests
             var myEntity = await GetByRowKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(myTableRowKey.ToString());
 
             Assert.That(myEntity, Is.Not.Null);
-            Assert.That(myEntity["Data"], Is.EqualTo("MyCustomData"));
-            Assert.That(context.SagaId, Is.EqualTo(sagaId));
+            Assert.Multiple(() =>
+            {
+                Assert.That(myEntity["Data"], Is.EqualTo("MyCustomData"));
+                Assert.That(context.SagaId, Is.EqualTo(sagaId));
+            });
         }
 
         public class Context : ScenarioContext

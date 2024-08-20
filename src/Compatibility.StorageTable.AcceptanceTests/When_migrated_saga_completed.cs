@@ -43,9 +43,12 @@ namespace NServiceBus.AcceptanceTests
             var partitionRowKeyTuple = SecondaryIndexKeyBuilder.BuildTableKey(typeof(EndpointWithSagaThatWasMigrated.MigratedSagaData), sagaCorrelationProperty);
             var secondaryIndexEntry = await GetByPartitionKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(partitionRowKeyTuple.PartitionKey);
 
-            Assert.That(sagaEntity, Is.Null);
-            Assert.That(secondaryIndexEntry, Is.Null);
-            Assert.That(context.SagaId, Is.EqualTo(sagaId));
+            Assert.Multiple(() =>
+            {
+                Assert.That(sagaEntity, Is.Null);
+                Assert.That(secondaryIndexEntry, Is.Null);
+                Assert.That(context.SagaId, Is.EqualTo(sagaId));
+            });
         }
 
         public class Context : ScenarioContext

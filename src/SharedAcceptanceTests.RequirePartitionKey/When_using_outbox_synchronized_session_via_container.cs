@@ -18,8 +18,11 @@
                 .Done(c => c.Done)
                 .Run();
 
-            Assert.That(context.RepositoryHasBatch, Is.True);
-            Assert.That(context.RepositoryHasTable, Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(context.RepositoryHasBatch, Is.True);
+                Assert.That(context.RepositoryHasTable, Is.True);
+            });
             AssertPartitionPart(context);
         }
 

@@ -36,8 +36,11 @@ namespace NServiceBus.AcceptanceTests
             var myEntity = await GetByRowKey(myTableRowKey);
 
             Assert.That(myEntity, Is.Not.Null);
-            Assert.That(myEntity.TryGetValue("Data", out var entityValue), Is.True);
-            Assert.That(entityValue, Is.EqualTo(context.SagaId.ToString()));
+            Assert.Multiple(() =>
+            {
+                Assert.That(myEntity.TryGetValue("Data", out var entityValue), Is.True);
+                Assert.That(entityValue, Is.EqualTo(context.SagaId.ToString()));
+            });
         }
 
         [Test]
@@ -58,8 +61,11 @@ namespace NServiceBus.AcceptanceTests
             var myEntity = await GetByRowKey(myTableRowKey);
 
             Assert.That(myEntity, Is.Not.Null);
-            Assert.That(myEntity.TryGetValue("Data", out var entityValue), Is.True);
-            Assert.That(entityValue, Is.EqualTo(context.SagaId.ToString()));
+            Assert.Multiple(() =>
+            {
+                Assert.That(myEntity.TryGetValue("Data", out var entityValue), Is.True);
+                Assert.That(entityValue, Is.EqualTo(context.SagaId.ToString()));
+            });
         }
 
         static async Task<TableEntity> GetByRowKey(Guid sagaId)

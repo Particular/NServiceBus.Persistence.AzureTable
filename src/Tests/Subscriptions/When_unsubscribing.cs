@@ -43,8 +43,11 @@
             Assert.That(subscribers.Count(), Is.EqualTo(1));
 
             var subscription = subscribers.ToArray()[0];
-            Assert.That(subscription.Endpoint, Is.EqualTo(subscriber.Endpoint));
-            Assert.That(subscription.TransportAddress, Is.EqualTo(subscriber.TransportAddress));
+            Assert.Multiple(() =>
+            {
+                Assert.That(subscription.Endpoint, Is.EqualTo(subscriber.Endpoint));
+                Assert.That(subscription.TransportAddress, Is.EqualTo(subscriber.TransportAddress));
+            });
 
             await persister.Unsubscribe(subscriber, messageType, null);
             var postUnsubscribe = await persister.GetSubscriberAddressesForMessage(messageTypes, null);

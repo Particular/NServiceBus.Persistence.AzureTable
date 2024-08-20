@@ -41,8 +41,11 @@
             }, null)).ToArray();
 
             Assert.That(subscribers.Length, Is.EqualTo(1));
-            Assert.That(subscribers[0].TransportAddress, Is.EqualTo("address://test-queue"));
-            Assert.That(subscribers[0].Endpoint, Is.EqualTo("2"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(subscribers[0].TransportAddress, Is.EqualTo("address://test-queue"));
+                Assert.That(subscribers[0].Endpoint, Is.EqualTo("2"));
+            });
         }
     }
 }

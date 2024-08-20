@@ -75,8 +75,11 @@ namespace NServiceBus.Persistence.AzureTable.Tests
             var result = await secondaryIndex.FindSagaId<TestSagaData>(tableClient,
                 new SagaCorrelationProperty("SomeId", someId));
 
-            Assert.That(result, Is.Null);
-            Assert.That(logStatements.ToString(), Is.Empty);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result, Is.Null);
+                Assert.That(logStatements.ToString(), Is.Empty);
+            });
         }
 
         [Test]
@@ -115,9 +118,12 @@ namespace NServiceBus.Persistence.AzureTable.Tests
             var requestAfterCaching = recorder.Requests;
 
             Assert.That(nonCachedResult, Is.Not.Null);
-            Assert.That(nonCachedResult, Is.EqualTo(cachedResult));
-            Assert.That(requestsBeforeCaching, Is.Not.Empty);
-            Assert.That(requestAfterCaching, Is.Empty);
+            Assert.Multiple(() =>
+            {
+                Assert.That(nonCachedResult, Is.EqualTo(cachedResult));
+                Assert.That(requestsBeforeCaching, Is.Not.Empty);
+                Assert.That(requestAfterCaching, Is.Empty);
+            });
         }
 
         [Test]
@@ -151,8 +157,11 @@ namespace NServiceBus.Persistence.AzureTable.Tests
                     get.Contains($"$select=PartitionKey%2CRowKey&$filter=SomeId%20eq%20guid%27{someId}%27"))
                 .ToArray();
 
-            Assert.That(tableScanResult, Is.Not.Null);
-            Assert.That(getWithFilter, Is.Not.Empty);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tableScanResult, Is.Not.Null);
+                Assert.That(getWithFilter, Is.Not.Empty);
+            });
         }
 
         [Test]
@@ -186,8 +195,11 @@ namespace NServiceBus.Persistence.AzureTable.Tests
                     get.Contains($"$select=PartitionKey%2CRowKey&$filter=SomeId%20eq%20guid%27{someId}%27"))
                 .ToArray();
 
-            Assert.That(tableScanResult, Is.Null);
-            Assert.That(getWithFilter, Is.Empty);
+            Assert.Multiple(() =>
+            {
+                Assert.That(tableScanResult, Is.Null);
+                Assert.That(getWithFilter, Is.Empty);
+            });
         }
 
         [Test]
@@ -226,9 +238,12 @@ namespace NServiceBus.Persistence.AzureTable.Tests
             var requestAfterCaching = recorder.Requests;
 
             Assert.That(nonCachedResult, Is.Not.Null);
-            Assert.That(nonCachedResult, Is.EqualTo(cachedResult));
-            Assert.That(requestsBeforeCaching, Is.Not.Empty);
-            Assert.That(requestAfterCaching, Is.Empty);
+            Assert.Multiple(() =>
+            {
+                Assert.That(nonCachedResult, Is.EqualTo(cachedResult));
+                Assert.That(requestsBeforeCaching, Is.Not.Empty);
+                Assert.That(requestAfterCaching, Is.Empty);
+            });
         }
 
         [TearDown]
