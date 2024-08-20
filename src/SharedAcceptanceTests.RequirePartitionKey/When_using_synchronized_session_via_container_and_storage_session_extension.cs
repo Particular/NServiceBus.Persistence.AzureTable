@@ -24,7 +24,7 @@
                 .Done(c => c.FirstHandlerIsDone && c.SecondHandlerIsDone)
                 .Run();
 
-            Assert.That(context.BatchIdentifiers.Count, Is.EqualTo(1), "Expected to have a single transactional batch but found more.");
+            Assert.That(context.BatchIdentifiers, Has.Count.EqualTo(1), "Expected to have a single transactional batch but found more.");
         }
 
         public class Context : ScenarioContext

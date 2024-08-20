@@ -23,7 +23,7 @@ namespace NServiceBus.AcceptanceTests
                     .Done(c => c.FailedMessages.Any())
                     .Run());
 
-            Assert.That(exception.ScenarioContext.FailedMessages.Count, Is.EqualTo(1));
+            Assert.That(exception.ScenarioContext.FailedMessages, Has.Count.EqualTo(1));
             StringAssert.Contains(
                 "with DateTime property 'DateTime' has an invalid value",
                 exception.FailedMessage.Exception.Message);
