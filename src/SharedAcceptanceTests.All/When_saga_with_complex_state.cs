@@ -51,7 +51,7 @@ namespace NServiceBus.AcceptanceTests
             Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.ByteArray), out var byteArray));
             Assert.AreEqual(new byte[] { 1 }, byteArray);
 
-            Assert.IsFalse(sagaEntity.ContainsKey("NServiceBus_2ndIndexKey"), "Entity should not contain secondary index property");
+            Assert.That(sagaEntity.ContainsKey("NServiceBus_2ndIndexKey"), Is.False, "Entity should not contain secondary index property");
         }
 
         static async Task<TableEntity> GetEntity(Guid sagaId)
