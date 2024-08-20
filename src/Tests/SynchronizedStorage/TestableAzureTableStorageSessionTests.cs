@@ -29,7 +29,7 @@
             var handler = new HandlerUsingSynchronizedStorageSessionExtension();
             await handler.Handle(new MyMessage(), handlerContext);
 
-            Assert.IsNotEmpty(transactionalBatch);
+            Assert.That(transactionalBatch, Is.Not.Empty);
         }
 
         class HandlerUsingSynchronizedStorageSessionExtension : IHandleMessages<MyMessage>
