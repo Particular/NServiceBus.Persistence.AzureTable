@@ -58,7 +58,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
             }
             else
             {
-                Assert.IsEmpty(logStatements.ToString());
+                Assert.That(logStatements.ToString(), Is.Empty);
             }
         }
 
@@ -76,7 +76,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
                 new SagaCorrelationProperty("SomeId", someId));
 
             Assert.That(result, Is.Null);
-            Assert.IsEmpty(logStatements.ToString());
+            Assert.That(logStatements.ToString(), Is.Empty);
         }
 
         [Test]
