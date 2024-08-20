@@ -35,7 +35,7 @@ namespace NServiceBus.AcceptanceTests
 
             var myEntity = await GetByRowKey(myTableRowKey);
 
-            Assert.IsNotNull(myEntity);
+            Assert.That(myEntity, Is.Not.Null);
             Assert.That(myEntity.TryGetValue("Data", out var entityValue), Is.True);
             Assert.That(entityValue, Is.EqualTo(context.SagaId.ToString()));
         }
@@ -57,7 +57,7 @@ namespace NServiceBus.AcceptanceTests
 
             var myEntity = await GetByRowKey(myTableRowKey);
 
-            Assert.IsNotNull(myEntity);
+            Assert.That(myEntity, Is.Not.Null);
             Assert.That(myEntity.TryGetValue("Data", out var entityValue), Is.True);
             Assert.That(entityValue, Is.EqualTo(context.SagaId.ToString()));
         }

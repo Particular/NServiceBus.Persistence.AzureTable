@@ -47,7 +47,7 @@ namespace NServiceBus.AcceptanceTests
 
             var myEntity = await GetByRowKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(myTableRowKey.ToString());
 
-            Assert.IsNotNull(myEntity);
+            Assert.That(myEntity, Is.Not.Null);
             Assert.That(myEntity["Data"], Is.EqualTo("MyCustomData"));
             Assert.That(context.SagaId, Is.EqualTo(sagaId));
         }
@@ -96,7 +96,7 @@ namespace NServiceBus.AcceptanceTests
 
             var myEntity = await GetByRowKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(myTableRowKey.ToString());
 
-            Assert.IsNotNull(myEntity);
+            Assert.That(myEntity, Is.Not.Null);
             Assert.That(myEntity["Data"], Is.EqualTo("MyCustomData"));
             Assert.That(context.SagaId, Is.EqualTo(sagaId));
         }

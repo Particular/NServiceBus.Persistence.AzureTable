@@ -44,7 +44,7 @@ namespace NServiceBus.AcceptanceTests
             var secondaryIndexEntry = await GetByPartitionKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(partitionRowKeyTuple.PartitionKey);
 
             Assert.That(sagaEntity.ContainsKey("NServiceBus_2ndIndexKey"), Is.True, "Secondary index property should be preserved");
-            Assert.IsNotNull(secondaryIndexEntry);
+            Assert.That(secondaryIndexEntry, Is.Not.Null);
             Assert.That(context.SagaId, Is.EqualTo(sagaId));
         }
 
