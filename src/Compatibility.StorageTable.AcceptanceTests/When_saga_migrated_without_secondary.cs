@@ -76,7 +76,7 @@ namespace NServiceBus.AcceptanceTests
                                         get.Contains($"$select=PartitionKey%2CRowKey&$filter=SomeId%20eq%20guid%27{correlationPropertyValue}%27"))
                 .ToArray();
 
-            CollectionAssert.IsNotEmpty(getWithFilter);
+            Assert.That(getWithFilter, Is.Not.Empty);
             Assert.That(context.SagaId, Is.EqualTo(sagaId));
         }
 
@@ -125,7 +125,7 @@ namespace NServiceBus.AcceptanceTests
                     get.Contains($"$filter=SomeId%20eq%20guid%27{correlationPropertyValue}%27&$select=PartitionKey%2CRowKey%2CTimestamp"))
                 .ToArray();
 
-            CollectionAssert.IsEmpty(getWithFilter);
+            Assert.That(getWithFilter, Is.Empty);
             Assert.That(context.SagaId, Is.Not.EqualTo(sagaId));
         }
 

@@ -48,7 +48,7 @@
                     get.Contains($"$select=PartitionKey%2CRowKey&$filter=DataId%20eq%20guid%27{correlationPropertyValue}%27"))
                 .ToArray();
 
-            CollectionAssert.IsEmpty(getWithFilter);
+            Assert.That(getWithFilter, Is.Empty);
         }
 
         public class Context : ScenarioContext

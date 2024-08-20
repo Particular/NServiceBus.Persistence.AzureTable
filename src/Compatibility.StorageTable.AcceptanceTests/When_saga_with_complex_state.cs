@@ -88,7 +88,7 @@ namespace NServiceBus.AcceptanceTests
 
                 Assert.That(byteArrayProp.GetType(), Is.EqualTo(typeof(byte[])));
             });
-            CollectionAssert.AreEqual(new byte[] { 1 }, (byte[])byteArrayProp);
+            Assert.That((byte[])byteArrayProp, Is.EqualTo(new byte[] { 1 }).AsCollection);
 
             Assert.That(context.SagaId, Is.EqualTo(sagaId));
         }
