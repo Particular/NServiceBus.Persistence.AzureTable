@@ -158,7 +158,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, new SagaCorrelationProperty("SomeId", Guid.NewGuid()));
 
-            Assert.IsTrue(Guid.TryParse(logicalMessageContext.Extensions.Get<TableEntityPartitionKey>().PartitionKey, out _));
+            Assert.That(Guid.TryParse(logicalMessageContext.Extensions.Get<TableEntityPartitionKey>().PartitionKey, out _), Is.True);
         }
 
         [Test]
@@ -174,7 +174,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, new SagaCorrelationProperty("SomeId", Guid.NewGuid()));
 
-            Assert.IsTrue(Guid.TryParse(logicalMessageContext.Extensions.Get<TableEntityPartitionKey>().PartitionKey, out _));
+            Assert.That(Guid.TryParse(logicalMessageContext.Extensions.Get<TableEntityPartitionKey>().PartitionKey, out _), Is.True);
             Assert.That(secondaryIndex.FindSagaIdCalled, Is.False);
         }
 

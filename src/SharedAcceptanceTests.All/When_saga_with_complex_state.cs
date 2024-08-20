@@ -27,28 +27,28 @@ namespace NServiceBus.AcceptanceTests
 
             var sagaEntity = await GetEntity(context.SagaId);
 
-            Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableDouble), out var nullableDouble));
+            Assert.That(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableDouble), out var nullableDouble), Is.True);
             Assert.AreEqual(4.5d, nullableDouble);
 
-            Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.IntArray), out var intArray));
+            Assert.That(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.IntArray), out var intArray), Is.True);
             Assert.AreEqual("[1,2,3,4]", intArray);
 
-            Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.ComplexData), out var complexData));
+            Assert.That(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.ComplexData), out var complexData), Is.True);
             Assert.AreEqual("{\"Data\":\"SomeData\"}", complexData);
 
-            Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableBool), out var nullableBool));
+            Assert.That(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableBool), out var nullableBool), Is.True);
             Assert.AreEqual(true, nullableBool);
 
-            Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableGuid), out var nullableGuid));
+            Assert.That(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableGuid), out var nullableGuid), Is.True);
             Assert.AreEqual(new Guid("3C623C1F-80AB-4036-86CA-C2020FAE2EFE"), nullableGuid);
 
-            Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableLong), out var nullableLong));
+            Assert.That(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableLong), out var nullableLong), Is.True);
             Assert.AreEqual(10, nullableLong);
 
-            Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableInt), out var nullableInt));
+            Assert.That(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableInt), out var nullableInt), Is.True);
             Assert.AreEqual(10, nullableInt);
 
-            Assert.IsTrue(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.ByteArray), out var byteArray));
+            Assert.That(sagaEntity.TryGetValue(nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.ByteArray), out var byteArray), Is.True);
             Assert.AreEqual(new byte[] { 1 }, byteArray);
 
             Assert.That(sagaEntity.ContainsKey("NServiceBus_2ndIndexKey"), Is.False, "Entity should not contain secondary index property");
