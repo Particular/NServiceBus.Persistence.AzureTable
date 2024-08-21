@@ -49,7 +49,7 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
             {
                 var entity = SetupFixture.TableClient.GetEntity<Azure.Data.Tables.TableEntity>(context.TestRunId.ToString(), entityRowId).Value;
                 Assert.IsTrue(entity.TryGetValue("Data", out var entityValue));
-                Assert.AreEqual("MyCustomData", entityValue);
+                Assert.That(entityValue, Is.EqualTo("MyCustomData"));
             }
             catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
             {
@@ -91,8 +91,8 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
             try
             {
                 var entity = SetupFixture.TableClient.GetEntity<Azure.Data.Tables.TableEntity>(context.TestRunId.ToString(), entityRowId).Value;
-                Assert.IsTrue(entity.TryGetValue("Data", out var entityValue));
-                Assert.AreEqual("MyCustomData", entityValue);
+                Assert.That(entity.TryGetValue("Data", out var entityValue), Is.True);
+                Assert.That(entityValue, Is.EqualTo("MyCustomData"));
             }
             catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
             {
@@ -141,7 +141,7 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
             {
                 SetupFixture.TableClient.GetEntity<Azure.Data.Tables.TableEntity>(context.TestRunId.ToString(), entityRowId);
             });
-            Assert.AreEqual((int)HttpStatusCode.NotFound, requestFailedException.Status);
+            Assert.That(requestFailedException.Status, Is.EqualTo((int)HttpStatusCode.NotFound));
         }
 
         [TestCase(true)]
@@ -164,7 +164,7 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
                 .Done(c => c.MessageReceived)
                 .Run();
 
-            Assert.True(result.MessageReceived);
+            Assert.That(result.MessageReceived, Is.True);
         }
 
         class Context : ScenarioContext, IInjectServiceProvider

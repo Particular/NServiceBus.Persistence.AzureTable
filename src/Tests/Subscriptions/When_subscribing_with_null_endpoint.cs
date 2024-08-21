@@ -45,8 +45,11 @@
             Assert.That(subscribers.Count(), Is.EqualTo(1));
 
             var subscription = subscribers.ToArray()[0];
-            Assert.That(subscription.TransportAddress, Is.EqualTo("address://test-queue"));
-            Assert.That(subscription.Endpoint, Is.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(subscription.TransportAddress, Is.EqualTo("address://test-queue"));
+                Assert.That(subscription.Endpoint, Is.Null);
+            });
         }
     }
 }

@@ -40,9 +40,12 @@
                 messageType
             }, null)).ToArray();
 
-            Assert.AreEqual(1, subscribers.Length);
-            Assert.AreEqual("address://test-queue", subscribers[0].TransportAddress);
-            Assert.AreEqual("2", subscribers[0].Endpoint);
+            Assert.That(subscribers, Has.Length.EqualTo(1));
+            Assert.Multiple(() =>
+            {
+                Assert.That(subscribers[0].TransportAddress, Is.EqualTo("address://test-queue"));
+                Assert.That(subscribers[0].Endpoint, Is.EqualTo("2"));
+            });
         }
     }
 }

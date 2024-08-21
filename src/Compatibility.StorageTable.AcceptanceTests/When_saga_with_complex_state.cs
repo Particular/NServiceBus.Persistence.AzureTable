@@ -63,31 +63,34 @@ namespace NServiceBus.AcceptanceTests
             var nullableIntProp = sagaEntity[nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.NullableInt)];
             var byteArrayProp = sagaEntity[nameof(EndpointWithSagaWithComplexState.ComplexStateSagaData.ByteArray)];
 
-            Assert.AreEqual(typeof(double), nullableDoubleProp.GetType());
-            Assert.AreEqual(4.5d, nullableDoubleProp);
+            Assert.Multiple(() =>
+            {
+                Assert.That(nullableDoubleProp.GetType(), Is.EqualTo(typeof(double)));
+                Assert.That(nullableDoubleProp, Is.EqualTo(4.5d));
 
-            Assert.AreEqual(typeof(string), intArrayProp.GetType());
-            Assert.AreEqual("[1,2,3,4]", intArrayProp);
+                Assert.That(intArrayProp.GetType(), Is.EqualTo(typeof(string)));
+                Assert.That(intArrayProp, Is.EqualTo("[1,2,3,4]"));
 
-            Assert.AreEqual(typeof(string), complexObjectProp.GetType());
-            Assert.AreEqual("{\"Data\":\"SomeData\"}", complexObjectProp);
+                Assert.That(complexObjectProp.GetType(), Is.EqualTo(typeof(string)));
+                Assert.That(complexObjectProp, Is.EqualTo("{\"Data\":\"SomeData\"}"));
 
-            Assert.AreEqual(typeof(bool), nullableBoolProp.GetType());
-            Assert.AreEqual(true, nullableBoolProp);
+                Assert.That(nullableBoolProp.GetType(), Is.EqualTo(typeof(bool)));
+                Assert.That(nullableBoolProp, Is.EqualTo(true));
 
-            Assert.AreEqual(typeof(Guid), nullableGuidProp.GetType());
-            Assert.AreEqual(new Guid("3C623C1F-80AB-4036-86CA-C2020FAE2EFE"), nullableGuidProp);
+                Assert.That(nullableGuidProp.GetType(), Is.EqualTo(typeof(Guid)));
+                Assert.That(nullableGuidProp, Is.EqualTo(new Guid("3C623C1F-80AB-4036-86CA-C2020FAE2EFE")));
 
-            Assert.AreEqual(typeof(long), nullableLongProp.GetType());
-            Assert.AreEqual(10L, nullableLongProp);
+                Assert.That(nullableLongProp.GetType(), Is.EqualTo(typeof(long)));
+                Assert.That(nullableLongProp, Is.EqualTo(10L));
 
-            Assert.AreEqual(typeof(int), nullableIntProp.GetType());
-            Assert.AreEqual(10, nullableIntProp);
+                Assert.That(nullableIntProp.GetType(), Is.EqualTo(typeof(int)));
+                Assert.That(nullableIntProp, Is.EqualTo(10));
 
-            Assert.AreEqual(typeof(byte[]), byteArrayProp.GetType());
-            CollectionAssert.AreEqual(new byte[] { 1 }, (byte[])byteArrayProp);
+                Assert.That(byteArrayProp.GetType(), Is.EqualTo(typeof(byte[])));
+            });
+            Assert.That((byte[])byteArrayProp, Is.EqualTo(new byte[] { 1 }).AsCollection);
 
-            Assert.AreEqual(sagaId, context.SagaId);
+            Assert.That(context.SagaId, Is.EqualTo(sagaId));
         }
 
         public class Context : ScenarioContext

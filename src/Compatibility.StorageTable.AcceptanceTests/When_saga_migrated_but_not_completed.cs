@@ -43,9 +43,12 @@ namespace NServiceBus.AcceptanceTests
             var partitionRowKeyTuple = SecondaryIndexKeyBuilder.BuildTableKey(typeof(EndpointWithSagaThatWasMigrated.MigratedSagaData), sagaCorrelationProperty);
             var secondaryIndexEntry = await GetByPartitionKey<EndpointWithSagaThatWasMigrated.MigratedSagaData>(partitionRowKeyTuple.PartitionKey);
 
-            Assert.IsTrue(sagaEntity.ContainsKey("NServiceBus_2ndIndexKey"), "Secondary index property should be preserved");
-            Assert.IsNotNull(secondaryIndexEntry);
-            Assert.AreEqual(sagaId, context.SagaId);
+            Assert.Multiple(() =>
+            {
+                Assert.That(sagaEntity.ContainsKey("NServiceBus_2ndIndexKey"), Is.True, "Secondary index property should be preserved");
+                Assert.That(secondaryIndexEntry, Is.Not.Null);
+                Assert.That(context.SagaId, Is.EqualTo(sagaId));
+            });
         }
 
         public class Context : ScenarioContext

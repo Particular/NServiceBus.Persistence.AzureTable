@@ -38,7 +38,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, new SagaCorrelationProperty("SomeId", Guid.NewGuid()));
 
-            Assert.AreEqual(tableEntityPartitionKey, logicalMessageContext.Extensions.Get<TableEntityPartitionKey>());
+            Assert.That(logicalMessageContext.Extensions.Get<TableEntityPartitionKey>(), Is.EqualTo(tableEntityPartitionKey));
         }
 
         [Test]
@@ -52,7 +52,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
             logicalMessageContext.Extensions.Set(tableHolder);
 
             var exception = Assert.ThrowsAsync<Exception>(async () => await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, SagaCorrelationProperty.None));
-            StringAssert.Contains("The Azure Table saga persister doesn't support custom saga finders.", exception.Message);
+            Assert.That(exception.Message, Does.Contain("The Azure Table saga persister doesn't support custom saga finders."));
         }
 
         [Test]
@@ -69,7 +69,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             var tableInformation = logicalMessageContext.Extensions.Get<TableInformation>();
 
-            Assert.AreEqual(tableClient.Name, tableInformation.TableName);
+            Assert.That(tableInformation.TableName, Is.EqualTo(tableClient.Name));
         }
 
         [Test]
@@ -87,7 +87,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             var tableInformation = logicalMessageContext.Extensions.Get<TableInformation>();
 
-            Assert.AreEqual(nameof(TestSagaData), tableInformation.TableName);
+            Assert.That(tableInformation.TableName, Is.EqualTo(nameof(TestSagaData)));
         }
 
         [Test]
@@ -105,7 +105,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, new SagaCorrelationProperty("SomeId", Guid.NewGuid()));
 
-            Assert.AreEqual(tableInformation, logicalMessageContext.Extensions.Get<TableInformation>());
+            Assert.That(logicalMessageContext.Extensions.Get<TableInformation>(), Is.EqualTo(tableInformation));
         }
 
         [Test]
@@ -123,7 +123,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, new SagaCorrelationProperty("SomeId", Guid.NewGuid()));
 
-            Assert.AreEqual(sagaId, logicalMessageContext.Extensions.Get<TableEntityPartitionKey>().PartitionKey);
+            Assert.That(logicalMessageContext.Extensions.Get<TableEntityPartitionKey>().PartitionKey, Is.EqualTo(sagaId));
         }
 
         [Test]
@@ -142,7 +142,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, new SagaCorrelationProperty("SomeId", Guid.NewGuid()));
 
-            Assert.AreEqual(sagaId.ToString(), logicalMessageContext.Extensions.Get<TableEntityPartitionKey>().PartitionKey);
+            Assert.That(logicalMessageContext.Extensions.Get<TableEntityPartitionKey>().PartitionKey, Is.EqualTo(sagaId.ToString()));
         }
 
         [Test]
@@ -158,7 +158,7 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, new SagaCorrelationProperty("SomeId", Guid.NewGuid()));
 
-            Assert.IsTrue(Guid.TryParse(logicalMessageContext.Extensions.Get<TableEntityPartitionKey>().PartitionKey, out _));
+            Assert.That(Guid.TryParse(logicalMessageContext.Extensions.Get<TableEntityPartitionKey>().PartitionKey, out _), Is.True);
         }
 
         [Test]
@@ -174,8 +174,11 @@ namespace NServiceBus.Persistence.AzureTable.Tests
 
             await provider.SetPartitionKey<TestSagaData>(logicalMessageContext, new SagaCorrelationProperty("SomeId", Guid.NewGuid()));
 
-            Assert.IsTrue(Guid.TryParse(logicalMessageContext.Extensions.Get<TableEntityPartitionKey>().PartitionKey, out _));
-            Assert.False(secondaryIndex.FindSagaIdCalled);
+            Assert.Multiple(() =>
+            {
+                Assert.That(Guid.TryParse(logicalMessageContext.Extensions.Get<TableEntityPartitionKey>().PartitionKey, out _), Is.True);
+                Assert.That(secondaryIndex.FindSagaIdCalled, Is.False);
+            });
         }
 
         class TestSagaData : ContainSagaData
