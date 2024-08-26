@@ -16,9 +16,11 @@
             var persistence = endpointConfig.UsePersistence<AzureTablePersistence>().ConnectionString(connectionString);
 
             var settings = persistence.GetSettings();
+            var provideTableServiceClient = settings.Get<IProvideTableServiceClient>();
 
-            Assert.IsNotAssignableFrom<TableServiceClientFromConfiguration>(settings.Get<IProvideTableServiceClient>());
-            Assert.IsNotAssignableFrom<TableServiceServiceClientForSubscriptionsFromConfiguration>(settings.Get<IProvideTableServiceClient>());
+            Assert.That(provideTableServiceClient, Is.AssignableFrom<TableServiceClientFromConnectionString>().And
+                .Not.AssignableFrom<TableServiceClientFromConfiguration>().And.Not
+                .AssignableFrom<TableServiceServiceClientForSubscriptionsFromConfiguration>());
         }
     }
 }
