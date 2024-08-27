@@ -48,7 +48,7 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
             try
             {
                 var entity = SetupFixture.TableClient.GetEntity<Azure.Data.Tables.TableEntity>(context.TestRunId.ToString(), entityRowId).Value;
-                Assert.IsTrue(entity.TryGetValue("Data", out var entityValue));
+                Assert.That(entity.TryGetValue("Data", out var entityValue), Is.True);
                 Assert.That(entityValue, Is.EqualTo("MyCustomData"));
             }
             catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
@@ -134,8 +134,8 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
                 .Done(c => c.CompleteMessageReceived)
                 .Run();
 
-            Assert.True(context.CompleteMessageReceived);
-            Assert.False(context.MessageReceived);
+            Assert.That(context.CompleteMessageReceived, Is.True);
+            Assert.That(context.MessageReceived, Is.False);
 
             RequestFailedException requestFailedException = Assert.Throws<RequestFailedException>(() =>
             {
