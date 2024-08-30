@@ -1,7 +1,6 @@
 namespace NServiceBus.TransactionalSession.AcceptanceTests
 {
     using System;
-    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using AcceptanceTesting;
@@ -47,7 +46,7 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
 
             try
             {
-                var entity = SetupFixture.TableClient.GetEntity<Azure.Data.Tables.TableEntity>(context.TestRunId.ToString(), entityRowId).Value;
+                var entity = SetupFixture.TableClient.GetEntity<TableEntity>(context.TestRunId.ToString(), entityRowId).Value;
                 Assert.That(entity.TryGetValue("Data", out var entityValue), Is.True);
                 Assert.That(entityValue, Is.EqualTo("MyCustomData"));
             }
@@ -90,7 +89,7 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
 
             try
             {
-                var entity = SetupFixture.TableClient.GetEntity<Azure.Data.Tables.TableEntity>(context.TestRunId.ToString(), entityRowId).Value;
+                var entity = SetupFixture.TableClient.GetEntity<TableEntity>(context.TestRunId.ToString(), entityRowId).Value;
                 Assert.That(entity.TryGetValue("Data", out var entityValue), Is.True);
                 Assert.That(entityValue, Is.EqualTo("MyCustomData"));
             }
@@ -139,7 +138,7 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
 
             RequestFailedException requestFailedException = Assert.Throws<RequestFailedException>(() =>
             {
-                SetupFixture.TableClient.GetEntity<Azure.Data.Tables.TableEntity>(context.TestRunId.ToString(), entityRowId);
+                SetupFixture.TableClient.GetEntity<TableEntity>(context.TestRunId.ToString(), entityRowId);
             });
             Assert.That(requestFailedException.Status, Is.EqualTo((int)HttpStatusCode.NotFound));
         }
@@ -165,6 +164,56 @@ namespace NServiceBus.TransactionalSession.AcceptanceTests
                 .Run();
 
             Assert.That(result.MessageReceived, Is.True);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task Should_allow_using_synchronized_storage_even_when_there_are_no_outgoing_operations(bool outboxEnabled)
+        {
+            var entityRowId = Guid.NewGuid().ToString();
+
+            var context = await Scenario.Define<Context>()
+                .WithEndpoint<AnEndpoint>(s => s.When(async (statelessSession, ctx) =>
+                {
+                    using (var scope = ctx.ServiceProvider.CreateScope())
+                    using (var transactionalSession = scope.ServiceProvider.GetRequiredService<ITransactionalSession>())
+                    {
+                        await transactionalSession.Open(new AzureTableOpenSessionOptions(
+                            new TableEntityPartitionKey(ctx.TestRunId.ToString()),
+                            new TableInformation(SetupFixture.TableName)));
+
+                        var storageSession =
+                            transactionalSession.SynchronizedStorageSession.AzureTablePersistenceSession();
+
+                        var entity = new MyTableEntity
+                        {
+                            RowKey = entityRowId,
+                            PartitionKey = ctx.TestRunId.ToString(),
+                            Data = "MyCustomData"
+                        };
+
+                        storageSession.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
+
+                        // Deliberately not sending any messages via the transactional session before committing
+                        await transactionalSession.Commit();
+                    }
+
+                    //Send immediately dispatched message to finish the test
+                    await statelessSession.SendLocal(new CompleteTestMessage());
+                }))
+                .Done(c => c.CompleteMessageReceived)
+                .Run();
+
+            try
+            {
+                var entity = SetupFixture.TableClient.GetEntity<TableEntity>(context.TestRunId.ToString(), entityRowId).Value;
+                Assert.That(entity.TryGetValue("Data", out var entityValue), Is.True);
+                Assert.That(entityValue, Is.EqualTo("MyCustomData"));
+            }
+            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
+            {
+                Assert.Fail("TableEntity does not exist");
+            }
         }
 
         class Context : ScenarioContext, IInjectServiceProvider
