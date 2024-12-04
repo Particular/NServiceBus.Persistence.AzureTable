@@ -35,7 +35,7 @@ namespace NServiceBus.AcceptanceTests
             runSettings.RegisterTableNameProvider(() => TableToBeCreated);
 
             await Scenario.Define<Context>()
-                    .WithEndpoint<EndpointWithOutbox>(b => b.When(session => session.SendLocal(new SomeCommand
+                    .WithEndpoint<EndpointWithOutboxAndNameInBahaviour>(b => b.When(session => session.SendLocal(new SomeCommand
                     {
                         SomeId = Guid.NewGuid()
                     })))
@@ -56,9 +56,9 @@ namespace NServiceBus.AcceptanceTests
             public bool CommandReceived { get; set; }
         }
 
-        public class EndpointWithOutbox : EndpointConfigurationBuilder
+        public class EndpointWithOutboxAndNameInBahaviour : EndpointConfigurationBuilder
         {
-            public EndpointWithOutbox() =>
+            public EndpointWithOutboxAndNameInBahaviour() =>
                 EndpointSetup<DefaultServer>(c =>
                 {
                     c.EnableOutbox();

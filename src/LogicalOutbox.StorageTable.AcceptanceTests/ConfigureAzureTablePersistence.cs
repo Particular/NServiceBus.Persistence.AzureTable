@@ -23,13 +23,13 @@
             var sagaPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>()
                 .UseTableServiceClient(tableServiceClient);
 
+            var outboxPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
+
             if (!(settings.TryGet("allowTableCreation", out bool allowTableCreation) && allowTableCreation))
             {
                 sagaPersistence.DisableTableCreation();
+                outboxPersistence.DisableTableCreation();
             }
-
-
-            configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
 
             if (endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))
             {

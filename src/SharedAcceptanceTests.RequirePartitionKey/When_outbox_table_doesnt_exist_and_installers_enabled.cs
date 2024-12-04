@@ -30,16 +30,16 @@ namespace NServiceBus.AcceptanceTests
         [Test]
         public async Task Should_create_table()
         {
-            var settings = new RunSettings();
-            settings.Set("allowTableCreation", true);
+            var runSettings = new RunSettings();
+            runSettings.AllowTableCreation();
 
             await Scenario.Define<Context>()
-                    .WithEndpoint<EndpointWithOutbox>(b => b.When(session => session.SendLocal(new SomeCommand
+                    .WithEndpoint<EndpointWithOutboxAndInstallersOn>(b => b.When(session => session.SendLocal(new SomeCommand
                     {
                         SomeId = Guid.NewGuid()
                     })))
                     .Done(c => c.CommandReceived)
-                    .Run(settings);
+                    .Run(runSettings);
 
             var tableCreated = false;
             await foreach (var table in SetupFixture.TableServiceClient.QueryAsync(t => t.Name == TableToBeCreated))
@@ -55,16 +55,18 @@ namespace NServiceBus.AcceptanceTests
             public bool CommandReceived { get; set; }
         }
 
-        public class EndpointWithOutbox : EndpointConfigurationBuilder
+        public class EndpointWithOutboxAndInstallersOn : EndpointConfigurationBuilder
         {
-            public EndpointWithOutbox() =>
+            public EndpointWithOutboxAndInstallersOn() =>
                 EndpointSetup<DefaultServer>(c =>
                 {
                     c.EnableOutbox();
                     c.ConfigureTransport().TransportTransactionMode = TransportTransactionMode.ReceiveOnly;
 
-                    var sagaPersistence = c.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
-                    sagaPersistence.DefaultTable(TableToBeCreated);
+                    //Note: that EnabledInstallers is on by default in the TransactionSessionDefaultServer
+
+                    var outboxPersistence = c.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
+                    outboxPersistence.DefaultTable(TableToBeCreated);
                 });
 
             public class MyCommandHandler : IHandleMessages<SomeCommand>

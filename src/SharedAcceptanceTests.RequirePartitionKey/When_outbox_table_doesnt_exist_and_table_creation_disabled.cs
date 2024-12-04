@@ -34,35 +34,33 @@ namespace NServiceBus.AcceptanceTests
         {
             var exception = Assert.ThrowsAsync<MessageFailedException>(async () =>
                 await Scenario.Define<Context>()
-                    .WithEndpoint<EndpointWithOutbox>(b => b.When(session => session.SendLocal(new SomeCommand
+                    .WithEndpoint<EndpointWithOutboxAndTableCreationDisabled>(b => b.When(session => session.SendLocal(new SomeCommand
                     {
                         SomeId = Guid.NewGuid()
                     })))
                     .Done(c => c.FailedMessages.Any())
                     .Run());
 
-            Assert.AreEqual(1, exception.ScenarioContext.FailedMessages.Count);
-            StringAssert.Contains(
-                ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.ConnectionString)
+            Assert.That(exception.ScenarioContext.FailedMessages.Count, Is.EqualTo(1));
+            Assert.That(exception.FailedMessage.Exception.Message.Contains(ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.ConnectionString)
                     ? "The specified resource does not exist."
-                    : "The table specified does not exist",
-                exception.FailedMessage.Exception.Message);
+                    : "The table specified does not exist"));
         }
 
         public class Context : ScenarioContext
         {
         }
 
-        public class EndpointWithOutbox : EndpointConfigurationBuilder
+        public class EndpointWithOutboxAndTableCreationDisabled : EndpointConfigurationBuilder
         {
-            public EndpointWithOutbox() =>
+            public EndpointWithOutboxAndTableCreationDisabled() =>
                 EndpointSetup<DefaultServer>(c =>
                 {
                     c.EnableOutbox();
                     c.ConfigureTransport().TransportTransactionMode = TransportTransactionMode.ReceiveOnly;
 
-                    var sagaPersistence = c.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
-                    sagaPersistence.DefaultTable(TableThatDoesntExist);
+                    var outboxPersistence = c.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
+                    outboxPersistence.DefaultTable(TableThatDoesntExist);
 
                     // Note that DefaultServer disables table creation as part of the default persistence configuration
                 });

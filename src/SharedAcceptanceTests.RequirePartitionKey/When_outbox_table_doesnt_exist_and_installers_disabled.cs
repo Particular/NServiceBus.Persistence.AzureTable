@@ -35,28 +35,26 @@ namespace NServiceBus.AcceptanceTests
         {
             var exception = Assert.ThrowsAsync<MessageFailedException>(async () =>
                 await Scenario.Define<Context>()
-                    .WithEndpoint<EndpointWithInstallersOff>(b => b.When(session => session.SendLocal(new SomeCommand
+                    .WithEndpoint<EndpointWithOutboxAndInstallersOff>(b => b.When(session => session.SendLocal(new SomeCommand
                     {
                         SomeId = Guid.NewGuid()
                     })))
                     .Done(c => c.FailedMessages.Any())
                     .Run());
 
-            Assert.AreEqual(1, exception.ScenarioContext.FailedMessages.Count);
-            StringAssert.Contains(
-                ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.ConnectionString)
+            Assert.That(exception.ScenarioContext.FailedMessages.Count, Is.EqualTo(1));
+            Assert.That(exception.FailedMessage.Exception.Message.Contains(ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.ConnectionString)
                     ? "The specified resource does not exist."
-                    : "The table specified does not exist",
-                exception.FailedMessage.Exception.Message);
+                    : "The table specified does not exist"));
         }
 
         public class Context : ScenarioContext
         {
         }
 
-        public class EndpointWithInstallersOff : EndpointConfigurationBuilder
+        public class EndpointWithOutboxAndInstallersOff : EndpointConfigurationBuilder
         {
-            public EndpointWithInstallersOff() =>
+            public EndpointWithOutboxAndInstallersOff() =>
                 EndpointSetup<DefaultServer>(c =>
                 {
                     c.EnableOutbox();
@@ -65,8 +63,8 @@ namespace NServiceBus.AcceptanceTests
                     // so that we don't have to create a new endpoint template
                     c.GetSettings().Set("Installers.Enable", false);
 
-                    var sagaPersistence = c.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
-                    sagaPersistence.DefaultTable(TableThatDoesntExist);
+                    var outboxPersistence = c.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
+                    outboxPersistence.DefaultTable(TableThatDoesntExist);
                 });
 
             public class MyCommandHandler : IHandleMessages<SomeCommand>
