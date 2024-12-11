@@ -49,7 +49,7 @@
 
             var setAsDispatchedHolder = context.Extensions.Get<SetAsDispatchedHolder>();
             setAsDispatchedHolder.PartitionKey = partitionKey;
-            setAsDispatchedHolder.TableClientHolder = tableHolder;
+            setAsDispatchedHolder.TableClientHolder = tableHolder ?? throw new InvalidOperationException("Outbox table name not given. Consider calling DefaultTable(string) on the persistence or alternatively supply the table name as part of the message handling pipeline.");
 
             azureStorageOutboxTransaction.PartitionKey = partitionKey;
             azureStorageOutboxTransaction.StorageSession.TableClientHolder = tableHolder;

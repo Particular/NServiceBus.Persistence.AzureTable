@@ -37,10 +37,11 @@
 
             SagaIdGenerator = new SagaIdGenerator();
             var resolver = new TableClientHolderResolver(this, new TableInformation(SetupFixture.TableName));
+            var tableCreator = new TableCreator(true);
             var secondaryIndices = new SecondaryIndex();
             SagaStorage = new AzureSagaPersister(
                 this,
-                true,
+                tableCreator,
                 false,
                 secondaryIndices,
                 null,
@@ -48,7 +49,7 @@
                 reader => new JsonTextReader(reader),
                 writer => new JsonTextWriter(writer));
 
-            OutboxStorage = new OutboxPersister(resolver);
+            OutboxStorage = new OutboxPersister(resolver, tableCreator);
 
             GetContextBagForSagaStorage = () =>
             {

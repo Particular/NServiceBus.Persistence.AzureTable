@@ -10,8 +10,11 @@
 
     class OutboxPersister : IOutboxStorage
     {
-        public OutboxPersister(TableClientHolderResolver tableClientHolderResolver)
-            => this.tableClientHolderResolver = tableClientHolderResolver;
+        public OutboxPersister(TableClientHolderResolver tableClientHolderResolver, TableCreator tableCreator)
+        {
+            this.tableClientHolderResolver = tableClientHolderResolver;
+            this.tableCreator = tableCreator;
+        }
 
         public Task<IOutboxTransaction> BeginTransaction(ContextBag context, CancellationToken cancellationToken = default)
         {
@@ -26,9 +29,11 @@
 
         public async Task<OutboxMessage> Get(string messageId, ContextBag context, CancellationToken cancellationToken = default)
         {
+            var tableClientHolder = tableClientHolderResolver.ResolveAndSetIfAvailable(context);
+
             var setAsDispatchedHolder = new SetAsDispatchedHolder
             {
-                TableClientHolder = tableClientHolderResolver.ResolveAndSetIfAvailable(context)
+                TableClientHolder = tableClientHolder
             };
             context.Set(setAsDispatchedHolder);
 
@@ -47,6 +52,8 @@
             }
 
             setAsDispatchedHolder.ThrowIfTableClientIsNotSet();
+
+            await tableCreator.CreateTableIfNotExists(tableClientHolder.TableClient, cancellationToken).ConfigureAwait(false);
 
             var outboxRecord = await setAsDispatchedHolder.TableClientHolder.TableClient
                 .ReadOutboxRecord(messageId, partitionKey, context, cancellationToken)
@@ -101,5 +108,6 @@
         }
 
         readonly TableClientHolderResolver tableClientHolderResolver;
+        readonly TableCreator tableCreator;
     }
 }

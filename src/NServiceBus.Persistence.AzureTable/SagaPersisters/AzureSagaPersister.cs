@@ -1,7 +1,6 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.IO;
     using System.Threading;
@@ -15,7 +14,7 @@
     {
         public AzureSagaPersister(
             IProvideTableServiceClient tableServiceClientProvider,
-            bool disableTableCreation,
+            TableCreator tableCreator,
             bool compatibilityMode,
             SecondaryIndex secondaryIndex,
             string conventionalTablePrefix,
@@ -28,7 +27,7 @@
             this.jsonSerializer = jsonSerializer;
             this.conventionalTablePrefix = conventionalTablePrefix;
             this.compatibilityMode = compatibilityMode;
-            this.disableTableCreation = disableTableCreation;
+            this.tableCreator = tableCreator;
             client = tableServiceClientProvider.Client;
             this.secondaryIndex = secondaryIndex;
         }
@@ -156,14 +155,8 @@
                 tableToReadFrom = storageSession.Table;
             }
 
-            if (disableTableCreation || tableCreated.TryGetValue(tableToReadFrom.Name, out var isTableCreated) ||
-                isTableCreated)
-            {
-                return tableToReadFrom;
-            }
+            await tableCreator.CreateTableIfNotExists(tableToReadFrom, cancellationToken).ConfigureAwait(false);
 
-            await tableToReadFrom.CreateIfNotExistsAsync(cancellationToken).ConfigureAwait(false);
-            tableCreated[tableToReadFrom.Name] = true;
             return tableToReadFrom;
         }
 
@@ -196,11 +189,10 @@
         static TableEntityPartitionKey GetPartitionKey(ContextBag context, Guid sagaDataId)
             => !context.TryGet<TableEntityPartitionKey>(out var partitionKey) ? new TableEntityPartitionKey(sagaDataId.ToString()) : partitionKey;
 
-        readonly bool disableTableCreation;
+        readonly TableCreator tableCreator;
         readonly TableServiceClient client;
         readonly SecondaryIndex secondaryIndex;
         const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
-        static readonly ConcurrentDictionary<string, bool> tableCreated = new();
         readonly bool compatibilityMode;
         readonly string conventionalTablePrefix;
         readonly JsonSerializer jsonSerializer;
