@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
     using Outbox;
     using Pipeline;
@@ -14,8 +15,12 @@
     /// </summary>
     public sealed class LogicalOutboxBehavior : IBehavior<IIncomingLogicalMessageContext, IIncomingLogicalMessageContext>
     {
-        internal LogicalOutboxBehavior(TableClientHolderResolver tableClientHolderResolver) =>
+        internal LogicalOutboxBehavior(TableClientHolderResolver tableClientHolderResolver, TableCreator tableCreator)
+        {
             this.tableClientHolderResolver = tableClientHolderResolver;
+            this.tableCreator = tableCreator;
+
+        }
 
         /// <inheritdoc />
         public async Task Invoke(IIncomingLogicalMessageContext context, Func<IIncomingLogicalMessageContext, Task> next)
@@ -55,6 +60,8 @@
             azureStorageOutboxTransaction.StorageSession.TableClientHolder = tableHolder;
 
             setAsDispatchedHolder.ThrowIfTableClientIsNotSet();
+
+            await tableCreator.CreateTableIfNotExists(tableHolder.TableClient, CancellationToken.None).ConfigureAwait(false);
 
             var outboxRecord = await tableHolder.TableClient.ReadOutboxRecord(context.MessageId, azureStorageOutboxTransaction.PartitionKey.Value, context.Extensions, context.CancellationToken)
                 .ConfigureAwait(false);
@@ -102,5 +109,6 @@
         }
 
         readonly TableClientHolderResolver tableClientHolderResolver;
+        readonly TableCreator tableCreator;
     }
 }

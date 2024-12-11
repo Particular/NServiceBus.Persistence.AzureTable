@@ -19,7 +19,7 @@
             var installerSettings = context.Settings.Get<SynchronizedStorageInstallerSettings>();
             context.Services.AddSingleton(new TableCreator(installerSettings.Disabled));
             context.Services.AddSingleton<IOutboxStorage, OutboxPersister>();
-            context.Services.AddTransient(provider => new LogicalOutboxBehavior(provider.GetRequiredService<TableClientHolderResolver>()));
+            context.Services.AddTransient(provider => new LogicalOutboxBehavior(provider.GetRequiredService<TableClientHolderResolver>(), provider.GetRequiredService<TableCreator>()));
 
             context.Pipeline.Register(provider => provider.GetRequiredService<LogicalOutboxBehavior>(), "Behavior that mimics the outbox as part of the logical stage.");
         }
