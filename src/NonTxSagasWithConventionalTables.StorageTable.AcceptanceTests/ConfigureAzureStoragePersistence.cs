@@ -18,11 +18,6 @@
 
             sagaPersistence.UseTableServiceClient(SetupFixture.TableServiceClient);
 
-            if (!(settings.TryGet("allowTableCreation", out bool allowTableCreation) && allowTableCreation))
-            {
-                sagaPersistence.DisableTableCreation();
-            }
-
             var recoverabilitySettings = configuration.Recoverability();
 
             if (endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))
