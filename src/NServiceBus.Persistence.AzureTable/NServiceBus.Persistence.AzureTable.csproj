@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup Label="Direct references to transitive dependencies to avoid versions with CVE">
-    <PackageReference Include="System.Text.Json" Version="8.0.5" AutomaticVersionRange="false" />
+    <PackageReference Include="System.Text.Json" Version="9.0.0" AutomaticVersionRange="false" />
   </ItemGroup>
 
   <ItemGroup>
