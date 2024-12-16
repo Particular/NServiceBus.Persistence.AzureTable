@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
     using Outbox;
     using Pipeline;
@@ -14,8 +15,12 @@
     /// </summary>
     public sealed class LogicalOutboxBehavior : IBehavior<IIncomingLogicalMessageContext, IIncomingLogicalMessageContext>
     {
-        internal LogicalOutboxBehavior(TableClientHolderResolver tableClientHolderResolver) =>
+        internal LogicalOutboxBehavior(TableClientHolderResolver tableClientHolderResolver, TableCreator tableCreator)
+        {
             this.tableClientHolderResolver = tableClientHolderResolver;
+            this.tableCreator = tableCreator;
+
+        }
 
         /// <inheritdoc />
         public async Task Invoke(IIncomingLogicalMessageContext context, Func<IIncomingLogicalMessageContext, Task> next)
@@ -49,12 +54,14 @@
 
             var setAsDispatchedHolder = context.Extensions.Get<SetAsDispatchedHolder>();
             setAsDispatchedHolder.PartitionKey = partitionKey;
-            setAsDispatchedHolder.TableClientHolder = tableHolder;
+            setAsDispatchedHolder.TableClientHolder = tableHolder ?? throw new InvalidOperationException("Outbox table name not given. Consider calling DefaultTable(string) on the persistence or alternatively supply the table name as part of the message handling pipeline.");
 
             azureStorageOutboxTransaction.PartitionKey = partitionKey;
             azureStorageOutboxTransaction.StorageSession.TableClientHolder = tableHolder;
 
             setAsDispatchedHolder.ThrowIfTableClientIsNotSet();
+
+            await tableCreator.CreateTableIfNotExists(tableHolder.TableClient, CancellationToken.None).ConfigureAwait(false);
 
             var outboxRecord = await tableHolder.TableClient.ReadOutboxRecord(context.MessageId, azureStorageOutboxTransaction.PartitionKey.Value, context.Extensions, context.CancellationToken)
                 .ConfigureAwait(false);
@@ -102,5 +109,6 @@
         }
 
         readonly TableClientHolderResolver tableClientHolderResolver;
+        readonly TableCreator tableCreator;
     }
 }
