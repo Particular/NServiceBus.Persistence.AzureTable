@@ -1,7 +1,6 @@
 ﻿namespace NServiceBus.Persistence.AzureTable.Tests
 {
     using System;
-    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Net;
@@ -78,7 +77,7 @@
             },
                 new TableInformation(tableName));
 
-            var behavior = new LogicalOutboxBehavior(containerHolderHolderResolver);
+            var behavior = new LogicalOutboxBehavior(containerHolderHolderResolver, new TableCreator(false));
 
             var testableContext = new TestableIncomingLogicalMessageContext
             {

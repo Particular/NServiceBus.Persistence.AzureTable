@@ -12,11 +12,11 @@
     {
         Task IConfigureEndpointTestExecution.Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
         {
-            var persistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
+            var sagaPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
             // backdoor for testing
-            persistence.GetSettings().Set("AzureSagaStorage.ConventionalTablePrefix", SetupFixture.TablePrefix);
+            sagaPersistence.GetSettings().Set("AzureSagaStorage.ConventionalTablePrefix", SetupFixture.TablePrefix);
 
-            persistence.UseTableServiceClient(SetupFixture.TableServiceClient);
+            sagaPersistence.UseTableServiceClient(SetupFixture.TableServiceClient);
 
             var recoverabilitySettings = configuration.Recoverability();
 
