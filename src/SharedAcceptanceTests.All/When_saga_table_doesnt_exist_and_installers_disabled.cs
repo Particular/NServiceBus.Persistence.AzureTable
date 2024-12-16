@@ -65,6 +65,9 @@ namespace NServiceBus.AcceptanceTests
                     var sagaPersistence = c.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
                     sagaPersistence.DefaultTable(TableThatDoesntExist);
 
+                    //it is on by default
+                    sagaPersistence.DisableTableCreation();
+
                     var subscriptionStorage = c.UsePersistence<AzureTablePersistence, StorageType.Subscriptions>();
                 });
 
