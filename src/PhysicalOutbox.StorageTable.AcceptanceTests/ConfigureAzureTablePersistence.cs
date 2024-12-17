@@ -3,6 +3,7 @@
     using System;
     using System.Threading.Tasks;
     using Azure.Data.Tables;
+    using Microsoft.Extensions.DependencyInjection;
     using NServiceBus;
     using NServiceBus.AcceptanceTesting;
     using NServiceBus.AcceptanceTesting.Support;
@@ -20,11 +21,16 @@
 
         Task IConfigureEndpointTestExecution.Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
         {
-            configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>()
-                         .DisableTableCreation()
-                         .UseTableServiceClient(tableServiceClient);
+            var sagaPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>()
+                .UseTableServiceClient(tableServiceClient);
 
-            configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
+            var outboxPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
+
+            if (!settings.TryGet<AllowTableCreation>(out _))
+            {
+                sagaPersistence.DisableTableCreation();
+                outboxPersistence.DisableTableCreation();
+            }
 
             if (endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))
             {
@@ -37,9 +43,13 @@
                 configuration.Pipeline.Register(typeof(PartitionKeyProviderBehavior), "Populates the partition key");
             }
 
-            if (!settings.TryGet<DoNotRegisterDefaultTableNameProvider>(out _))
+            if (settings.TryGet<TableNameProvider>(out var tableNameProvider))
             {
-                configuration.Pipeline.Register(typeof(TableInformationProviderBehavior), "Populates the table information key");
+                configuration.Pipeline.Register(new TableInformationProviderBehavior.Registration(tableNameProvider.GetTableName));
+            }
+            else if (!settings.TryGet<DoNotRegisterDefaultTableNameProvider>(out _))
+            {
+                configuration.Pipeline.Register(new TableInformationProviderBehavior.Registration());
             }
 
             return Task.CompletedTask;
@@ -66,18 +76,52 @@
 
         class TableInformationProviderBehavior : Behavior<ITransportReceiveContext>
         {
-            public TableInformationProviderBehavior(IReadOnlySettings settings) => this.settings = settings;
+            readonly IReadOnlySettings settings;
+            readonly Func<ITransportReceiveContext, string> tableNameProvider;
 
-            public override Task Invoke(ITransportReceiveContext context, Func<Task> next)
+            public TableInformationProviderBehavior(IReadOnlySettings settings, Func<string> tableNameProvider)
+            {
+                this.settings = settings;
+
+                this.tableNameProvider = tableNameProvider == null
+                    ? DefaultTableNameProvider
+                    : context => tableNameProvider();
+            }
+
+            string DefaultTableNameProvider(ITransportReceiveContext context)
             {
                 if (!settings.TryGet<TableInformation>(out _) && !context.Extensions.TryGet<TableInformation>(out _))
                 {
-                    context.Extensions.Set(new TableInformation(SetupFixture.TableName));
+                    return SetupFixture.TableName;
                 }
+                else
+                {
+                    return null;
+                }
+            }
+
+            public override Task Invoke(ITransportReceiveContext context, Func<Task> next)
+            {
+                var tableName = tableNameProvider(context);
+
+                if (!string.IsNullOrEmpty(tableName))
+                {
+                    context.Extensions.Set(new TableInformation(tableName));
+                }
+
                 return next();
             }
 
-            readonly IReadOnlySettings settings;
+            public class Registration(Func<string> tableNameProvider = null)
+                : RegisterStep(
+                    nameof(TableInformationProviderBehavior),
+                    typeof(TableInformationProviderBehavior),
+                    "Populates the table information",
+                    serviceProvider => new TableInformationProviderBehavior(
+                        serviceProvider.GetRequiredService<IReadOnlySettings>(),
+                        tableNameProvider))
+            {
+            }
         }
     }
 }

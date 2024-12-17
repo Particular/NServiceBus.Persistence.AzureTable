@@ -20,11 +20,16 @@
 
         Task IConfigureEndpointTestExecution.Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
         {
-            configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>()
-                         .DisableTableCreation()
-                         .UseTableServiceClient(tableServiceClient);
+            var sagaPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>()
+                .UseTableServiceClient(tableServiceClient);
 
-            configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
+            var outboxPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
+
+            if (!settings.TryGet<AllowTableCreation>(out _))
+            {
+                sagaPersistence.DisableTableCreation();
+                outboxPersistence.DisableTableCreation();
+            }
 
             if (endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))
             {
@@ -35,7 +40,12 @@
             {
                 configuration.Pipeline.Register(new PartitionKeyProviderBehavior.Registration());
             }
-            if (!settings.TryGet<DoNotRegisterDefaultTableNameProvider>(out _))
+
+            if (settings.TryGet<TableNameProvider>(out var tableNameProvider))
+            {
+                configuration.Pipeline.Register(new TableInformationProviderBehavior.Registration(tableNameProvider.GetTableName));
+            }
+            else if (!settings.TryGet<DoNotRegisterDefaultTableNameProvider>(out _))
             {
                 configuration.Pipeline.Register(new TableInformationProviderBehavior.Registration());
             }
@@ -75,26 +85,53 @@
 
         class TableInformationProviderBehavior : Behavior<IIncomingLogicalMessageContext>
         {
-            public TableInformationProviderBehavior(IReadOnlySettings settings) => this.settings = settings;
+            readonly IReadOnlySettings settings;
+            readonly Func<IIncomingLogicalMessageContext, string> tableNameProvider;
 
-            public override Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
+            public TableInformationProviderBehavior(IReadOnlySettings settings, Func<string> tableNameProvider)
+            {
+                this.settings = settings;
+
+                this.tableNameProvider = tableNameProvider == null
+                    ? DefaultTableNameProvider
+                    : context => tableNameProvider();
+            }
+
+            string DefaultTableNameProvider(IIncomingLogicalMessageContext context)
             {
                 if (!settings.TryGet<TableInformation>(out _) && !context.Extensions.TryGet<TableInformation>(out _))
                 {
-                    context.Extensions.Set(new TableInformation(SetupFixture.TableName));
+                    return SetupFixture.TableName;
                 }
+                else
+                {
+                    return null;
+                }
+            }
+
+            public override Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
+            {
+                var tableName = tableNameProvider(context);
+
+                if (!string.IsNullOrEmpty(tableName))
+                {
+                    context.Extensions.Set(new TableInformation(tableName));
+                }
+
                 return next();
             }
 
-            readonly IReadOnlySettings settings;
-
             public class Registration : RegisterStep
             {
-                public Registration() : base(nameof(TableInformationProviderBehavior),
-                    typeof(TableInformationProviderBehavior),
-                    "Populates the table information",
-                    provider => new TableInformationProviderBehavior(provider.GetRequiredService<IReadOnlySettings>())) =>
-                    InsertBeforeIfExists(nameof(LogicalOutboxBehavior));
+                public Registration(Func<string> tableNameProvider = null)
+                    : base(
+                          nameof(TableInformationProviderBehavior),
+                          typeof(TableInformationProviderBehavior),
+                          "Populates the table information",
+                          serviceProvider => new TableInformationProviderBehavior(
+                              serviceProvider.GetRequiredService<IReadOnlySettings>(),
+                              tableNameProvider))
+                    => InsertBeforeIfExists(nameof(LogicalOutboxBehavior));
             }
         }
     }
