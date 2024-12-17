@@ -62,7 +62,7 @@
             var writerCreator = context.Settings.Get<Func<TextWriter, JsonWriter>>(WellKnownConfigurationKeys.SagaWriterCreator);
 
             context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideTableServiceClient>(),
-                installerSettings.Disabled, compatibilityModeEnabled, secondaryIndices, conventionalTablePrefix, jsonSerializer, readerCreator, writerCreator));
+                provider.GetRequiredService<TableCreator>(), compatibilityModeEnabled, secondaryIndices, conventionalTablePrefix, jsonSerializer, readerCreator, writerCreator));
         }
 
         static readonly ILog Logger = LogManager.GetLogger<SagaStorage>();

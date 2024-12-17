@@ -40,6 +40,8 @@
                 new AzureStorageSynchronizedStorageSession(provider.GetRequiredService<TableClientHolderResolver>()));
             context.Services.AddScoped(provider => provider.GetRequiredService<ICompletableSynchronizedStorageSession>().AzureTablePersistenceSession());
 
+            context.Settings.TryGet(out SynchronizedStorageInstallerSettings installerSettings);
+            context.Services.AddSingleton(new TableCreator(installerSettings != null && installerSettings.Disabled));
         }
     }
 }

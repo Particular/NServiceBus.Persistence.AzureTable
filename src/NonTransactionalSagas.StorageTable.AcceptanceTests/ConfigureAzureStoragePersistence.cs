@@ -10,12 +10,10 @@
     {
         Task IConfigureEndpointTestExecution.Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
         {
-            var persistence = configuration
-                .UsePersistence<AzureTablePersistence, StorageType.Sagas>()
-                .DisableTableCreation()
+            var sagaPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>()
                 .UseTableServiceClient(SetupFixture.TableServiceClient);
 
-            persistence.DefaultTable(SetupFixture.TableName);
+            sagaPersistence.DefaultTable(SetupFixture.TableName);
 
             if (endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))
             {
