@@ -5,7 +5,8 @@ namespace NServiceBus.AcceptanceTests
 
     public static partial class RunSettingsExtensions
     {
-        public static void AllowTableCreation(this RunSettings runSettings) => runSettings.Set("allowTableCreation", true);
+        public static void AllowTableCreation(this RunSettings runSettings) =>
+            runSettings.Set(new AllowTableCreation());
 
         public static void DoNotRegisterDefaultPartitionKeyProvider(this RunSettings runSettings) =>
             runSettings.Set(new DoNotRegisterDefaultPartitionKeyProvider());
