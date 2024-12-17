@@ -16,8 +16,6 @@
 
         protected override void Setup(FeatureConfigurationContext context)
         {
-            var installerSettings = context.Settings.Get<SynchronizedStorageInstallerSettings>();
-            context.Services.AddSingleton(new TableCreator(installerSettings.Disabled));
             context.Services.AddSingleton<IOutboxStorage, OutboxPersister>();
             context.Services.AddTransient(provider => new LogicalOutboxBehavior(provider.GetRequiredService<TableClientHolderResolver>(), provider.GetRequiredService<TableCreator>()));
 
