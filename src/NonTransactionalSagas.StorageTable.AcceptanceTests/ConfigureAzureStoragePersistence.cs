@@ -13,11 +13,6 @@
             var sagaPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>()
                 .UseTableServiceClient(SetupFixture.TableServiceClient);
 
-            if (!(settings.TryGet("allowTableCreation", out bool allowTableCreation) && allowTableCreation))
-            {
-                sagaPersistence.DisableTableCreation();
-            }
-
             sagaPersistence.DefaultTable(SetupFixture.TableName);
 
             if (endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))

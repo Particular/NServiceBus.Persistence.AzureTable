@@ -25,7 +25,7 @@
 
             var outboxPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
 
-            if (!(settings.TryGet("allowTableCreation", out bool allowTableCreation) && allowTableCreation))
+            if (!settings.TryGet<AllowTableCreation>(out _))
             {
                 sagaPersistence.DisableTableCreation();
                 outboxPersistence.DisableTableCreation();
