@@ -28,12 +28,12 @@
 
   <ItemGroup Condition="'$(PkgNServiceBus_AcceptanceTests_Sources)' != ''">
     <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\*.cs" />
-    <Compile Include="$(PkgNServiceBus_AcceptanceTests_Sources)\contentFiles\cs\$(TargetFramework)\**\EndpointTemplates\*.cs" />
-    <Compile Include="$(PkgNServiceBus_AcceptanceTests_Sources)\contentFiles\cs\$(TargetFramework)\**\ScenarioDescriptors\*.cs" />
-    <Compile Include="$(PkgNServiceBus_AcceptanceTests_Sources)\contentFiles\cs\$(TargetFramework)\**\ConfigureEndpointAcceptanceTestingTransport.cs" />
-    <Compile Include="$(PkgNServiceBus_AcceptanceTests_Sources)\contentFiles\cs\$(TargetFramework)\**\ConfigureEndpointAcceptanceTestingPersistence.cs" />
-    <Compile Include="$(PkgNServiceBus_AcceptanceTests_Sources)\contentFiles\cs\$(TargetFramework)\**\DeterministicGuid.cs" />
-    <Compile Include="$(PkgNServiceBus_AcceptanceTests_Sources)\contentFiles\cs\$(TargetFramework)\**\NServiceBusAcceptanceTest.cs" />
+    <Compile Include="$(PkgNServiceBus_AcceptanceTests_Sources)\**\EndpointTemplates\*.cs" />
+    <Compile Include="$(PkgNServiceBus_AcceptanceTests_Sources)\**\ScenarioDescriptors\*.cs" />
+    <Compile Include="$(PkgNServiceBus_AcceptanceTests_Sources)\**\ConfigureEndpointAcceptanceTestingTransport.cs" />
+    <Compile Include="$(PkgNServiceBus_AcceptanceTests_Sources)\**\ConfigureEndpointAcceptanceTestingPersistence.cs" />
+    <Compile Include="$(PkgNServiceBus_AcceptanceTests_Sources)\**\DeterministicGuid.cs" />
+    <Compile Include="$(PkgNServiceBus_AcceptanceTests_Sources)\**\NServiceBusAcceptanceTest.cs" />
   </ItemGroup>
 
 </Project>
