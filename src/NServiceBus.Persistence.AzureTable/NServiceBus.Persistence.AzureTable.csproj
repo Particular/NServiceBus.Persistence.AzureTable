@@ -11,7 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Azure.Data.Tables" Version="12.9.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NServiceBus" Version="9.2.3" />
+    <PackageReference Include="NServiceBus" Version="9.2.5" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" AutomaticVersionRange="false" />
   </ItemGroup>
 
