@@ -19,8 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="TransactionalSession.StorageTable.AcceptanceTests" Key="$(NServiceBusTestsKey)" />
     <InternalsVisibleTo Include="TransactionalSession.CosmosDB.AcceptanceTests" Key="$(NServiceBusTestsKey)" />
+    <InternalsVisibleTo Include="TransactionalSession.StorageTable.AcceptanceTests" Key="$(NServiceBusTestsKey)" />
   </ItemGroup>
 
 </Project>
