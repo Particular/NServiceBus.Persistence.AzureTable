@@ -9,5 +9,6 @@ namespace NServiceBus.TransactionalSession
     public static class AzureTableTransactionalSessionExtensions
     {
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence> EnableTransactionalSession(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence> persistenceExtensions) { }
+        public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence> EnableTransactionalSession(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence> persistenceExtensions, NServiceBus.TransactionalSession.TransactionalSessionOptions transactionalSessionOptions) { }
     }
 }
