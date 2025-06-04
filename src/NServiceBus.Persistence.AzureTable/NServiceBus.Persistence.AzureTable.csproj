@@ -21,10 +21,6 @@
     <PackageReference Include="Particular.Packaging" Version="4.2.2" PrivateAssets="All" />
   </ItemGroup>
 
-  <ItemGroup Label="Direct references to transitive dependencies to avoid versions with CVE">
-    <PackageReference Include="System.Text.Json" Version="8.0.5" AutomaticVersionRange="false" />
-  </ItemGroup>
-
   <ItemGroup>
     <InternalsVisibleTo Include="NServiceBus.Persistence.AzureTable.TransactionalSession" Key="$(NServiceBusKey)" />
   </ItemGroup>
