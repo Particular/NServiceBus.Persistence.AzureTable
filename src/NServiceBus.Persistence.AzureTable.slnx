@@ -4,7 +4,6 @@
     <File Path="../.github/workflows/release.yml" />
     <File Path="Custom.Build.props" />
   </Folder>
-  <Project Path="Compatibility.StorageTable.AcceptanceTests/Compatibility.StorageTable.AcceptanceTests.csproj" />
   <Project Path="LogicalOutbox.CosmosDB.AcceptanceTests/LogicalOutbox.CosmosDB.AcceptanceTests.csproj" />
   <Project Path="LogicalOutbox.StorageTable.AcceptanceTests/LogicalOutbox.StorageTable.AcceptanceTests.csproj" />
   <Project Path="NonTransactionalSagas.CosmosDB.AcceptanceTests/NonTransactionalSagas.CosmosDB.AcceptanceTests.csproj" />
