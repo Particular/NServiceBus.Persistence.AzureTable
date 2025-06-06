@@ -93,15 +93,5 @@
 
             return config;
         }
-
-        /// <summary>
-        /// Configures the backward compatibility specific settings.
-        /// </summary>
-        public static CompatibilitySettings Compatibility(this PersistenceExtensions<AzureTablePersistence, StorageType.Sagas> config)
-        {
-            ArgumentNullException.ThrowIfNull(config);
-
-            return new CompatibilitySettings(config.GetSettings());
-        }
     }
 }

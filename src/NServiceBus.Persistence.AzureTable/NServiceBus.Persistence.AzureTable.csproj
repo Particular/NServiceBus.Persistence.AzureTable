@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\NServiceBus.snk</AssemblyOriginatorKeyFile>
     <Description>NServiceBus Azure Table Persistence</Description>
@@ -11,18 +11,13 @@
   <ItemGroup>
     <PackageReference Include="Azure.Data.Tables" Version="12.11.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NServiceBus" Version="9.2.7" />
-    <PackageReference Include="System.Linq.Async" Version="6.0.1" AutomaticVersionRange="false" />
+    <PackageReference Include="NServiceBus" Version="10.0.0-alpha.1" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Fody" Version="6.9.2" PrivateAssets="All" />
-    <PackageReference Include="Obsolete.Fody" Version="5.3.0" PrivateAssets="All" />
-    <PackageReference Include="Particular.Packaging" Version="4.2.2" PrivateAssets="All" />
-  </ItemGroup>
-
-  <ItemGroup Label="Direct references to transitive dependencies to avoid versions with CVE">
-    <PackageReference Include="System.Text.Json" Version="8.0.5" AutomaticVersionRange="false" />
+    <PackageReference Include="Obsolete.Fody" Version="5.3.1" PrivateAssets="All" />
+    <PackageReference Include="Particular.Packaging" Version="4.3.1" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>

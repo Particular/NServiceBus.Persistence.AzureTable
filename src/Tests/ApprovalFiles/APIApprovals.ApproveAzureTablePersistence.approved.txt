@@ -5,20 +5,23 @@
 namespace NServiceBus
 {
     public sealed class AzureTablePersistence : NServiceBus.Persistence.PersistenceDefinition { }
+    [System.Obsolete("Compatibility mode is deprecated. Will be removed in version 8.0.0.", true)]
     public class CompatibilitySettings : NServiceBus.Configuration.AdvancedExtensibility.ExposeSettings
     {
-        [System.Obsolete("Compatibility mode is deprecated. Will be treated as an error from version 7.0.0." +
-            " Will be removed in version 8.0.0.", false)]
+        [System.Obsolete("Compatibility mode is deprecated. The member currently throws a NotImplementedExc" +
+            "eption. Will be removed in version 8.0.0.", true)]
         public void AllowSecondaryKeyLookupToFallbackToFullTableScan() { }
-        [System.Obsolete("Compatibility mode is deprecated. Will be treated as an error from version 7.0.0." +
-            " Will be removed in version 8.0.0.", false)]
+        [System.Obsolete("Compatibility mode is deprecated. The member currently throws a NotImplementedExc" +
+            "eption. Will be removed in version 8.0.0.", true)]
         public void AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey() { }
-        [System.Obsolete("Compatibility mode is deprecated. Will be treated as an error from version 7.0.0." +
-            " Will be removed in version 8.0.0.", false)]
+        [System.Obsolete("Compatibility mode is deprecated. The member currently throws a NotImplementedExc" +
+            "eption. Will be removed in version 8.0.0.", true)]
         public void EnableSecondaryKeyLookupForSagasCorrelatedByProperties() { }
     }
     public static class ConfigureAzureSagaStorage
     {
+        [System.Obsolete("Compatibility mode is deprecated. The member currently throws a NotImplementedExc" +
+            "eption. Will be removed in version 8.0.0.", true)]
         public static NServiceBus.CompatibilitySettings Compatibility(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> ConnectionString(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config, string connectionString) { }
         public static NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> DisableTableCreation(this NServiceBus.PersistenceExtensions<NServiceBus.AzureTablePersistence, NServiceBus.StorageType.Sagas> config) { }
