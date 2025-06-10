@@ -1,0 +1,31 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="../.github/workflows/ci.yml" />
+    <File Path="../.github/workflows/release.yml" />
+    <File Path="Custom.Build.props" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/Tests.csproj" />
+    <Project Path="TransactionalSession.Tests/TransactionalSession.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Tests/CosmosDB/">
+    <Project Path="LogicalOutbox.CosmosDB.AcceptanceTests/LogicalOutbox.CosmosDB.AcceptanceTests.csproj" />
+    <Project Path="NonTransactionalSagas.CosmosDB.AcceptanceTests/NonTransactionalSagas.CosmosDB.AcceptanceTests.csproj" />
+    <Project Path="NonTxSagasWithConventionalTables.CosmosDB.AcceptanceTests/NonTxSagasWithConventionalTables.CosmosDB.AcceptanceTests.csproj" />
+    <Project Path="Persistence.CosmosDB.Tests/Persistence.CosmosDB.Tests.csproj" />
+    <Project Path="PhysicalOutbox.CosmosDB.AcceptanceTests/PhysicalOutbox.CosmosDB.AcceptanceTests.csproj" />
+    <Project Path="Subscription.CosmosDB.AcceptanceTests/Subscription.CosmosDB.AcceptanceTests.csproj" />
+    <Project Path="TransactionalSession.CosmosDB.AcceptanceTests/TransactionalSession.CosmosDB.AcceptanceTests.csproj" />
+  </Folder>
+  <Folder Name="/Tests/StorageTable/">
+    <Project Path="LogicalOutbox.StorageTable.AcceptanceTests/LogicalOutbox.StorageTable.AcceptanceTests.csproj" />
+    <Project Path="NonTransactionalSagas.StorageTable.AcceptanceTests/NonTransactionalSagas.StorageTable.AcceptanceTests.csproj" />
+    <Project Path="NonTxSagasWithConventionalTables.StorageTable.AcceptanceTests/NonTxSagasWithConventionalTables.StorageTable.AcceptanceTests.csproj" />
+    <Project Path="Persistence.StorageTable.Tests/Persistence.StorageTable.Tests.csproj" />
+    <Project Path="PhysicalOutbox.StorageTable.AcceptanceTests/PhysicalOutbox.StorageTable.AcceptanceTests.csproj" />
+    <Project Path="Subscription.StorageTable.AcceptanceTests/Subscription.StorageTable.AcceptanceTests.csproj" />
+    <Project Path="TransactionalSession.StorageTable.AcceptanceTests/TransactionalSession.StorageTable.AcceptanceTests.csproj" />
+  </Folder>
+  <Project Path="NServiceBus.Persistence.AzureTable.TransactionalSession/NServiceBus.Persistence.AzureTable.TransactionalSession.csproj" />
+  <Project Path="NServiceBus.Persistence.AzureTable/NServiceBus.Persistence.AzureTable.csproj" />
+</Solution>
