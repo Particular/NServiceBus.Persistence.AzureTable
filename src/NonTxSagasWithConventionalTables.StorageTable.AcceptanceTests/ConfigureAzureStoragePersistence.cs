@@ -14,7 +14,7 @@
         {
             var sagaPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>();
             // backdoor for testing
-            sagaPersistence.GetSettings().Set("AzureSagaStorage.ConventionalTablePrefix", SetupFixture.TablePrefix);
+            sagaPersistence.GetSettings().Set(Persistence.AzureTable.WellKnownConfigurationKeys.SagaStorageConventionalTablePrefix, SetupFixture.TablePrefix);
 
             sagaPersistence.UseTableServiceClient(SetupFixture.TableServiceClient);
 

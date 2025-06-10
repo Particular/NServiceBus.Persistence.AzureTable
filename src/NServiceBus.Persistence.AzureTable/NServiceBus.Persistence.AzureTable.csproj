@@ -25,6 +25,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="NonTxSagasWithConventionalTables.CosmosDB.AcceptanceTests" Key="$(NServiceBusTestsKey)" />
+    <InternalsVisibleTo Include="NonTxSagasWithConventionalTables.StorageTable.AcceptanceTests" Key="$(NServiceBusTestsKey)" />
     <InternalsVisibleTo Include="Persistence.CosmosDB.Tests" Key="$(NServiceBusTestsKey)" />
     <InternalsVisibleTo Include="Persistence.StorageTable.Tests" Key="$(NServiceBusTestsKey)" />
     <InternalsVisibleTo Include="Tests" Key="$(NServiceBusTestsKey)" />
