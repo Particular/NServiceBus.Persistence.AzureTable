@@ -2,9 +2,6 @@
 {
     static class WellKnownConfigurationKeys
     {
-        public const string SagaStorageAssumeSecondaryIndicesExist = "AzureSagaStorage.SagaStorageAssumeSecondaryIndicesExist";
-        public const string SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey = "AzureSagaStorage.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey";
-        public const string SagaStorageCompatibilityMode = "AzureSagaStorage.EnableCompatibilityMode";
         public const string SagaStorageConventionalTablePrefix = "AzureSagaStorage.ConventionalTablePrefix";
         public const string SagaJsonSerializer = "AzureSagaStorage.JsonSerializerSettings";
         public const string SagaReaderCreator = "AzureSagaStorage.ReaderCreator";

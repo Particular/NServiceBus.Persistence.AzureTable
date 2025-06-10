@@ -3,11 +3,10 @@
     using System;
     using System.IO;
     using Features;
-    using Logging;
     using Microsoft.Extensions.DependencyInjection;
-    using Sagas;
     using Migration;
     using Newtonsoft.Json;
+    using Sagas;
 
     class SagaStorage : Feature
     {
@@ -15,9 +14,6 @@
         {
             Defaults(s =>
             {
-                s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist, AzureStorageSagaDefaults.AssumeSecondaryIndicesExist);
-                s.SetDefault(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey, AzureStorageSagaDefaults.AssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
-                s.SetDefault(WellKnownConfigurationKeys.SagaStorageCompatibilityMode, AzureStorageSagaDefaults.CompatibilityModeEnabled);
                 s.SetDefault(WellKnownConfigurationKeys.SagaStorageConventionalTablePrefix, AzureStorageSagaDefaults.ConventionalTablePrefix);
                 s.SetDefault(WellKnownConfigurationKeys.SagaJsonSerializer, JsonSerializer.Create());
                 s.SetDefault(WellKnownConfigurationKeys.SagaReaderCreator, (Func<TextReader, JsonReader>)(reader => new JsonTextReader(reader)));
@@ -33,28 +29,11 @@
 
         protected override void Setup(FeatureConfigurationContext context)
         {
-            var compatibilityModeEnabled = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageCompatibilityMode);
-            var assumeSecondaryIndicesExist = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryIndicesExist);
-            var assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey = context.Settings.Get<bool>(WellKnownConfigurationKeys.SagaStorageAssumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
             // backdoor for testing
             var conventionalTablePrefix = context.Settings.Get<string>(WellKnownConfigurationKeys.SagaStorageConventionalTablePrefix);
 
-            if (compatibilityModeEnabled)
-            {
-                var addition = assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey ? ", assuming the secondary index uses RowKey = PartitionKey," : string.Empty;
-                Logger.Info($"The version of {nameof(AzureTablePersistence)} uses the migration mode and will fallback to lookup correlated sagas based on the secondary index{addition} if necessary.");
-            }
-
-            if (assumeSecondaryIndicesExist == false)
-            {
-                Logger.Warn($"The version of {nameof(AzureTablePersistence)} used is not configured to optimize sagas creation and might fall back to full table scanning to retrieve correlated sagas. It is suggested to migrate saga instances. Consult the upgrade guides for recommendations.");
-            }
-
-            var secondaryIndices = new SecondaryIndex(assumeSecondaryIndicesExist, assumeSecondaryKeyUsesANonEmptyRowKeySetToThePartitionKey);
-
             context.Services.AddSingleton<IProvidePartitionKeyFromSagaId>(provider =>
-                new ProvidePartitionKeyFromSagaId(provider.GetRequiredService<IProvideTableServiceClient>(),
-                    provider.GetRequiredService<TableClientHolderResolver>(), secondaryIndices, compatibilityModeEnabled, conventionalTablePrefix));
+                new ProvidePartitionKeyFromSagaId(provider.GetRequiredService<IProvideTableServiceClient>(), provider.GetRequiredService<TableClientHolderResolver>(), conventionalTablePrefix));
 
             var installerSettings = context.Settings.Get<SynchronizedStorageInstallerSettings>();
             var jsonSerializer = context.Settings.Get<JsonSerializer>(WellKnownConfigurationKeys.SagaJsonSerializer);
@@ -62,9 +41,7 @@
             var writerCreator = context.Settings.Get<Func<TextWriter, JsonWriter>>(WellKnownConfigurationKeys.SagaWriterCreator);
 
             context.Services.AddSingleton<ISagaPersister>(provider => new AzureSagaPersister(provider.GetRequiredService<IProvideTableServiceClient>(),
-                provider.GetRequiredService<TableCreator>(), compatibilityModeEnabled, secondaryIndices, conventionalTablePrefix, jsonSerializer, readerCreator, writerCreator));
+                provider.GetRequiredService<TableCreator>(), conventionalTablePrefix, jsonSerializer, readerCreator, writerCreator));
         }
-
-        static readonly ILog Logger = LogManager.GetLogger<SagaStorage>();
     }
 }
