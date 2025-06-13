@@ -8,22 +8,20 @@ namespace NServiceBus.Persistence.AzureTable.Migration
 
     class ProvidePartitionKeyFromSagaId : IProvidePartitionKeyFromSagaId
     {
-        public ProvidePartitionKeyFromSagaId(IProvideTableServiceClient tableServiceClientProvider, TableClientHolderResolver resolver, SecondaryIndex secondaryIndex, bool compatibilityMode, string conventionalTablePrefix)
+        public ProvidePartitionKeyFromSagaId(IProvideTableServiceClient tableServiceClientProvider, TableClientHolderResolver resolver, string conventionalTablePrefix)
         {
             this.conventionalTablePrefix = conventionalTablePrefix;
-            this.compatibilityMode = compatibilityMode;
             this.resolver = resolver;
-            this.secondaryIndex = secondaryIndex;
             tableServiceClient = tableServiceClientProvider.Client;
         }
 
-        public async Task SetPartitionKey<TSagaData>(IIncomingLogicalMessageContext context,
+        public Task SetPartitionKey<TSagaData>(IIncomingLogicalMessageContext context,
             SagaCorrelationProperty correlationProperty)
             where TSagaData : IContainSagaData
         {
             if (context.Extensions.TryGet<TableEntityPartitionKey>(out _))
             {
-                return;
+                return Task.CompletedTask;
             }
             var tableHolder = resolver.ResolveAndSetIfAvailable(context.Extensions);
             // slight duplication between saga persister and here when it comes to conventional tables
@@ -39,7 +37,7 @@ namespace NServiceBus.Persistence.AzureTable.Migration
             {
                 var tableEntityPartitionKey = new TableEntityPartitionKey(sagaId);
                 context.Extensions.Set(tableEntityPartitionKey);
-                return;
+                return Task.CompletedTask;
             }
 
             if (correlationProperty == SagaCorrelationProperty.None)
@@ -47,26 +45,14 @@ namespace NServiceBus.Persistence.AzureTable.Migration
                 throw new Exception("The Azure Table saga persister doesn't support custom saga finders.");
             }
 
-            if (compatibilityMode)
-            {
-                var nullableSagaId = await secondaryIndex.FindSagaId<TSagaData>(sagaTable, correlationProperty, context.CancellationToken)
-                    .ConfigureAwait(false);
-
-                if (nullableSagaId.HasValue)
-                {
-                    context.Extensions.Set(new TableEntityPartitionKey(nullableSagaId.Value.ToString()));
-                    return;
-                }
-            }
-
             var deterministicSagaId = SagaIdGenerator.Generate<TSagaData>(correlationProperty);
             context.Extensions.Set(new TableEntityPartitionKey(deterministicSagaId.ToString()));
+
+            return Task.CompletedTask;
         }
 
-        readonly SecondaryIndex secondaryIndex;
         readonly TableServiceClient tableServiceClient;
         readonly TableClientHolderResolver resolver;
-        readonly bool compatibilityMode;
         readonly string conventionalTablePrefix;
     }
 }

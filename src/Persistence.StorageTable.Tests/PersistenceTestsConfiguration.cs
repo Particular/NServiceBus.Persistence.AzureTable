@@ -38,12 +38,9 @@
             SagaIdGenerator = new SagaIdGenerator();
             var resolver = new TableClientHolderResolver(this, new TableInformation(SetupFixture.TableName));
             var tableCreator = new TableCreator(true);
-            var secondaryIndices = new SecondaryIndex();
             SagaStorage = new AzureSagaPersister(
                 this,
                 tableCreator,
-                false,
-                secondaryIndices,
                 null,
                 JsonSerializer.Create(),
                 reader => new JsonTextReader(reader),

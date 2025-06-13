@@ -15,8 +15,6 @@
         public AzureSagaPersister(
             IProvideTableServiceClient tableServiceClientProvider,
             TableCreator tableCreator,
-            bool compatibilityMode,
-            SecondaryIndex secondaryIndex,
             string conventionalTablePrefix,
             JsonSerializer jsonSerializer,
             Func<TextReader, JsonReader> readerCreator,
@@ -26,10 +24,8 @@
             this.readerCreator = readerCreator;
             this.jsonSerializer = jsonSerializer;
             this.conventionalTablePrefix = conventionalTablePrefix;
-            this.compatibilityMode = compatibilityMode;
             this.tableCreator = tableCreator;
             client = tableServiceClientProvider.Client;
-            this.secondaryIndex = secondaryIndex;
         }
 
         public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, ISynchronizedStorageSession session, ContextBag context, CancellationToken cancellationToken = default)
@@ -100,42 +96,7 @@
             var sagaId = SagaIdGenerator.Generate<TSagaData>(sagaCorrelationProperty);
             var sagaData = await Get<TSagaData>(sagaId, session, context, cancellationToken).ConfigureAwait(false);
 
-            if (sagaData == null && compatibilityMode)
-            {
-                sagaData = await GetByCorrelationProperty<TSagaData>(sagaCorrelationProperty, session, context, false, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-
             return sagaData;
-        }
-
-        async Task<TSagaData> GetByCorrelationProperty<TSagaData>(SagaCorrelationProperty correlationProperty, ISynchronizedStorageSession session, ContextBag context, bool triedAlreadyOnce, CancellationToken cancellationToken)
-            where TSagaData : class, IContainSagaData
-        {
-            var storageSession = (IWorkWithSharedTransactionalBatch)session;
-
-            var tableToReadFrom = await GetTableClientAndCreateTableIfNotExists(storageSession, typeof(TSagaData), cancellationToken)
-                .ConfigureAwait(false);
-
-            var sagaId = await secondaryIndex.FindSagaId<TSagaData>(tableToReadFrom, correlationProperty, cancellationToken).ConfigureAwait(false);
-            if (sagaId == null)
-            {
-                return null;
-            }
-
-            var sagaData = await Get<TSagaData>(sagaId.Value, session, context, cancellationToken).ConfigureAwait(false);
-            if (sagaData != null)
-            {
-                return sagaData;
-            }
-            // saga is not found, try invalidate cache and try getting value one more time
-            secondaryIndex.InvalidateCacheIfAny<TSagaData>(correlationProperty);
-            if (triedAlreadyOnce == false)
-            {
-                return await GetByCorrelationProperty<TSagaData>(correlationProperty, session, context, true, cancellationToken).ConfigureAwait(false);
-            }
-
-            return null;
         }
 
         async ValueTask<TableClient> GetTableClientAndCreateTableIfNotExists(IAzureTableStorageSession storageSession, Type sagaDataType, CancellationToken cancellationToken)
@@ -170,19 +131,6 @@
 
             storageSession.Add(new SagaDelete(partitionKey, sagaDataEntityToDelete, sagaDataEntityToDeleteTuple.Item1));
 
-            //  if it is not an old saga just go ahead
-            if (!sagaDataEntityToDelete.TryGetValue(SecondaryIndexIndicatorProperty, out var secondaryIndexKey))
-            {
-                return Task.CompletedTask;
-            }
-
-            var partitionRowKeyTuple = PartitionRowKeyTuple.Parse(secondaryIndexKey.ToString());
-            if (partitionRowKeyTuple.HasValue)
-            {
-                // fake partition key to make sure we get a dedicated batch for this operation
-                var tableEntityPartitionKey = new TableEntityPartitionKey(Guid.NewGuid().ToString());
-                storageSession.Add(new SagaRemoveSecondaryIndex(tableEntityPartitionKey, sagaData.Id, secondaryIndex, partitionRowKeyTuple.Value, sagaDataEntityToDeleteTuple.Item1));
-            }
             return Task.CompletedTask;
         }
 
@@ -191,9 +139,6 @@
 
         readonly TableCreator tableCreator;
         readonly TableServiceClient client;
-        readonly SecondaryIndex secondaryIndex;
-        const string SecondaryIndexIndicatorProperty = "NServiceBus_2ndIndexKey";
-        readonly bool compatibilityMode;
         readonly string conventionalTablePrefix;
         readonly JsonSerializer jsonSerializer;
         readonly Func<TextReader, JsonReader> readerCreator;

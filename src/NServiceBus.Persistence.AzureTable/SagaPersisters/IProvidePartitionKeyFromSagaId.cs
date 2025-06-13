@@ -14,7 +14,6 @@ namespace NServiceBus.Persistence.AzureTable
         /// <summary>
         /// Sets the partition key based on the
         /// - The saga ID header if present -or-
-        /// - The saga ID on the secondary index derived from the specified <paramref name="correlationProperty"/> when compatibility mode is enabled -or-
         /// - The saga ID calculated using the specified <paramref name="correlationProperty"/>.
         /// </summary>
         /// <param name="context">The logical message handler context.</param>
