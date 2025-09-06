@@ -1,12 +1,13 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
     using Azure.Data.Tables;
     using Extensibility;
 
-    class StorageSession : IWorkWithSharedTransactionalBatch
+    sealed class StorageSession : IWorkWithSharedTransactionalBatch, IDisposable, IAsyncDisposable
     {
         public StorageSession(TableClientHolderResolver resolver, ContextBag context)
         {
@@ -19,6 +20,12 @@
         {
             Batch.Clear();
             operations.Clear();
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            Dispose();
+            return ValueTask.CompletedTask;
         }
 
         public void Add(Operation operation)

@@ -5,7 +5,7 @@
     using Extensibility;
     using Outbox;
 
-    class AzureStorageOutboxTransaction : IOutboxTransaction
+    sealed class AzureStorageOutboxTransaction : IOutboxTransaction
     {
         public StorageSession StorageSession { get; }
 
@@ -21,5 +21,6 @@
             => SuppressStoreAndCommit ? Task.CompletedTask : StorageSession.Commit(cancellationToken);
 
         public void Dispose() => StorageSession.Dispose();
+        public ValueTask DisposeAsync() => StorageSession.DisposeAsync();
     }
 }
