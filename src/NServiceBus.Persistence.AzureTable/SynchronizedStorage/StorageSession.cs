@@ -1,24 +1,30 @@
 ﻿namespace NServiceBus.Persistence.AzureTable
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
     using Azure.Data.Tables;
     using Extensibility;
 
-    class StorageSession : IWorkWithSharedTransactionalBatch
+    sealed class StorageSession(TableClientHolderResolver resolver, ContextBag context)
+        : IWorkWithSharedTransactionalBatch, IDisposable, IAsyncDisposable
     {
-        public StorageSession(TableClientHolderResolver resolver, ContextBag context)
-        {
-            CurrentContextBag = context;
-            TableClientHolder = resolver.ResolveAndSetIfAvailable(context);
-            Batch = [];
-        }
-
         public void Dispose()
         {
+            if (Batch.Count == 0 && operations.Count == 0)
+            {
+                return;
+            }
+
             Batch.Clear();
             operations.Clear();
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            Dispose();
+            return ValueTask.CompletedTask;
         }
 
         public void Add(Operation operation)
@@ -56,15 +62,15 @@
             }
         }
 
-        public TableClientHolder TableClientHolder { get; set; }
-        public ContextBag CurrentContextBag { get; set; }
+        public TableClientHolder TableClientHolder { get; set; } = resolver.ResolveAndSetIfAvailable(context);
+        public ContextBag CurrentContextBag { get; set; } = context;
 
 
         // for the user path only
         public TableClient Table => TableClientHolder?.TableClient;
 
         // for the user path only
-        public List<TableTransactionAction> Batch { get; }
+        public List<TableTransactionAction> Batch { get; } = [];
 
         // for the user path only
         public string PartitionKey => !CurrentContextBag.TryGet<TableEntityPartitionKey>(out var partitionKey)
