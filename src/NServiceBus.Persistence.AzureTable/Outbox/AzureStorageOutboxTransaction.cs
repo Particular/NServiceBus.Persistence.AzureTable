@@ -5,17 +5,15 @@
     using Extensibility;
     using Outbox;
 
-    sealed class AzureStorageOutboxTransaction : IOutboxTransaction
+    sealed class AzureStorageOutboxTransaction(TableClientHolderResolver resolver, ContextBag context)
+        : IOutboxTransaction
     {
-        public StorageSession StorageSession { get; }
+        public StorageSession StorageSession { get; } = new(resolver, context);
 
         // By default, store and commit are enabled
         public bool SuppressStoreAndCommit { get; set; }
 
         public TableEntityPartitionKey? PartitionKey { get; set; }
-
-        public AzureStorageOutboxTransaction(TableClientHolderResolver resolver, ContextBag context)
-            => StorageSession = new StorageSession(resolver, context);
 
         public Task Commit(CancellationToken cancellationToken = default)
             => SuppressStoreAndCommit ? Task.CompletedTask : StorageSession.Commit(cancellationToken);
