@@ -22,6 +22,15 @@
             }
         }
 
+        public async ValueTask DisposeAsync()
+        {
+            if (!disposed && ownsTransaction)
+            {
+                await session.DisposeAsync().ConfigureAwait(false);
+                disposed = true;
+            }
+        }
+
         public ValueTask<bool> TryOpen(IOutboxTransaction transaction, ContextBag context, CancellationToken cancellationToken = default)
         {
             if (transaction is AzureStorageOutboxTransaction azureStorageOutboxTransaction)

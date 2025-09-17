@@ -14,6 +14,8 @@
 
         }
 
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
         public ValueTask<bool> TryOpen(IOutboxTransaction transaction, ContextBag context,
                                        CancellationToken cancellationToken = new CancellationToken()) =>
             new ValueTask<bool>(false);
