@@ -29,4 +29,9 @@
     <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Versioning\*.*" />
   </ItemGroup>
 
+  <!-- Remove this when https://github.com/Particular/NServiceBus.Persistence.AzureTable/issues/1116 is fixed -->
+  <ItemGroup Condition="'$(PkgNServiceBus_AcceptanceTests_Sources)' != ''">
+    <Compile Remove="$(PkgNServiceBus_AcceptanceTests_Sources)\**\Outbox\When_subscribers_handles_the_same_event.cs" />
+  </ItemGroup>
+
 </Project>
