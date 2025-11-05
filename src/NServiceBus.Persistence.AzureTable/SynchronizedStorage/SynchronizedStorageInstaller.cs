@@ -19,7 +19,7 @@ namespace NServiceBus.Persistence.AzureTable
 
         public async Task Install(string identity, CancellationToken cancellationToken = default)
         {
-            if (!settings.IsFeatureActive(typeof(SynchronizedStorage)))
+            if (!settings.IsFeatureActive<SynchronizedStorage>())
             {
                 return;
             }
