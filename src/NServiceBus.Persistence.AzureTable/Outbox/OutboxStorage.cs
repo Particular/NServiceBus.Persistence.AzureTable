@@ -6,9 +6,9 @@
 
     class OutboxStorage : Feature
     {
-        internal OutboxStorage()
+        public OutboxStorage()
         {
-            EnableByDefault<SynchronizedStorage>();
+            Enable<SynchronizedStorage>();
 
             DependsOn<Outbox>();
             DependsOn<SynchronizedStorage>();

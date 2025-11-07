@@ -7,7 +7,7 @@
     {
         public SynchronizedStorage()
         {
-            EnableByDefault<SynchronizedStorageInstallerFeature>();
+            Enable<SynchronizedStorageInstallerFeature>();
             DependsOn<Features.SynchronizedStorage>();
         }
 

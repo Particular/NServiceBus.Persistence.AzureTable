@@ -7,9 +7,9 @@ namespace NServiceBus.Persistence.AzureTable
 
     class SubscriptionStorage : Feature
     {
-        internal SubscriptionStorage()
+        public SubscriptionStorage()
         {
-            EnableByDefault<SubscriptionStorageInstallerFeature>();
+            Enable<SubscriptionStorageInstallerFeature>();
 
             DependsOn("NServiceBus.Features.MessageDrivenSubscriptions");
             Defaults(s => s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageTableName, AzureSubscriptionStorageDefaults.TableName));
