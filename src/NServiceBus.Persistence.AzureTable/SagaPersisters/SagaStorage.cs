@@ -10,9 +10,9 @@
 
     class SagaStorage : Feature
     {
-        internal SagaStorage()
+        public SagaStorage()
         {
-            EnableByDefault<SynchronizedStorage>();
+            Enable<SynchronizedStorage>();
 
             Defaults(s =>
             {
