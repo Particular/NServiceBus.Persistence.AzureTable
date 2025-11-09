@@ -47,7 +47,7 @@ public class DefaultServer : IEndpointSetupTemplate
         await configurationBuilderCustomization(endpointConfiguration).ConfigureAwait(false);
 
         // scan types at the end so that all types used by the configuration have been loaded into the AppDomain
-        endpointConfiguration.TypesToIncludeInScan(endpointCustomizations.GetTypesScopedByTestClass());
+        endpointConfiguration.ScanTypesForTest(endpointCustomizations);
 
         return endpointConfiguration;
     }
