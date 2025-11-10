@@ -3,32 +3,17 @@ namespace NServiceBus.Persistence.AzureTable
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Features;
     using Installation;
     using Logging;
     using Microsoft.Extensions.DependencyInjection;
     using Settings;
 
-    class SubscriptionStorageInstaller : INeedToInstallSomething
+    class SubscriptionStorageInstaller(IServiceProvider serviceProvider, IReadOnlySettings settings)
+        : INeedToInstallSomething
     {
-        public SubscriptionStorageInstaller(IServiceProvider serviceProvider, IReadOnlySettings settings)
-        {
-            this.settings = settings;
-            this.serviceProvider = serviceProvider;
-        }
-
         public async Task Install(string identity, CancellationToken cancellationToken = default)
         {
-            if (!settings.IsFeatureActive<SubscriptionStorage>())
-            {
-                return;
-            }
-
             var installerSettings = settings.Get<SubscriptionStorageInstallerSettings>();
-            if (installerSettings.Disabled)
-            {
-                return;
-            }
 
             try
             {
@@ -42,15 +27,12 @@ namespace NServiceBus.Persistence.AzureTable
             }
         }
 
-        async Task CreateTableIfNotExists(SubscriptionStorageInstallerSettings installerSettings, IProvideTableServiceClientForSubscriptions serviceClientProvider, CancellationToken cancellationToken)
+        static async Task CreateTableIfNotExists(SubscriptionStorageInstallerSettings installerSettings, IProvideTableServiceClientForSubscriptions serviceClientProvider, CancellationToken cancellationToken)
         {
             var tableClient = serviceClientProvider.Client.GetTableClient(installerSettings.TableName);
             await tableClient.CreateIfNotExistsAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        IServiceProvider serviceProvider;
-
         static readonly ILog Logger = LogManager.GetLogger<SynchronizedStorageInstaller>();
-        IReadOnlySettings settings;
     }
 }

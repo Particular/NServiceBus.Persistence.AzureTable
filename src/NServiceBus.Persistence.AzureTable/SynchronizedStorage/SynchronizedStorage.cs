@@ -7,8 +7,9 @@
     {
         public SynchronizedStorage()
         {
-            Enable<SynchronizedStorageInstallerFeature>();
             DependsOn<Features.SynchronizedStorage>();
+
+            Defaults(s => s.SetDefault(new SynchronizedStorageInstallerSettings()));
         }
 
         protected override void Setup(FeatureConfigurationContext context)
@@ -17,10 +18,18 @@
             context.Settings.TryGet(out IProvideTableServiceClient tableServiceClientProvider);
             context.Services.AddSingleton(tableServiceClientProvider ?? new ThrowIfNoTableServiceClientProvider());
 
+            var settings = context.Settings.Get<SynchronizedStorageInstallerSettings>();
+
             TableInformation? defaultTableInformation = null;
             if (context.Settings.TryGet<TableInformation>(out var info))
             {
                 defaultTableInformation = info;
+                settings.TableName = info.TableName;
+            }
+
+            if (!settings.Disabled && !string.IsNullOrEmpty(settings.TableName))
+            {
+                context.AddInstaller<SynchronizedStorageInstaller>();
             }
 
             context.Settings.AddStartupDiagnosticsSection(
