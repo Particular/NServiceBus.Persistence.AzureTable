@@ -50,7 +50,7 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_ACI_CREDENTIALS }}
       - name: Setup Cosmos DB
-        uses: Particular/setup-cosmosdb-action@v1.4.0
+        uses: Particular/setup-cosmosdb-action@390d02eda2633cfc679e1f9701a6bce1a1674dfc
         with:
           connection-string-name: AzureTable_CosmosDB_ConnectionString
           azure-credentials: ${{ secrets.AZURE_ACI_CREDENTIALS }}

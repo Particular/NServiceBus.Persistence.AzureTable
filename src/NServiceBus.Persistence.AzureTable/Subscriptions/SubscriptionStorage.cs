@@ -9,10 +9,12 @@ namespace NServiceBus.Persistence.AzureTable
     {
         public SubscriptionStorage()
         {
-            Enable<SubscriptionStorageInstallerFeature>();
-
             DependsOn("NServiceBus.Features.MessageDrivenSubscriptions");
-            Defaults(s => s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageTableName, AzureSubscriptionStorageDefaults.TableName));
+            Defaults(s =>
+            {
+                s.SetDefault(WellKnownConfigurationKeys.SubscriptionStorageTableName, AzureSubscriptionStorageDefaults.TableName);
+                s.SetDefault(new SubscriptionStorageInstallerSettings());
+            });
         }
 
         protected override void Setup(FeatureConfigurationContext context)
@@ -22,6 +24,14 @@ namespace NServiceBus.Persistence.AzureTable
             context.Services.AddSingleton(tableServiceClientProvider ?? new ThrowIfNoTableServiceServiceClientForSubscriptionsProvider());
 
             var subscriptionTableName = context.Settings.GetSubscriptionTableName();
+
+            var installerSettings = context.Settings.Get<SubscriptionStorageInstallerSettings>();
+            installerSettings.TableName = subscriptionTableName;
+            if (!installerSettings.Disabled)
+            {
+                context.AddInstaller<SubscriptionStorageInstaller>();
+            }
+
             var cacheFor = context.Settings.GetOrDefault<TimeSpan>(WellKnownConfigurationKeys.SubscriptionStorageCacheFor);
 
             context.Settings.AddStartupDiagnosticsSection(
