@@ -21,10 +21,7 @@
             }
 
             var context = await Scenario.Define<Context>()
-                .WithEndpoint<EndpointUsingDefaultCredentials>(b => b.When(session => session.SendLocal(new StartSaga1
-                {
-                    DataId = Guid.NewGuid()
-                })))
+                .WithEndpoint<EndpointUsingDefaultCredentials>(b => b.When(session => session.SendLocal(new StartSaga1 { DataId = Guid.NewGuid() })))
                 .Done(c => c.SagaReceivedMessage)
                 .Run();
 
@@ -41,10 +38,7 @@
             public EndpointUsingDefaultCredentials() =>
                 EndpointSetup<DefaultServer>(config =>
                 {
-                    var builder = new DbConnectionStringBuilder
-                    {
-                        ConnectionString = this.GetEnvConfiguredConnectionStringByCallerConvention()
-                    };
+                    var builder = new DbConnectionStringBuilder { ConnectionString = this.GetEnvConfiguredConnectionStringByCallerConvention() };
                     builder.TryGetValue("AccountEndpoint", out var accountEndpoint);
 
                     var baseUrlTemplate = $"https://{builder["AccountName"]}.{{0}}.{builder["EndpointSuffix"]}";
@@ -67,7 +61,7 @@
                 }
 
                 protected override void ConfigureHowToFindSaga(SagaPropertyMapper<JustASagaData> mapper)
-                    => mapper.ConfigureMapping<StartSaga1>(m => m.DataId).ToSaga(s => s.DataId);
+                    => mapper.MapSaga(s => s.DataId).ToMessage<StartSaga1>(m => m.DataId);
 
                 readonly Context testContext;
             }

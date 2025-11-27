@@ -1,115 +1,101 @@
-﻿namespace NServiceBus.AcceptanceTests
+﻿namespace NServiceBus.AcceptanceTests;
+
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using AcceptanceTesting;
+using Azure;
+using Azure.Data.Tables;
+using NUnit.Framework;
+using Persistence.AzureTable;
+using ITableEntity = Azure.Data.Tables.ITableEntity;
+
+[TestFixture]
+public class When_using_synchronized_session_via_container_and_storage_session_extension : NServiceBusAcceptanceTest
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using AcceptanceTesting;
-    using Azure;
-    using Azure.Data.Tables;
-    using NUnit.Framework;
-    using Persistence.AzureTable;
-    using ITableEntity = Azure.Data.Tables.ITableEntity;
-
-    [TestFixture]
-    public class When_using_synchronized_session_via_container_and_storage_session_extension : NServiceBusAcceptanceTest
+    [Test]
+    public async Task Should_commit_all_operations_using_the_same_batch()
     {
-        [Test]
-        public async Task Should_commit_all_operations_using_the_same_batch()
+        // not possible to intercept cosmos API calls with OperationContext
+        Requires.AzureStorageTable();
+
+        var context = await Scenario.Define<Context>()
+            .WithEndpoint<Endpoint>(b => b.When(s => s.SendLocal(new MyMessage())))
+            .Done(c => c.FirstHandlerIsDone && c.SecondHandlerIsDone)
+            .Run();
+
+        Assert.That(context.BatchIdentifiers, Has.Count.EqualTo(1), "Expected to have a single transactional batch but found more.");
+    }
+
+    public class Context : ScenarioContext
+    {
+        public bool FirstHandlerIsDone { get; set; }
+        public bool SecondHandlerIsDone { get; set; }
+        public HashSet<string> BatchIdentifiers { get; set; }
+    }
+
+    public class Endpoint : EndpointConfigurationBuilder
+    {
+        public Endpoint()
         {
-            // not possible to intercept cosmos API calls with OperationContext
-            Requires.AzureStorageTable();
+            var server = new BatchCountingServer();
+            EndpointSetup(server, (cfg, rd) =>
+            {
+                var context = rd.ScenarioContext as Context;
+                Assert.That(context, Is.Not.Null);
 
-            var context = await Scenario.Define<Context>()
-                .WithEndpoint<Endpoint>(b => b.When(s => s.SendLocal(new MyMessage())))
-                .Done(c => c.FirstHandlerIsDone && c.SecondHandlerIsDone)
-                .Run();
-
-            Assert.That(context.BatchIdentifiers, Has.Count.EqualTo(1), "Expected to have a single transactional batch but found more.");
+                context.BatchIdentifiers = server.TransactionalBatchCounterPolicy.BatchIdentifiers;
+            });
         }
 
-        public class Context : ScenarioContext
+        public class MyHandlerUsingStorageSession(IAzureTableStorageSession session, Context context) : IHandleMessages<MyMessage>
         {
-            public bool FirstHandlerIsDone { get; set; }
-            public bool SecondHandlerIsDone { get; set; }
-            public HashSet<string> BatchIdentifiers { get; set; }
-        }
-
-        public class Endpoint : EndpointConfigurationBuilder
-        {
-            public Endpoint()
+            public Task Handle(MyMessage message, IMessageHandlerContext handlerContext)
             {
-                var server = new BatchCountingServer();
-                EndpointSetup(server, (cfg, rd) =>
+                var entity = new MyTableEntity
                 {
-                    var context = rd.ScenarioContext as Context;
-                    Assert.That(context, Is.Not.Null);
+                    RowKey = Guid.NewGuid().ToString(),
+                    PartitionKey = context.TestRunId.ToString(),
+                    Data = "MyCustomData"
+                };
+                session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
+                context.FirstHandlerIsDone = true;
 
-                    context.BatchIdentifiers = server.TransactionalBatchCounterPolicy.BatchIdentifiers;
-                });
-            }
-
-            public class MyHandlerUsingStorageSession : IHandleMessages<MyMessage>
-            {
-                public MyHandlerUsingStorageSession(IAzureTableStorageSession session, Context context)
-                {
-                    this.session = session;
-                    this.context = context;
-                }
-
-                public Task Handle(MyMessage message, IMessageHandlerContext handlerContext)
-                {
-                    var entity = new MyTableEntity
-                    {
-                        RowKey = Guid.NewGuid().ToString(),
-                        PartitionKey = context.TestRunId.ToString(),
-                        Data = "MyCustomData"
-                    };
-                    session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
-                    context.FirstHandlerIsDone = true;
-
-                    return Task.CompletedTask;
-                }
-
-                readonly Context context;
-                readonly IAzureTableStorageSession session;
-            }
-
-            public class MyHandlerUsingExtensionMethod : IHandleMessages<MyMessage>
-            {
-                public MyHandlerUsingExtensionMethod(Context context) => this.context = context;
-
-                public Task Handle(MyMessage message, IMessageHandlerContext handlerContext)
-                {
-                    var session = handlerContext.SynchronizedStorageSession.AzureTablePersistenceSession();
-
-                    var entity = new MyTableEntity
-                    {
-                        RowKey = Guid.NewGuid().ToString(),
-                        PartitionKey = session.PartitionKey,
-                        Data = "MyCustomData"
-                    };
-                    session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
-                    context.SecondHandlerIsDone = true;
-
-                    return Task.CompletedTask;
-                }
-
-                readonly Context context;
+                return Task.CompletedTask;
             }
         }
 
-        public class MyTableEntity : ITableEntity
+        public class MyHandlerUsingExtensionMethod(Context context) : IHandleMessages<MyMessage>
         {
-            public string Data { get; set; }
-            public string PartitionKey { get; set; }
-            public string RowKey { get; set; }
-            public DateTimeOffset? Timestamp { get; set; }
-            public ETag ETag { get; set; }
-        }
+            public Task Handle(MyMessage message, IMessageHandlerContext handlerContext)
+            {
+                var session = handlerContext.SynchronizedStorageSession.AzureTablePersistenceSession();
 
-        public class MyMessage : IMessage
-        {
-            public string Property { get; set; }
+                var entity = new MyTableEntity
+                {
+                    RowKey = Guid.NewGuid().ToString(),
+                    PartitionKey = session.PartitionKey,
+                    Data = "MyCustomData"
+                };
+                session.Batch.Add(new TableTransactionAction(TableTransactionActionType.Add, entity));
+                context.SecondHandlerIsDone = true;
+
+                return Task.CompletedTask;
+            }
         }
+    }
+
+    public class MyTableEntity : ITableEntity
+    {
+        public string Data { get; set; }
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
+    }
+
+    public class MyMessage : IMessage
+    {
+        public string Property { get; set; }
     }
 }

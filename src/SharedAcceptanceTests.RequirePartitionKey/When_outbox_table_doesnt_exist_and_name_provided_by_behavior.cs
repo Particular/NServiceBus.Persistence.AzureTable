@@ -1,88 +1,83 @@
-namespace NServiceBus.AcceptanceTests
+namespace NServiceBus.AcceptanceTests;
+
+using System;
+using System.Net;
+using System.Threading.Tasks;
+using AcceptanceTesting;
+using Azure;
+using EndpointTemplates;
+using NServiceBus;
+using NServiceBus.AcceptanceTesting.Support;
+using NUnit.Framework;
+
+public partial class When_outbox_table_doesnt_exist_and_name_provided_by_behavior : NServiceBusAcceptanceTest
 {
-    using System;
-    using System.Net;
-    using System.Threading.Tasks;
-    using AcceptanceTesting;
-    using Azure;
-    using EndpointTemplates;
-    using NServiceBus;
-    using NServiceBus.AcceptanceTesting.Support;
-    using NUnit.Framework;
+    const string TableToBeCreated = "tablenamefrombehavior";
 
-    public partial class When_outbox_table_doesnt_exist_and_name_provided_by_behavior : NServiceBusAcceptanceTest
+    [SetUp]
+    [TearDown]
+    public async Task TryDeleteTestTable()
     {
-        const string TableToBeCreated = "tablenamefrombehavior";
-
-        [SetUp]
-        [TearDown]
-        public async Task TryDeleteTestTable()
+        try
         {
-            try
+            await SetupFixture.TableServiceClient.DeleteTableAsync(TableToBeCreated);
+        }
+        catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
+        {
+        }
+    }
+
+    [Test]
+    public async Task Should_create_table()
+    {
+        var runSettings = new RunSettings();
+        runSettings.AllowTableCreation();
+        runSettings.RegisterTableNameProvider(() => TableToBeCreated);
+
+        await Scenario.Define<Context>()
+            .WithEndpoint<EndpointWithOutboxAndNameInBahaviour>(b => b.When(session => session.SendLocal(new SomeCommand
             {
-                await SetupFixture.TableServiceClient.DeleteTableAsync(TableToBeCreated);
-            }
-            catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
-            {
-            }
+                SomeId = Guid.NewGuid()
+            })))
+            .Done(c => c.CommandReceived)
+            .Run(runSettings);
+
+        var tableCreated = false;
+        await foreach (var table in SetupFixture.TableServiceClient.QueryAsync(t => t.Name == TableToBeCreated))
+        {
+            tableCreated = true;
         }
 
-        [Test]
-        public async Task Should_create_table()
-        {
-            var runSettings = new RunSettings();
-            runSettings.AllowTableCreation();
-            runSettings.RegisterTableNameProvider(() => TableToBeCreated);
+        Assert.That(tableCreated, Is.True);
+    }
 
-            await Scenario.Define<Context>()
-                    .WithEndpoint<EndpointWithOutboxAndNameInBahaviour>(b => b.When(session => session.SendLocal(new SomeCommand
-                    {
-                        SomeId = Guid.NewGuid()
-                    })))
-                    .Done(c => c.CommandReceived)
-                    .Run(runSettings);
+    public class Context : ScenarioContext
+    {
+        public bool CommandReceived { get; set; }
+    }
 
-            var tableCreated = false;
-            await foreach (var table in SetupFixture.TableServiceClient.QueryAsync(t => t.Name == TableToBeCreated))
+    public class EndpointWithOutboxAndNameInBahaviour : EndpointConfigurationBuilder
+    {
+        public EndpointWithOutboxAndNameInBahaviour() =>
+            EndpointSetup<DefaultServer>(c =>
             {
-                tableCreated = true;
-            }
+                c.EnableOutbox();
+                c.ConfigureTransport().TransportTransactionMode = TransportTransactionMode.ReceiveOnly;
+                c.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
+            });
 
-            Assert.That(tableCreated, Is.True);
-        }
-
-        public class Context : ScenarioContext
+        public class MyCommandHandler(Context testContext) : IHandleMessages<SomeCommand>
         {
-            public bool CommandReceived { get; set; }
-        }
-
-        public class EndpointWithOutboxAndNameInBahaviour : EndpointConfigurationBuilder
-        {
-            public EndpointWithOutboxAndNameInBahaviour() =>
-                EndpointSetup<DefaultServer>(c =>
-                {
-                    c.EnableOutbox();
-                    c.ConfigureTransport().TransportTransactionMode = TransportTransactionMode.ReceiveOnly;
-                    c.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
-                });
-
-            public class MyCommandHandler : IHandleMessages<SomeCommand>
+            public Task Handle(SomeCommand message, IMessageHandlerContext context)
             {
-                readonly Context testContext;
-
-                public MyCommandHandler(Context testContext) => this.testContext = testContext;
-
-                public Task Handle(SomeCommand message, IMessageHandlerContext context)
-                {
-                    testContext.CommandReceived = true;
-                    return Task.CompletedTask;
-                }
+                testContext.CommandReceived = true;
+                return Task.CompletedTask;
             }
         }
+    }
 
-        public class SomeCommand : ICommand
-        {
-            public Guid SomeId { get; set; }
-        }
+    public class SomeCommand : ICommand
+    {
+        public Guid SomeId { get; set; }
     }
 }

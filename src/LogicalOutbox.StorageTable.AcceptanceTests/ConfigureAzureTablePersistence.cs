@@ -1,138 +1,137 @@
-﻿namespace NServiceBus.AcceptanceTests
+﻿namespace NServiceBus.AcceptanceTests;
+
+using System;
+using System.Threading.Tasks;
+using Azure.Data.Tables;
+using Microsoft.Extensions.DependencyInjection;
+using NServiceBus;
+using NServiceBus.AcceptanceTesting;
+using NServiceBus.AcceptanceTesting.Support;
+using NServiceBus.AcceptanceTests.Sagas;
+using NServiceBus.Persistence.AzureTable;
+using NServiceBus.Pipeline;
+using NServiceBus.Settings;
+using Conventions = AcceptanceTesting.Customization.Conventions;
+
+public class ConfigureAzureTablePersistence : IConfigureEndpointTestExecution
 {
-    using System;
-    using System.Threading.Tasks;
-    using Azure.Data.Tables;
-    using Microsoft.Extensions.DependencyInjection;
-    using NServiceBus;
-    using NServiceBus.AcceptanceTesting;
-    using NServiceBus.AcceptanceTesting.Support;
-    using NServiceBus.AcceptanceTests.Sagas;
-    using NServiceBus.Persistence.AzureTable;
-    using NServiceBus.Pipeline;
-    using NServiceBus.Settings;
-    using Conventions = AcceptanceTesting.Customization.Conventions;
+    public ConfigureAzureTablePersistence(TableServiceClient tableServiceClient = null) =>
+        this.tableServiceClient = tableServiceClient ?? SetupFixture.TableServiceClient;
 
-    public class ConfigureAzureTablePersistence : IConfigureEndpointTestExecution
+    Task IConfigureEndpointTestExecution.Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
     {
-        public ConfigureAzureTablePersistence(TableServiceClient tableServiceClient = null) =>
-            this.tableServiceClient = tableServiceClient ?? SetupFixture.TableServiceClient;
+        var sagaPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>()
+            .UseTableServiceClient(tableServiceClient);
 
-        Task IConfigureEndpointTestExecution.Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
+        var outboxPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
+
+        if (!settings.TryGet<AllowTableCreation>(out _))
         {
-            var sagaPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Sagas>()
-                .UseTableServiceClient(tableServiceClient);
-
-            var outboxPersistence = configuration.UsePersistence<AzureTablePersistence, StorageType.Outbox>();
-
-            if (!settings.TryGet<AllowTableCreation>(out _))
-            {
-                sagaPersistence.DisableTableCreation();
-                outboxPersistence.DisableTableCreation();
-            }
-
-            if (endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))
-            {
-                configuration.Recoverability().Immediate(c => c.NumberOfRetries(1));
-            }
-
-            if (!settings.TryGet<DoNotRegisterDefaultPartitionKeyProvider>(out _))
-            {
-                configuration.Pipeline.Register(new PartitionKeyProviderBehavior.Registration());
-            }
-
-            if (settings.TryGet<TableNameProvider>(out var tableNameProvider))
-            {
-                configuration.Pipeline.Register(new TableInformationProviderBehavior.Registration(tableNameProvider.GetTableName));
-            }
-            else if (!settings.TryGet<DoNotRegisterDefaultTableNameProvider>(out _))
-            {
-                configuration.Pipeline.Register(new TableInformationProviderBehavior.Registration());
-            }
-
-            return Task.CompletedTask;
+            sagaPersistence.DisableTableCreation();
+            outboxPersistence.DisableTableCreation();
         }
 
-        Task IConfigureEndpointTestExecution.Cleanup() => Task.CompletedTask;
-
-        readonly TableServiceClient tableServiceClient;
-
-        class PartitionKeyProviderBehavior : Behavior<IIncomingLogicalMessageContext>
+        if (endpointName != Conventions.EndpointNamingConvention(typeof(When_saga_started_concurrently.ConcurrentHandlerEndpoint)))
         {
-            public PartitionKeyProviderBehavior(ScenarioContext scenarioContext) => this.scenarioContext = scenarioContext;
+            configuration.Recoverability().Immediate(c => c.NumberOfRetries(1));
+        }
 
-            public override Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
+        if (!settings.TryGet<DoNotRegisterDefaultPartitionKeyProvider>(out _))
+        {
+            configuration.Pipeline.Register(new PartitionKeyProviderBehavior.Registration());
+        }
+
+        if (settings.TryGet<TableNameProvider>(out var tableNameProvider))
+        {
+            configuration.Pipeline.Register(new TableInformationProviderBehavior.Registration(tableNameProvider.GetTableName));
+        }
+        else if (!settings.TryGet<DoNotRegisterDefaultTableNameProvider>(out _))
+        {
+            configuration.Pipeline.Register(new TableInformationProviderBehavior.Registration());
+        }
+
+        return Task.CompletedTask;
+    }
+
+    Task IConfigureEndpointTestExecution.Cleanup() => Task.CompletedTask;
+
+    readonly TableServiceClient tableServiceClient;
+
+    class PartitionKeyProviderBehavior : Behavior<IIncomingLogicalMessageContext>
+    {
+        public PartitionKeyProviderBehavior(ScenarioContext scenarioContext) => this.scenarioContext = scenarioContext;
+
+        public override Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
+        {
+            if (!context.Extensions.TryGet<TableEntityPartitionKey>(out _))
             {
-                if (!context.Extensions.TryGet<TableEntityPartitionKey>(out _))
-                {
-                    context.Extensions.Set(new TableEntityPartitionKey(scenarioContext.TestRunId.ToString()));
-                }
-
-                return next();
+                context.Extensions.Set(new TableEntityPartitionKey(scenarioContext.TestRunId.ToString()));
             }
 
-            readonly ScenarioContext scenarioContext;
+            return next();
+        }
 
-            public class Registration : RegisterStep
+        readonly ScenarioContext scenarioContext;
+
+        public class Registration : RegisterStep
+        {
+            public Registration() : base(nameof(PartitionKeyProviderBehavior),
+                typeof(PartitionKeyProviderBehavior),
+                "Populates the partition key",
+                provider => new PartitionKeyProviderBehavior(provider.GetRequiredService<ScenarioContext>())) =>
+                InsertBeforeIfExists(nameof(LogicalOutboxBehavior));
+        }
+    }
+
+    class TableInformationProviderBehavior : Behavior<IIncomingLogicalMessageContext>
+    {
+        readonly IReadOnlySettings settings;
+        readonly Func<IIncomingLogicalMessageContext, string> tableNameProvider;
+
+        public TableInformationProviderBehavior(IReadOnlySettings settings, Func<string> tableNameProvider)
+        {
+            this.settings = settings;
+
+            this.tableNameProvider = tableNameProvider == null
+                ? DefaultTableNameProvider
+                : context => tableNameProvider();
+        }
+
+        string DefaultTableNameProvider(IIncomingLogicalMessageContext context)
+        {
+            if (!settings.TryGet<TableInformation>(out _) && !context.Extensions.TryGet<TableInformation>(out _))
             {
-                public Registration() : base(nameof(PartitionKeyProviderBehavior),
-                    typeof(PartitionKeyProviderBehavior),
-                    "Populates the partition key",
-                    provider => new PartitionKeyProviderBehavior(provider.GetRequiredService<ScenarioContext>())) =>
-                    InsertBeforeIfExists(nameof(LogicalOutboxBehavior));
+                return SetupFixture.TableName;
+            }
+            else
+            {
+                return null;
             }
         }
 
-        class TableInformationProviderBehavior : Behavior<IIncomingLogicalMessageContext>
+        public override Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
         {
-            readonly IReadOnlySettings settings;
-            readonly Func<IIncomingLogicalMessageContext, string> tableNameProvider;
+            var tableName = tableNameProvider(context);
 
-            public TableInformationProviderBehavior(IReadOnlySettings settings, Func<string> tableNameProvider)
+            if (!string.IsNullOrEmpty(tableName))
             {
-                this.settings = settings;
-
-                this.tableNameProvider = tableNameProvider == null
-                    ? DefaultTableNameProvider
-                    : context => tableNameProvider();
+                context.Extensions.Set(new TableInformation(tableName));
             }
 
-            string DefaultTableNameProvider(IIncomingLogicalMessageContext context)
-            {
-                if (!settings.TryGet<TableInformation>(out _) && !context.Extensions.TryGet<TableInformation>(out _))
-                {
-                    return SetupFixture.TableName;
-                }
-                else
-                {
-                    return null;
-                }
-            }
+            return next();
+        }
 
-            public override Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
-            {
-                var tableName = tableNameProvider(context);
-
-                if (!string.IsNullOrEmpty(tableName))
-                {
-                    context.Extensions.Set(new TableInformation(tableName));
-                }
-
-                return next();
-            }
-
-            public class Registration : RegisterStep
-            {
-                public Registration(Func<string> tableNameProvider = null)
-                    : base(
-                          nameof(TableInformationProviderBehavior),
-                          typeof(TableInformationProviderBehavior),
-                          "Populates the table information",
-                          serviceProvider => new TableInformationProviderBehavior(
-                              serviceProvider.GetRequiredService<IReadOnlySettings>(),
-                              tableNameProvider))
-                    => InsertBeforeIfExists(nameof(LogicalOutboxBehavior));
-            }
+        public class Registration : RegisterStep
+        {
+            public Registration(Func<string> tableNameProvider = null)
+                : base(
+                    nameof(TableInformationProviderBehavior),
+                    typeof(TableInformationProviderBehavior),
+                    "Populates the table information",
+                    serviceProvider => new TableInformationProviderBehavior(
+                        serviceProvider.GetRequiredService<IReadOnlySettings>(),
+                        tableNameProvider))
+                => InsertBeforeIfExists(nameof(LogicalOutboxBehavior));
         }
     }
 }

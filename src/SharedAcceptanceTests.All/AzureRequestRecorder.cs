@@ -1,41 +1,40 @@
-﻿namespace NServiceBus.AcceptanceTests
+﻿namespace NServiceBus.AcceptanceTests;
+
+using System;
+using System.Collections.Concurrent;
+using System.IO;
+using System.Threading.Tasks;
+using Azure.Core;
+using Azure.Core.Pipeline;
+
+public class AzureRequestRecorder : HttpPipelinePolicy
 {
-    using System;
-    using System.Collections.Concurrent;
-    using System.IO;
-    using System.Threading.Tasks;
-    using Azure.Core;
-    using Azure.Core.Pipeline;
+    public ConcurrentQueue<string> Requests { get; } = new();
 
-    public class AzureRequestRecorder : HttpPipelinePolicy
+    public override void Process(HttpMessage message, ReadOnlyMemory<HttpPipelinePolicy> pipeline)
     {
-        public ConcurrentQueue<string> Requests { get; } = new();
+        CaptureRequest(message);
+        ProcessNext(message, pipeline);
+    }
 
-        public override void Process(HttpMessage message, ReadOnlyMemory<HttpPipelinePolicy> pipeline)
+    public override async ValueTask ProcessAsync(HttpMessage message, ReadOnlyMemory<HttpPipelinePolicy> pipeline)
+    {
+        CaptureRequest(message);
+        await ProcessNextAsync(message, pipeline);
+    }
+
+    void CaptureRequest(HttpMessage message)
+        => Requests.Enqueue($"{message.Request.Method,-7} {message.Request.Uri.PathAndQuery}");
+
+    public void Print(TextWriter @out)
+    {
+        @out.WriteLine("Recorded calls to Azure Storage Services");
+
+        foreach (var request in Requests)
         {
-            CaptureRequest(message);
-            ProcessNext(message, pipeline);
+            @out.WriteLine($"- {request}");
         }
 
-        public override async ValueTask ProcessAsync(HttpMessage message, ReadOnlyMemory<HttpPipelinePolicy> pipeline)
-        {
-            CaptureRequest(message);
-            await ProcessNextAsync(message, pipeline);
-        }
-
-        void CaptureRequest(HttpMessage message)
-            => Requests.Enqueue($"{message.Request.Method,-7} {message.Request.Uri.PathAndQuery}");
-
-        public void Print(TextWriter @out)
-        {
-            @out.WriteLine("Recorded calls to Azure Storage Services");
-
-            foreach (var request in Requests)
-            {
-                @out.WriteLine($"- {request}");
-            }
-
-            @out.WriteLine();
-        }
+        @out.WriteLine();
     }
 }

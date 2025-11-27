@@ -1,9 +1,8 @@
-﻿namespace NServiceBus.AcceptanceTests
+﻿namespace NServiceBus.AcceptanceTests;
+
+class DoNotRegisterDefaultPartitionKeyProvider
 {
-    class DoNotRegisterDefaultPartitionKeyProvider
+    public DoNotRegisterDefaultPartitionKeyProvider()
     {
-        public DoNotRegisterDefaultPartitionKeyProvider()
-        {
-        }
     }
 }
