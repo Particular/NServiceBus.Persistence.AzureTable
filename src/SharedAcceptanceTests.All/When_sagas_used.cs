@@ -73,7 +73,7 @@
                 }
 
                 protected override void ConfigureHowToFindSaga(SagaPropertyMapper<JustASagaData> mapper)
-                    => mapper.ConfigureMapping<StartSaga1>(m => m.DataId).ToSaga(s => s.DataId);
+                    => mapper.MapSaga(s => s.DataId).ToMessage<StartSaga1>(m => m.DataId);
 
                 readonly Context testContext;
             }
