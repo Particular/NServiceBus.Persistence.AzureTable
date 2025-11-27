@@ -12,12 +12,9 @@
     using NServiceBus.Settings;
     using Conventions = AcceptanceTesting.Customization.Conventions;
 
-    public class ConfigureAzureTablePersistence : IConfigureEndpointTestExecution
+    public class ConfigureAzureTablePersistence(TableServiceClient tableServiceClient = null) : IConfigureEndpointTestExecution
     {
-        readonly TableServiceClient tableServiceClient;
-
-        public ConfigureAzureTablePersistence(TableServiceClient tableServiceClient = null) =>
-            this.tableServiceClient = tableServiceClient ?? SetupFixture.TableServiceClient;
+        readonly TableServiceClient tableServiceClient = tableServiceClient ?? SetupFixture.TableServiceClient;
 
         Task IConfigureEndpointTestExecution.Configure(string endpointName, EndpointConfiguration configuration, RunSettings settings, PublisherMetadata publisherMetadata)
         {
@@ -57,10 +54,8 @@
 
         Task IConfigureEndpointTestExecution.Cleanup() => Task.FromResult(0);
 
-        class PartitionKeyProviderBehavior : Behavior<ITransportReceiveContext>
+        class PartitionKeyProviderBehavior(ScenarioContext scenarioContext) : Behavior<ITransportReceiveContext>
         {
-            public PartitionKeyProviderBehavior(ScenarioContext scenarioContext) => this.scenarioContext = scenarioContext;
-
             public override Task Invoke(ITransportReceiveContext context, Func<Task> next)
             {
                 if (!context.Extensions.TryGet<TableEntityPartitionKey>(out _))
@@ -70,8 +65,6 @@
 
                 return next();
             }
-
-            readonly ScenarioContext scenarioContext;
         }
 
         class TableInformationProviderBehavior : Behavior<ITransportReceiveContext>

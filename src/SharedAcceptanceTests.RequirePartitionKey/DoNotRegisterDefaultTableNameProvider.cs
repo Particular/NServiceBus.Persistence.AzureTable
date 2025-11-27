@@ -1,10 +1,9 @@
-﻿namespace NServiceBus.AcceptanceTests
-{
-    class DoNotRegisterDefaultTableNameProvider
-    {
-        public DoNotRegisterDefaultTableNameProvider()
-        {
+﻿namespace NServiceBus.AcceptanceTests;
 
-        }
+class DoNotRegisterDefaultTableNameProvider
+{
+    public DoNotRegisterDefaultTableNameProvider()
+    {
+
     }
 }

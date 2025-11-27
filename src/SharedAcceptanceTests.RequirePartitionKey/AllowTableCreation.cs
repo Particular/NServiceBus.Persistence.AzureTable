@@ -1,10 +1,9 @@
-﻿namespace NServiceBus.AcceptanceTests
-{
-    class AllowTableCreation
-    {
-        public AllowTableCreation()
-        {
+﻿namespace NServiceBus.AcceptanceTests;
 
-        }
+class AllowTableCreation
+{
+    public AllowTableCreation()
+    {
+
     }
 }

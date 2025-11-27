@@ -1,24 +1,23 @@
-namespace NServiceBus.AcceptanceTests
+namespace NServiceBus.AcceptanceTests;
+
+using NUnit.Framework;
+using Testing;
+
+static partial class Requires
 {
-    using NUnit.Framework;
-    using Testing;
-
-    static partial class Requires
+    public static void AzureStorageTable()
     {
-        public static void AzureStorageTable()
+        if (ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.ConnectionString))
         {
-            if (ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.ConnectionString))
-            {
-                Assert.Ignore("Ignoring because it requires Azure Tables.");
-            }
+            Assert.Ignore("Ignoring because it requires Azure Tables.");
         }
+    }
 
-        public static void AzureCosmosTable()
+    public static void AzureCosmosTable()
+    {
+        if (!ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.ConnectionString))
         {
-            if (!ConnectionStringHelper.IsPremiumEndpoint(SetupFixture.ConnectionString))
-            {
-                Assert.Ignore("Ignoring because it requires Azure Tables.");
-            }
+            Assert.Ignore("Ignoring because it requires Azure Tables.");
         }
     }
 }
