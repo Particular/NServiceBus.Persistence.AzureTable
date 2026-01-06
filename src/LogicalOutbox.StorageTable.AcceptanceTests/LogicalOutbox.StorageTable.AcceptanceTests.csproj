@@ -12,6 +12,10 @@
     <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="3.0.0" />
     <PackageReference Include="NUnit" Version="3.14.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+    <!-- Following recommended actions from https://learn.microsoft.com/en-us/dotnet/core/compatibility/core-libraries/10.0/asyncenumerable -->
+    <PackageReference Include="System.Linq.Async" Version="6.0.1" Condition="'$(TargetFramework)' != 'net481'">
+      <ExcludeAssets>compile</ExcludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <Import Project="Includes.targets" />

@@ -12,6 +12,10 @@
     <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="3.0.0" />
     <PackageReference Include="NUnit" Version="3.14.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+    <!-- Following recommended actions from https://learn.microsoft.com/en-us/dotnet/core/compatibility/core-libraries/10.0/asyncenumerable -->
+    <PackageReference Include="System.Linq.Async" Version="6.0.1" Condition="'$(TargetFramework)' != 'net481'">
+      <ExcludeAssets>compile</ExcludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -19,12 +23,12 @@
     <Compile Include="..\SharedAcceptanceTests.All\AzureRequestRecorder.cs" />
   </ItemGroup>
 
-  <!-- The referenced source package does not currently include support for .NET 9 sources. 
-     This change addresses that limitation to ensure compatibility with .NET 9. 
-     Once the package provides support for .NET 9, this change can be re-evaluated. -->
+  <!-- The referenced source package does not currently include support for .NET 9 and newer sources. 
+     This change addresses that limitation to ensure compatibility with .NET 9 and newer. 
+     Once the package provides support for .NET 9 and newer, this change can be re-evaluated. -->
   <PropertyGroup>
     <ResolvedTargetFramework>$(TargetFramework)</ResolvedTargetFramework>
-    <ResolvedTargetFramework Condition="'$(TargetFramework)' == 'net9.0'">net8.0</ResolvedTargetFramework>
+    <ResolvedTargetFramework Condition="'$(TargetFramework)' != 'net481'">net8.0</ResolvedTargetFramework>
   </PropertyGroup>
   
   <ItemGroup Condition="'$(PkgNServiceBus_AcceptanceTests_Sources)' != ''">
