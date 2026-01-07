@@ -1,0 +1,4 @@
+ignore:
+  # 
+  - test: ComponentDependenciesShouldNotBeDuplicatedInTests
+    path: src/Compatibility.StorageTable.AcceptanceTests/Compatibility.StorageTable.AcceptanceTests.csproj
