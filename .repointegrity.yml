@@ -6,3 +6,5 @@ ignore:
     path: src/NServiceBus.Persistence.AzureTable/NServiceBus.Persistence.AzureTable.csproj
   - test: ValidateProjectFrameworks
     path: src/**/*Tests.csproj
+  - test: ValidateProjectFrameworks
+    path: src/Tests/Tests.csproj
