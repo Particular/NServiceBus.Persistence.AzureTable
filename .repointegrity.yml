@@ -4,3 +4,5 @@ ignore:
     path: src/NServiceBus.Persistence.AzureTable.TransactionalSession/NServiceBus.Persistence.AzureTable.TransactionalSession.csproj
   - test: ComponentShouldTargetDotNetLtsVersion
     path: src/NServiceBus.Persistence.AzureTable/NServiceBus.Persistence.AzureTable.csproj
+  - test: ValidateProjectFrameworks
+    path: src/**/*.csproj
