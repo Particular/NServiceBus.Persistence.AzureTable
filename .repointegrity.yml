@@ -1,0 +1,4 @@
+ignore:
+  # 
+  - test: ComponentShouldTargetDotNetLtsVersion
+    path: src/NServiceBus.Persistence.AzureTable/NServiceBus.Persistence.AzureTable.csproj
