@@ -49,7 +49,7 @@
                 reader => new JsonTextReader(reader),
                 writer => new JsonTextWriter(writer));
 
-            OutboxStorage = new OutboxPersister(resolver, tableCreator);
+            OutboxStorage = new OutboxPersister("fake", resolver, tableCreator);
 
             GetContextBagForSagaStorage = () =>
             {
