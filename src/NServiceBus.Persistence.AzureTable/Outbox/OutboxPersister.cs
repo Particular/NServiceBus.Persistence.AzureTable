@@ -10,8 +10,9 @@
 
     class OutboxPersister : IOutboxStorage
     {
-        public OutboxPersister(TableClientHolderResolver tableClientHolderResolver, TableCreator tableCreator)
+        public OutboxPersister(string endpointName, TableClientHolderResolver tableClientHolderResolver, TableCreator tableCreator)
         {
+            this.endpointName = endpointName;
             this.tableClientHolderResolver = tableClientHolderResolver;
             this.tableCreator = tableCreator;
         }
@@ -109,5 +110,6 @@
 
         readonly TableClientHolderResolver tableClientHolderResolver;
         readonly TableCreator tableCreator;
+        readonly string endpointName;
     }
 }
