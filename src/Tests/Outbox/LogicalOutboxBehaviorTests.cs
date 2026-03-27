@@ -77,7 +77,7 @@
             },
                 new TableInformation(tableName));
 
-            var behavior = new LogicalOutboxBehavior(containerHolderHolderResolver, new TableCreator(false));
+            var behavior = new LogicalOutboxBehavior("fake", containerHolderHolderResolver, new TableCreator(false));
 
             var testableContext = new TestableIncomingLogicalMessageContext
             {
