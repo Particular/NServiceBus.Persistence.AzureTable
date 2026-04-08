@@ -58,11 +58,12 @@
             };
             dispatchProperties["Destination"] = "DestinationQueue";
 
+            const string endpointName = "endpointName";
             var record = new OutboxRecord
             {
                 PartitionKey = messageId,
                 Dispatched = false,
-                Id = messageId,
+                Id = $"{endpointName}_{messageId}",
                 Operations = new[]
                 {
                     new TransportOperation("42", dispatchProperties, Array.Empty<byte>(), []),
@@ -76,8 +77,8 @@
                 Client = tableServiceClient
             },
                 new TableInformation(tableName));
-
-            var behavior = new LogicalOutboxBehavior("fake", containerHolderHolderResolver, new TableCreator(false));
+            
+            var behavior = new LogicalOutboxBehavior(endpointName, containerHolderHolderResolver, new TableCreator(false));
 
             var testableContext = new TestableIncomingLogicalMessageContext
             {
