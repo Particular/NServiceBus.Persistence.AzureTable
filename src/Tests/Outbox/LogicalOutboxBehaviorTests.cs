@@ -54,9 +54,9 @@
 
             var dispatchProperties = new DispatchProperties
             {
-                DelayDeliveryWith = new DelayedDelivery.DelayDeliveryWith(TimeSpan.FromMinutes(5))
+                DelayDeliveryWith = new DelayedDelivery.DelayDeliveryWith(TimeSpan.FromMinutes(5)),
+                ["Destination"] = "DestinationQueue"
             };
-            dispatchProperties["Destination"] = "DestinationQueue";
 
             const string endpointName = "endpointName";
             var record = new OutboxRecord
@@ -64,20 +64,18 @@
                 PartitionKey = messageId,
                 Dispatched = false,
                 Id = $"{endpointName}_{messageId}",
-                Operations = new[]
-                {
-                    new TransportOperation("42", dispatchProperties, Array.Empty<byte>(), []),
-                }
+                Operations = [new TransportOperation("42", dispatchProperties, Array.Empty<byte>(), [])]
             };
 
             await tableClient.AddEntityAsync(record);
 
-            var containerHolderHolderResolver = new TableClientHolderResolver(new Provider()
-            {
-                Client = tableServiceClient
-            },
+            var containerHolderHolderResolver = new TableClientHolderResolver(
+                new Provider
+                {
+                    Client = tableServiceClient
+                },
                 new TableInformation(tableName));
-            
+
             var behavior = new LogicalOutboxBehavior(endpointName, containerHolderHolderResolver, new TableCreator(false));
 
             var testableContext = new TestableIncomingLogicalMessageContext
