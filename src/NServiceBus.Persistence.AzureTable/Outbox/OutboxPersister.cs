@@ -56,8 +56,12 @@
 
             await tableCreator.CreateTableIfNotExists(tableClientHolder.TableClient, cancellationToken).ConfigureAwait(false);
 
+            var rowKey = context.TryGet<OutboxSourceEndpointName>(out var sourceEndpointName)
+                ? $"{sourceEndpointName.Value}_{messageId}"
+                : OutboxRowKey(messageId);
+
             var outboxRecord = await setAsDispatchedHolder.TableClientHolder.TableClient
-                .ReadOutboxRecord(OutboxRowKey(messageId), partitionKey, context, cancellationToken)
+                .ReadOutboxRecord(rowKey, partitionKey, context, cancellationToken)
                 .ConfigureAwait(false);
 
             setAsDispatchedHolder.Record = outboxRecord;
