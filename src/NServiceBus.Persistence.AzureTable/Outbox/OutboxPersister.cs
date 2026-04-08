@@ -56,14 +56,18 @@
 
             await tableCreator.CreateTableIfNotExists(tableClientHolder.TableClient, cancellationToken).ConfigureAwait(false);
 
+            var rowKey = context.TryGet<OutboxSourceEndpointName>(out var sourceEndpointName)
+                ? $"{sourceEndpointName.Value}_{messageId}"
+                : OutboxRowKey(messageId);
+
             var outboxRecord = await setAsDispatchedHolder.TableClientHolder.TableClient
-                .ReadOutboxRecord(messageId, partitionKey, context, cancellationToken)
+                .ReadOutboxRecord(rowKey, partitionKey, context, cancellationToken)
                 .ConfigureAwait(false);
 
             setAsDispatchedHolder.Record = outboxRecord;
             setAsDispatchedHolder.PartitionKey = partitionKey;
 
-            return outboxRecord != null ? new OutboxMessage(outboxRecord.Id, outboxRecord.Operations) : null;
+            return outboxRecord != null ? new OutboxMessage(messageId, outboxRecord.Operations) : null;
         }
 
         public Task Store(OutboxMessage message, IOutboxTransaction transaction, ContextBag context, CancellationToken cancellationToken = default)
@@ -80,7 +84,7 @@
 
             var outboxRecord = new OutboxRecord
             {
-                Id = message.MessageId,
+                Id = OutboxRowKey(message.MessageId),
                 Operations = message.TransportOperations,
                 PartitionKey = setAsDispatchedHolder.PartitionKey.PartitionKey
             };
@@ -107,6 +111,8 @@
             var transactionalBatch = new List<TableTransactionAction>(1);
             return transactionalBatch.ExecuteOperationAsync(operation, cancellationToken);
         }
+
+        string OutboxRowKey(string messageId) => $"{endpointName}_{messageId}";
 
         readonly TableClientHolderResolver tableClientHolderResolver;
         readonly TableCreator tableCreator;
