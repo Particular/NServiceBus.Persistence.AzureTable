@@ -38,12 +38,12 @@ namespace NServiceBus.PersistenceTesting
             _ = await endpoint2Persister.Get(messageId, ctx2);
 
             // Endpoint1 stores and commits
-            await using var tx1 = await endpoint1Persister.BeginTransaction(ctx1);
+            using var tx1 = await endpoint1Persister.BeginTransaction(ctx1);
             await endpoint1Persister.Store(new OutboxMessage(messageId, []), tx1, ctx1);
             await tx1.Commit();
 
             // Endpoint2 should also be able to store and commit without conflict
-            await using var tx2 = await endpoint2Persister.BeginTransaction(ctx2);
+            using var tx2 = await endpoint2Persister.BeginTransaction(ctx2);
             await endpoint2Persister.Store(new OutboxMessage(messageId, []), tx2, ctx2);
             await tx2.Commit();
 
