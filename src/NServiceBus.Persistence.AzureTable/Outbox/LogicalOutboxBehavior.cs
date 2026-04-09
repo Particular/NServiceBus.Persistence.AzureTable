@@ -15,11 +15,11 @@
     /// </summary>
     public sealed class LogicalOutboxBehavior : IBehavior<IIncomingLogicalMessageContext, IIncomingLogicalMessageContext>
     {
-        internal LogicalOutboxBehavior(TableClientHolderResolver tableClientHolderResolver, TableCreator tableCreator)
+        internal LogicalOutboxBehavior(string endpointName, TableClientHolderResolver tableClientHolderResolver, TableCreator tableCreator)
         {
+            this.endpointName = endpointName;
             this.tableClientHolderResolver = tableClientHolderResolver;
             this.tableCreator = tableCreator;
-
         }
 
         /// <inheritdoc />
@@ -63,7 +63,7 @@
 
             await tableCreator.CreateTableIfNotExists(tableHolder.TableClient, CancellationToken.None).ConfigureAwait(false);
 
-            var outboxRecord = await tableHolder.TableClient.ReadOutboxRecord(context.MessageId, azureStorageOutboxTransaction.PartitionKey.Value, context.Extensions, context.CancellationToken)
+            var outboxRecord = await tableHolder.TableClient.ReadOutboxRecord($"{endpointName}_{context.MessageId}", azureStorageOutboxTransaction.PartitionKey.Value, context.Extensions, context.CancellationToken)
                 .ConfigureAwait(false);
 
             if (outboxRecord is null)
@@ -108,6 +108,7 @@
             throw new Exception("Could not find routing strategy to deserialize.");
         }
 
+        readonly string endpointName;
         readonly TableClientHolderResolver tableClientHolderResolver;
         readonly TableCreator tableCreator;
     }
