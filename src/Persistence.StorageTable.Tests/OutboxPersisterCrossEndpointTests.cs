@@ -39,12 +39,12 @@ namespace NServiceBus.PersistenceTesting
 
             // Endpoint1 stores and commits
             using var tx1 = await endpoint1Persister.BeginTransaction(ctx1);
-            await endpoint1Persister.Store(new OutboxMessage(messageId, []), tx1, ctx1);
+            await endpoint1Persister.Store(new OutboxMessage(messageId, Array.Empty<TransportOperation>()), tx1, ctx1);
             await tx1.Commit();
 
             // Endpoint2 should also be able to store and commit without conflict
             using var tx2 = await endpoint2Persister.BeginTransaction(ctx2);
-            await endpoint2Persister.Store(new OutboxMessage(messageId, []), tx2, ctx2);
+            await endpoint2Persister.Store(new OutboxMessage(messageId, Array.Empty<TransportOperation>()), tx2, ctx2);
             await tx2.Commit();
 
             // Both endpoints should be able to independently retrieve their own outbox record

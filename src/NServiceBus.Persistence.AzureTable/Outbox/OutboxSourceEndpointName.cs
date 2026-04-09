@@ -1,7 +1,9 @@
 namespace NServiceBus.Persistence.AzureTable
 {
-    sealed class OutboxSourceEndpointName(string value)
+    sealed class OutboxSourceEndpointName
     {
-        public string Value { get; } = value;
+        public OutboxSourceEndpointName(string value) => Value = value;
+
+        public string Value { get; }
     }
 }

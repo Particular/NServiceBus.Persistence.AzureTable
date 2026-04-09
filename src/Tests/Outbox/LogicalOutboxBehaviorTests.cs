@@ -65,7 +65,10 @@
                 PartitionKey = messageId,
                 Dispatched = false,
                 Id = $"{endpointName}_{messageId}",
-                Operations = [new TransportOperation("42", dispatchProperties, Array.Empty<byte>(), [])]
+                Operations = new[]
+                {
+                    new TransportOperation("42", dispatchProperties, Array.Empty<byte>(), new Dictionary<string, string>()),
+                }
             };
 
             await tableClient.AddEntityAsync(record);
