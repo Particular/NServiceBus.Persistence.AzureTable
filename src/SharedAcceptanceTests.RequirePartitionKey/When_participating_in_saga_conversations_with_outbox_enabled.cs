@@ -105,13 +105,12 @@ public class When_participating_in_saga_conversations_with_outbox_enabled : NSer
             {
                 c.EnableOutbox();
                 c.ConfigureTransport().TransportTransactionMode = TransportTransactionMode.ReceiveOnly;
-                c.Pipeline.Register(typeof(PartitionPartitionKeyCleanerBehavior),
-                    "Cleans partition keys out");
+                c.Pipeline.Register(typeof(TransportReceivePartitionKeyCleanerBehavior), "Cleans partition keys during TransportReceive phase");
+                c.Pipeline.Register(typeof(IncomingPhysicalMessagePartitionKeyCleanerBehavior), "Cleans partition keys during IncomingPhysicalMessage phase");
                 c.Pipeline.Register(new ProvidePartitionKeyBasedOnSagaIdBehavior.Registration());
             });
 
-        class PartitionPartitionKeyCleanerBehavior : IBehavior<ITransportReceiveContext, ITransportReceiveContext>,
-            IBehavior<IIncomingPhysicalMessageContext, IIncomingPhysicalMessageContext>
+        class TransportReceivePartitionKeyCleanerBehavior : IBehavior<ITransportReceiveContext, ITransportReceiveContext>
         {
             public Task Invoke(ITransportReceiveContext context, Func<ITransportReceiveContext, Task> next)
             {
@@ -119,7 +118,10 @@ public class When_participating_in_saga_conversations_with_outbox_enabled : NSer
                 context.Extensions.Remove<TableEntityPartitionKey>();
                 return next(context);
             }
+        }
 
+        class IncomingPhysicalMessagePartitionKeyCleanerBehavior : IBehavior<IIncomingPhysicalMessageContext, IIncomingPhysicalMessageContext>
+        {
             public Task Invoke(IIncomingPhysicalMessageContext context, Func<IIncomingPhysicalMessageContext, Task> next)
             {
                 // to make it work in all test projects
