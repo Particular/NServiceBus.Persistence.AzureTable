@@ -15,7 +15,11 @@ public class When_custom_provider_registered : NServiceBusAcceptanceTest
     public async Task Should_be_used()
     {
         var context = await Scenario.Define<Context>()
-            .WithEndpoint<EndpointWithCustomProvider>(b => b.When(session => session.SendLocal(new StartSaga1 { DataId = Guid.NewGuid() })))
+            .WithEndpoint<EndpointWithCustomProvider>(b =>
+            {
+                b.Services(c => c.AddSingleton<IProvideTableServiceClient>(provider => new CustomProvider(provider.GetRequiredService<Context>())), afterStart: true);
+                b.When(session => session.SendLocal(new StartSaga1 { DataId = Guid.NewGuid() }));
+            })
             .Done(c => c.SagaReceivedMessage)
             .Run();
 
@@ -30,8 +34,7 @@ public class When_custom_provider_registered : NServiceBusAcceptanceTest
 
     public class EndpointWithCustomProvider : EndpointConfigurationBuilder
     {
-        public EndpointWithCustomProvider() =>
-            EndpointSetup<DefaultServer>(config => config.RegisterComponents(c => c.AddSingleton<IProvideTableServiceClient>(provider => new CustomProvider(provider.GetRequiredService<Context>()))));
+        public EndpointWithCustomProvider() => EndpointSetup<DefaultServer>();
 
         public class JustASaga(Context testContext) : Saga<JustASagaData>, IAmStartedByMessages<StartSaga1>
         {
@@ -47,21 +50,21 @@ public class When_custom_provider_registered : NServiceBusAcceptanceTest
                 mapper.MapSaga(s => s.DataId).ToMessage<StartSaga1>(m => m.DataId);
         }
 
-        public class CustomProvider(Context testContext) : IProvideTableServiceClient
-        {
-            public TableServiceClient Client
-            {
-                get
-                {
-                    testContext.ProviderWasCalled = true;
-                    return SetupFixture.TableServiceClient;
-                }
-            }
-        }
-
         public class JustASagaData : ContainSagaData
         {
             public virtual Guid DataId { get; set; }
+        }
+    }
+
+    public class CustomProvider(Context testContext) : IProvideTableServiceClient
+    {
+        public TableServiceClient Client
+        {
+            get
+            {
+                testContext.ProviderWasCalled = true;
+                return SetupFixture.TableServiceClient;
+            }
         }
     }
 
