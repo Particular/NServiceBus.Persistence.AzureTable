@@ -16,10 +16,7 @@ public partial class When_using_outbox_synchronized_session_via_container : NSer
         var context = await Scenario.Define<Context>()
             .WithEndpoint<Endpoint>(b =>
             {
-                b.Services(c =>
-                {
-                    c.AddScoped<MyRepository>();
-                });
+                b.Services(services => services.AddScoped<MyRepository>());
                 b.When(s => s.SendLocal(new MyMessage()));
             })
             .Done(c => c.Done)
