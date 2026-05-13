@@ -17,7 +17,7 @@ public class When_custom_provider_registered : NServiceBusAcceptanceTest
         var context = await Scenario.Define<Context>()
             .WithEndpoint<EndpointWithCustomProvider>(b =>
             {
-                b.Services(services => services.AddSingleton<IProvideTableServiceClient>(provider => new CustomProvider(provider.GetRequiredService<Context>())));
+                b.Services(services => services.AddSingleton<IProvideTableServiceClient>(provider => new CustomProvider(provider.GetRequiredService<Context>())), afterStart: true);
                 b.When(session => session.SendLocal(new StartSaga1 { DataId = Guid.NewGuid() }));
             })
             .Done(c => c.SagaReceivedMessage)
