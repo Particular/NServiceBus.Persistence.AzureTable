@@ -63,4 +63,4 @@ jobs:
           azure-credentials: ${{ secrets.AZURE_ACI_CREDENTIALS }}
           tag: AzureStorage        
       - name: Run tests
-        uses: Particular/run-tests-action@v1.8.0
+        uses: Particular/run-tests-action@v1.9.0
